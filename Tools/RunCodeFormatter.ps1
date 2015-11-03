@@ -2,19 +2,14 @@
 # The easiest way to use this is to add it as a content file to your
 # Visual Studio project, and whenever you want to run codeformatter
 # just right click and select "Execute as Script"
-#
-# The tool will be installed to %LOCALAPPDATA%\CodeFormatter, and
-# reuse an existing installation if it finds the binary is already
-# present. While this means subsequent runs won't download the
-# codeformatter release, it means that to upgrade to a new version
-# you need to delete %LOCALAPPDATA%\CodeFormatter.
 
 # Update from time-to-time by looking at:
 # https://github.com/dotnet/codeformatter/releases
+# TODO(chrsmith): Use the GitHub API and automate this.
 $release = "v1.0.0-alpha5"
 $latestBinaryDrop = "https://github.com/dotnet/codeformatter/releases/download/${release}/CodeFormatter.zip"
 
-$installPath = "${env:LOCALAPPDATA}\CodeFormatter\"
+$installPath = "${env:LOCALAPPDATA}\CodeFormatter-${release}\"
 
 # Download and install if needed. To delete an existing installation run:
 # Remove-Item -Recurse -Force $installPath
