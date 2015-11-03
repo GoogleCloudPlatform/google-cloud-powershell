@@ -19,15 +19,15 @@ $installPath = "${env:LOCALAPPDATA}\CodeFormatter\"
 # Download and install if needed. To delete an existing installation run:
 # Remove-Item -Recurse -Force $installPath
 If ( !(Test-Path $installPath) ) {
-	New-Item -Type directory $installPath
-	Invoke-WebRequest $latestBinaryDrop -OutFile "${installPath}\codeformatter.zip"
+    New-Item -Type directory $installPath
+    Invoke-WebRequest $latestBinaryDrop -OutFile "${installPath}\codeformatter.zip"
 
-	Add-Type -Assembly "System.IO.Compression.FileSystem"
+    Add-Type -Assembly "System.IO.Compression.FileSystem"
     [IO.Compression.ZipFile]::ExtractToDirectory(
         "${installPath}\codeformatter.zip",
-        "${installPath}\")
+        "${installPath}")
 
-	Remove-Item "${installPath}\codeformatter.zip"
+    Remove-Item "${installPath}\codeformatter.zip"
 }
 
 # TODO(chrsmith): Generalize this to search for any Solution file.
@@ -37,6 +37,8 @@ $solutionPath = Join-Path $PSScriptRoot "\..\gcloud-powershell.sln"
 $copyrightHeader = [IO.Path]::GetTempFileName() 
 "// Copyright 2015 Google Inc. All Rights Reserved." | Out-File -FilePath $copyrightHeader
 "// Licensed under the Apache License Version 2.0."  | Out-File -FilePath $copyrightHeader -Append
+
+$args = """${solutionPath}"" /copyright:""${copyrightHeader}"""
 
 # Format
 Write-Host "Running CodeFormatter on '${solutionPath}'"
