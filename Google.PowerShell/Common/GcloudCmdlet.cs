@@ -37,8 +37,8 @@ namespace Google.PowerShell.Common
         }
 
         /// <summary>
-        /// Prompt the user that they are about to perform the given action. Returns whether or not
-        /// they confirm it.
+        /// Prompt the user that they are about to perform the given action. Returns true IFF
+        /// the user confirms the action.
         /// 
         /// - Does not prompt if Force is set.
         /// - Always prompts if WhatIF is set.

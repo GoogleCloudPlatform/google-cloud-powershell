@@ -57,9 +57,8 @@ namespace Google.PowerShell.Common
             }
 
             // Look through all key/value pairs for the specific setting.
-            string[] fileLines = File.ReadAllLines(configFile);
             string linePrefix = settingName + " = ";
-            foreach (string fileLine in fileLines)
+            foreach (string fileLine in File.ReadAllLines(configFile))
             {
                 if (fileLine.StartsWith(linePrefix))
                 {
@@ -69,6 +68,8 @@ namespace Google.PowerShell.Common
 
             return null;
         }
+
+        // TODO(chrsmith): Deal with Cloud SDK named configurations.
 
         /// <summary>Returns the default project for the Google Cloud SDK.</summary>
         public string GetDefaultProject()

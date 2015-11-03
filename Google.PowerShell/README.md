@@ -35,7 +35,7 @@ And replace the `<runtime/>` element with:
   </runtime>
   <!-- END HACK -->
 
-And, because this is all fucking bullshit, add the following assembly redirect to the Test Explorer
+Finally, add the following assembly redirect to the Test Explorer
 process as well. (Not sure why it isn't picking it up from the machine.config.)
 
 "notepad C:\PROGRAM FILES (X86)\MICROSOFT VISUAL STUDIO 14.0\COMMON7\IDE\COMMONEXTENSIONS\MICROSOFT\TESTWINDOW\te.processhost.managed.exe.Config"
@@ -99,3 +99,6 @@ Then rebuild the solution, and the Unit Tests should show up in the Test Explore
 The `Google.PowerShell.IntegrationTests` test library is using the Pester PowerShell test framework.
 The tests described there will show up in the Test Explorer window after you install the
 `PowerShell Tools for Visual Studio 2015`. Also through the Visual Studio gallery.
+
+Note that these integration tests require you to be logged into a Google Cloud Platform account with
+billing enabled, as it will actually perform storage commands. (e.g. creating new Cloud Storage buckets.)

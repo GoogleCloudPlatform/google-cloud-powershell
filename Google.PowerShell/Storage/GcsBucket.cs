@@ -58,7 +58,7 @@ namespace Google.PowerShell.CloudStorage
     [Cmdlet(VerbsCommon.New, "GcsBucket")]
     public class NewGcsBucketCmdlet : GcsCmdlet
     {
-        [Parameter(Position = 0, Mandatory = false)]
+        [Parameter(Position = 0, Mandatory = true)]
         public string Name { get; set; }
 
         /// <summary>
