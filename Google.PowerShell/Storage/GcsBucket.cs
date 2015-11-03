@@ -69,7 +69,7 @@ namespace Google.PowerShell.CloudStorage
         public string Project { get; set; }
 
         [Parameter(Mandatory = false)]
-        [ValidateSet("DURABLE_REDUCED_AVAILABILITY", "NEARLINE", "STANDARD", IgnoreCase = false)]
+        [ValidateSet("DURABLE_REDUCED_AVAILABILITY", "NEARLINE", "STANDARD", IgnoreCase = true)]
         public string StorageClass { get; set; }
 
         [Parameter(Mandatory = false)]
