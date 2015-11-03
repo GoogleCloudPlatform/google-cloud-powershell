@@ -2,6 +2,12 @@
 # The easiest way to use this is to add it as a content file to your
 # Visual Studio project, and whenever you want to run codeformatter
 # just right click and select "Execute as Script"
+#
+# The tool will be installed to %LOCALAPPDATA%\CodeFormatter-XXX,
+# suffixed by the release ID. If this script finds that the tool is
+# present, the existing version will be used. This means that if
+# the release ID changes, the latest version of codeformatter will
+# be downloaded on the next run.
 
 # Update from time-to-time by looking at:
 # https://github.com/dotnet/codeformatter/releases
