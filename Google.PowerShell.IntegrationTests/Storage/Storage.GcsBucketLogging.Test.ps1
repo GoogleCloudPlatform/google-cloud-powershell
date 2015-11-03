@@ -1,4 +1,4 @@
-﻿. $PSSCriptRoot\..\GcloudCmdlets.ps1
+﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
 
 $project = "gcloud-powershell-testing"
@@ -15,14 +15,14 @@ Describe "Write-GcsBucketLogging and Remove-GcsBucketLogging" {
 
 		# Write, and confirm in output.
 		$result = Write-GcsBucketLogging `
-		    $bucket -LogBucket "alpha" -LogObjectPrefix "beta"
-		$result.Logging.LogBucket | Should BeExactly "alpha"
-		$result.Logging.LogObjectPrefix | Should BeExactly "beta"
+		    $bucket -LogBucket "gcloudps-alpha" -LogObjectPrefix "gcloudps-beta"
+		$result.Logging.LogBucket | Should BeExactly "gcloudps-alpha"
+		$result.Logging.LogObjectPrefix | Should BeExactly "gcloudps-beta"
 
 		# Confirm added
 		$result = Get-GcsBucket $bucket
-		$result.Logging.LogBucket | Should BeExactly "alpha"
-		$result.Logging.LogObjectPrefix | Should BeExactly "beta"
+		$result.Logging.LogBucket | Should BeExactly "gcloudps-alpha"
+		$result.Logging.LogObjectPrefix | Should BeExactly "gcloudps-beta"
 
 		# Remove, and confirm not in output.
 		$result = Remove-GcsBucketLogging $bucket
