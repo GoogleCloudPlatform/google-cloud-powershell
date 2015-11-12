@@ -10,7 +10,7 @@ This repository contains PowerShell cmdlets for interacting with the Google Clou
 
 # Support
 
-To get help on using these cmdlets, please log an issue with this project. While we will eventually be able to offer support on StackOVerflow or a Google+ community, for how your best bet is to contact the dev team directly.
+To get help on using these cmdlets, please log an issue with this project. While we will eventually be able to offer support on StackOverflow or a Google+ community, for now your best bet is to contact the dev team directly.
 
 Patches are encouraged, and may be submitted by forking this project and submitting a Pull Request.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
