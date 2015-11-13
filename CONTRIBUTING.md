@@ -1,4 +1,4 @@
-# Contributing
+﻿# Contributing
 
 Want to contribute? Great! Please read this page so your submission can go through smoothly.
 
@@ -29,12 +29,12 @@ frustration later on.
 If you would like to add a new feature, cmdlet, or change, first create a new Issue. There we will
 triage the idea and discuss any design or implementation details.
 
-Both Roslyn and exeternal contributors are expected to do their work in a locak fork and
-submit code for consideration via a pull request.
+Contributors are expected to do their work in a local fork and submit code for consideration via a
+pull request.
 
 It is expected that pull requests meet the following:
 
-- Adhere to the codeing style guide - We use the [DotNet Foundation's Coding Style Guide](https://github.com/dotnet/corefx/blob/master/Documentation/coding-guidelines/coding-style.md). Fortunately you can run the [codeformatter](https://github.com/dotnet/codeformatter) tool to clean up syntax as needed.
+- Adhere to the coding style guide - We use the [DotNet Foundation's Coding Style Guide](https://github.com/dotnet/corefx/blob/master/Documentation/coding-guidelines/coding-style.md). Fortunately you can run the [codeformatter](https://github.com/dotnet/codeformatter) tool to clean up syntax as needed.
 - Adds an appropriate amount of test coverage - See the `README.md` files in the various projects for detailed information on how to run tests locally.
 - And finally, that you have signed the CLA as mentioned above.
 
