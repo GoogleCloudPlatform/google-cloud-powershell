@@ -11,8 +11,13 @@ Describe "Get-GcsBucket" {
     }
     It "should work" {
         gsutil mb -p gcloud-powershell-testing gs://gcps-testbucket
-        (Get-GcsBucket -Name "gcps-testbucket").GetType().FullName | Should Match "Google.Apis.Storage.v1.Data.Bucket"
-        # TODO(chrsmith): Verify the object's fields contain reasonable information.
+        $bucket = Get-GcsBucket -Name "gcps-testbucket"
+		$bucket.GetType().FullName | Should Match "Google.Apis.Storage.v1.Data.Bucket"
+
+        $bucket.StorageClass | Should Match "STANDARD"
+        $bucket.Id | Should Match "gcps-testbucket"
+        $bucket.SelfLink | Should Match "https://www.googleapis.com/storage/v1/b/gcps-testbucket"
+
         gsutil rb gs://gcps-testbucket
     }
     It "should contain ACL information" {
@@ -95,7 +100,7 @@ Describe "Test-GcsBucket" {
         # Our own bucket
         gsutil mb -p gcloud-powershell-testing gs://gcps-test-gcsbucket
         Test-GcsBucket -Name "gcps-test-gcsbucket" | Should Be $true
-        gsutil rb gs://gcps-test-gcsbucket | Should Be $false
+        gsutil rb gs://gcps-test-gcsbucket
         # Buckets that exists but we don't have access to.
         Test-GcsBucket -Name "asdf" | Should Be $true
 

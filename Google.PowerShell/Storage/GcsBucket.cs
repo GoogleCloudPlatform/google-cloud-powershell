@@ -1,4 +1,5 @@
 ﻿// Copyright 2015 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
 
 using System.Management.Automation;
 
@@ -8,6 +9,7 @@ using Google.Apis.Download;
 using Google.Apis.Services;
 using Google.Apis.Storage.v1;
 using Google.Apis.Storage.v1.Data;
+using System.Net;
 
 using Google.PowerShell.Common;
 
@@ -37,20 +39,20 @@ namespace Google.PowerShell.CloudStorage
             base.ProcessRecord();
             var service = GetStorageService();
 
-            if (this.ParameterSetName == "SingleBucket")
+            if (ParameterSetName == "SingleBucket")
             {
-                BucketsResource.GetRequest req = service.Buckets.Get(this.Name);
+                BucketsResource.GetRequest req = service.Buckets.Get(Name);
                 req.Projection = BucketsResource.GetRequest.ProjectionEnum.Full;
                 Bucket bucket = req.Execute();
-                this.WriteObject(bucket);
+                WriteObject(bucket);
             }
 
-            if (this.ParameterSetName == "BucketsByProject")
+            if (ParameterSetName == "BucketsByProject")
             {
-                var req = service.Buckets.List(this.Project ?? this.CloudSdk.GetDefaultProject());
+                var req = service.Buckets.List(Project ?? CloudSdk.GetDefaultProject());
                 req.Projection = BucketsResource.ListRequest.ProjectionEnum.Full;
                 Buckets buckets = req.Execute();
-                this.WriteObject(buckets.Items, true);
+                WriteObject(buckets.Items, true);
             }
         }
     }
@@ -86,12 +88,12 @@ namespace Google.PowerShell.CloudStorage
             // https://cloud.google.com/storage/docs/xml-api/put-bucket-create
             // TODO(chrsmith): Wire in ACL-related parameters.
             var bucket = new Google.Apis.Storage.v1.Data.Bucket();
-            bucket.Name = this.Name;
-            bucket.Location = this.Location;
-            bucket.StorageClass = this.StorageClass;
+            bucket.Name = Name;
+            bucket.Location = Location;
+            bucket.StorageClass = StorageClass;
 
-            Bucket result = service.Buckets.Insert(bucket, this.Project).Execute();
-            this.WriteObject(result);
+            Bucket result = service.Buckets.Insert(bucket, Project).Execute();
+            WriteObject(result);
         }
     }
 
@@ -113,7 +115,7 @@ namespace Google.PowerShell.CloudStorage
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            if (!base.ConfirmAction(this.Force.IsPresent, this.Name, "Remove-GcsBucket (DeleteBucket)"))
+            if (!base.ConfirmAction(Force.IsPresent, Name, "Remove-GcsBucket (DeleteBucket)"))
             {
                 return;
             }
@@ -128,7 +130,7 @@ namespace Google.PowerShell.CloudStorage
             // TODO(chrsmith): What is the specific exception type?
             catch (GoogleApiException re)
             {
-                if (re.Message.Contains("409"))
+                if (re.HttpStatusCode == HttpStatusCode.Conflict)
                 {
                     WriteVerbose("Got RequestError[409]. Bucket not empty.");
                 }
@@ -139,10 +141,10 @@ namespace Google.PowerShell.CloudStorage
                 // TODO(chrsmith): Provide some progress output? Deleting thousands of GCS objects takes a while.
                 // TODO(chrsmith): Multi-threaded delete? e.g. the -m parameter to gsutil?
                 // TODO(chrsmith): What about buckets with TONS of objects, and paging?
-                Objects bucketObjects = service.Objects.List(this.Name).Execute();
+                Objects bucketObjects = service.Objects.List(Name).Execute();
                 foreach (Apis.Storage.v1.Data.Object bucketObject in bucketObjects.Items)
                 {
-                    service.Objects.Delete(this.Name, bucketObject.Name).Execute();
+                    service.Objects.Delete(Name, bucketObject.Name).Execute();
                 }
 
                 service.Buckets.Delete(Name).Execute();
@@ -169,18 +171,18 @@ namespace Google.PowerShell.CloudStorage
 
             try
             {
-                service.Buckets.Get(this.Name).Execute();
-                this.WriteObject(true);
+                service.Buckets.Get(Name).Execute();
+                WriteObject(true);
             }
             catch (GoogleApiException ex)
             {
-                if (ex.Message.Contains("404"))
+                if (ex.HttpStatusCode == HttpStatusCode.NotFound)
                 {
-                    this.WriteObject(false);
+                    WriteObject(false);
                 }
                 else
                 {
-                    this.WriteObject(true);
+                    WriteObject(true);
                 }
             }
         }

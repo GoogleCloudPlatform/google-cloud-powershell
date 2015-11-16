@@ -1,4 +1,5 @@
 ﻿// Copyright 2015 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
 
 using System;
 using System.Collections.Generic;
@@ -22,7 +23,7 @@ namespace Google.PowerShell.Common
         /// <summary>GCloud configuration directory in Windows, relative to %APPDATA%.</summary>
         private const string CloudSDKConfigDirectoryWindows = "gcloud";
 
-        public CloudSdkSettings() {}
+        public CloudSdkSettings() { }
 
         /// <summary> 
         /// Returns the file path to the Cloud SDK configuration file. Returns null on any sort of
