@@ -15,10 +15,10 @@ Describe "Get-GcsBucket" {
 		$bucket.GetType().FullName | Should Match "Google.Apis.Storage.v1.Data.Bucket"
 
         $bucket.StorageClass | Should Match "STANDARD"
-		$bucket.Id | Should Match "gcps-testbucket"
-		$bucket.SelfLink | Should Match "https://www.googleapis.com/storage/v1/b/gcps-testbucket"
+        $bucket.Id | Should Match "gcps-testbucket"
+        $bucket.SelfLink | Should Match "https://www.googleapis.com/storage/v1/b/gcps-testbucket"
 
-		gsutil rb gs://gcps-testbucket
+        gsutil rb gs://gcps-testbucket
     }
     It "should contain ACL information" {
         (Get-GcsBucket -Project $project)[0].ACL.Length -gt 0 | Should Be $true
