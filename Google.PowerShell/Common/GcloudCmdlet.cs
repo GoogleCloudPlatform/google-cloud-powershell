@@ -1,21 +1,29 @@
 ﻿// Copyright 2015 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
+using System;
 using System.Management.Automation;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using System.Threading.Tasks;
+using System.Reflection;
 
 namespace Google.PowerShell.Common
 {
     /// <summary>
     /// Base commandlet for all Google Cloud cmdlets.
     /// </summary>
-    public abstract class GCloudCmdlet : PSCmdlet
+    public abstract class GCloudCmdlet : PSCmdlet, IDisposable
     {
+        protected IReportCmdletResults _telemetryReporter;
+        protected bool _cmdletInvocationSuccessful;
+
         public GCloudCmdlet()
         {
             CloudSdk = new CloudSdkSettings();
+            _telemetryReporter = new FakeCmdletResultReporter();
+            // Only set upon successful completion of EndProcessing.
+            _cmdletInvocationSuccessful = false;
         }
 
         public CloudSdkSettings CloudSdk { get; protected set; }
@@ -59,6 +67,50 @@ namespace Google.PowerShell.Common
             }
 
             return force || ShouldProcess(resource, action);
+        }
+
+        /// <summary>
+        /// Provides a one-time, post-processing functionality for the cmdlet.
+        /// </summary>
+        protected override void EndProcessing()
+        {
+            base.EndProcessing();
+            // EndProcessing is not called if the cmdlet threw an exception or the user cancelled
+            // the execution. We use IDispose.Dispose to perform the final telemetry reporting.
+            _cmdletInvocationSuccessful = true;
+        }
+
+        /// <summary>
+        /// Returns the name of a properly annotated cmdlet, otherwise null.
+        /// </summary>
+        /// <returns></returns>
+        protected string GetCmdletName()
+        {
+            foreach (var attrib in this.GetType().GetCustomAttributes())
+            {
+                if (attrib is CmdletAttribute)
+                {
+                    CmdletAttribute cmdletAttrib = attrib as CmdletAttribute;
+                    return String.Format("{0}-{1}", cmdletAttrib.VerbName, cmdletAttrib.NounName);
+                }
+            }
+            return null;
+        }
+
+        public void Dispose()
+        {
+            string cmdletName = GetCmdletName() ?? "<unknown>";
+            string parameterSet = String.IsNullOrWhiteSpace(ParameterSetName) ? "Default" : ParameterSetName;
+            if (_cmdletInvocationSuccessful)
+            {
+                _telemetryReporter.ReportSuccess(cmdletName, parameterSet);
+            }
+            else
+            {
+                // TODO(chrsmith): Is it possible to get ahold of any exceptions the
+                // cmdlet threw? If so, use that to determine a more appropriate error code.
+                _telemetryReporter.ReportFailure(cmdletName, parameterSet, 0);
+            }
         }
     }
 }
