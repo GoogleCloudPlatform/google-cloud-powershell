@@ -100,7 +100,14 @@ namespace Google.PowerShell.Common
         public void Dispose()
         {
             string cmdletName = GetCmdletName() ?? "<unknown>";
-            string parameterSet = String.IsNullOrWhiteSpace(ParameterSetName) ? "Default" : ParameterSetName;
+            string parameterSet = ParameterSetName;
+            // "__AllParameterSets" isn't super-useful in reports.
+            if (String.IsNullOrWhiteSpace(parameterSet)
+                || ParameterSetName == ParameterAttribute.AllParameterSets)
+            {
+                parameterSet = "Default";
+            }
+
             if (_cmdletInvocationSuccessful)
             {
                 _telemetryReporter.ReportSuccess(cmdletName, parameterSet);
