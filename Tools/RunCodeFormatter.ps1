@@ -11,7 +11,8 @@
 
 # Update from time-to-time by looking at:
 # https://github.com/dotnet/codeformatter/releases
-# TODO(chrsmith): Use the GitHub API and automate this.
+# TODO(chrsmith): Use the GitHub API and automate this, see:
+# https://developer.github.com/v3/repos/releases/
 $release = "v1.0.0-alpha5"
 $latestBinaryDrop = "https://github.com/dotnet/codeformatter/releases/download/${release}/CodeFormatter.zip"
 

@@ -16,6 +16,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFiles", "SolutionFi
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{31BC29EB-08CC-4060-B64A-189B0E908A73}"
+	ProjectSection(SolutionItems) = preProject
+		Tools\RunCodeFormatter.ps1 = Tools\RunCodeFormatter.ps1
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,5 +42,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{31BC29EB-08CC-4060-B64A-189B0E908A73} = {A9C63839-C794-4DBF-A72C-052BCB9CE71E}
 	EndGlobalSection
 EndGlobal
