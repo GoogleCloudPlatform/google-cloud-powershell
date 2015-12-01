@@ -21,7 +21,10 @@ namespace Google.PowerShell.Common
         public GCloudCmdlet()
         {
             CloudSdk = new CloudSdkSettings();
-            _telemetryReporter = new FakeCmdletResultReporter();
+            // TODO(chrsmith): Get the anonymous user ID from gcloud, as well
+            // as check their opt-in preferences.
+            // _telemetryReporter = new FakeCmdletResultReporter();
+            _telemetryReporter = new GoogleAnalyticsCmdletReporter("100");
             // Only set upon successful completion of EndProcessing.
             _cmdletInvocationSuccessful = false;
         }

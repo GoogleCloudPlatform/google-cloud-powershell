@@ -6,6 +6,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Web;
+
 
 namespace Google.PowerShell.Common
 {
@@ -21,6 +27,125 @@ namespace Google.PowerShell.Common
     /// - "action" is the name of the cmdlet
     /// - "label" is the name of the parameter set
     /// - "value" will be null if the cmdlet was successful, otherwise non-zero.
+
+    /// <summary>
+    /// Wrapper around the Google Analytics Measurement Protocol service. This class is stateless and
+    /// just exposes methods to submit event data. See:
+    /// https://developers.google.com/analytics/devguides/collection/protocol/v1/
+    /// 
+    /// This class is thread hostile. You have been warned.
+    /// </summary>
+    public class MeasurementProtocolService
+    {
+        // Static constructor initializes the default values.
+        static MeasurementProtocolService()
+        {
+            SetWebPropertyID("UA-19953206-4");
+            // Consumers should set a more appropriate ID once known. e.g. reading the
+            // Cloud SDK's settings file.
+            SetClientID("b93766c9-6ef4-4824-872c-9457fd74fb77");
+        }
+
+        /// <summary>
+        /// Google Analytics account ID to send data to.
+        /// </summary>
+        public static string WebPropertyID { get; protected set; }
+
+        /// <summary>
+        /// Anonymous client ID for the source of the event.
+        /// </summary>
+        public static string ClientID { get; protected set; }
+
+        public static void SetWebPropertyID(string analyticsID)
+        {
+            AssertArgumentNotNullOrEmpty("analyticsID", analyticsID);
+            // TODO(chrsmith): We could also assert it matches a regex, etc.
+            WebPropertyID = analyticsID;
+        }
+
+        public static void SetClientID(string clientID)
+        {
+            AssertArgumentNotNullOrEmpty("clientID", clientID);
+            ClientID = clientID.Trim();
+        }
+
+        public static HttpWebRequest GenerateRequest(string category, string action, string label, int? value = null)
+        {
+            AssertArgumentNotNullOrEmpty("category", category);
+            AssertArgumentNotNullOrEmpty("action", action);
+            AssertArgumentNotNullOrEmpty("label", label);
+
+            // If you need help debugging the request, see the Validation Server at
+            // /debug/collect.
+            // DO NOT SUBMIT
+            var request = (HttpWebRequest)WebRequest.Create(
+                // "https://www.google-analytics.com/debug/collect");
+                "https://www.google-analytics.com/collect");
+            request.Method = "POST";
+            request.ContentType = "application/x-www-form-urlencoded";
+            request.KeepAlive = false;
+
+            // the request body we want to send
+            var postData = new Dictionary<string, string> {
+                { "v", "1" },
+                { "tid", WebPropertyID },
+                { "cid", ClientID },
+                { "t", "event" },
+                { "ec", category },
+                { "ea", action },
+                { "el", label },
+            };
+            if (value.HasValue)
+            {
+                postData.Add("ev", value.ToString());
+            }
+
+            // Convert the URL parameters into a single payload.
+            var postDataString =
+                postData
+                .Aggregate("", (data, next) => string.Format("{0}{1}={2}&", data, next.Key,
+                                                             HttpUtility.UrlEncode(next.Value)))
+                .TrimEnd('&');
+
+            var encoding = new UTF8Encoding(false /* no BOM */);
+            request.ContentLength = Encoding.UTF8.GetByteCount(postDataString);
+            using (var writer = new StreamWriter(request.GetRequestStream(), encoding))
+            {
+                writer.Write(postDataString);
+                writer.Close();
+            }
+
+            return request;
+        }
+
+        public static void IssueRequest(HttpWebRequest request)
+        {
+            // Issue the POST request to Google Analytics.
+            try
+            {
+                using (var webResponse = (HttpWebResponse)request.GetResponse())
+                {
+                    if (webResponse.StatusCode != HttpStatusCode.OK)
+                    {
+                        throw new System.Net.WebException("Google Analytics did not return a 200.");
+                    }
+                    webResponse.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Silently ignore it.
+            }
+        }
+
+        private static void AssertArgumentNotNullOrEmpty(string argumentName, string argumentValue)
+        {
+            if (string.IsNullOrEmpty(argumentValue))
+            {
+                throw new ArgumentNullException(argumentName);
+            }
+        }
+    }
 
     /// <summary>
     /// Interface for interacting with the Measurement Protocol service. See concrete
@@ -138,6 +263,34 @@ namespace Google.PowerShell.Common
             }
 
             return false;
+        }
+    }
+
+    /// <summary>
+    /// Reports PowerShell cmdlet results to Google Analytics.
+    /// </summary>
+    public class GoogleAnalyticsCmdletReporter : IReportCmdletResults
+    {
+        public GoogleAnalyticsCmdletReporter(string clientID)
+        {
+            // DO NOT SUBMIT: Rely on default.
+            // MeasurementProtocolService.SetClientID(clientID);
+        }
+
+        public void ReportSuccess(string cmdletName, string parameterSet)
+        {
+            Report(cmdletName, parameterSet, null);
+        }
+
+        public void ReportFailure(string cmdletName, string parameterSet, int errorCode)
+        {
+            Report(cmdletName, parameterSet, errorCode);
+        }
+
+        private void Report(string cmdletName, string parameterSet, int? errorCode)
+        {
+            var request = MeasurementProtocolService.GenerateRequest("powershell", cmdletName, parameterSet, errorCode);
+            MeasurementProtocolService.IssueRequest(request);
         }
     }
 }
