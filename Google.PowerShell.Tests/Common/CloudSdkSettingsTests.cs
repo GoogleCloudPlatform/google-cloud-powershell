@@ -20,6 +20,11 @@ namespace Google.PowerShell.Tests.Common
     /// Ideally we would script installing and configuring the Cloud SDK, but rather than
     /// deal with test account credentials, etc. We just verify that the local developer's
     /// creds and settings are present.
+    /// 
+    /// IMPORTANT TODO(chrsmith): We'll want to automate testing these routines against
+    /// different installs of the Cloud SDK:
+    /// - { per-user, per-system }
+    /// - { default install location, non-standard install location }
     /// </summary>
     internal class CloudSdkSettingsTests
     {
@@ -34,12 +39,35 @@ namespace Google.PowerShell.Tests.Common
         }
 
         [Test]
+        public void TestGetPythonConfigurationFilePath()
+        {
+            var cloudSettings = new CloudSdkSettings();
+            string pythonConfigFilePath = cloudSettings.GetPythonConfigurationFilePath();
+
+            Assert.IsNotNull(pythonConfigFilePath);
+            Assert.IsTrue(File.Exists(pythonConfigFilePath));
+        }
+
+        [Test]
         public void TestGetDefaultProject()
         {
             var cloudSettings = new CloudSdkSettings();
             string defaultProject = cloudSettings.GetDefaultProject();
-
+            // This requires that gcloud init was run and the default project was set.
             Assert.IsNotNull(defaultProject);
+        }
+
+        [Test]
+        public void TestGetOptInSetting()
+        {
+            var cloudSettings = new CloudSdkSettings();
+            // Just assert this doesn't throw, depending on the install the
+            // value could be true or false.
+            cloudSettings.GetOptIntoReportingSetting();
+            // Same with this. If the user opted into settings (and has ran
+            // the Python bits at least once) the value will be stable.
+            // Otherwise it will be different each time.
+            cloudSettings.GetAnoymousClientID();
         }
     }
 }

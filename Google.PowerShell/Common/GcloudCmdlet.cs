@@ -21,6 +21,9 @@ namespace Google.PowerShell.Common
         public GCloudCmdlet()
         {
             CloudSdk = new CloudSdkSettings();
+            // TODO(chrsmith): Confirm these files based on the install.
+            // Flag in C:\Users\Chris Smith\AppData\Local\Google\Cloud SDK\google-cloud-sdk\properties
+            // CID in C:\Users\Chris Smith\AppData\Roaming\gcloud\.metricsUUID
             // TODO(chrsmith): Get the anonymous user ID from gcloud, as well
             // as check their opt-in preferences.
             // _telemetryReporter = new FakeCmdletResultReporter();
