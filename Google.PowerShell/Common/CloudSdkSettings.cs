@@ -14,8 +14,6 @@ namespace Google.PowerShell.Common
     // TODO(chrsmith): Confirm settings can be read based even if the gcloud install
     // is per-user instead of per-system.
     // TODO(chrsmith): What if the user chooses to install to a non-default path?
-    // TODO(chrsmith): Use regkey to get paths and things:
-    // HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Google Cloud SDK
 
     /// <summary>
     /// Wrapper over the settings files created by the Google Cloud SDK. No data is cached, so
@@ -178,7 +176,7 @@ namespace Google.PowerShell.Common
 
             if (!File.Exists(uuidFile))
             {
-                return Guid.NewGuid().ToString().ToLower().Replace("-", "");
+                return Guid.NewGuid().ToString();
             }
             return File.ReadAllText(uuidFile);
         }

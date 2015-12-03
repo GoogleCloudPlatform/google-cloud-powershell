@@ -88,9 +88,8 @@ namespace Google.PowerShell.Common
         }
 
         /// <summary>
-        /// Returns the name of a properly annotated cmdlet, otherwise null.
+        /// Returns the name of a properly annotated cmdlet, e.g. Test-GcsBucket, otherwise null.
         /// </summary>
-        /// <returns></returns>
         protected string GetCmdletName()
         {
             foreach (var attrib in this.GetType().GetCustomAttributes())
@@ -106,7 +105,7 @@ namespace Google.PowerShell.Common
 
         public void Dispose()
         {
-            string cmdletName = GetCmdletName() ?? "<unknown>";
+            string cmdletName = GetCmdletName() ?? "unknown-cmdlet";
             string parameterSet = ParameterSetName;
             // "__AllParameterSets" isn't super-useful in reports.
             if (String.IsNullOrWhiteSpace(parameterSet)

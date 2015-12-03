@@ -51,7 +51,7 @@ namespace Google.PowerShell.Common
         }
 
         /// <summary>
-        /// Google Analytics account ID to send data to.
+        /// Google Analytics web property ID to associate the data with.
         /// </summary>
         public static string WebPropertyID { get; protected set; }
 
@@ -159,11 +159,12 @@ namespace Google.PowerShell.Common
         /// For example, Test-XXX should report success even if the existance test fails.
         /// </summary>
         void ReportSuccess(string cmdletName, string parameterSet);
+
         /// <summary>
         /// Report a cmdlet failing. Failure is defined as any abnormal termination, such as
         /// a runtime exception, user-cancelation, etc.
         /// </summary>
-        /// <param name="errorCode">Return the HTTP error code as applicable, otherwise use 0.</param>
+        /// <param name="errorCode">Return the HTTP error code as applicable, otherwise use non-zero.</param>
         void ReportFailure(string cmdletName, string parameterSet, int errorCode);
     }
 
@@ -254,7 +255,7 @@ namespace Google.PowerShell.Common
                 }
             }
 
-            // Loop backwards and start from kMaxEvents down to eventsRecorded_.
+            // Loop backwards and start from kMaxEvents down to _eventsRecorded.
             for (int i = kMaxEvents - 1; i >= _eventsRecorded; i--)
             {
                 if (_events[i].Equals(expectedRecord))

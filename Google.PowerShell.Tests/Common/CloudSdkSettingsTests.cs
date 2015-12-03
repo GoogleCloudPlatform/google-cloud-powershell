@@ -64,7 +64,7 @@ namespace Google.PowerShell.Tests.Common
             // Just assert this doesn't throw, depending on the install the
             // value could be true or false.
             cloudSettings.GetOptIntoReportingSetting();
-            // Same with this. If the user opted into settings (and has ran
+            // Same with above. If the user opted into settings (and has ran
             // the Python bits at least once) the value will be stable.
             // Otherwise it will be different each time.
             cloudSettings.GetAnoymousClientID();
