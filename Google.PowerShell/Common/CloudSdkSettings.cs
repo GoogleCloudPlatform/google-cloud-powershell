@@ -47,7 +47,7 @@ namespace Google.PowerShell.Common
             // Check both HKCU and HKLM, since the location depends on if gcloud was
             // installed as an admin or not.
             RegistryKey hkcuKey = Registry.CurrentUser.OpenSubKey(CloudSDKInstallPathRegKey);
-            string hkcuValue = hkcuKey.GetValue(CloudSDKInstallPathRegKeyName,  "") as string;
+            string hkcuValue = hkcuKey.GetValue(CloudSDKInstallPathRegKeyName, "") as string;
             if (!String.IsNullOrEmpty(hkcuValue))
             {
                 return hkcuValue.Replace("\"", "");
@@ -151,8 +151,9 @@ namespace Google.PowerShell.Common
                 return false;
             }
 
+            // Return !value because the setting is *disable*_usage_reporting.
             bool value = false;
-            return bool.TryParse(rawValue, out value) ? value : false;
+            return bool.TryParse(rawValue, out value) ? !value : false;
         }
 
         /// <summary>

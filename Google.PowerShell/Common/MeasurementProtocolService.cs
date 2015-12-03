@@ -23,7 +23,7 @@ namespace Google.PowerShell.Common
     /// https://developers.google.com/analytics/devguides/collection/protocol/v1/
     ///
     /// The following convention is assumed to be used:
-    /// - "category" is fixed to be "powershell"
+    /// - "category" is fixed to be "PowerShell"
     /// - "action" is the name of the cmdlet
     /// - "label" is the name of the parameter set
     /// - "value" will be null if the cmdlet was successful, otherwise non-zero.
@@ -37,13 +37,17 @@ namespace Google.PowerShell.Common
     /// </summary>
     public class MeasurementProtocolService
     {
+        // TODO(chrsmith): After the code has been submitted and had some bake time,
+        // change this to the prod Cloud SDK analytics property ID ("UA-36037335-2").
+        private const string TestWebPropertyID = "UA-19953206-4";
+
         // Static constructor initializes the default values.
         static MeasurementProtocolService()
         {
-            SetWebPropertyID("UA-19953206-4");
+            SetWebPropertyID(TestWebPropertyID);
             // Consumers should set a more appropriate ID once known. e.g. reading the
             // Cloud SDK's settings file.
-            SetClientID("b93766c9-6ef4-4824-872c-9457fd74fb77");
+            SetClientID(Guid.NewGuid().ToString());
         }
 
         /// <summary>
@@ -76,17 +80,13 @@ namespace Google.PowerShell.Common
             AssertArgumentNotNullOrEmpty("label", label);
 
             // If you need help debugging the request, see the Validation Server at
-            // /debug/collect.
-            // DO NOT SUBMIT
-            var request = (HttpWebRequest)WebRequest.Create(
-                // "https://www.google-analytics.com/debug/collect");
-                "https://www.google-analytics.com/collect");
+            // /debug/collect and then inspect the response.
+            var request = (HttpWebRequest)WebRequest.Create("https://www.google-analytics.com/collect");
             request.Method = "POST";
             request.ContentType = "application/x-www-form-urlencoded";
             request.KeepAlive = false;
 
-            // the request body we want to send
-            var postData = new Dictionary<string, string> {
+            var payloadData = new Dictionary<string, string> {
                 { "v", "1" },
                 { "tid", WebPropertyID },
                 { "cid", ClientID },
@@ -97,14 +97,14 @@ namespace Google.PowerShell.Common
             };
             if (value.HasValue)
             {
-                postData.Add("ev", value.ToString());
+                payloadData.Add("ev", value.ToString());
             }
 
             // Convert the URL parameters into a single payload.
             var postDataString =
-                postData
-                .Aggregate("", (data, next) => string.Format("{0}{1}={2}&", data, next.Key,
-                                                             HttpUtility.UrlEncode(next.Value)))
+                payloadData
+                .Aggregate("", (acc, val) => string.Format("{0}{1}={2}&", acc, val.Key,
+                                                             HttpUtility.UrlEncode(val.Value)))
                 .TrimEnd('&');
 
             var encoding = new UTF8Encoding(false /* no BOM */);
@@ -120,21 +120,22 @@ namespace Google.PowerShell.Common
 
         public static void IssueRequest(HttpWebRequest request)
         {
-            // Issue the POST request to Google Analytics.
             try
             {
                 using (var webResponse = (HttpWebResponse)request.GetResponse())
                 {
                     if (webResponse.StatusCode != HttpStatusCode.OK)
                     {
-                        throw new System.Net.WebException("Google Analytics did not return a 200.");
+                        throw new WebException("Google Analytics did not return a 200.");
                     }
                     webResponse.Close();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // Silently ignore it.
+                // Silently ignore it. Even if the request was malformed Google Analytics will
+                // return a 200. So I assume this would only happen in the event of some transient
+                // network failure, e.g. there is no internet connection.
             }
         }
 
@@ -273,8 +274,7 @@ namespace Google.PowerShell.Common
     {
         public GoogleAnalyticsCmdletReporter(string clientID)
         {
-            // DO NOT SUBMIT: Rely on default.
-            // MeasurementProtocolService.SetClientID(clientID);
+            MeasurementProtocolService.SetClientID(clientID);
         }
 
         public void ReportSuccess(string cmdletName, string parameterSet)
@@ -289,7 +289,7 @@ namespace Google.PowerShell.Common
 
         private void Report(string cmdletName, string parameterSet, int? errorCode)
         {
-            var request = MeasurementProtocolService.GenerateRequest("powershell", cmdletName, parameterSet, errorCode);
+            var request = MeasurementProtocolService.GenerateRequest("PowerShell", cmdletName, parameterSet, errorCode);
             MeasurementProtocolService.IssueRequest(request);
         }
     }

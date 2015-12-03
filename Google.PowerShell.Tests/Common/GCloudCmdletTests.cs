@@ -95,7 +95,7 @@ namespace Google.PowerShell.Tests.Common
                 fakeCmdlet.Dispose();
             }
 
-            Assert.IsTrue(reporter.ContainsEvent("Test-GCloudCmdlets", "Default", 0));
+            Assert.IsTrue(reporter.ContainsEvent("Test-GCloudCmdlets", "Default", 1));
         }
     }
 }

@@ -21,13 +21,14 @@ namespace Google.PowerShell.Common
         public GCloudCmdlet()
         {
             CloudSdk = new CloudSdkSettings();
-            // TODO(chrsmith): Confirm these files based on the install.
-            // Flag in C:\Users\Chris Smith\AppData\Local\Google\Cloud SDK\google-cloud-sdk\properties
-            // CID in C:\Users\Chris Smith\AppData\Roaming\gcloud\.metricsUUID
-            // TODO(chrsmith): Get the anonymous user ID from gcloud, as well
-            // as check their opt-in preferences.
-            // _telemetryReporter = new FakeCmdletResultReporter();
-            _telemetryReporter = new GoogleAnalyticsCmdletReporter("100");
+
+            _telemetryReporter = new FakeCmdletResultReporter();
+            if (CloudSdk.GetOptIntoReportingSetting())
+            {
+                string clientID = CloudSdk.GetAnoymousClientID();
+                _telemetryReporter = new GoogleAnalyticsCmdletReporter(clientID);
+            }
+
             // Only set upon successful completion of EndProcessing.
             _cmdletInvocationSuccessful = false;
         }
@@ -122,7 +123,9 @@ namespace Google.PowerShell.Common
             {
                 // TODO(chrsmith): Is it possible to get ahold of any exceptions the
                 // cmdlet threw? If so, use that to determine a more appropriate error code.
-                _telemetryReporter.ReportFailure(cmdletName, parameterSet, 0);
+                // We report 1 instead of 0 so that the data can be see in Google Analytics.
+                // (null vs. 0 is ambiguous in the UI.)
+                _telemetryReporter.ReportFailure(cmdletName, parameterSet, 1);
             }
         }
     }
