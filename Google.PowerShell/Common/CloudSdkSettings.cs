@@ -11,10 +11,6 @@ using Microsoft.Win32;
 
 namespace Google.PowerShell.Common
 {
-    // TODO(chrsmith): Confirm settings can be read based even if the gcloud install
-    // is per-user instead of per-system.
-    // TODO(chrsmith): What if the user chooses to install to a non-default path?
-
     /// <summary>
     /// Wrapper over the settings files created by the Google Cloud SDK. No data is cached, so
     /// it is possible to have race conditions between gcloud and PowerShell. This is by design.
