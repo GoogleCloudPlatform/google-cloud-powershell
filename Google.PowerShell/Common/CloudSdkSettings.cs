@@ -7,7 +7,6 @@ using System.Linq;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Win32;
 
 namespace Google.PowerShell.Common
 {

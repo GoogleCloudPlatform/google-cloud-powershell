@@ -104,7 +104,7 @@ namespace Google.PowerShell.Common
             var postDataString =
                 payloadData
                 .Aggregate("", (acc, val) => string.Format("{0}{1}={2}&", acc, val.Key,
-                                                             HttpUtility.UrlEncode(val.Value)))
+                                                           HttpUtility.UrlEncode(val.Value)))
                 .TrimEnd('&');
 
             var encoding = new UTF8Encoding(false /* no BOM */);
@@ -124,10 +124,8 @@ namespace Google.PowerShell.Common
             {
                 using (var webResponse = (HttpWebResponse)request.GetResponse())
                 {
-                    if (webResponse.StatusCode != HttpStatusCode.OK)
-                    {
-                        throw new WebException("Google Analytics did not return a 200.");
-                    }
+                    // If usage data seems too low, consider debugging this line
+                    // and checking webResponse.StatusCode.
                     webResponse.Close();
                 }
             }
