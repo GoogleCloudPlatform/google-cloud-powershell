@@ -43,7 +43,8 @@ namespace Google.PowerShell.Common
                 appDataFolder,
                 CloudSDKConfigDirectoryWindows,
                 "active_config");
-            try {
+            try
+            {
                 return File.ReadAllText(activeconfigFilePath);
             }
             catch (Exception)
@@ -94,7 +95,7 @@ namespace Google.PowerShell.Common
                 {
                     return null;
                 }
-               configLines = File.ReadAllLines(configFile);
+                configLines = File.ReadAllLines(configFile);
             }
             catch (Exception)
             {
@@ -113,7 +114,7 @@ namespace Google.PowerShell.Common
 
             return null;
         }
-   
+
         /// <summary>Returns the default project for the Google Cloud SDK.</summary>
         public string GetDefaultProject()
         {
