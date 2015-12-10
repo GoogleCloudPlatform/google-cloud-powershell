@@ -25,11 +25,38 @@ namespace Google.PowerShell.Common
 
         public CloudSdkSettings() { }
 
-        /// <summary> 
-        /// Returns the file path to the Cloud SDK configuration file. Returns null on any sort of
-        /// error.
+        /// <summary>
+        /// Returns the name of the current configuration. See `gcloud config configurations` for more information.
+        /// Returns null on any sort of error. For example, before gcloud runs for the first time no configuration
+        /// file is set.
         /// </summary>
-        public string GetConfigurationFilePath()
+        /// <returns></returns>
+        public string GetCurrentConfigurationName()
+        {
+            string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
+            if (appDataFolder == null || !Directory.Exists(appDataFolder))
+            {
+                return null;
+            }
+
+            string activeconfigFilePath = Path.Combine(
+                appDataFolder,
+                CloudSDKConfigDirectoryWindows,
+                "active_config");
+            try {
+                return File.ReadAllText(activeconfigFilePath);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        /// <summary> 
+        /// Returns the file path to the current Cloud SDK configuration set's property file. Returns null on any
+        /// sort of error.
+        /// </summary>
+        public string GetCurrentConfigurationFilePath()
         {
             string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
             if (appDataFolder == null || !Directory.Exists(appDataFolder))
@@ -40,7 +67,7 @@ namespace Google.PowerShell.Common
             string defaultConfigFile = Path.Combine(
                 appDataFolder,
                 CloudSDKConfigDirectoryWindows,
-                "configurations/config_default");
+                "configurations/config_" + GetCurrentConfigurationName());
 
             if (!File.Exists(defaultConfigFile))
             {
@@ -49,17 +76,34 @@ namespace Google.PowerShell.Common
             return defaultConfigFile;
         }
 
+        /// <summary>
+        /// Returns the setting with the given name from the currently active gcloud configuration.
+        /// </summary>
         protected string GetSettingsValue(string settingName)
         {
-            string configFile = GetConfigurationFilePath();
+            string configFile = GetCurrentConfigurationFilePath();
             if (configFile == null)
+            {
+                return null;
+            }
+
+            string[] configLines = null;
+            try
+            {
+                if (!File.Exists(configFile))
+                {
+                    return null;
+                }
+               configLines = File.ReadAllLines(configFile);
+            }
+            catch (Exception)
             {
                 return null;
             }
 
             // Look through all key/value pairs for the specific setting.
             string linePrefix = settingName + " = ";
-            foreach (string fileLine in File.ReadAllLines(configFile))
+            foreach (string fileLine in configLines)
             {
                 if (fileLine.StartsWith(linePrefix))
                 {
@@ -69,13 +113,28 @@ namespace Google.PowerShell.Common
 
             return null;
         }
-
-        // TODO(chrsmith): Deal with Cloud SDK named configurations.
-
+   
         /// <summary>Returns the default project for the Google Cloud SDK.</summary>
         public string GetDefaultProject()
         {
             return GetSettingsValue("project");
+        }
+
+        /// <summary>
+        /// Returns whether or not the user has opted-OUT of telemetry reporting. Defaults to true (opted-out).
+        /// </summary>
+        public bool GetDisableUsageReporting()
+        {
+            string rawValue = GetSettingsValue("disable_usage_reporting");
+            bool value;
+            if (Boolean.TryParse(rawValue, out value))
+            {
+                return value;
+            }
+            else
+            {
+                return true;
+            }
         }
     }
 }
