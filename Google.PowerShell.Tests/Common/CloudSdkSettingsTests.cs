@@ -32,25 +32,20 @@ namespace Google.PowerShell.Tests.Common
         public void TestGetConfigurationFilePath()
         {
             var cloudSettings = new CloudSdkSettings();
-            string configFilePath = cloudSettings.GetConfigurationFilePath();
+            string currentConfigName = cloudSettings.GetCurrentConfigurationName();
+            Assert.IsNotNull(currentConfigName);
+
+            string configFilePath = cloudSettings.GetCurrentConfigurationFilePath();
 
             Assert.IsNotNull(configFilePath);
             Assert.IsTrue(File.Exists(configFilePath));
         }
 
         [Test]
-        public void TestGetPythonConfigurationFilePath()
-        {
-            var cloudSettings = new CloudSdkSettings();
-            string pythonConfigFilePath = cloudSettings.GetPythonConfigurationFilePath();
-
-            Assert.IsNotNull(pythonConfigFilePath);
-            Assert.IsTrue(File.Exists(pythonConfigFilePath));
-        }
-
-        [Test]
         public void TestGetDefaultProject()
         {
+            // This test requires the default project has actually been set. Run `gcloud init`
+            // after a fresh install if necessary.
             var cloudSettings = new CloudSdkSettings();
             string defaultProject = cloudSettings.GetDefaultProject();
             // This requires that gcloud init was run and the default project was set.

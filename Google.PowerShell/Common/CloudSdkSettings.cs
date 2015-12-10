@@ -24,68 +24,40 @@ namespace Google.PowerShell.Common
         /// <summary>GCloud configuration directory in Windows, relative to %APPDATA%.</summary>
         private const string CloudSDKConfigDirectoryWindows = "gcloud";
 
-        // TODO(chrsmith): Put in a new reg key specifically for this purpose. The "uninstall"
-        // reg key isn't ideal.
-        /// <summary>Registry key to get the installed path of the Cloud SDK.</summary>
-        private const string CloudSDKInstallPathRegKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Google Cloud SDK";
-        private const string CloudSDKInstallPathRegKeyName = "InstallLocation";
-
         public CloudSdkSettings() { }
 
         /// <summary>
-        /// Returns the installation location of the Cloud SDK. Returns null if not found.
+        /// Returns the name of the current configuration. See `gcloud config configurations` for more information.
+        /// Returns null on any sort of error. For example, before gcloud runs for the first time no configuration
+        /// file is set.
         /// </summary>
-        /// <returns></returns>
-        public string GetCloudSdkInstallPath()
+        public string GetCurrentConfigurationName()
         {
-            // Check both HKCU and HKLM, since the location depends on if gcloud was
-            // installed as an admin or not.
-            RegistryKey hkcuKey = Registry.CurrentUser.OpenSubKey(CloudSDKInstallPathRegKey);
-            string hkcuValue = hkcuKey.GetValue(CloudSDKInstallPathRegKeyName, "") as string;
-            if (!String.IsNullOrEmpty(hkcuValue))
-            {
-                return hkcuValue.Replace("\"", "");
-            }
-
-            RegistryKey hklmKey = Registry.LocalMachine.OpenSubKey(CloudSDKInstallPathRegKey);
-            string hklmValue = hklmKey.GetValue(CloudSDKInstallPathRegKeyName, "") as string;
-            if (!String.IsNullOrEmpty(hklmValue))
-            {
-                return hklmValue.Replace("\"", "");
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Returns the file path to the Cloud SDK configuration for its Python code. (Not to
-        /// be confused with the more general configuration file.)
-        /// </summary>
-        /// <returns></returns>
-        public string GetPythonConfigurationFilePath()
-        {
-            string installFolder = GetCloudSdkInstallPath();
-            if (installFolder == null)
+            string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
+            if (appDataFolder == null || !Directory.Exists(appDataFolder))
             {
                 return null;
             }
 
-            string configFile = Path.Combine(
-                installFolder,
-                @"google-cloud-sdk\properties");
-
-            if (!File.Exists(configFile))
+            string activeconfigFilePath = Path.Combine(
+                appDataFolder,
+                CloudSDKConfigDirectoryWindows,
+                "active_config");
+            try
+            {
+                return File.ReadAllText(activeconfigFilePath);
+            }
+            catch (Exception)
             {
                 return null;
             }
-            return configFile;
         }
 
         /// <summary> 
-        /// Returns the file path to the Cloud SDK configuration file. Returns null on any sort of
-        /// error.
+        /// Returns the file path to the current Cloud SDK configuration set's property file. Returns null on any
+        /// sort of error.
         /// </summary>
-        public string GetConfigurationFilePath()
+        public string GetCurrentConfigurationFilePath()
         {
             string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
             if (appDataFolder == null || !Directory.Exists(appDataFolder))
@@ -96,7 +68,7 @@ namespace Google.PowerShell.Common
             string defaultConfigFile = Path.Combine(
                 appDataFolder,
                 CloudSDKConfigDirectoryWindows,
-                "configurations/config_default");
+                "configurations/config_" + GetCurrentConfigurationName());
 
             if (!File.Exists(defaultConfigFile))
             {
@@ -105,16 +77,34 @@ namespace Google.PowerShell.Common
             return defaultConfigFile;
         }
 
-        protected string GetSettingsValue(string configFilePath, string settingName)
+        /// <summary>
+        /// Returns the setting with the given name from the currently active gcloud configuration.
+        /// </summary>
+        protected string GetSettingsValue(string settingName)
         {
-            if (configFilePath == null || !File.Exists(configFilePath))
+            string configFile = GetCurrentConfigurationFilePath();
+            if (configFile == null)
+            {
+                return null;
+            }
+
+            string[] configLines = null;
+            try
+            {
+                if (!File.Exists(configFile))
+                {
+                    return null;
+                }
+                configLines = File.ReadAllLines(configFile);
+            }
+            catch (Exception)
             {
                 return null;
             }
 
             // Look through all key/value pairs for the specific setting.
             string linePrefix = settingName + " = ";
-            foreach (string fileLine in File.ReadAllLines(configFilePath))
+            foreach (string fileLine in configLines)
             {
                 if (fileLine.StartsWith(linePrefix))
                 {
@@ -125,30 +115,30 @@ namespace Google.PowerShell.Common
             return null;
         }
 
-        // TODO(chrsmith): Deal with Cloud SDK named configurations.
-
         /// <summary>Returns the default project for the Google Cloud SDK.</summary>
         public string GetDefaultProject()
         {
-            return GetSettingsValue(GetConfigurationFilePath(), "project");
+            return GetSettingsValue("project");
         }
 
         /// <summary>
-        /// Returns if the user has opted-in to reporting anonymous usage metrics. Returns
-        /// false if there was any problem reading the configuration data.
+        /// Returns whether or not the user has opted-in to reporting telemetry data. Defaults to false (opted-out).
         /// </summary>
         public bool GetOptIntoReportingSetting()
         {
-            string rawValue = GetSettingsValue(GetPythonConfigurationFilePath(), "disable_usage_reporting");
-            if (rawValue == null)
+            string rawValue = GetSettingsValue("disable_usage_reporting");
+            bool value;
+            if (Boolean.TryParse(rawValue, out value))
+            {
+                // We invert the value because the setting is "disable" reporting.
+                return !value;
+            }
+            else
             {
                 return false;
             }
-
-            // Return !value because the setting is *disable*_usage_reporting.
-            bool value = false;
-            return bool.TryParse(rawValue, out value) ? !value : false;
         }
+
 
         /// <summary>
         /// Client ID refers to the random UUID generated to group telemetry reporting.
