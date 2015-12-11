@@ -27,6 +27,9 @@ namespace Google.PowerShell.Common
         /// <summary>Name of the Cloud SDK file containing the name of the active config.</summary>
         private const string ActiveConfigFileName = "active_config";
 
+        /// <summary>Folder name where configuration files are stored.</summary>
+        private const string ConfigurationsFolderName = "configurations";
+
         // Prevent instantiation. Should just be a static utility class.
         private CloudSdkSettings() { }
 
@@ -73,7 +76,8 @@ namespace Google.PowerShell.Common
             string defaultConfigFile = Path.Combine(
                 appDataFolder,
                 CloudSDKConfigDirectoryWindows,
-                "configurations/config_" + GetCurrentConfigurationName());
+                ConfigurationsFolderName,
+                String.Format("config_{0}", GetCurrentConfigurationName()));
 
             if (!File.Exists(defaultConfigFile))
             {
