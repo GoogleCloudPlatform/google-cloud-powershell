@@ -23,7 +23,8 @@ namespace Google.PowerShell.Common
         /// <summary>GCloud configuration directory in Windows, relative to %APPDATA%.</summary>
         private const string CloudSDKConfigDirectoryWindows = "gcloud";
 
-        public CloudSdkSettings() { }
+        // Prevent instantiation. Should just be a static utility class.
+        private CloudSdkSettings() { }
 
         /// <summary>
         /// Returns the name of the current configuration. See `gcloud config configurations` for more information.
@@ -31,7 +32,7 @@ namespace Google.PowerShell.Common
         /// file is set.
         /// </summary>
         /// <returns></returns>
-        public string GetCurrentConfigurationName()
+        public static string GetCurrentConfigurationName()
         {
             string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
             if (appDataFolder == null || !Directory.Exists(appDataFolder))
@@ -57,7 +58,7 @@ namespace Google.PowerShell.Common
         /// Returns the file path to the current Cloud SDK configuration set's property file. Returns null on any
         /// sort of error.
         /// </summary>
-        public string GetCurrentConfigurationFilePath()
+        public static string GetCurrentConfigurationFilePath()
         {
             string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
             if (appDataFolder == null || !Directory.Exists(appDataFolder))
@@ -80,7 +81,7 @@ namespace Google.PowerShell.Common
         /// <summary>
         /// Returns the setting with the given name from the currently active gcloud configuration.
         /// </summary>
-        protected string GetSettingsValue(string settingName)
+        protected static string GetSettingsValue(string settingName)
         {
             string configFile = GetCurrentConfigurationFilePath();
             if (configFile == null)
@@ -116,25 +117,26 @@ namespace Google.PowerShell.Common
         }
 
         /// <summary>Returns the default project for the Google Cloud SDK.</summary>
-        public string GetDefaultProject()
+        public static string GetDefaultProject()
         {
             return GetSettingsValue("project");
         }
 
         /// <summary>
-        /// Returns whether or not the user has opted-OUT of telemetry reporting. Defaults to true (opted-out).
+        /// Returns whether or not the user has opted-into of telemetry reporting. Defaults to false (opted-out).
         /// </summary>
-        public bool GetDisableUsageReporting()
+        public static bool GetOptIntoUsageReporting()
         {
             string rawValue = GetSettingsValue("disable_usage_reporting");
             bool value;
             if (Boolean.TryParse(rawValue, out value))
             {
-                return value;
+                // Invert the value, because the value stores whether it is *disabled*.
+                return !value;
             }
             else
             {
-                return true;
+                return false;
             }
         }
     }

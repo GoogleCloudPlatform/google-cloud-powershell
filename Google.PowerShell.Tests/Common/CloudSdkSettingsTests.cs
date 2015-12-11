@@ -26,11 +26,10 @@ namespace Google.PowerShell.Tests.Common
         [Test]
         public void TestGetConfigurationFilePath()
         {
-            var cloudSettings = new CloudSdkSettings();
-            string currentConfigName = cloudSettings.GetCurrentConfigurationName();
+            string currentConfigName = CloudSdkSettings.GetCurrentConfigurationName();
             Assert.IsNotNull(currentConfigName);
 
-            string configFilePath = cloudSettings.GetCurrentConfigurationFilePath();
+            string configFilePath = CloudSdkSettings.GetCurrentConfigurationFilePath();
 
             Assert.IsNotNull(configFilePath);
             Assert.IsTrue(File.Exists(configFilePath));
@@ -41,9 +40,7 @@ namespace Google.PowerShell.Tests.Common
         {
             // This test requires the default project has actually been set. Run `gcloud init`
             // after a fresh install if necessary.
-            var cloudSettings = new CloudSdkSettings();
-            string defaultProject = cloudSettings.GetDefaultProject();
-
+            string defaultProject = CloudSdkSettings.GetDefaultProject();
             Assert.IsNotNull(defaultProject);
         }
     }

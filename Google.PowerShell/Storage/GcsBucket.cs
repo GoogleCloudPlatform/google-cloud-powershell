@@ -49,7 +49,7 @@ namespace Google.PowerShell.CloudStorage
 
             if (ParameterSetName == "BucketsByProject")
             {
-                var req = service.Buckets.List(Project ?? CloudSdk.GetDefaultProject());
+                var req = service.Buckets.List(Project ?? CloudSdkSettings.GetDefaultProject());
                 req.Projection = BucketsResource.ListRequest.ProjectionEnum.Full;
                 Buckets buckets = req.Execute();
                 WriteObject(buckets.Items, true);
