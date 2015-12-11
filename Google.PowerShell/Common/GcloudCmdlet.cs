@@ -20,12 +20,10 @@ namespace Google.PowerShell.Common
 
         public GCloudCmdlet()
         {
-            CloudSdk = new CloudSdkSettings();
-
             _telemetryReporter = new FakeCmdletResultReporter();
-            if (CloudSdk.GetOptIntoReportingSetting())
+            if (CloudSdkSettings.GetOptIntoUsageReporting())
             {
-                string clientID = CloudSdk.GetAnoymousClientID();
+                string clientID = CloudSdkSettings.GetAnoymousClientID();
                 _telemetryReporter = new GoogleAnalyticsCmdletReporter(clientID);
             }
 
@@ -33,15 +31,12 @@ namespace Google.PowerShell.Common
             _cmdletInvocationSuccessful = false;
         }
 
-        public CloudSdkSettings CloudSdk { get; protected set; }
-
         /// <summary>
         /// Returns an instance of the Google Client API initializer, using the machine's default credentials.
         /// </summary>
         protected BaseClientService.Initializer GetBaseClientServiceInitializer()
         {
-            // TODO(chrsmith): Support the notion of "profiles" and switching between them.
-            // This should be built into the CloudSdkSettings class.
+            // TODO(chrsmith): How does the AppDefaultCredentials work with Cloud SDK profiles?
             Task<GoogleCredential> getCredsTask = GoogleCredential.GetApplicationDefaultAsync();
             getCredsTask.Wait();
 

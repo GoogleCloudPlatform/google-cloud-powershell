@@ -26,14 +26,10 @@ namespace Google.PowerShell.Tests.Common
         [Test]
         public void TestGetConfigurationFilePath()
         {
-            var cloudSettings = new CloudSdkSettings();
-
-            // Check the current configuration name, e.g. "default".
-            string currentConfigName = cloudSettings.GetCurrentConfigurationName();
+            string currentConfigName = CloudSdkSettings.GetCurrentConfigurationName();
             Assert.IsNotNull(currentConfigName);
 
-            // Check the specific configuration file with the settings.
-            string configFilePath = cloudSettings.GetCurrentConfigurationFilePath();
+            string configFilePath = CloudSdkSettings.GetCurrentConfigurationFilePath();
             Assert.IsNotNull(configFilePath);
             Assert.IsTrue(File.Exists(configFilePath));
         }
@@ -43,25 +39,21 @@ namespace Google.PowerShell.Tests.Common
         {
             // This test requires the default project has actually been set. Run `gcloud init`
             // after a fresh install if necessary.
-            var cloudSettings = new CloudSdkSettings();
-            string defaultProject = cloudSettings.GetDefaultProject();
-            // This requires that gcloud init was run and the default project was set.
+            string defaultProject = CloudSdkSettings.GetDefaultProject();
             Assert.IsNotNull(defaultProject);
         }
 
         [Test]
         public void TestGetOptInSetting()
         {
-            var cloudSettings = new CloudSdkSettings();
-
             // Just assert this doesn't throw, depending on the install the
             // value could be true or false.
-            cloudSettings.GetOptIntoReportingSetting();
+            CloudSdkSettings.GetOptIntoUsageReporting();
 
             // Same with above. If the user opted into settings (and has ran
             // the Python bits at least once) the value will be stable.
             // Otherwise it will be different each time.
-            cloudSettings.GetAnoymousClientID();
+            CloudSdkSettings.GetAnoymousClientID();
         }
     }
 }

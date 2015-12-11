@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.IO;
 using System.Text;
@@ -23,14 +24,21 @@ namespace Google.PowerShell.Common
         /// <summary>GCloud configuration directory in Windows, relative to %APPDATA%.</summary>
         private const string CloudSDKConfigDirectoryWindows = "gcloud";
 
-        public CloudSdkSettings() { }
+        /// <summary>Name of the Cloud SDK file containing the name of the active config.</summary>
+        private const string ActiveConfigFileName = "active_config";
+
+        /// <summary>Folder name where configuration files are stored.</summary>
+        private const string ConfigurationsFolderName = "configurations";
+
+        // Prevent instantiation. Should just be a static utility class.
+        private CloudSdkSettings() { }
 
         /// <summary>
         /// Returns the name of the current configuration. See `gcloud config configurations` for more information.
         /// Returns null on any sort of error. For example, before gcloud runs for the first time no configuration
         /// file is set.
         /// </summary>
-        public string GetCurrentConfigurationName()
+        public static string GetCurrentConfigurationName()
         {
             string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
             if (appDataFolder == null || !Directory.Exists(appDataFolder))
@@ -41,13 +49,14 @@ namespace Google.PowerShell.Common
             string activeconfigFilePath = Path.Combine(
                 appDataFolder,
                 CloudSDKConfigDirectoryWindows,
-                "active_config");
+                ActiveConfigFileName);
             try
             {
                 return File.ReadAllText(activeconfigFilePath);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Debug.WriteLine("Error reading Cloud SDK active configuration file: {0}", ex.Message);
                 return null;
             }
         }
@@ -56,7 +65,7 @@ namespace Google.PowerShell.Common
         /// Returns the file path to the current Cloud SDK configuration set's property file. Returns null on any
         /// sort of error.
         /// </summary>
-        public string GetCurrentConfigurationFilePath()
+        public static string GetCurrentConfigurationFilePath()
         {
             string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
             if (appDataFolder == null || !Directory.Exists(appDataFolder))
@@ -67,7 +76,8 @@ namespace Google.PowerShell.Common
             string defaultConfigFile = Path.Combine(
                 appDataFolder,
                 CloudSDKConfigDirectoryWindows,
-                "configurations/config_" + GetCurrentConfigurationName());
+                ConfigurationsFolderName,
+                String.Format("config_{0}", GetCurrentConfigurationName()));
 
             if (!File.Exists(defaultConfigFile))
             {
@@ -79,7 +89,7 @@ namespace Google.PowerShell.Common
         /// <summary>
         /// Returns the setting with the given name from the currently active gcloud configuration.
         /// </summary>
-        protected string GetSettingsValue(string settingName)
+        protected static string GetSettingsValue(string settingName)
         {
             string configFile = GetCurrentConfigurationFilePath();
             if (configFile == null)
@@ -96,8 +106,9 @@ namespace Google.PowerShell.Common
                 }
                 configLines = File.ReadAllLines(configFile);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Debug.WriteLine("Error reading Cloud SDK configuration file: {0}", ex.Message);
                 return null;
             }
 
@@ -115,21 +126,21 @@ namespace Google.PowerShell.Common
         }
 
         /// <summary>Returns the default project for the Google Cloud SDK.</summary>
-        public string GetDefaultProject()
+        public static string GetDefaultProject()
         {
             return GetSettingsValue("project");
         }
 
         /// <summary>
-        /// Returns whether or not the user has opted-in to reporting telemetry data. Defaults to false (opted-out).
+        /// Returns whether or not the user has opted-into of telemetry reporting. Defaults to false (opted-out).
         /// </summary>
-        public bool GetOptIntoReportingSetting()
+        public static bool GetOptIntoUsageReporting()
         {
             string rawValue = GetSettingsValue("disable_usage_reporting");
             bool value;
             if (Boolean.TryParse(rawValue, out value))
             {
-                // We invert the value because the setting is "disable" reporting.
+                // Invert the value, because the value stores whether it is *disabled*.
                 return !value;
             }
             else
@@ -146,7 +157,7 @@ namespace Google.PowerShell.Common
         /// the file isn't found. (Meaning we will generate new UUIDs until the Python
         /// code gets executed.)
         /// </summary>
-        public string GetAnoymousClientID()
+        public static string GetAnoymousClientID()
         {
             string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
             if (appDataFolder == null || !Directory.Exists(appDataFolder))
