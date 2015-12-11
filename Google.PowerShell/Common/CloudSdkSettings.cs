@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.IO;
 using System.Text;
@@ -50,8 +51,9 @@ namespace Google.PowerShell.Common
             {
                 return File.ReadAllText(activeconfigFilePath);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Debug.WriteLine("Error reading Cloud SDK active configuration file: {0}", ex.Message);
                 return null;
             }
         }
@@ -100,8 +102,9 @@ namespace Google.PowerShell.Common
                 }
                 configLines = File.ReadAllLines(configFile);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Debug.WriteLine("Error reading Cloud SDK configuration file: {0}", ex.Message);
                 return null;
             }
 
