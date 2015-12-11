@@ -23,6 +23,9 @@ namespace Google.PowerShell.Common
         /// <summary>GCloud configuration directory in Windows, relative to %APPDATA%.</summary>
         private const string CloudSDKConfigDirectoryWindows = "gcloud";
 
+        /// <summary>Name of the Cloud SDK file containing the name of the active config.</summary>
+        private const string ActiveConfigFileName = "active_config";
+
         // Prevent instantiation. Should just be a static utility class.
         private CloudSdkSettings() { }
 
@@ -31,7 +34,6 @@ namespace Google.PowerShell.Common
         /// Returns null on any sort of error. For example, before gcloud runs for the first time no configuration
         /// file is set.
         /// </summary>
-        /// <returns></returns>
         public static string GetCurrentConfigurationName()
         {
             string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
@@ -43,7 +45,7 @@ namespace Google.PowerShell.Common
             string activeconfigFilePath = Path.Combine(
                 appDataFolder,
                 CloudSDKConfigDirectoryWindows,
-                "active_config");
+                ActiveConfigFileName);
             try
             {
                 return File.ReadAllText(activeconfigFilePath);
