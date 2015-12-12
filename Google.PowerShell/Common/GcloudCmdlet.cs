@@ -18,13 +18,19 @@ namespace Google.PowerShell.Common
         protected IReportCmdletResults _telemetryReporter;
         protected bool _cmdletInvocationSuccessful;
 
+        /// <summary>Placeholder for an unknown cmdlet name when reporting telemetry.</summary>
+        private const string UnknownCmdletName = "unknown-cmdlet";
+
         public GCloudCmdlet()
         {
-            _telemetryReporter = new FakeCmdletResultReporter();
             if (CloudSdkSettings.GetOptIntoUsageReporting())
             {
                 string clientID = CloudSdkSettings.GetAnoymousClientID();
                 _telemetryReporter = new GoogleAnalyticsCmdletReporter(clientID);
+            }
+            else
+            {
+                _telemetryReporter = new InMemoryCmdletResultReporter();
             }
 
             // Only set upon successful completion of EndProcessing.
@@ -83,7 +89,7 @@ namespace Google.PowerShell.Common
         }
 
         /// <summary>
-        /// Returns the name of a properly annotated cmdlet, e.g. Test-GcsBucket, otherwise null.
+        /// Returns the name of a properly annotated cmdlet, e.g. Test-GcsBucket, otherwise UnknownCmdletName.
         /// </summary>
         protected string GetCmdletName()
         {
@@ -91,16 +97,16 @@ namespace Google.PowerShell.Common
             {
                 if (attrib is CmdletAttribute)
                 {
-                    CmdletAttribute cmdletAttrib = attrib as CmdletAttribute;
+                    var cmdletAttrib = attrib as CmdletAttribute;
                     return String.Format("{0}-{1}", cmdletAttrib.VerbName, cmdletAttrib.NounName);
                 }
             }
-            return null;
+            return UnknownCmdletName;
         }
 
         public void Dispose()
         {
-            string cmdletName = GetCmdletName() ?? "unknown-cmdlet";
+            string cmdletName = GetCmdletName();
             string parameterSet = ParameterSetName;
             // "__AllParameterSets" isn't super-useful in reports.
             if (String.IsNullOrWhiteSpace(parameterSet)

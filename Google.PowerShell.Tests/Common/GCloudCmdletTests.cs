@@ -23,7 +23,7 @@ namespace Google.PowerShell.Tests.Common
         {
             ShouldThrowException = false;
             // Use the fake reporter, regardless of Cloud SDK settings.
-            _telemetryReporter = new FakeCmdletResultReporter();
+            _telemetryReporter = new InMemoryCmdletResultReporter();
         }
 
         public bool ShouldThrowException { get; set; }
@@ -61,7 +61,7 @@ namespace Google.PowerShell.Tests.Common
         public void TestResultReportingSuccess()
         {
             var fakeCmdlet = new FakeGCloudCmdlet();
-            var reporter = fakeCmdlet.CmdletResultReporter as FakeCmdletResultReporter;
+            var reporter = fakeCmdlet.CmdletResultReporter as InMemoryCmdletResultReporter;
             try
             {
                 fakeCmdlet.SimulateInvocation();
@@ -80,20 +80,9 @@ namespace Google.PowerShell.Tests.Common
             var fakeCmdlet = new FakeGCloudCmdlet();
             fakeCmdlet.ShouldThrowException = true;
 
-            var reporter = fakeCmdlet.CmdletResultReporter as FakeCmdletResultReporter;
-            try
-            {
-                fakeCmdlet.SimulateInvocation();
-                Assert.Fail("Expected exception to be thrown.");
-            }
-            catch (InvalidOperationException)
-            {
-                // Expected.
-            }
-            finally
-            {
-                fakeCmdlet.Dispose();
-            }
+            var reporter = fakeCmdlet.CmdletResultReporter as InMemoryCmdletResultReporter;
+            Assert.Throws<InvalidOperationException>(() => fakeCmdlet.SimulateInvocation());
+            fakeCmdlet.Dispose();
 
             Assert.IsTrue(reporter.ContainsEvent("Test-GCloudCmdlets", "Default", 1));
         }

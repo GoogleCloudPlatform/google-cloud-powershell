@@ -3,9 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -15,6 +12,7 @@ using System.Web;
 
 namespace Google.PowerShell.Common
 {
+    /// <summary>
     /// Client for the the Google Analytics Measurement Protocol service, which makes
     /// HTTP requests to publish data to a Google Analytics account. This is used to track
     /// usage of PowerShell cmdlets.
@@ -27,57 +25,50 @@ namespace Google.PowerShell.Common
     /// - "action" is the name of the cmdlet
     /// - "label" is the name of the parameter set
     /// - "value" will be null if the cmdlet was successful, otherwise non-zero.
-
-    /// <summary>
-    /// Wrapper around the Google Analytics Measurement Protocol service. This class is stateless and
-    /// just exposes methods to submit event data. See:
-    /// https://developers.google.com/analytics/devguides/collection/protocol/v1/
-    /// 
+    ///
     /// This class is thread hostile. You have been warned.
     /// </summary>
     public class MeasurementProtocolService
     {
         // TODO(chrsmith): After the code has been submitted and had some bake time,
         // change this to the prod Cloud SDK analytics property ID ("UA-36037335-2").
-        private const string TestWebPropertyID = "UA-19953206-4";
+        private const string TestWebPropertyId = "UA-19953206-4";
 
         // Static constructor initializes the default values.
         static MeasurementProtocolService()
         {
-            SetWebPropertyID(TestWebPropertyID);
             // Consumers should set a more appropriate ID once known. e.g. reading the
             // Cloud SDK's settings file.
-            SetClientID(Guid.NewGuid().ToString());
+            SetClientId(Guid.NewGuid().ToString());
         }
 
         /// <summary>
         /// Google Analytics web property ID to associate the data with.
         /// </summary>
-        public static string WebPropertyID { get; protected set; }
+        public static string WebPropertyId { get; } = TestWebPropertyId;
 
         /// <summary>
         /// Anonymous client ID for the source of the event.
         /// </summary>
-        public static string ClientID { get; protected set; }
+        public static string ClientId { get; protected set; }
 
-        public static void SetWebPropertyID(string analyticsID)
+        /// <summary>
+        /// Sets the client ID used when reporting telemetry.
+        /// </summary>
+        public static void SetClientId(string clientId)
         {
-            AssertArgumentNotNullOrEmpty("analyticsID", analyticsID);
-            // TODO(chrsmith): We could also assert it matches a regex, etc.
-            WebPropertyID = analyticsID;
+            AssertArgumentNotNullOrEmpty(nameof(clientId), clientId);
+            ClientId = clientId.Trim();
         }
 
-        public static void SetClientID(string clientID)
-        {
-            AssertArgumentNotNullOrEmpty("clientID", clientID);
-            ClientID = clientID.Trim();
-        }
-
+        /// <summary>
+        /// Generates the HTTP request object used for sending telemetry data.
+        /// </summary>
         public static HttpWebRequest GenerateRequest(string category, string action, string label, int? value = null)
         {
-            AssertArgumentNotNullOrEmpty("category", category);
-            AssertArgumentNotNullOrEmpty("action", action);
-            AssertArgumentNotNullOrEmpty("label", label);
+            AssertArgumentNotNullOrEmpty(nameof(category), category);
+            AssertArgumentNotNullOrEmpty(nameof(action), action);
+            AssertArgumentNotNullOrEmpty(nameof(label), label);
 
             // If you need help debugging the request, see the Validation Server at
             // /debug/collect and then inspect the response.
@@ -86,10 +77,12 @@ namespace Google.PowerShell.Common
             request.ContentType = "application/x-www-form-urlencoded";
             request.KeepAlive = false;
 
+            // Data we will send along with the web request. Later baked into the HTTP
+            // request's payload.
             var payloadData = new Dictionary<string, string> {
                 { "v", "1" },
-                { "tid", WebPropertyID },
-                { "cid", ClientID },
+                { "tid", WebPropertyId },
+                { "cid", ClientId },
                 { "t", "event" },
                 { "ec", category },
                 { "ea", action },
@@ -118,6 +111,9 @@ namespace Google.PowerShell.Common
             return request;
         }
 
+        /// <summary>
+        /// Sends the web request, effectively sending the telemetry data to Google Analytics.
+        /// </summary>
         public static void IssueRequest(HttpWebRequest request)
         {
             try
@@ -171,7 +167,7 @@ namespace Google.PowerShell.Common
     /// production for users who have opted-out of sending analytics data to Google. (Read:
     /// performance matters.)
     /// </summary>
-    public class FakeCmdletResultReporter : IReportCmdletResults
+    public class InMemoryCmdletResultReporter : IReportCmdletResults
     {
         /// <summary>
         /// IMPORTANT: We rely on ValueType.Equals for structural equality later. If
@@ -203,7 +199,7 @@ namespace Google.PowerShell.Common
         private int _eventsRecorded;
         private EventRecord[] _events;
 
-        public FakeCmdletResultReporter()
+        public InMemoryCmdletResultReporter()
         {
             Reset();
         }
@@ -220,12 +216,9 @@ namespace Google.PowerShell.Common
 
         protected void Report(EventRecord record)
         {
-            _events[_eventsRecorded] = record;
+            // Overwrite older events as if it were a circular buffer.
+            _events[_eventsRecorded % kMaxEvents] = record;
             _eventsRecorded++;
-            if (_eventsRecorded >= kMaxEvents)
-            {
-                _eventsRecorded = 0;
-            }
         }
 
         /// <summary>
@@ -234,7 +227,7 @@ namespace Google.PowerShell.Common
         public void Reset()
         {
             _eventsRecorded = 0;
-            _events = new EventRecord[16];
+            _events = new EventRecord[kMaxEvents];
         }
 
         /// <summary>
@@ -243,18 +236,7 @@ namespace Google.PowerShell.Common
         public bool ContainsEvent(string cmdletName, string parameterSet, int errorCode = Int32.MinValue)
         {
             var expectedRecord = EventRecord.Create(cmdletName, parameterSet, errorCode);
-
-            // Count backwards to 0.
-            for (int i = _eventsRecorded - 1; i >= 0; i--)
-            {
-                if (_events[i].Equals(expectedRecord))
-                {
-                    return true;
-                }
-            }
-
-            // Loop backwards and start from kMaxEvents down to _eventsRecorded.
-            for (int i = kMaxEvents - 1; i >= _eventsRecorded; i--)
+            for (int i = 0; i < _events.Length; i++)
             {
                 if (_events[i].Equals(expectedRecord))
                 {
@@ -273,7 +255,7 @@ namespace Google.PowerShell.Common
     {
         public GoogleAnalyticsCmdletReporter(string clientID)
         {
-            MeasurementProtocolService.SetClientID(clientID);
+            MeasurementProtocolService.SetClientId(clientID);
         }
 
         public void ReportSuccess(string cmdletName, string parameterSet)

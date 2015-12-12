@@ -30,6 +30,9 @@ namespace Google.PowerShell.Common
         /// <summary>Folder name where configuration files are stored.</summary>
         private const string ConfigurationsFolderName = "configurations";
 
+        /// <summary>Name of the file containing the anonymous client ID.</summary>
+        private const string ClientIDFileName = ".metricsUUID";
+
         // Prevent instantiation. Should just be a static utility class.
         private CloudSdkSettings() { }
 
@@ -168,7 +171,7 @@ namespace Google.PowerShell.Common
             string uuidFile = Path.Combine(
                 appDataFolder,
                 CloudSDKConfigDirectoryWindows,
-                ".metricsUUID");
+                ClientIDFileName);
 
             if (!File.Exists(uuidFile))
             {
