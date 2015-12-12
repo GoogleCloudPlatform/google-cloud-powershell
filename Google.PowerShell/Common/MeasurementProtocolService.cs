@@ -94,11 +94,9 @@ namespace Google.PowerShell.Common
             }
 
             // Convert the URL parameters into a single payload.
-            var postDataString =
-                payloadData
-                .Aggregate("", (acc, val) => string.Format("{0}{1}={2}&", acc, val.Key,
-                                                           HttpUtility.UrlEncode(val.Value)))
-                .TrimEnd('&');
+            string postDataString = String.Join(
+                "&",
+                payloadData.Select(kvp => $"{kvp.Key}={HttpUtility.UrlEncode(kvp.Value)}"));
 
             var encoding = new UTF8Encoding(false /* no BOM */);
             request.ContentLength = Encoding.UTF8.GetByteCount(postDataString);
