@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.IO;
 using System.Text;
@@ -23,13 +24,48 @@ namespace Google.PowerShell.Common
         /// <summary>GCloud configuration directory in Windows, relative to %APPDATA%.</summary>
         private const string CloudSDKConfigDirectoryWindows = "gcloud";
 
-        public CloudSdkSettings() { }
+        /// <summary>Name of the Cloud SDK file containing the name of the active config.</summary>
+        private const string ActiveConfigFileName = "active_config";
+
+        /// <summary>Folder name where configuration files are stored.</summary>
+        private const string ConfigurationsFolderName = "configurations";
+
+        // Prevent instantiation. Should just be a static utility class.
+        private CloudSdkSettings() { }
+
+        /// <summary>
+        /// Returns the name of the current configuration. See `gcloud config configurations` for more information.
+        /// Returns null on any sort of error. For example, before gcloud runs for the first time no configuration
+        /// file is set.
+        /// </summary>
+        public static string GetCurrentConfigurationName()
+        {
+            string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
+            if (appDataFolder == null || !Directory.Exists(appDataFolder))
+            {
+                return null;
+            }
+
+            string activeconfigFilePath = Path.Combine(
+                appDataFolder,
+                CloudSDKConfigDirectoryWindows,
+                ActiveConfigFileName);
+            try
+            {
+                return File.ReadAllText(activeconfigFilePath);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Error reading Cloud SDK active configuration file: {0}", ex.Message);
+                return null;
+            }
+        }
 
         /// <summary> 
-        /// Returns the file path to the Cloud SDK configuration file. Returns null on any sort of
-        /// error.
+        /// Returns the file path to the current Cloud SDK configuration set's property file. Returns null on any
+        /// sort of error.
         /// </summary>
-        public string GetConfigurationFilePath()
+        public static string GetCurrentConfigurationFilePath()
         {
             string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
             if (appDataFolder == null || !Directory.Exists(appDataFolder))
@@ -40,7 +76,8 @@ namespace Google.PowerShell.Common
             string defaultConfigFile = Path.Combine(
                 appDataFolder,
                 CloudSDKConfigDirectoryWindows,
-                "configurations/config_default");
+                ConfigurationsFolderName,
+                String.Format("config_{0}", GetCurrentConfigurationName()));
 
             if (!File.Exists(defaultConfigFile))
             {
@@ -49,17 +86,35 @@ namespace Google.PowerShell.Common
             return defaultConfigFile;
         }
 
-        protected string GetSettingsValue(string settingName)
+        /// <summary>
+        /// Returns the setting with the given name from the currently active gcloud configuration.
+        /// </summary>
+        protected static string GetSettingsValue(string settingName)
         {
-            string configFile = GetConfigurationFilePath();
+            string configFile = GetCurrentConfigurationFilePath();
             if (configFile == null)
             {
                 return null;
             }
 
+            string[] configLines = null;
+            try
+            {
+                if (!File.Exists(configFile))
+                {
+                    return null;
+                }
+                configLines = File.ReadAllLines(configFile);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Error reading Cloud SDK configuration file: {0}", ex.Message);
+                return null;
+            }
+
             // Look through all key/value pairs for the specific setting.
             string linePrefix = settingName + " = ";
-            foreach (string fileLine in File.ReadAllLines(configFile))
+            foreach (string fileLine in configLines)
             {
                 if (fileLine.StartsWith(linePrefix))
                 {
@@ -70,12 +125,28 @@ namespace Google.PowerShell.Common
             return null;
         }
 
-        // TODO(chrsmith): Deal with Cloud SDK named configurations.
-
         /// <summary>Returns the default project for the Google Cloud SDK.</summary>
-        public string GetDefaultProject()
+        public static string GetDefaultProject()
         {
             return GetSettingsValue("project");
+        }
+
+        /// <summary>
+        /// Returns whether or not the user has opted-into of telemetry reporting. Defaults to false (opted-out).
+        /// </summary>
+        public static bool GetOptIntoUsageReporting()
+        {
+            string rawValue = GetSettingsValue("disable_usage_reporting");
+            bool value;
+            if (Boolean.TryParse(rawValue, out value))
+            {
+                // Invert the value, because the value stores whether it is *disabled*.
+                return !value;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }

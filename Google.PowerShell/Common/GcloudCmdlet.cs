@@ -13,20 +13,14 @@ namespace Google.PowerShell.Common
     /// </summary>
     public abstract class GCloudCmdlet : PSCmdlet
     {
-        public GCloudCmdlet()
-        {
-            CloudSdk = new CloudSdkSettings();
-        }
-
-        public CloudSdkSettings CloudSdk { get; protected set; }
+        public GCloudCmdlet() { }
 
         /// <summary>
         /// Returns an instance of the Google Client API initializer, using the machine's default credentials.
         /// </summary>
         protected BaseClientService.Initializer GetBaseClientServiceInitializer()
         {
-            // TODO(chrsmith): Support the notion of "profiles" and switching between them.
-            // This should be built into the CloudSdkSettings class.
+            // TODO(chrsmith): How does the AppDefaultCredentials work with Cloud SDK profiles?
             Task<GoogleCredential> getCredsTask = GoogleCredential.GetApplicationDefaultAsync();
             getCredsTask.Wait();
 
