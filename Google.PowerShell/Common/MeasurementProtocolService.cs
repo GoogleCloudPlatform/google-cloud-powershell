@@ -3,12 +3,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Web;
-
 
 namespace Google.PowerShell.Common
 {
@@ -103,7 +103,6 @@ namespace Google.PowerShell.Common
             using (var writer = new StreamWriter(request.GetRequestStream(), encoding))
             {
                 writer.Write(postDataString);
-                writer.Close();
             }
 
             return request;
@@ -120,14 +119,14 @@ namespace Google.PowerShell.Common
                 {
                     // If usage data seems too low, consider debugging this line
                     // and checking webResponse.StatusCode.
-                    webResponse.Close();
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // Silently ignore it. Even if the request was malformed Google Analytics will
                 // return a 200. So I assume this would only happen in the event of some transient
                 // network failure, e.g. there is no internet connection.
+                Debug.WriteLine("Error issuing Analytics request: {0}", ex.Message);
             }
         }
 
