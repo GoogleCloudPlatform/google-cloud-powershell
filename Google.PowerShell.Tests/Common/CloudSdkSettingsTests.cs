@@ -30,7 +30,6 @@ namespace Google.PowerShell.Tests.Common
             Assert.IsNotNull(currentConfigName);
 
             string configFilePath = CloudSdkSettings.GetCurrentConfigurationFilePath();
-
             Assert.IsNotNull(configFilePath);
             Assert.IsTrue(File.Exists(configFilePath));
         }
@@ -42,6 +41,19 @@ namespace Google.PowerShell.Tests.Common
             // after a fresh install if necessary.
             string defaultProject = CloudSdkSettings.GetDefaultProject();
             Assert.IsNotNull(defaultProject);
+        }
+
+        [Test]
+        public void TestGetOptInSetting()
+        {
+            // Just assert this doesn't throw, depending on the install the
+            // value could be true or false.
+            CloudSdkSettings.GetOptIntoUsageReporting();
+
+            // Same with above. If the user opted into settings (and has ran
+            // the Python bits at least once) the value will be stable.
+            // Otherwise it will be different each time.
+            CloudSdkSettings.GetAnoymousClientID();
         }
     }
 }

@@ -30,6 +30,9 @@ namespace Google.PowerShell.Common
         /// <summary>Folder name where configuration files are stored.</summary>
         private const string ConfigurationsFolderName = "configurations";
 
+        /// <summary>Name of the file containing the anonymous client ID.</summary>
+        private const string ClientIDFileName = ".metricsUUID";
+
         // Prevent instantiation. Should just be a static utility class.
         private CloudSdkSettings() { }
 
@@ -147,6 +150,34 @@ namespace Google.PowerShell.Common
             {
                 return false;
             }
+        }
+
+
+        /// <summary>
+        /// Client ID refers to the random UUID generated to group telemetry reporting.
+        ///
+        /// The file is generated on-demand by the Python code. Returns a new UUID if
+        /// the file isn't found. (Meaning we will generate new UUIDs until the Python
+        /// code gets executed.)
+        /// </summary>
+        public static string GetAnoymousClientID()
+        {
+            string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
+            if (appDataFolder == null || !Directory.Exists(appDataFolder))
+            {
+                return null;
+            }
+
+            string uuidFile = Path.Combine(
+                appDataFolder,
+                CloudSDKConfigDirectoryWindows,
+                ClientIDFileName);
+
+            if (!File.Exists(uuidFile))
+            {
+                return Guid.NewGuid().ToString();
+            }
+            return File.ReadAllText(uuidFile);
         }
     }
 }
