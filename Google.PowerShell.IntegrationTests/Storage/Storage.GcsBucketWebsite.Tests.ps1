@@ -4,11 +4,10 @@ Install-GcloudCmdlets
 $project = "gcloud-powershell-testing"
 
 # Both commands tested together.
-Describe "Write-GcsBucketWebsite and Delete-GcsBucketWebsite" {
+Describe "{Delete, Write}-GcsBucketWebsite" {
     It "should work" {
         $bucket = "gcps-website-testing"
-        gsutil rb gs://$bucket
-        gsutil mb -p $project gs://$bucket
+        Create-TestBucket $project $bucket
 
         # Confirm not set by default.
         (Get-GcsBucket $bucket).Website | Should BeNullOrEmpty

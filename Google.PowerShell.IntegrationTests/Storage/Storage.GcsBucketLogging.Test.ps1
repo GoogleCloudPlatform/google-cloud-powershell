@@ -6,9 +6,8 @@ $project = "gcloud-powershell-testing"
 # Both commands tested together.
 Describe "Write-GcsBucketLogging and Remove-GcsBucketLogging" {
     It "should work" {
-        $bucket = "gcps-logging-testing"
-        gsutil rb gs://$bucket
-        gsutil mb -p $project gs://$bucket
+        $bucket = "gcps-logging-testing"    
+        Create-TestBucket $project $bucket
 
         # Confirm not set by default.
         (Get-GcsBucket $bucket).Logging | Should BeNullOrEmpty

@@ -60,47 +60,42 @@ Describe "Create-GcsBucket" {
 }
 
 Describe "Remove-GcsBucket" {
+    $bucket = "gcps-bucket-removal"
     # Delete the test bucket before/after each test to ensure we are in a good state.
     BeforeEach {
-        gsutil rm gs://gcps-bucket-removal/*
-        gsutil rb gs://gcps-bucket-removal
-        gsutil mb -p $project gs://gcps-bucket-removal
+        Create-TestBucket $project $bucket
     }
 
     # TODO(chrsmith): Confirm that the user gets prompted if -Force is not present.
     # TODO(chrsmith): Confirm that the -WhatIf prameter prompts the user, even if -Force is added.
 
     It "will work" {
-        Remove-GcsBucket -Name "gcps-bucket-removal" -Force
-        { Get-GcsBucket -Name "gcps-bucket-removal" } | Should Throw "404"
+        Remove-GcsBucket -Name $bucket -Force
+        { Get-GcsBucket -Name $bucket } | Should Throw "404"
     }
 
     It "will fail to remove non-empty buckets" {
-        # Place an object in the GCS bucket.
-        $filename = [System.IO.Path]::GetTempFileName()
-        gsutil cp $filename gs://gcps-bucket-removal/file.txt
-        Remove-Item -Force $filename
-
-        { Remove-GcsBucket -Name "gcps-bucket-removal" -Force } | Should Throw "409"
+        Add-TestFile $bucket "file.txt"
+        { Remove-GcsBucket -Name $bucket -Force } | Should Throw "409"
     }
 
     It "will be unstoppable with the DeleteObjects flag" {
         # Place an object in the GCS bucket.
-        $filename = [System.IO.Path]::GetTempFileName()
-        gsutil cp $filename gs://gcps-bucket-removal/file.txt
-        Remove-Item $filename
+        Add-TestFile $bucket "file.txt"
 
-        Remove-GcsBucket -Name "gcps-bucket-removal" -DeleteObjects -Force
-        { Get-GcsBucket -Name "gcps-bucket-removal" } | Should Throw "404"
+        Remove-GcsBucket -Name $bucket -DeleteObjects -Force
+        { Get-GcsBucket -Name $bucket } | Should Throw "404"
     }
 }
 
 Describe "Test-GcsBucket" {
     It "will work" {
         # Our own bucket
-        gsutil mb -p gcloud-powershell-testing gs://gcps-test-gcsbucket
-        Test-GcsBucket -Name "gcps-test-gcsbucket" | Should Be $true
+        $bucket = "gcps-test-gcsbucket"
+        Create-TestBucket $project $bucket
+        Test-GcsBucket -Name $bucket | Should Be $true
         gsutil rb gs://gcps-test-gcsbucket
+      
         # Buckets that exists but we don't have access to.
         Test-GcsBucket -Name "asdf" | Should Be $true
 

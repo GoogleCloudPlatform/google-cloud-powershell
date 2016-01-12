@@ -44,7 +44,20 @@ namespace Google.PowerShell.Common
         {
             // TODO(chrsmith): How does the AppDefaultCredentials work with Cloud SDK profiles?
             Task<GoogleCredential> getCredsTask = GoogleCredential.GetApplicationDefaultAsync();
-            getCredsTask.Wait();
+            try
+            {
+                getCredsTask.Wait();
+            }
+            catch (AggregateException ae)
+            {
+                // Unpackage the AggregateException to aid debugging. See:
+                // https://github.com/google/google-api-dotnet-client/issues/652
+                if (ae.InnerExceptions.Count == 1)
+                {
+                    throw ae.InnerException;
+                }
+                throw;
+            }
 
             return new BaseClientService.Initializer()
             {
