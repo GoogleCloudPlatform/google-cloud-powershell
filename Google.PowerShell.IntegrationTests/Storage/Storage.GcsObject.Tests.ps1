@@ -52,7 +52,8 @@ Describe "New-GcsObject" {
         Remove-GcsObject $bucket $objectName
     }
 
-    It "should support local file paths" {
+    It "should support relative file paths" {
+        # TODO(chrsmith): Fix underlying bugs and use Push-Location and Pop-Location.
         $orgWorkingDir = [System.Environment]::CurrentDirectory
         [System.Environment]::CurrentDirectory = [System.IO.Path]::GetTempPath()
 

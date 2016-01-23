@@ -7,8 +7,8 @@ function Install-GcloudCmdlets() {
 	Import-Module $pathToCmdlets -Verbose
 }
 
-# Creates a GCS in the project, deleting any existing buckets with that name
-# and all of their contents.
+# Creates a GCS bucket owned associated with the project, deleting any existing
+# buckets with that name and all of their contents.
 function Create-TestBucket($project, $bucket) {
     gsutil rm "gs://${bucket}/*"
     gsutil rb "gs://${bucket}"

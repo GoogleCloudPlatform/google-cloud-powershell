@@ -6,9 +6,11 @@ $project = "gcloud-powershell-testing"
 # TODO(chrsmith): When Posh updates, newer versions of Pester have Should BeOfType.
 # TODO(chrsmith): Add a random suffix to bucket names to avoid collisions between devs.
 Describe "Get-GcsBucket" {
+
     It "should fail to return non-existing buckets" {
         { Get-GcsBucket -Name "gcps-bucket-no-exist" } | Should Throw "404"
     }
+
     It "should work" {
         gsutil mb -p gcloud-powershell-testing gs://gcps-testbucket
         $bucket = Get-GcsBucket -Name "gcps-testbucket"
@@ -20,12 +22,15 @@ Describe "Get-GcsBucket" {
 
         gsutil rb gs://gcps-testbucket
     }
+
     It "should contain ACL information" {
         (Get-GcsBucket -Project $project)[0].ACL.Length -gt 0 | Should Be $true
     }
+
     It "should list all buckets in a project" {
         (Get-GcsBucket -Project $project).Count -gt 0 | Should Be $true
     }
+
     It "should give access errors as appropriate" {
         # Don't know who created the "asdf" project and "asdf" bucket.
         { Get-GcsBucket -Project "asdf" } | Should Throw "403"
@@ -34,10 +39,12 @@ Describe "Get-GcsBucket" {
 }
 
 Describe "Create-GcsBucket" {
+
     # Should remove the bucket before/after each test to ensure we are in a good state.
     BeforeEach {
         gsutil rb gs://gcps-bucket-creation
     }
+
     AfterEach {
         gsutil rb gs://gcps-bucket-creation
     }
@@ -89,6 +96,7 @@ Describe "Remove-GcsBucket" {
 }
 
 Describe "Test-GcsBucket" {
+
     It "will work" {
         # Our own bucket
         $bucket = "gcps-test-gcsbucket"

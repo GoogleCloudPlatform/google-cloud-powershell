@@ -75,12 +75,10 @@ namespace Google.PowerShell.CloudStorage
                     throw finalProgress.Exception;
                 }
 
-                object output = "" as object;
                 if (insertReq.ResponseBody != null)
                 {
-                    output = insertReq.ResponseBody;
+                    WriteObject(insertReq.ResponseBody);
                 }
-                WriteObject(output);
             }
         }
     }

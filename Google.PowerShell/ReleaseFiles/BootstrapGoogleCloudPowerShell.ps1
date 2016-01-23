@@ -12,7 +12,7 @@ function Get-ScriptDirectory
 $modulePath = Join-Path (Get-ScriptDirectory) "GoogleCloudPowerShell.psd1"
 Import-Module $modulePath
 
-cd c:\
+$Env:UserProfile
 clear
 
 $welcomeBanner = "Google Cloud PowerShell"

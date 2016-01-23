@@ -22,7 +22,7 @@ Describe "Get-GcsObjectContents" {
     It "should work" {
         $tempFileName = [System.IO.Path]::Combine(
              [System.IO.Path]::GetTempPath(),
-             [System.DateTime]::Now.Ticks.ToString())
+             [System.IO.Path]::GetRandomFileName())
         Get-GcsObjectContents $bucket $testObjectName $tempFileName
 
         $fileContents = [System.IO.File]::ReadAllText($tempFileName)
@@ -53,7 +53,7 @@ Describe "Get-GcsObjectContents" {
     It "throws a 404 if the Storage Object does not exist" {
         $tempFileName = [System.IO.Path]::Combine(
              [System.IO.Path]::GetTempPath(),
-             [System.DateTime]::Now.Ticks.ToString())
+             [System.IO.Path]::GetRandomFileName())
         { Get-GcsObjectContents $bucket "random-file" $tempFileName } `
             | Should Throw "404" 
     }

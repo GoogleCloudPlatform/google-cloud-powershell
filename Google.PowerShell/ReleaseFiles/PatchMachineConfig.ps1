@@ -52,11 +52,11 @@ function UpdateMachineConfig($path) {
     $xml.Save($path)
 }
 
-$path = "C:\Windows\Microsoft.NET\Framework\v4.0.30319\Config\machine.config"
+$path = "$Env:WinDir\Microsoft.NET\Framework\v4.0.30319\Config\machine.config"
 Write-Host "Updating file: ${path}"
 UpdateMachineConfig $path | Out-Null
 
-$path = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\Config\machine.config"
+$path = "$Env:WinDir\Microsoft.NET\Framework64\v4.0.30319\Config\machine.config"
 Write-Host "Updating file: ${path}"
 UpdateMachineConfig $path | Out-Null
 

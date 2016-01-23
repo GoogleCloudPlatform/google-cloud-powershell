@@ -72,8 +72,6 @@ namespace Google.PowerShell.CloudStorage
                 {
                     throw result.Exception;
                 }
-
-                WriteObject(true);
             }
         }
     }
