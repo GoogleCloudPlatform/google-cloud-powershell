@@ -103,6 +103,7 @@ namespace Google.PowerShell.CloudStorage
         [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true)]
         public string Name { get; set; }
 
+        // TODO(chrsmith): Should this be Force instead?
         /// <summary>
         /// Delete the objects too. By default, you cannot delete non-empty buckets.
         /// </summary>
