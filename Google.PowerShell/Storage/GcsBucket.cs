@@ -16,20 +16,41 @@ using Google.PowerShell.Common;
 namespace Google.PowerShell.CloudStorage
 {
     /// <summary>
-    /// Get-GcsBucket returns the Google Cloud Storage bucket with the given name.
+    /// <para type="synopsis">
+    /// Gets the Google Cloud Storage bucket with a given name, or all buckets associated with a
+    /// project.
+    /// </para>
+    /// <para type="description">
+    /// Returns the Google Cloud Storate bucket by name, if the current gcloud user has access.
+    /// </para>
+    /// <para type="description">
+    /// If a Project is specified, will instead return all buckets owned by that project. Again,
+    /// restricted to those that the gcloud user has access to view.
+    /// </para>
+    /// <example>
+    ///   <para>Get the bucket named "widget-co-logs".</para>
+    ///   <para><code>Get-GcsBucket "widget-co-logs"</code></para>
+    /// </example>
+    /// <example>
+    ///   <para>Get all buckets for project "widget-co".</para>
+    ///   <para><code>Get-GcsBucket -Project "widget-co"</code></para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcsBucket", DefaultParameterSetName = "SingleBucket")]
     public class GetGcsBucketCmdlet : GcsCmdlet
     {
         /// <summary>
+        /// <para type="description">
         /// The name of the bucket to return.
+        /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true, ParameterSetName = "SingleBucket")]
         public string Name { get; set; }
 
         /// <summary>
-        /// The name of the project associated with the command. If not set via PowerShell parameter processing, will
-        /// default to the Cloud SDK's DefaultProject property.
+        /// <para type="description">
+        /// The project to check for Storage buckets.
+        /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true, ParameterSetName = "BucketsByProject")]
         public string Project { get; set; }
