@@ -69,6 +69,22 @@ Describe "New-GcsObject" {
 
         [System.Environment]::CurrentDirectory = $orgWorkingDir
     }
+
+    It "should set predefined ACLs if instructed to" {
+        $filename = [System.IO.Path]::GetTempFileName()
+        [System.IO.File]::WriteAllText($filename, "predefined ACL test")
+
+        $objectName = "predefined-acl-test"
+        $newObj = New-GcsObject $bucket $objectName $filename -PredefinedAcl "publicRead"
+        # ACL[0] is from the user who created the object.
+        # ACL[1]'s Id is like "gcps-object-testing/predefined-acl-test/1459867429211000/allUsers"
+        $newObj.Acl[1].Id | Should Contain "/o/predefined-acl-test/acl/allUsers"
+
+        $existingObj = Get-GcsObject $bucket $objectName
+        $existingObj.Acl[1].Id | Should Contain "/o/predefined-acl-test/acl/allUsers"
+
+        Remove-GcsObject $bucket $objectName
+    }
 }
 
 Describe "Get-GcsObject" {
@@ -84,15 +100,54 @@ Describe "Get-GcsObject" {
         $obj.Size | Should Be 0
     }
 
-    It "should support getting all objects in a bucket" {
-        $objs = Get-GcsObject $bucket
-        $objs.Length | Should Be 2
-        $objs[0].Name | Should Be "testfile1.txt"
-        $objs[1].Name | Should Be "testfile2.txt"
-    }
-
     It "should fail for non existing objects" {
         { Get-GcsObject -Bucket $bucket -ObjectName "file-404.txt" } | Should Throw "404"
+    }
+}
+
+Describe "Find-GcsObject" {
+
+    $bucket = "gcps-get-object-testing"
+    Create-TestBucket $project $bucket
+    Add-TestFile $bucket "file1.txt"
+    Add-TestFile $bucket "A/file2.txt"
+    Add-TestFile $bucket "A/B/file3.txt"
+    Add-TestFile $bucket "A/B/file4.txt"
+    Add-TestFile $bucket "B/A/A/file5.txt"
+    Add-TestFile $bucket "B/A/A/A/A/file6.txt"
+    Add-TestFile $bucket "B/A/A/A/A/file7.txt"
+    Add-TestFile $bucket "B/B/A/A/A/file8.txt"
+    Add-TestFile $bucket "C/file9.txt"
+    Add-TestFile $bucket "C/fileA.txt"
+
+    It "should support getting all objects in a bucket" {
+        $objs = Get-GcsObject $bucket
+        $objs.Length | Should Be 10
+    }
+
+    It "should support prefix matching" {
+        $objs = Get-GcsObject $bucket -Prefix "A/"
+        $objs.Length | Should Be 3
+
+        $objs = Get-GcsObject $bucket -Prefix "B/"
+        $objs.Length | Should Be 4
+
+        $objs = Get-GcsObject $bucket -Prefix "B/B"
+        $objs.Length | Should Be 1
+    }
+
+    It "should support delimiting results" {
+        $objs = Get-GcsObject $bucket -Delimiter "/"
+        $objs.Length | Should Be 1
+
+        $objs = Get-GcsObject $bucket -Prefix "A/" -Delimiter "/"
+        $objs.Length | Should Be 1
+        
+        $objs = Get-GcsObject $bucket -Prefix "A/B" -Delimiter "/"
+        $objs.Length | Should Be 0
+
+        $objs = Get-GcsObject $bucket -Prefix "A/B/" -Delimiter "/"
+        $objs.Length | Should Be 2
     }
 }
 

@@ -27,6 +27,7 @@ namespace Google.PowerShell.Tests.Common
         public void TestGetConfigurationFilePath()
         {
             string currentConfigName = CloudSdkSettings.GetCurrentConfigurationName();
+            // If this fails it is most likely because gcloud is not installed on the machine.
             Assert.IsNotNull(currentConfigName);
 
             string configFilePath = CloudSdkSettings.GetCurrentConfigurationFilePath();
