@@ -59,7 +59,7 @@ namespace Google.PowerShell.Common
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("Error reading Cloud SDK active configuration file: {0}", ex.Message);
+                Debug.WriteLine(String.Format("Error reading Cloud SDK active configuration file: {0}", ex.Message));
                 return null;
             }
         }
