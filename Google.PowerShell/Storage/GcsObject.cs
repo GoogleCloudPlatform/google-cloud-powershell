@@ -127,7 +127,7 @@ namespace Google.PowerShell.CloudStorage
                 throw new FileNotFoundException("File Not Found", qualifiedPath);
             }
 
-            using (var fileStream = new FileStream(qualifiedPath, FileMode.Open, FileAccess.Read))
+            using (var fileStream = new FileStream(qualifiedPath, FileMode.Open))
             {
                 Object newGcsObject = new Object
                 {
@@ -399,9 +399,6 @@ namespace Google.PowerShell.CloudStorage
     /// <para type="description">
     /// Replaces the contents of a Cloud Storage object with data from the local disk.
     /// </para>
-    /// <para type="description">
-    /// This entails uploading a temp object to Cloud Storage.
-    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommunications.Write, "GcsObject")]
     public class WriteGcsObjectCmdlet : GcsCmdlet
@@ -452,57 +449,41 @@ namespace Google.PowerShell.CloudStorage
             }
             catch (GoogleApiException ex)
             {
-                if (ex.HttpStatusCode == HttpStatusCode.NotFound) {
+                if (ex.HttpStatusCode == HttpStatusCode.NotFound)
+                {
                     throw new PSArgumentException("Storage Object Does Not Exist.");
                 } else {
                     throw new PSArgumentException("Error Confirming Object Exists: " + ex.Message);
                 }
             }
 
-            // Rewriting the object is composed of three steps:
-            // 1. Create a new, temporary GCS object (i.e. the upload).
-            // 2. Use the Rewrite operation to replace the existing object.
-            // 3. Delete the temporary object.
-            string tempObjectName = ObjectName + ".Write-GcsObject.temp";
-
-            // This is copied entirely from New-GcsObject. Move to new class GcsCmdletImpl?
-            using (var fileStream = new FileStream(qualifiedPath, FileMode.Open, FileAccess.Read))
+            // Rewriting GCS objects is done by simply creating a new object with the
+            // same name. (i.e. this is functionally identical to New-GcsObject.)
+            //
+            // We don't need to worry about data races and/or corrupting data mid-upload
+            // because of the strong consistency guarantees provided by Cloud Storage.
+            // See: https://cloud.google.com/storage/docs/consistency
+            // TODO(chrsmith): Unify this code with New-GcsObject? GcsCmdletImpl.NewObject?
+            using (var fileStream = new FileStream(qualifiedPath, FileMode.Open))
             {
-                Object newGcsObject = new Object
-                {
-                    Bucket = Bucket,
-                    Name = tempObjectName,
-                };
+                // Preserve the existing object's metadata, etc. But we need to remove the hashes
+                // because the data will be changed.
+                existingGcsObject.Crc32c = null;
+                existingGcsObject.Md5Hash = null;
 
                 ObjectsResource.InsertMediaUpload insertReq = service.Objects.Insert(
-                    newGcsObject, Bucket, fileStream, OctetStreamMimeType);
+                    existingGcsObject, Bucket, fileStream, existingGcsObject.ContentType);
 
                 var finalProgress = insertReq.Upload();
                 if (finalProgress.Exception != null)
                 {
                     throw finalProgress.Exception;
                 }
-            }
 
-            // Bug: If the new file is 0-bytes, Rewrite will fail.
-
-            try
-            {
-                // Replace object ObjectName with tempObjectName.
-                var rewriteRequest = service.Objects.Rewrite(
-                    existingGcsObject /* keep existing object metadata */,
-                    Bucket, tempObjectName,  // src
-                    Bucket, ObjectName);     // dest
-                var rewriteResponse = rewriteRequest.Execute();
-                while (rewriteResponse.RewriteToken != null)
+                if (insertReq.ResponseBody != null)
                 {
-                    rewriteRequest.RewriteToken = rewriteResponse.RewriteToken;
-                    rewriteResponse = rewriteRequest.Execute();
+                    WriteObject(insertReq.ResponseBody);
                 }
-            } finally {
-                // Delete the temp object as applicable.
-                ObjectsResource.DeleteRequest delReq = service.Objects.Delete(Bucket, tempObjectName);
-                delReq.Execute();
             }
         }
     }
