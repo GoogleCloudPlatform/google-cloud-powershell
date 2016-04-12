@@ -78,10 +78,12 @@ Describe "New-GcsObject" {
         $newObj = New-GcsObject $bucket $objectName $filename -PredefinedAcl "publicRead"
         # ACL[0] is from the user who created the object.
         # ACL[1]'s Id is like "gcps-object-testing/predefined-acl-test/1459867429211000/allUsers"
-        $newObj.Acl[1].Id | Should Contain "/o/predefined-acl-test/acl/allUsers"
+        $newObj.Acl[1].Id | Should Match "$bucket/$objectName/"
+        $newObj.Acl[1].Id | Should Match "/allUsers"
 
         $existingObj = Get-GcsObject $bucket $objectName
-        $existingObj.Acl[1].Id | Should Contain "/o/predefined-acl-test/acl/allUsers"
+        $newObj.Acl[1].Id | Should Match "$bucket/$objectName/"
+        $newObj.Acl[1].Id | Should Match "/allUsers"
 
         Remove-GcsObject $bucket $objectName
     }
@@ -121,32 +123,32 @@ Describe "Find-GcsObject" {
     Add-TestFile $bucket "C/fileA.txt"
 
     It "should support getting all objects in a bucket" {
-        $objs = Get-GcsObject $bucket
+        $objs = Find-GcsObject $bucket
         $objs.Length | Should Be 10
     }
 
     It "should support prefix matching" {
-        $objs = Get-GcsObject $bucket -Prefix "A/"
+        $objs = Find-GcsObject $bucket -Prefix "A/"
         $objs.Length | Should Be 3
 
-        $objs = Get-GcsObject $bucket -Prefix "B/"
+        $objs = Find-GcsObject $bucket -Prefix "B/"
         $objs.Length | Should Be 4
 
-        $objs = Get-GcsObject $bucket -Prefix "B/B"
+        $objs = Find-GcsObject $bucket -Prefix "B/B"
         $objs.Length | Should Be 1
     }
 
     It "should support delimiting results" {
-        $objs = Get-GcsObject $bucket -Delimiter "/"
+        $objs = Find-GcsObject $bucket -Delimiter "/"
         $objs.Length | Should Be 1
 
-        $objs = Get-GcsObject $bucket -Prefix "A/" -Delimiter "/"
+        $objs = Find-GcsObject $bucket -Prefix "A/" -Delimiter "/"
         $objs.Length | Should Be 1
         
-        $objs = Get-GcsObject $bucket -Prefix "A/B" -Delimiter "/"
+        $objs = Find-GcsObject $bucket -Prefix "A/B" -Delimiter "/"
         $objs.Length | Should Be 0
 
-        $objs = Get-GcsObject $bucket -Prefix "A/B/" -Delimiter "/"
+        $objs = Find-GcsObject $bucket -Prefix "A/B/" -Delimiter "/"
         $objs.Length | Should Be 2
     }
 }
@@ -166,4 +168,67 @@ Describe "Remove-GcsObject" {
     It "should fail for non existing objects" {
         { Remove-GcsObject -Bucket $bucket -ObjectName "file-404.txt" } | Should Throw "404"
     }
+}
+
+Describe "Read-GcsObjectContents" {
+
+    $bucket = "gcps-objectcontents-testing"
+    Create-TestBucket $project $bucket
+
+    $testObjectName = "alpha/beta/testfile.txt"
+    $testFileContents = "Hello, World"
+
+    BeforeEach {
+        # Before each test, upload a new file named "helloworld.txt" to the GCS bucket.
+        $filename = [System.IO.Path]::GetTempFileName()
+        [System.IO.File]::WriteAllText($filename, $testFileContents)
+        New-GcsObject $bucket $testObjectName $filename
+        Remove-Item -Force $filename
+    }
+
+    It "should work" {
+        $tempFileName = [System.IO.Path]::Combine(
+             [System.IO.Path]::GetTempPath(),
+             [System.IO.Path]::GetRandomFileName())
+        Read-GcsObject $bucket $testObjectName $tempFileName
+
+        $fileContents = [System.IO.File]::ReadAllText($tempFileName)
+        $fileContents | Should BeExactly $testFileContents
+
+        Remove-Item -Force $tempFileName
+    }
+
+    It "won't overwrite existing files" {
+        # Creates a 0-byte file, which we won't clobber.
+        $tempFileName = [System.IO.Path]::GetTempFileName()
+        # Pester automatically confirms the 
+        { Read-GcsObject $bucket $testObjectName $tempFileName } `
+            | Should Throw "File Already Exists"
+
+        Remove-Item -Force $tempFileName
+    }
+
+    It "will cobber files if -Overwrite is present" {
+        # Creates a 0-byte file in the way.
+        $tempFileName = [System.IO.Path]::GetTempFileName()
+        Read-GcsObject $bucket $testObjectName $tempFileName -Overwrite
+
+        # Confirm the file has non-zero size.
+        [System.IO.File]::ReadAllText($tempFileName) | Should Be $testFileContents
+    }
+
+    It "throws a 404 if the Storage Object does not exist" {
+        $tempFileName = [System.IO.Path]::Combine(
+             [System.IO.Path]::GetTempPath(),
+             [System.IO.Path]::GetRandomFileName())
+        { Read-GcsObject $bucket "random-file" $tempFileName } `
+            | Should Throw "404" 
+    }
+
+    It "failes if it doesn't have write access" {
+        { Read-GcsObject $bucket $testObjectName "C:\windows\helloworld.txt" } `
+            | Should Throw "is denied" 
+    }
+    # TODO(chrsmith): Confirm it throws a 403 if you don't have GCS access.
+    # TODO(chrsmith): Confirm it fails if you don't have write access to disk.
 }
