@@ -306,25 +306,36 @@ namespace Google.PowerShell.CloudStorage
     }
 
     /// <summary>
-    /// Read-GcsBucket downloads the contents of a Google Cloud Storage Object to disk.
+    /// <para type="synopsis">
+    /// Writes the contents of a Cloud Storage object to disk.
+    /// </para>
+    /// <para type="description">
+    /// Reads the contents of a Cloud Storage object, writing it to disk.
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommunications.Read, "GcsObject")]
     public class ReadGcsObjectCmdlet : GcsCmdlet
     {
         /// <summary>
-        /// The name of the bucket to check.
+        /// <para type="description">
+        /// Name of the bucket containing the object.
+        /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
         public string Bucket { get; set; }
 
         /// <summary>
-        /// Object name.
+        /// <para type="description">
+        /// Name of the object to read.
+        /// </para>
         /// </summary>
         [Parameter(Position = 1, Mandatory = true)]
         public string ObjectName { get; set; }
 
         /// <summary>
-        /// Destination on disk to download the contents to.
+        /// <para type="description">
+        /// Local file path to write the contents to.
+        /// </para>
         /// </summary>
         [Parameter(Position = 2, Mandatory = true)]
         public string DestinationPath { get; set; }
@@ -358,7 +369,7 @@ namespace Google.PowerShell.CloudStorage
             using (var writer = new FileStream(qualifiedPath, FileMode.Create))
             {
                 var result = downloader.Download(uri, writer);
-                if (result.Status == DownloadStatus.Failed
+                if (result.Status == DownloadStatus.Failed 
                     || result.Exception != null)
                 {
                     throw result.Exception;
