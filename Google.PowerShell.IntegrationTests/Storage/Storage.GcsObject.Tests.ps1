@@ -15,7 +15,7 @@ Describe "New-GcsObject" {
         $objectName = "43b75bdd-8869-496e-8c0d-3c12b49dcb18.txt"
 
         $newObj = New-GcsObject $bucket $objectName $filename
-        Remove-Item -Force $filename
+        Remove-Item $filename
 
         $newObj.Name | Should Be $objectName
         $newObj.Size | Should Be 12
@@ -86,6 +86,34 @@ Describe "New-GcsObject" {
         $newObj.Acl[1].Id | Should Match "/allUsers"
 
         Remove-GcsObject $bucket $objectName
+    }
+
+    It "will not overwrite existing objects without -Force" {
+        $objectName = "existing-object"
+
+        $tempFile = [System.IO.Path]::GetTempFileName()
+        [System.IO.File]::WriteAllText($tempFile, "existing-gcs-object")
+
+        # Create
+        New-GcsObject $bucket $objectName $tempFile
+
+        # Confirm we won't clobber
+        { New-GcsObject $bucket $objectName $tempFile } `
+            | Should Throw "Storage Object Already Exists"
+
+        # Confirm -Force works
+        [System.IO.File]::WriteAllText($tempFile, "updated-object-contents")
+        New-GcsObject $bucket $objectName $tempFile -Force
+        Remove-Item $tempFile
+
+        # Confirm the contents are expected
+        $tempFile2 = [System.IO.Path]::GetTempFileName()  # New temp file to download the updated object.
+        Read-GcsObject $bucket $objectName $tempFile2 -Force
+
+        $fileContents = [System.IO.File]::ReadAllText($tempFile2)
+        $fileContents | Should BeExactly "updated-object-contents"
+
+        Remove-Item $tempFile2
     }
     # TODO(chrsmith): Confirm it works for 0-byte files (currently it doesn't).
 }
@@ -183,7 +211,7 @@ Describe "Read-GcsObject" {
         # Before each test, upload a new file to the GCS bucket.
         $filename = [System.IO.Path]::GetTempFileName()
         [System.IO.File]::WriteAllText($filename, $testFileContents)
-        New-GcsObject $bucket $testObjectName $filename
+        New-GcsObject $bucket $testObjectName $filename -Force
         Remove-Item -Force $filename
     }
 
@@ -198,17 +226,16 @@ Describe "Read-GcsObject" {
         $fileContents = [System.IO.File]::ReadAllText($tempFileName)
         $fileContents | Should BeExactly $testFileContents
 
-        Remove-Item -Force $tempFileName
+        Remove-Item $tempFileName
     }
 
     It "won't overwrite existing files" {
         # Creates a 0-byte file, which we won't clobber.
         $tempFileName = [System.IO.Path]::GetTempFileName()
-        # Pester automatically confirms the 
         { Read-GcsObject $bucket $testObjectName $tempFileName } `
             | Should Throw "File Already Exists"
 
-        Remove-Item -Force $tempFileName
+        Remove-Item $tempFileName
     }
 
     It "will cobber files if -Force is present" {

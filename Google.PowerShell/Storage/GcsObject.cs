@@ -89,6 +89,14 @@ namespace Google.PowerShell.CloudStorage
         [Parameter(Mandatory = false)]
         public string PredefinedAcl { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// Force the operation to succeed, overwriting existing Storage objects if needed.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public SwitchParameter Force { get; set; }
+
         protected PredefinedAclEnum? GetPredefinedAcl()
         {
             switch (PredefinedAcl)
@@ -108,7 +116,7 @@ namespace Google.PowerShell.CloudStorage
                         string.Format("Invalid predefined ACL: {0}", PredefinedAcl));
             }
 
-            return null;    
+            return null;
         }
 
         protected override void ProcessRecord()
@@ -136,10 +144,22 @@ namespace Google.PowerShell.CloudStorage
                     ContentType = ContentType
                 };
 
-                // DO NOT SUBMIT BEFORE FIXING THIS!
-                // TODO(chrsmith): Confirm the file does not exist in GCS. Otherwise prompt the user.
-                // Add -Force to override the warning.
-                // TODO(chrsmith): Update unit tests accordingly, including Read-GcsObject's BeforeEach.
+                Object existingGcsObject = null;
+                bool objectExists = false;
+                try
+                {
+                    ObjectsResource.GetRequest getReq = service.Objects.Get(Bucket, ObjectName);
+                    existingGcsObject = getReq.Execute();
+                    objectExists = true;
+                }
+                catch (GoogleApiException ex)
+                {
+                    // Swallow the error, most likely a 404 because the object doesn't exist.
+                }
+                if (objectExists && !Force.IsPresent)
+                {
+                    throw new PSArgumentException("Storage Object Already Exists. Use -Force to overwrite.");
+                }
 
                 ObjectsResource.InsertMediaUpload insertReq = service.Objects.Insert(
                     newGcsObject, Bucket, fileStream, ContentType);
@@ -383,7 +403,7 @@ namespace Google.PowerShell.CloudStorage
             using (var writer = new FileStream(qualifiedPath, FileMode.Create))
             {
                 var result = downloader.Download(uri, writer);
-                if (result.Status == DownloadStatus.Failed 
+                if (result.Status == DownloadStatus.Failed
                     || result.Exception != null)
                 {
                     throw result.Exception;
@@ -452,7 +472,9 @@ namespace Google.PowerShell.CloudStorage
                 if (ex.HttpStatusCode == HttpStatusCode.NotFound)
                 {
                     throw new PSArgumentException("Storage Object Does Not Exist.");
-                } else {
+                }
+                else
+                {
                     throw new PSArgumentException("Error Confirming Object Exists: " + ex.Message);
                 }
             }
