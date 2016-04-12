@@ -208,10 +208,10 @@ Describe "Read-GcsObjectContents" {
         Remove-Item -Force $tempFileName
     }
 
-    It "will cobber files if -Overwrite is present" {
+    It "will cobber files if -Force is present" {
         # Creates a 0-byte file in the way.
         $tempFileName = [System.IO.Path]::GetTempFileName()
-        Read-GcsObject $bucket $testObjectName $tempFileName -Overwrite
+        Read-GcsObject $bucket $testObjectName $tempFileName -Force
 
         # Confirm the file has non-zero size.
         [System.IO.File]::ReadAllText($tempFileName) | Should Be $testFileContents
@@ -225,7 +225,7 @@ Describe "Read-GcsObjectContents" {
             | Should Throw "404" 
     }
 
-    It "failes if it doesn't have write access" {
+    It "fails if it doesn't have write access" {
         { Read-GcsObject $bucket $testObjectName "C:\windows\helloworld.txt" } `
             | Should Throw "is denied" 
     }

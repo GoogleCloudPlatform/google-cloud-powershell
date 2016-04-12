@@ -340,20 +340,25 @@ namespace Google.PowerShell.CloudStorage
         [Parameter(Position = 2, Mandatory = true)]
         public string DestinationPath { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// Force the operation to succeed, overwriting any local files.
+        /// </para>
+        /// </summary>
         [Parameter(Mandatory = false)]
-        public SwitchParameter Overwrite { get; set; }
+        public SwitchParameter Force { get; set; }
 
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
             var service = GetStorageService();
 
-            // TODO(chrsmith): Pop a confirmation? Overwrite (y/N)?
+            // Fail if the local file exists, unless -Force is specified.
             string qualifiedPath = Path.GetFullPath(DestinationPath);
             bool fileExists = File.Exists(qualifiedPath);
-            if (fileExists && !Overwrite.IsPresent)
+            if (fileExists && !Force.IsPresent)
             {
-                throw new PSArgumentException("File Already Exists. Use -Overwrite to overwrite.");
+                throw new PSArgumentException("File Already Exists. Use -Force to overwrite.");
             }
 
             string uri = GetBaseUri(Bucket, ObjectName);

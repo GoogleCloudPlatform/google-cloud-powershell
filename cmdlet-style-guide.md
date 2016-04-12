@@ -34,8 +34,8 @@ PS C:\>
 In order to avoid accidentally destroying data (deleting a file, shutting down a
 virtual machine, etc.) users should be prompt to confirm the operation.
 
-Cmdlets decorated with the [SupportsShouldProcess](https://msdn.microsoft.com/en-us/library/system.management.automation.cmdletcommonmetadataattribute.supportsshouldprocess(v=vs.85).aspx)
-attribute automatically get `-WhatIf` and `-Confirm` parameters.
+Cmdlets decorated with `Cmdlet`'s [SupportsShouldProcess](https://msdn.microsoft.com/en-us/library/system.management.automation.cmdletcommonmetadataattribute.supportsshouldprocess(v=vs.85).aspx)
+parameter automatically get `-WhatIf` and `-Confirm` parameters.
 
 `-WhatIf` is used for a cmdlet to "go through the motions" of its operation, but
 to not actually complete its action. It is used so you can test "what if" the
