@@ -15,7 +15,7 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// MIME attachment for general binary data. (Octets of bits, commonly referred to as bytes.)
         /// </summary>
-        protected readonly string OctetStreamMimeType = "application/octet-stream";
+        protected const string OctetStreamMimeType = "application/octet-stream";
 
         // TODO(chrsmith): Cache the storage service? Create it in OnProcessRecord every time? (So it does so once?)
 

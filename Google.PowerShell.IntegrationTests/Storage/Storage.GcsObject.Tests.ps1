@@ -247,12 +247,12 @@ Describe "Read-GcsObject" {
         [System.IO.File]::ReadAllText($tempFileName) | Should Be $testFileContents
     }
 
-    It "throws a 404 if the Storage Object does not exist" {
+    It "raise an error if the Storage Object does not exist" {
         $tempFileName = [System.IO.Path]::Combine(
              [System.IO.Path]::GetTempPath(),
              [System.IO.Path]::GetRandomFileName())
         { Read-GcsObject $bucket "random-file" $tempFileName } `
-            | Should Throw "404" 
+            | Should Throw "Storage Object Does Not Exist"
     }
 
     It "fails if it doesn't have write access" {
@@ -294,4 +294,6 @@ Describe "Write-GcsObject" {
         Remove-Item $tempFile
     }
     # TODO(chrsmith): Confirm it works for 0-byte files (currently it doesn't).
+    # TODO(chrsmith): Confirm Write-GcsObject doesn't remove object metadata, such
+    # as its existing ACLs. (Since we are uploading a new object in-place.)
 }
