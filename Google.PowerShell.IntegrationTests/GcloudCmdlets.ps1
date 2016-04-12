@@ -10,7 +10,7 @@ function Install-GcloudCmdlets() {
 # Creates a GCS bucket owned associated with the project, deleting any existing
 # buckets with that name and all of their contents.
 function Create-TestBucket($project, $bucket) {
-    gsutil rm "gs://${bucket}/*"
+    gsutil -m rm -r "gs://${bucket}/*"
     gsutil rb "gs://${bucket}"
     gsutil mb -p $project "gs://${bucket}"
 }

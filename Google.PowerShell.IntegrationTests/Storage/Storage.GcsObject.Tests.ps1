@@ -170,16 +170,16 @@ Describe "Remove-GcsObject" {
     }
 }
 
-Describe "Read-GcsObjectContents" {
+Describe "Read-GcsObject" {
 
-    $bucket = "gcps-objectcontents-testing"
+    $bucket = "gcps-read-object-testing"
     Create-TestBucket $project $bucket
 
     $testObjectName = "alpha/beta/testfile.txt"
     $testFileContents = "Hello, World"
 
     BeforeEach {
-        # Before each test, upload a new file named "helloworld.txt" to the GCS bucket.
+        # Before each test, upload a new file to the GCS bucket.
         $filename = [System.IO.Path]::GetTempFileName()
         [System.IO.File]::WriteAllText($filename, $testFileContents)
         New-GcsObject $bucket $testObjectName $filename
@@ -187,9 +187,11 @@ Describe "Read-GcsObjectContents" {
     }
 
     It "should work" {
+        # GetTempFileName creates a 0-byte file, which will cause problems
+        # because the cmdlet won't overwrite it without -Force.
         $tempFileName = [System.IO.Path]::Combine(
-             [System.IO.Path]::GetTempPath(),
-             [System.IO.Path]::GetRandomFileName())
+                 [System.IO.Path]::GetTempPath(),
+                 [System.IO.Path]::GetRandomFileName())
         Read-GcsObject $bucket $testObjectName $tempFileName
 
         $fileContents = [System.IO.File]::ReadAllText($tempFileName)
@@ -231,4 +233,62 @@ Describe "Read-GcsObjectContents" {
     }
     # TODO(chrsmith): Confirm it throws a 403 if you don't have GCS access.
     # TODO(chrsmith): Confirm it fails if you don't have write access to disk.
+}
+
+Describe "Write-GcsObject" {
+
+    $bucket = "gcps-write-object-testing"
+    Create-TestBucket $project $bucket
+
+    It "should work" {
+        $objectName = "folder/file.txt"
+        $originalContents = "This is the ORIGINAL file contents."
+
+        # Create the original file.
+        $tempFile = [System.IO.Path]::GetTempFileName()
+        [System.IO.File]::WriteAllText($tempFile, $originalContents)
+        New-GcsObject $bucket $objectName $tempFile
+        Remove-Item $tempFile
+
+        # Rewrite its contents
+        $tempFile = [System.IO.Path]::GetTempFileName()
+        $newContents = "This is the NEW content."
+        [System.IO.File]::WriteAllText($tempFile, $newContents)
+        Write-GcsObject $bucket $objectName $tempFile
+        Remove-Item $tempFile
+
+        # Confirm the contents have changed.
+        $tempFile = [System.IO.Path]::GetTempFileName()
+        Read-GcsObject $bucket $objectName $tempFile -Force
+
+        $fileContents = [System.IO.File]::ReadAllText($tempFile)
+        $fileContents | Should BeExactly $newContents
+        Remove-Item $tempFile
+    }
+
+    It "supports writing 0-byte files" {
+        $objectName = "folder/file.txt"
+        $originalContents = "This is the ORIGINAL file contents."
+
+        # Create the original file.
+        $tempFile = [System.IO.Path]::GetTempFileName()
+        [System.IO.File]::WriteAllText($tempFile, $originalContents)
+        New-GcsObject $bucket $objectName $tempFile
+        Remove-Item $tempFile
+
+        # Rewrite its contents
+        $tempFile = [System.IO.Path]::GetTempFileName()
+        $newContents = ""  # Intentionally zero-bytes.
+        [System.IO.File]::WriteAllText($tempFile, $newContents)
+        Write-GcsObject $bucket $objectName $tempFile
+        Remove-Item $tempFile
+
+        # Confirm the contents have changed.
+        $tempFile = [System.IO.Path]::GetTempFileName()
+        Read-GcsObject $bucket $objectName $tempFile -Force
+
+        $fileContents = [System.IO.File]::ReadAllText($tempFile)
+        $fileContents | Should BeExactly $newContents
+        Remove-Item $tempFile
+    }
 }

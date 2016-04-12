@@ -21,6 +21,10 @@ namespace Google.PowerShell.CloudStorage
     // TODO(chrsmith): Provide a way to upload an entire directory to Gcs. Reuse New-GcsObject?
     // Upload-GcsObject?
 
+    // TODO(chrsmith): Provide a way to test if an object exists, a la Test-GcsObject.
+
+    // TODO(chrsmith): Provide a way to return GCS object contents as a string, a la Type-GcsObject.
+
     /// <summary>
     /// <para type="synopsis">
     /// Uploads a local file into a Google Cloud Storage bucket.
@@ -114,7 +118,7 @@ namespace Google.PowerShell.CloudStorage
 
             if (string.IsNullOrEmpty(ContentType))
             {
-                ContentType = "application/octet-stream";
+                ContentType = OctetStreamMimeType;
             }
 
             string qualifiedPath = Path.GetFullPath(FilePath);
@@ -123,7 +127,7 @@ namespace Google.PowerShell.CloudStorage
                 throw new FileNotFoundException("File Not Found", qualifiedPath);
             }
 
-            using (var fileStream = new FileStream(qualifiedPath, FileMode.Open))
+            using (var fileStream = new FileStream(qualifiedPath, FileMode.Open, FileAccess.Read))
             {
                 Object newGcsObject = new Object
                 {
@@ -131,6 +135,11 @@ namespace Google.PowerShell.CloudStorage
                     Name = ObjectName,
                     ContentType = ContentType
                 };
+
+                // DO NOT SUBMIT BEFORE FIXING THIS!
+                // TODO(chrsmith): Confirm the file does not exist in GCS. Otherwise prompt the user.
+                // Add -Force to override the warning.
+                // TODO(chrsmith): Update unit tests accordingly, including Read-GcsObject's BeforeEach.
 
                 ObjectsResource.InsertMediaUpload insertReq = service.Objects.Insert(
                     newGcsObject, Bucket, fileStream, ContentType);
@@ -379,6 +388,121 @@ namespace Google.PowerShell.CloudStorage
                 {
                     throw result.Exception;
                 }
+            }
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Replaces the contents of a Cloud Storage object.
+    /// </para>
+    /// <para type="description">
+    /// Replaces the contents of a Cloud Storage object with data from the local disk.
+    /// </para>
+    /// <para type="description">
+    /// This entails uploading a temp object to Cloud Storage.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommunications.Write, "GcsObject")]
+    public class WriteGcsObjectCmdlet : GcsCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// Name of the bucket containing the object.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true)]
+        public string Bucket { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the object to write to.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 1, Mandatory = true)]
+        public string ObjectName { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Local file path to read.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 2, Mandatory = true)]
+        public string LocalFile { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            base.ProcessRecord();
+            var service = GetStorageService();
+
+            // Fail if the local file does not exist.
+            string qualifiedPath = Path.GetFullPath(LocalFile);
+            FileInfo localFileInfo = new FileInfo(qualifiedPath);
+            if (!localFileInfo.Exists)
+            {
+                throw new PSArgumentException("Local File Does Not Exist.");
+            }
+
+            // Fail if the GCS Object does not exist.
+            Object existingGcsObject = null;
+            try
+            {
+                ObjectsResource.GetRequest getReq = service.Objects.Get(Bucket, ObjectName);
+                existingGcsObject = getReq.Execute();
+            }
+            catch (GoogleApiException ex)
+            {
+                if (ex.HttpStatusCode == HttpStatusCode.NotFound) {
+                    throw new PSArgumentException("Storage Object Does Not Exist.");
+                } else {
+                    throw new PSArgumentException("Error Confirming Object Exists: " + ex.Message);
+                }
+            }
+
+            // Rewriting the object is composed of three steps:
+            // 1. Create a new, temporary GCS object (i.e. the upload).
+            // 2. Use the Rewrite operation to replace the existing object.
+            // 3. Delete the temporary object.
+            string tempObjectName = ObjectName + ".Write-GcsObject.temp";
+
+            // This is copied entirely from New-GcsObject. Move to new class GcsCmdletImpl?
+            using (var fileStream = new FileStream(qualifiedPath, FileMode.Open, FileAccess.Read))
+            {
+                Object newGcsObject = new Object
+                {
+                    Bucket = Bucket,
+                    Name = tempObjectName,
+                };
+
+                ObjectsResource.InsertMediaUpload insertReq = service.Objects.Insert(
+                    newGcsObject, Bucket, fileStream, OctetStreamMimeType);
+
+                var finalProgress = insertReq.Upload();
+                if (finalProgress.Exception != null)
+                {
+                    throw finalProgress.Exception;
+                }
+            }
+
+            // Bug: If the new file is 0-bytes, Rewrite will fail.
+
+            try
+            {
+                // Replace object ObjectName with tempObjectName.
+                var rewriteRequest = service.Objects.Rewrite(
+                    existingGcsObject /* keep existing object metadata */,
+                    Bucket, tempObjectName,  // src
+                    Bucket, ObjectName);     // dest
+                var rewriteResponse = rewriteRequest.Execute();
+                while (rewriteResponse.RewriteToken != null)
+                {
+                    rewriteRequest.RewriteToken = rewriteResponse.RewriteToken;
+                    rewriteResponse = rewriteRequest.Execute();
+                }
+            } finally {
+                // Delete the temp object as applicable.
+                ObjectsResource.DeleteRequest delReq = service.Objects.Delete(Bucket, tempObjectName);
+                delReq.Execute();
             }
         }
     }
