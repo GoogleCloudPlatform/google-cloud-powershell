@@ -1,6 +1,6 @@
 # PowerShell cmdlet Style Guide #
 
-This guide outlines the best practices when writing PowerShell cmdlets. It is a
+This guide outlines the our practices when writing PowerShell cmdlets. It is a
 work in-progress, and if you have suggestions or altering opinions please feel
 free to submit an issue for discussion.
 
@@ -8,12 +8,12 @@ free to submit an issue for discussion.
 
 # Cmdlets SHOULD call `ShouldProcess` during unexpected situations
 
-A cmdlet can call the [ShouldProcess(https://msdn.microsoft.com/en-us/library/system.management.automation.cmdlet.shouldprocess(v=vs.85).aspx)
+A cmdlet can call the [ShouldProcess](https://msdn.microsoft.com/en-us/library/system.management.automation.cmdlet.shouldprocess.aspx)
 method to prompt the user before proceeding.
 
 This allows the user to adjudicate any unexpected situations. For example, when
 the `Remove-Item` cmdlet is used and it would delete a folder but the
-`-Recruse` flag is not set, `ShouldProcess` is called to prompt the user to
+`-Recurse` flag is not set, `ShouldProcess` is called to prompt the user to
 confirm this is what they want.
 
 ````
@@ -34,7 +34,7 @@ PS C:\>
 In order to avoid accidentally destroying data (deleting a file, shutting down a
 virtual machine, etc.) users should be prompt to confirm the operation.
 
-Cmdlets decorated with `Cmdlet`'s [SupportsShouldProcess](https://msdn.microsoft.com/en-us/library/system.management.automation.cmdletcommonmetadataattribute.supportsshouldprocess(v=vs.85).aspx)
+Cmdlets decorated with `Cmdlet`'s [SupportsShouldProcess](https://msdn.microsoft.com/en-us/library/system.management.automation.cmdletcommonmetadataattribute.supportsshouldprocess.aspx)
 parameter automatically get `-WhatIf` and `-Confirm` parameters.
 
 `-WhatIf` is used for a cmdlet to "go through the motions" of its operation, but

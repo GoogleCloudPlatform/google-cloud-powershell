@@ -28,7 +28,7 @@ Describe "New-GcsObject" {
 
     It "should fail if the file does not exist" {
         { New-GcsObject $bucket "file-not-found.txt" "C:\file-404" } `
-            | Should Throw "File Not Found"
+            | Should Throw "File not found"
     }
 
     # Confirm the object can have slashes. Regression test for .NET Client Libs
@@ -99,7 +99,7 @@ Describe "New-GcsObject" {
 
         # Confirm we won't clobber
         { New-GcsObject $bucket $objectName $tempFile } `
-            | Should Throw "Storage Object Already Exists"
+            | Should Throw "Storage object already exists"
 
         # Confirm -Force works
         [System.IO.File]::WriteAllText($tempFile, "updated-object-contents")
@@ -233,12 +233,12 @@ Describe "Read-GcsObject" {
         # Creates a 0-byte file, which we won't clobber.
         $tempFileName = [System.IO.Path]::GetTempFileName()
         { Read-GcsObject $bucket $testObjectName $tempFileName } `
-            | Should Throw "File Already Exists"
+            | Should Throw "File already exists"
 
         Remove-Item $tempFileName
     }
 
-    It "will cobber files if -Force is present" {
+    It "will clobber files if -Force is present" {
         # Creates a 0-byte file in the way.
         $tempFileName = [System.IO.Path]::GetTempFileName()
         Read-GcsObject $bucket $testObjectName $tempFileName -Force
@@ -252,7 +252,7 @@ Describe "Read-GcsObject" {
              [System.IO.Path]::GetTempPath(),
              [System.IO.Path]::GetRandomFileName())
         { Read-GcsObject $bucket "random-file" $tempFileName } `
-            | Should Throw "Storage Object Does Not Exist"
+            | Should Throw "Not Found"
     }
 
     It "fails if it doesn't have write access" {

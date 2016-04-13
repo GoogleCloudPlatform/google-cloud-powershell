@@ -24,6 +24,7 @@ namespace Google.PowerShell.CloudStorage
     // TODO(chrsmith): Provide a way to test if an object exists, a la Test-GcsObject.
 
     // TODO(chrsmith): Provide a way to return GCS object contents as a string, a la Type-GcsObject.
+    // Ideally one could `Read-GcsContents xyz | sort | Write-GcsContents abc`.
 
     /// <summary>
     /// Base class for Cloud Storage Object cmdlets. Used to reuse common methods.
@@ -193,6 +194,10 @@ namespace Google.PowerShell.CloudStorage
                 throw new FileNotFoundException("File not found.", qualifiedPath);
             }
 
+            // We could potentially avoid this extra step by using a special request header.
+            //     "If you set the x-goog-if-generation-match header to 0, Google Cloud Storage only
+            //     performs the specified request if the object does not currently exist."
+            // See https://cloud.google.com/storage/docs/reference-headers#xgoogifgenerationmatch
             bool objectExists = TestObjectExists(service, Bucket, ObjectName);
             if (objectExists && !Force.IsPresent)
             {
@@ -416,12 +421,6 @@ namespace Google.PowerShell.CloudStorage
                 throw new PSArgumentException("File already exists. Use -Force to overwrite.");
             }
 
-            bool objectExists = TestObjectExists(service, Bucket, ObjectName);
-            if (!objectExists)
-            {
-                throw new PSArgumentException("Storage object does not exist.");
-            }
-
             string uri = GetBaseUri(Bucket, ObjectName);
             var downloader = new MediaDownloader(service);
 
@@ -508,7 +507,7 @@ namespace Google.PowerShell.CloudStorage
             // same name. (i.e. this is functionally identical to New-GcsObject.)
             //
             // We don't need to worry about data races and/or corrupting data mid-upload
-            // because of the strong consistency guarantees provided by Cloud Storage.
+            // because of the upload semantics of Cloud Storage.
             // See: https://cloud.google.com/storage/docs/consistency
             Object updatedGcsObject = UploadGcsObject(
                 service, Bucket, ObjectName, qualifiedPath,
