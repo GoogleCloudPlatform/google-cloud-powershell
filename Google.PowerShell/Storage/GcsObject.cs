@@ -190,13 +190,13 @@ namespace Google.PowerShell.CloudStorage
             string qualifiedPath = Path.GetFullPath(FilePath);
             if (!File.Exists(qualifiedPath))
             {
-                throw new FileNotFoundException("File Not Found", qualifiedPath);
+                throw new FileNotFoundException("File not found.", qualifiedPath);
             }
 
             bool objectExists = TestObjectExists(service, Bucket, ObjectName);
             if (objectExists && !Force.IsPresent)
             {
-                throw new PSArgumentException("Storage Object Already Exists. Use -Force to overwrite.");
+                throw new PSArgumentException("Storage object already exists. Use -Force to overwrite.");
             }
 
             Object newGcsObject = UploadGcsObject(
@@ -413,13 +413,13 @@ namespace Google.PowerShell.CloudStorage
             bool fileExists = File.Exists(qualifiedPath);
             if (fileExists && !Force.IsPresent)
             {
-                throw new PSArgumentException("File Already Exists. Use -Force to overwrite.");
+                throw new PSArgumentException("File already exists. Use -Force to overwrite.");
             }
 
             bool objectExists = TestObjectExists(service, Bucket, ObjectName);
             if (!objectExists)
             {
-                throw new PSArgumentException("Storage Object Does Not Exist.");
+                throw new PSArgumentException("Storage object does not exist.");
             }
 
             string uri = GetBaseUri(Bucket, ObjectName);
@@ -428,8 +428,7 @@ namespace Google.PowerShell.CloudStorage
             using (var writer = new FileStream(qualifiedPath, FileMode.Create))
             {
                 var result = downloader.Download(uri, writer);
-                if (result.Status == DownloadStatus.Failed
-                    || result.Exception != null)
+                if (result.Status == DownloadStatus.Failed || result.Exception != null)
                 {
                     throw result.Exception;
                 }
@@ -482,7 +481,7 @@ namespace Google.PowerShell.CloudStorage
             FileInfo localFileInfo = new FileInfo(qualifiedPath);
             if (!localFileInfo.Exists)
             {
-                throw new PSArgumentException("Local File Does Not Exist.");
+                throw new PSArgumentException("Local file does not exist.");
             }
 
             // Fail if the GCS Object does not exist. We don't use TestGcsObjectExists
@@ -497,11 +496,11 @@ namespace Google.PowerShell.CloudStorage
             {
                 if (ex.HttpStatusCode == HttpStatusCode.NotFound)
                 {
-                    throw new PSArgumentException("Storage Object Does Not Exist.");
+                    throw new PSArgumentException("Storage object does not exist.");
                 }
                 else
                 {
-                    throw new PSArgumentException("Error Confirming Object Exists: " + ex.Message);
+                    throw new PSArgumentException("Error confirming object exists: " + ex.Message);
                 }
             }
 
