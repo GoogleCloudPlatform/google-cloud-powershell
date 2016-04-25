@@ -44,9 +44,10 @@ namespace Google.PowerShell.CloudStorage
                 getReq.Execute();
                 return true;
             }
-            catch (GoogleApiException ex)
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
             {
-                // Swallow the error, most likely a 404 because the object doesn't exist.
+                // Just swallow it. Ideally we wouldn't need to use an exception for
+                // control flow, but alas the API doesn't seem to have a test method.
             }
             return false;
         }
