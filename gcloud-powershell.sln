@@ -11,6 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Google.PowerShell.Integrati
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFiles", "SolutionFiles", "{A9C63839-C794-4DBF-A72C-052BCB9CE71E}"
 	ProjectSection(SolutionItems) = preProject
+		cmdlet-style-guide.md = cmdlet-style-guide.md
 		CONTRIBUTING.md = CONTRIBUTING.md
 		LICENSE = LICENSE
 		nuget.config = nuget.config

@@ -119,7 +119,6 @@
     <Compile Include="Storage\GcsBucketWebsite.cs" />
     <Compile Include="Storage\GcsCmdlet.cs" />
     <Compile Include="Storage\GcsObject.cs" />
-    <Compile Include="Storage\GcsObjectContents.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
