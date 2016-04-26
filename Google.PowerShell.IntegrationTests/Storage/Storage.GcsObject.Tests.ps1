@@ -298,7 +298,7 @@ Describe "Write-GcsObject" {
         $tempFile = [System.IO.Path]::GetTempFileName()
         $newContents = "This is the NEW content."
         [System.IO.File]::WriteAllText($tempFile, $newContents)
-        Write-GcsObject $bucket $objectName $tempFile
+        Write-GcsObject $bucket $objectName -File $tempFile
         Remove-Item $tempFile
 
         # Confirm the contents have changed.
@@ -308,6 +308,28 @@ Describe "Write-GcsObject" {
         $fileContents = [System.IO.File]::ReadAllText($tempFile)
         $fileContents | Should BeExactly $newContents
         Remove-Item $tempFile
+    }
+
+    It "requires the -File or -Contents parameter be named (or from pipeline)" {
+        { Write-GcsObject "bucket-name" "object-name" "contents-or-file?" } `
+            | Should Throw "Parameter set cannot be resolved using the specified named parameters"
+    }
+
+    It "will accept contents from the pipeline" {
+        # Note that we aren't specifying the -Contents or -File parameter. Instead
+        # that is set by the pipeline.
+        $objectName = "write-gcsobject-from-pipeline"
+        $objectContents = "This is some text from the PowerShell pipeline"
+        { $objectContents | Write-GcsObject $bucket $objectName } `
+            | Should Throw "Storage object does not exist"
+
+        # Adding -Force does the trick. Confirm it worked.
+        $objectContents | Write-GcsObject $bucket $objectName -Force
+        Read-GcsObject $bucket $objectName | Should BeExactly $objectContents
+
+        # Exercise the explicit -Content parameter too.
+        Write-GcsObject $bucket ($objectName + "2") -Content $objectContents -Force
+        Read-GcsObject $bucket ($objectName + "2") | Should BeExactly $objectContents
     }
     # TODO(chrsmith): Confirm it works for 0-byte files (currently it doesn't).
     # TODO(chrsmith): Confirm Write-GcsObject doesn't remove object metadata, such

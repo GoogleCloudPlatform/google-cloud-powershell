@@ -470,7 +470,8 @@ namespace Google.PowerShell.CloudStorage
     /// Replaces the contents of a Cloud Storage object.
     /// </para>
     /// <para type="description">
-    /// Replaces the contents of a Cloud Storage object with data from the local disk.
+    /// Replaces the contents of a Cloud Storage object with data from the local disk or a value
+    /// from the pipeline.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommunications.Write, "GcsObject")]
@@ -494,19 +495,45 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
-        /// Local file path to read.
+        /// Text content to write to the Storage object. Ignored if LocalFile is specified.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = true)]
-        public string LocalFile { get; set; }
+        [Parameter(Position = 2, Mandatory = false, ValueFromPipeline = true, ParameterSetName = "ContentsFromString")]
+        public string Contents { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Local file path to read, writing its contents into Cloud Storage.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 2, Mandatory = false, ParameterSetName = "ContentsFromFile")]
+        public string File { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Force the operation to succeed, ignoring errors if no existing Storage object exists.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public SwitchParameter Force { get; set; }
 
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
             var service = GetStorageService();
 
+            // If no LocalFile is specified, then we will write the Contents parameter to the
+            // storage object. To simplify the code we will reuse the LocalFile property.
+            bool createdTempFile = false;
+            if (string.IsNullOrEmpty(File))
+            {
+                createdTempFile = true;
+                File = Path.GetTempFileName();
+                System.IO.File.WriteAllText(File, Contents);
+            }
+
             // Fail if the local file does not exist.
-            string qualifiedPath = Path.GetFullPath(LocalFile);
+            string qualifiedPath = Path.GetFullPath(File);
             FileInfo localFileInfo = new FileInfo(qualifiedPath);
             if (!localFileInfo.Exists)
             {
@@ -515,21 +542,18 @@ namespace Google.PowerShell.CloudStorage
 
             // Fail if the GCS Object does not exist. We don't use TestGcsObjectExists
             // so we can reuse the existing objects metadata when uploading a new file.
-            Object existingGcsObject = null;
+            string contentType = OctetStreamMimeType;
             try
             {
                 ObjectsResource.GetRequest getReq = service.Objects.Get(Bucket, ObjectName);
-                existingGcsObject = getReq.Execute();
+                Object existingGcsObject = getReq.Execute();
+                contentType = existingGcsObject.ContentType;
             }
-            catch (GoogleApiException ex)
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
             {
-                if (ex.HttpStatusCode == HttpStatusCode.NotFound)
+                if (!Force.IsPresent)
                 {
                     throw new PSArgumentException("Storage object does not exist.");
-                }
-                else
-                {
-                    throw new PSArgumentException("Error confirming object exists: " + ex.Message);
                 }
             }
 
@@ -541,7 +565,12 @@ namespace Google.PowerShell.CloudStorage
             // See: https://cloud.google.com/storage/docs/consistency
             Object updatedGcsObject = UploadGcsObject(
                 service, Bucket, ObjectName, qualifiedPath,
-                existingGcsObject.ContentType);
+                contentType);
+
+            if (createdTempFile)
+            {
+                System.IO.File.Delete(File);
+            }
         }
     }
 }
