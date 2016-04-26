@@ -23,9 +23,6 @@ namespace Google.PowerShell.CloudStorage
 
     // TODO(chrsmith): Provide a way to test if an object exists, a la Test-GcsObject.
 
-    // TODO(chrsmith): Provide a way to return GCS object contents as a string, a la Type-GcsObject.
-    // Ideally one could `Read-GcsContents xyz | sort | Write-GcsContents abc`.
-
     /// <summary>
     /// Base class for Cloud Storage Object cmdlets. Used to reuse common methods.
     /// </summary>
@@ -368,10 +365,12 @@ namespace Google.PowerShell.CloudStorage
 
     /// <summary>
     /// <para type="synopsis">
-    /// Writes the contents of a Cloud Storage object to disk.
+    /// Read the contents of a Cloud Storage object.
     /// </para>
     /// <para type="description">
-    /// Reads the contents of a Cloud Storage object, writing it to disk.
+    /// Reads the contents of a Cloud Storage object. By default the contents will be
+    /// written to the pipeline. If the -OutFile parameter is set, it will be written
+    /// to disk instead.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommunications.Read, "GcsObject")]
@@ -398,8 +397,12 @@ namespace Google.PowerShell.CloudStorage
         /// Local file path to write the contents to.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = true)]
-        public string DestinationPath { get; set; }
+        [Parameter(Position = 2, Mandatory = false)]
+        public string OutFile { get; set; }
+
+        // Consider adding a -PassThru parameter to enable writing the contents to the
+        // pipeline AND saving to disk, like Invoke-WebRequest. See:
+        // https://technet.microsoft.com/en-us/library/hh849901.aspx
 
         /// <summary>
         /// <para type="description">
@@ -414,16 +417,42 @@ namespace Google.PowerShell.CloudStorage
             base.ProcessRecord();
             var service = GetStorageService();
 
-            // Fail if the local file exists, unless -Force is specified.
-            string qualifiedPath = Path.GetFullPath(DestinationPath);
+            string uri = GetBaseUri(Bucket, ObjectName);
+            var downloader = new MediaDownloader(service);
+
+            // Write object contents to the pipeline if no -OutFile is specified.
+            if (string.IsNullOrEmpty(OutFile))
+            {
+                // Start with a 1MiB buffer. We could get the object's metadata and use its exact
+                // file size, but making a web request << just allocating more memory.
+                using (var memStream = new MemoryStream(1024 * 1024))
+                {
+                    var result = downloader.Download(uri, memStream);
+                    if (result.Status == DownloadStatus.Failed || result.Exception != null)
+                    {
+                        throw result.Exception;
+                    }
+
+                    // Stream cursor is at the end (data just written).
+                    memStream.Position = 0;
+                    using (var streamReader = new StreamReader(memStream))
+                    {
+                        string objectContents = streamReader.ReadToEnd();
+                        WriteObject(objectContents);
+                    }
+                }
+
+                return;
+            }
+
+            // Write object contents to disk. Fail if the local file exists, unless -Force is specified.
+            string qualifiedPath = Path.GetFullPath(OutFile);
             bool fileExists = File.Exists(qualifiedPath);
             if (fileExists && !Force.IsPresent)
             {
                 throw new PSArgumentException("File already exists. Use -Force to overwrite.");
             }
 
-            string uri = GetBaseUri(Bucket, ObjectName);
-            var downloader = new MediaDownloader(service);
 
             using (var writer = new FileStream(qualifiedPath, FileMode.Create))
             {

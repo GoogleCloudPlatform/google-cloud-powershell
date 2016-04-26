@@ -259,6 +259,22 @@ Describe "Read-GcsObject" {
         { Read-GcsObject $bucket $testObjectName "C:\windows\helloworld.txt" } `
             | Should Throw "is denied" 
     }
+
+    It "will write contents to pipeline if no -OutFile is set" {
+        $result = Read-GcsObject $bucket $testObjectName
+        $result | Should BeExactly $testFileContents
+        # TODO(chrmsith): Find out how to get Pester to confirm a cmdlet did not have any
+        # output, and confirm that -Outfile doesn't put anything in the pipeline.
+    }
+
+    It "will work in conjunction with the Out-File cmdlet" {
+        $tempFileName = [System.IO.Path]::GetTempFileName()
+        # Read contents from GCS, pipe them to a file.
+        Read-GcsObject $bucket $testObjectName `
+            | Out-File $tempFileName -Force -NoNewline
+        [System.IO.File]::ReadAllText($tempFileName) | Should Be $testFileContents
+    }
+
     # TODO(chrsmith): Confirm it throws a 403 if you don't have GCS access.
     # TODO(chrsmith): Confirm it fails if you don't have write access to disk.
 }
