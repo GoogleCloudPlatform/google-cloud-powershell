@@ -92,7 +92,7 @@ namespace Google.PowerShell.CloudStorage
     /// <example>
     ///   <para>Upload a local log file to GCS.</para>
     ///   <para><code>New-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt" `</code></para>
-    ///   <para><code>    -FilePath "C:\logs\log-000.txt"</code></para></code></para>
+    ///   <para><code>    -File "C:\logs\log-000.txt"</code></para></code></para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GcsObject")]
@@ -116,11 +116,19 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
+        /// Text content to write to the Storage object. Ignored if File is specified.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 2, Mandatory = false, ValueFromPipeline = true, ParameterSetName = "ContentsFromString")]
+        public string Contents { get; set; }
+
+        /// <summary>
+        /// <para type="description">
         /// Local path to the file to upload.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = true)]
-        public string FilePath { get; set; }
+        [Parameter(Position = 2, Mandatory = true, ParameterSetName = "ContentsFromFile")]
+        public string File { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -186,8 +194,18 @@ namespace Google.PowerShell.CloudStorage
                 ContentType = OctetStreamMimeType;
             }
 
-            string qualifiedPath = Path.GetFullPath(FilePath);
-            if (!File.Exists(qualifiedPath))
+            // If no File is specified, then we will write the Contents parameter to the
+            // storage object. To simplify the code we will reuse the File property.
+            bool createdTempFile = false;
+            if (string.IsNullOrEmpty(File))
+            {
+                createdTempFile = true;
+                File = Path.GetTempFileName();
+                System.IO.File.WriteAllText(File, Contents);
+            }
+
+            string qualifiedPath = Path.GetFullPath(File);
+            if (!System.IO.File.Exists(qualifiedPath))
             {
                 throw new FileNotFoundException("File not found.", qualifiedPath);
             }
@@ -206,6 +224,11 @@ namespace Google.PowerShell.CloudStorage
                 service, Bucket, ObjectName, qualifiedPath,
                 ContentType, GetPredefinedAcl());
             WriteObject(newGcsObject);
+
+            if (createdTempFile)
+            {
+                System.IO.File.Delete(File);
+            }
         }
     }
 
@@ -495,7 +518,7 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
-        /// Text content to write to the Storage object. Ignored if LocalFile is specified.
+        /// Text content to write to the Storage object. Ignored if File is specified.
         /// </para>
         /// </summary>
         [Parameter(Position = 2, Mandatory = false, ValueFromPipeline = true, ParameterSetName = "ContentsFromString")]
@@ -522,8 +545,8 @@ namespace Google.PowerShell.CloudStorage
             base.ProcessRecord();
             var service = GetStorageService();
 
-            // If no LocalFile is specified, then we will write the Contents parameter to the
-            // storage object. To simplify the code we will reuse the LocalFile property.
+            // If no File is specified, then we will write the Contents parameter to the
+            // storage object. To simplify the code we will reuse the File property.
             bool createdTempFile = false;
             if (string.IsNullOrEmpty(File))
             {
@@ -553,7 +576,7 @@ namespace Google.PowerShell.CloudStorage
             {
                 if (!Force.IsPresent)
                 {
-                    throw new PSArgumentException("Storage object does not exist.");
+                    throw new PSArgumentException("Storage object does not exist. Use -Force to ignore.");
                 }
             }
 
