@@ -271,7 +271,7 @@ Describe "Read-GcsObject" {
     It "will write contents to pipeline if no -OutFile is set" {
         $result = Read-GcsObject $bucket $testObjectName
         $result | Should BeExactly $testFileContents
-        # TODO(chrmsith): Find out how to get Pester to confirm a cmdlet did not have any
+        # TODO(chrsmith): Find out how to get Pester to confirm a cmdlet did not have any
         # output, and confirm that -Outfile doesn't put anything in the pipeline.
     }
 
