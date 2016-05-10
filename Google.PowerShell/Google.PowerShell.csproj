@@ -50,6 +50,10 @@
       <HintPath>..\packages\Google.Apis.Auth.1.11.1\lib\net45\Google.Apis.Auth.PlatformServices.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Google.Apis.Compute.v1, Version=1.12.0.467, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.Compute.v1.1.12.0.467\lib\portable-net45+netcore45+wpa81+wp8\Google.Apis.Compute.v1.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Google.Apis.Core, Version=1.11.1.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
       <HintPath>..\packages\Google.Apis.Core.1.11.1\lib\net45\Google.Apis.Core.dll</HintPath>
       <Private>True</Private>
@@ -113,6 +117,8 @@
     <Compile Include="Common\CloudSdkSettings.cs" />
     <Compile Include="Common\GcloudCmdlet.cs" />
     <Compile Include="Common\MeasurementProtocolService.cs" />
+    <Compile Include="Compute\GceCmdlet.cs" />
+    <Compile Include="Compute\GceDisk.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Storage\GcsBucket.cs" />
     <Compile Include="Storage\GcsBucketLogging.cs" />
