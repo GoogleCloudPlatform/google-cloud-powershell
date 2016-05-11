@@ -212,4 +212,106 @@ namespace Google.PowerShell.ComputeEngine
             WriteObject(op);
         }
     }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Resize a Compute Engine disk object.
+    /// </para>
+    /// <para type="description">
+    /// Resize a Compute Engine disk object.
+    /// </para>
+    /// </summary>
+    [Cmdlet("Resize", "GceDisk")]
+    public class ResizeGceDiskCmdlet : GceCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The project to associate the new Compute Engine disk.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Specific zone to create the disk in, e.g. "us-central1-a".
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 1, Mandatory = true)]
+        public string Zone { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the disk.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 2, Mandatory = true), ValidatePattern("[a-z]([-a-z0-9]*[a-z0-9])?")]
+        public string DiskName { get; set; }
+
+        /// <summary>
+        /// <paratype="description">
+        /// Specify the new size of the disk in GiB. Must be larger than the current disk size.
+        /// </paratype>
+        /// </summary>
+        [Parameter]
+        public long NewSizeGb { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            base.ProcessRecord();
+            var service = GetComputeService();
+
+            DisksResizeRequest diskResizeReq = new DisksResizeRequest();
+            diskResizeReq.SizeGb = NewSizeGb;
+
+            DisksResource.ResizeRequest resizeReq = service.Disks.Resize(diskResizeReq, Project, Zone, DiskName);
+
+            Operation op = resizeReq.Execute();
+            WriteObject(op);
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Deletes a Compute Engine disk.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Remove, "GceDisk")]
+    public class RemoveGceDiskCmdlet : GceCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The project to associate the new Compute Engine disk.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Specific zone to create the disk in, e.g. "us-central1-a".
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 1, Mandatory = true)]
+        public string Zone { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the disk.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 2, Mandatory = true), ValidatePattern("[a-z]([-a-z0-9]*[a-z0-9])?")]
+        public string DiskName { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            base.ProcessRecord();
+            var service = GetComputeService();
+
+            DisksResource.DeleteRequest deleteReq = service.Disks.Delete(Project, Zone, DiskName);
+
+            Operation op = deleteReq.Execute();
+            WriteObject(op);
+        }
+    }
 }
