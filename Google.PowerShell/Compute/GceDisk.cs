@@ -115,4 +115,126 @@ namespace Google.PowerShell.ComputeEngine
             }
         }
     }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Creates a new Google Compute Engine disk object.
+    /// </para>
+    /// <para type="description">
+    /// Creates a new Google Compute Engine disk object.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.New, "GceDisk")]
+    public class NewGceDiskCmdlet : GceCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The project to associate the new Compute Engine disk.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Specific zone to create the disk in, e.g. "us-central1-a".
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true)]
+        public string Zone { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the disk.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true)]
+        public string DiskName { get; set; }
+
+        /// <summary>
+        /// <paratype="description">
+        /// Optional description of the disk.
+        /// </paratype>
+        /// </summary>
+        [Parameter]
+        public string Description { get; set; }
+
+        /// <summary>
+        /// <paratype="description">
+        /// Specify the size of the disk in GiB.
+        /// </paratype>
+        /// </summary>
+        [Parameter]
+        public long? SizeGb { get; set; }
+
+        /// <summary>
+        /// <paratype="description">
+        /// Type of disk, e.g. pd-ssd or pd-standard.
+        /// </paratype>
+        /// </summary>
+        [Parameter, ValidateSet(new string[] { "pd-ssd", "pd-standard" })]
+        public string DiskType { get; set; }
+
+        /// <summary>
+        /// <paratype="description">
+        /// Source image to apply to the disk.
+        /// </paratype>
+        /// <paratype="description">
+        /// You can provide a private (custom) image using the following input, and Compute Engine
+        /// will use the corresponding image from your project. For example:
+        /// "global/images/my-private-image"
+        /// </paratype>
+        /// <paratype="description">
+        /// Or you can provide an image from a publicly-available project.For example, to use a
+        /// Debian image from the debian-cloud project, make sure to include the project in the URL:
+        // "projects/debian-cloud/global/images/debian-7-wheezy-vYYYYMMDD"
+        /// </paratype>
+        /// <paratype="description">
+        /// 
+        /// </paratype>
+        /// </summary>
+        [Parameter]
+        public string SourceImage { get; set; }
+
+        // TODO(chrsmith): Provide a way to create new disks from an existing disk snapshot.
+        // A prereq for this is having PowerShell support for snapshots, etc.
+
+        protected override void ProcessRecord()
+        {
+            base.ProcessRecord();
+            var service = GetComputeService();
+
+            // TODO(chrsmith): Validate the name matches "[a-z]([-a-z0-9]*[a-z0-9])?".
+
+            Disk newDisk = new Disk();
+            newDisk.SizeGb = SizeGb;
+            newDisk.Type = DiskType;
+            newDisk.SourceImage = SourceImage;
+            // TODO(chrsmith): Support creating disks based on existing snapshots. See
+            // comment above for more info.
+
+            DisksResource.InsertRequest insertReq = service.Disks.Insert(newDisk, Project, Zone);
+            /*
+            Required field 'resource' not specified [400]
+            Errors [
+                Message[Required field 'resource' not specified] Location[ - ] Reason[required] Domain[global]
+            ]
+            */
+            // I never "set" this parameter, so it should use the default value, right?
+            insertReq.RequestParameters.Add(
+                "trace",
+                new Google.Apis.Discovery.Parameter
+                {
+                    Name = "trace",
+                    ParameterType = "query",
+                    DefaultValue = "email:chrsmith"
+                });
+            var req = insertReq.CreateRequest();
+            WriteObject(req.RequestUri.ToString());
+
+            // Wrap and return for sync? GceCmdlet peramter "-WaitForZoneOpsToComplete"?
+            Operation op = insertReq.Execute();
+            WriteObject(op);
+        }
+    }
 }
