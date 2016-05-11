@@ -5,6 +5,7 @@ using Google.Apis.Compute.v1;
 using Google.Apis.Compute.v1.Data;
 using Google.PowerShell.Common;
 using System;
+using System.Management.Automation;
 using System.Threading;
 
 namespace Google.PowerShell.ComputeEngine
@@ -25,15 +26,18 @@ namespace Google.PowerShell.ComputeEngine
         /// 
         /// Will throw an exception if the operation fails for any reason.
         /// </summary>
-        /// <param name="service"></param>
-        /// <param name="op"></param>
-        protected void WaitForRegionOperation(ComputeService service, string project, Operation op)
+        protected void WaitForZoneOperation(ComputeService service, string project, string zone, Operation op)
         {
             while (op.Status != "DONE")
             {
                 Thread.Sleep(150);
-                RegionOperationsResource.GetRequest getReq = service.RegionOperations.Get(project, op.Region, op.Name);
+                ZoneOperationsResource.GetRequest getReq = service.ZoneOperations.Get(project, zone, op.Name);
                 op = getReq.Execute();
+            }
+
+            if (op.Error != null)
+            {
+                throw new GoogleApiException("Compute", "Error waiting for zone operation: " + op.Error.ToString());
             }
         }
     }
