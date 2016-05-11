@@ -148,7 +148,7 @@ namespace Google.PowerShell.ComputeEngine
         /// Name of the disk.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true)]
+        [Parameter(Mandatory = true), ValidatePattern("[a-z]([-a-z0-9]*[a-z0-9])?")]
         public string DiskName { get; set; }
 
         /// <summary>
@@ -180,17 +180,9 @@ namespace Google.PowerShell.ComputeEngine
         /// Source image to apply to the disk.
         /// </paratype>
         /// <paratype="description">
-        /// You can provide a private (custom) image using the following input, and Compute Engine
-        /// will use the corresponding image from your project. For example:
-        /// "global/images/my-private-image"
-        /// </paratype>
-        /// <paratype="description">
-        /// Or you can provide an image from a publicly-available project.For example, to use a
-        /// Debian image from the debian-cloud project, make sure to include the project in the URL:
-        // "projects/debian-cloud/global/images/debian-7-wheezy-vYYYYMMDD"
-        /// </paratype>
-        /// <paratype="description">
-        /// 
+        /// Or you can provide an image from a publicly-available project. For example, to use a
+        /// Windows Serve image use "projects/windows-cloud/global/images/family/windows-2012-r2".
+        /// For more information type `gcloud compute images list`.
         /// </paratype>
         /// </summary>
         [Parameter]
@@ -204,35 +196,18 @@ namespace Google.PowerShell.ComputeEngine
             base.ProcessRecord();
             var service = GetComputeService();
 
-            // TODO(chrsmith): Validate the name matches "[a-z]([-a-z0-9]*[a-z0-9])?".
 
             Disk newDisk = new Disk();
+            newDisk.Name = DiskName;
+            // Optional fields. OK if null.
             newDisk.SizeGb = SizeGb;
             newDisk.Type = DiskType;
-            newDisk.SourceImage = SourceImage;
+
+            DisksResource.InsertRequest insertReq = service.Disks.Insert(newDisk, Project, Zone);
+            insertReq.SourceImage = SourceImage;
             // TODO(chrsmith): Support creating disks based on existing snapshots. See
             // comment above for more info.
 
-            DisksResource.InsertRequest insertReq = service.Disks.Insert(newDisk, Project, Zone);
-            /*
-            Required field 'resource' not specified [400]
-            Errors [
-                Message[Required field 'resource' not specified] Location[ - ] Reason[required] Domain[global]
-            ]
-            */
-            // I never "set" this parameter, so it should use the default value, right?
-            insertReq.RequestParameters.Add(
-                "trace",
-                new Google.Apis.Discovery.Parameter
-                {
-                    Name = "trace",
-                    ParameterType = "query",
-                    DefaultValue = "email:chrsmith"
-                });
-            var req = insertReq.CreateRequest();
-            WriteObject(req.RequestUri.ToString());
-
-            // Wrap and return for sync? GceCmdlet peramter "-WaitForZoneOpsToComplete"?
             Operation op = insertReq.Execute();
             WriteObject(op);
         }
