@@ -209,7 +209,13 @@ namespace Google.PowerShell.ComputeEngine
             // comment above for more info.
 
             Operation op = insertReq.Execute();
-            WriteObject(op);
+            WaitForRegionOperation(service, Project, op);
+
+            // Return the newly created disk.
+            DisksResource.GetRequest getReq = service.Disks.Get(Project, Zone, DiskName);
+            Disk disk = getReq.Execute();
+
+            WriteObject(disk);
         }
     }
 
@@ -267,7 +273,13 @@ namespace Google.PowerShell.ComputeEngine
             DisksResource.ResizeRequest resizeReq = service.Disks.Resize(diskResizeReq, Project, Zone, DiskName);
 
             Operation op = resizeReq.Execute();
-            WriteObject(op);
+            WaitForRegionOperation(service, Project, op);
+
+            // Return the updated disk.
+            DisksResource.GetRequest getReq = service.Disks.Get(Project, Zone, DiskName);
+            Disk disk = getReq.Execute();
+
+            WriteObject(disk);
         }
     }
 
@@ -311,7 +323,7 @@ namespace Google.PowerShell.ComputeEngine
             DisksResource.DeleteRequest deleteReq = service.Disks.Delete(Project, Zone, DiskName);
 
             Operation op = deleteReq.Execute();
-            WriteObject(op);
+            WaitForRegionOperation(service, Project, op);
         }
     }
 }
