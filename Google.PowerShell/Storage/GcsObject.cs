@@ -11,6 +11,7 @@ using Google.PowerShell.Common;
 using System.IO;
 using System.Management.Automation;
 using System.Net;
+using System.Text;
 using static Google.Apis.Storage.v1.ObjectsResource.InsertMediaUpload;
 
 namespace Google.PowerShell.CloudStorage
@@ -55,30 +56,27 @@ namespace Google.PowerShell.CloudStorage
         /// </summary>
         protected Object UploadGcsObject(
             StorageService service, string bucket, string objectName,
-            string qualifiedFilePath,
-            string contentType = OctetStreamMimeType, PredefinedAclEnum? predefinedAcl = null)
+            Stream contentStream, string contentType = OctetStreamMimeType,
+            PredefinedAclEnum? predefinedAcl = null)
         {
-            using (var fileStream = new FileStream(qualifiedFilePath, FileMode.Open))
+            Object newGcsObject = new Object
             {
-                Object newGcsObject = new Object
-                {
-                    Bucket = bucket,
-                    Name = objectName,
-                    ContentType = contentType
-                };
+                Bucket = bucket,
+                Name = objectName,
+                ContentType = contentType
+            };
 
-                ObjectsResource.InsertMediaUpload insertReq = service.Objects.Insert(
-                    newGcsObject, bucket, fileStream, contentType);
-                insertReq.PredefinedAcl = predefinedAcl;
+            ObjectsResource.InsertMediaUpload insertReq = service.Objects.Insert(
+                newGcsObject, bucket, contentStream, contentType);
+            insertReq.PredefinedAcl = predefinedAcl;
 
-                var finalProgress = insertReq.Upload();
-                if (finalProgress.Exception != null)
-                {
-                    throw finalProgress.Exception;
-                }
-
-                return insertReq.ResponseBody;
+            var finalProgress = insertReq.Upload();
+            if (finalProgress.Exception != null)
+            {
+                throw finalProgress.Exception;
             }
+
+            return insertReq.ResponseBody;
         }
     }
 
@@ -194,40 +192,42 @@ namespace Google.PowerShell.CloudStorage
                 ContentType = OctetStreamMimeType;
             }
 
-            // If no File is specified, then we will write the Contents parameter to the
-            // storage object. To simplify the code we will reuse the File property.
-            bool createdTempFile = false;
-            if (string.IsNullOrEmpty(File))
+            Stream contentStream = null;
+            if (!string.IsNullOrEmpty(File))
             {
-                createdTempFile = true;
-                File = Path.GetTempFileName();
-                System.IO.File.WriteAllText(File, Contents);
+                string qualifiedPath = Path.GetFullPath(File);
+                if (!System.IO.File.Exists(qualifiedPath))
+                {
+                    throw new FileNotFoundException("File not found.", qualifiedPath);
+                }
+                contentStream = new FileStream(qualifiedPath, FileMode.Open);
+            }
+            else
+            {
+                // Get the underlying byte representation of the string using the same encoding (UTF-16).
+                // So the data will be written in the same format it is passed, rather than converting to
+                // UTF-8 or UTF-32 when writen to Cloud Storage.
+                byte[] contentBuffer = Encoding.Unicode.GetBytes(Contents);
+                contentStream = new MemoryStream(contentBuffer);
             }
 
-            string qualifiedPath = Path.GetFullPath(File);
-            if (!System.IO.File.Exists(qualifiedPath))
+            using (contentStream)
             {
-                throw new FileNotFoundException("File not found.", qualifiedPath);
-            }
+                // We could potentially avoid this extra step by using a special request header.
+                //     "If you set the x-goog-if-generation-match header to 0, Google Cloud Storage only
+                //     performs the specified request if the object does not currently exist."
+                // See https://cloud.google.com/storage/docs/reference-headers#xgoogifgenerationmatch
+                bool objectExists = TestObjectExists(service, Bucket, ObjectName);
+                if (objectExists && !Force.IsPresent)
+                {
+                    throw new PSArgumentException("Storage object already exists. Use -Force to overwrite.");
+                }
 
-            // We could potentially avoid this extra step by using a special request header.
-            //     "If you set the x-goog-if-generation-match header to 0, Google Cloud Storage only
-            //     performs the specified request if the object does not currently exist."
-            // See https://cloud.google.com/storage/docs/reference-headers#xgoogifgenerationmatch
-            bool objectExists = TestObjectExists(service, Bucket, ObjectName);
-            if (objectExists && !Force.IsPresent)
-            {
-                throw new PSArgumentException("Storage object already exists. Use -Force to overwrite.");
-            }
+                Object newGcsObject = UploadGcsObject(
+                    service, Bucket, ObjectName, contentStream,
+                    ContentType, GetPredefinedAcl());
 
-            Object newGcsObject = UploadGcsObject(
-                service, Bucket, ObjectName, qualifiedPath,
-                ContentType, GetPredefinedAcl());
-            WriteObject(newGcsObject);
-
-            if (createdTempFile)
-            {
-                System.IO.File.Delete(File);
+                WriteObject(newGcsObject);
             }
         }
     }
@@ -545,54 +545,53 @@ namespace Google.PowerShell.CloudStorage
             base.ProcessRecord();
             var service = GetStorageService();
 
-            // If no File is specified, then we will write the Contents parameter to the
-            // storage object. To simplify the code we will reuse the File property.
-            bool createdTempFile = false;
-            if (string.IsNullOrEmpty(File))
+            Stream contentStream = null;
+            if (!string.IsNullOrEmpty(File))
             {
-                createdTempFile = true;
-                File = Path.GetTempFileName();
-                System.IO.File.WriteAllText(File, Contents);
-            }
-
-            // Fail if the local file does not exist.
-            string qualifiedPath = Path.GetFullPath(File);
-            FileInfo localFileInfo = new FileInfo(qualifiedPath);
-            if (!localFileInfo.Exists)
-            {
-                throw new PSArgumentException("Local file does not exist.");
-            }
-
-            // Fail if the GCS Object does not exist. We don't use TestGcsObjectExists
-            // so we can reuse the existing objects metadata when uploading a new file.
-            string contentType = OctetStreamMimeType;
-            try
-            {
-                ObjectsResource.GetRequest getReq = service.Objects.Get(Bucket, ObjectName);
-                Object existingGcsObject = getReq.Execute();
-                contentType = existingGcsObject.ContentType;
-            }
-            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
-            {
-                if (!Force.IsPresent)
+                string qualifiedPath = Path.GetFullPath(File);
+                if (!System.IO.File.Exists(qualifiedPath))
                 {
-                    throw new PSArgumentException("Storage object does not exist. Use -Force to ignore.");
+                    throw new FileNotFoundException("File not found.", qualifiedPath);
                 }
+                contentStream = new FileStream(qualifiedPath, FileMode.Open);
+            }
+            else
+            {
+                // Get the underlying byte representation of the string using the same encoding (UTF-16).
+                // So the data will be written in the same format it is passed, rather than converting to
+                // UTF-8 or UTF-32 when writen to Cloud Storage.
+                byte[] contentBuffer = Encoding.Unicode.GetBytes(Contents);
+                contentStream = new MemoryStream(contentBuffer);
             }
 
-            // Rewriting GCS objects is done by simply creating a new object with the
-            // same name. (i.e. this is functionally identical to New-GcsObject.)
-            //
-            // We don't need to worry about data races and/or corrupting data mid-upload
-            // because of the upload semantics of Cloud Storage.
-            // See: https://cloud.google.com/storage/docs/consistency
-            Object updatedGcsObject = UploadGcsObject(
-                service, Bucket, ObjectName, qualifiedPath,
-                contentType);
-
-            if (createdTempFile)
+            using (contentStream)
             {
-                System.IO.File.Delete(File);
+                // Fail if the GCS Object does not exist. We don't use TestGcsObjectExists
+                // so we can reuse the existing objects metadata when uploading a new file.
+                string contentType = OctetStreamMimeType;
+                try
+                {
+                    ObjectsResource.GetRequest getReq = service.Objects.Get(Bucket, ObjectName);
+                    Object existingGcsObject = getReq.Execute();
+                    contentType = existingGcsObject.ContentType;
+                }
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+                {
+                    if (!Force.IsPresent)
+                    {
+                        throw new PSArgumentException("Storage object does not exist. Use -Force to ignore.");
+                    }
+                }
+
+                // Rewriting GCS objects is done by simply creating a new object with the
+                // same name. (i.e. this is functionally identical to New-GcsObject.)
+                //
+                // We don't need to worry about data races and/or corrupting data mid-upload
+                // because of the upload semantics of Cloud Storage.
+                // See: https://cloud.google.com/storage/docs/consistency
+                Object updatedGcsObject = UploadGcsObject(
+                    service, Bucket, ObjectName, contentStream,
+                    contentType);
             }
         }
     }
