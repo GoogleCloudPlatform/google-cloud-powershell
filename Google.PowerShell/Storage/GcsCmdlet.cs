@@ -17,6 +17,11 @@ namespace Google.PowerShell.CloudStorage
         /// </summary>
         protected const string OctetStreamMimeType = "application/octet-stream";
 
+        /// <summary>
+        /// MIME attachment for UTF-8 encoding text.
+        /// </summary>
+        protected const string UTF8TextMimeType = "text/plain; charset=utf-8";
+
         // TODO(chrsmith): Cache the storage service? Create it in OnProcessRecord every time? (So it does so once?)
 
         protected StorageService GetStorageService()
