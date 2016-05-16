@@ -192,9 +192,12 @@ namespace Google.PowerShell.CloudStorage
                 ContentType = OctetStreamMimeType;
             }
 
+            string objContentType = null;
             Stream contentStream = null;
             if (!string.IsNullOrEmpty(File))
             {
+                // TODO(chrsmith): Look at the file extension and infer content type.
+                objContentType = OctetStreamMimeType;
                 string qualifiedPath = Path.GetFullPath(File);
                 if (!System.IO.File.Exists(qualifiedPath))
                 {
@@ -204,11 +207,17 @@ namespace Google.PowerShell.CloudStorage
             }
             else
             {
-                // Get the underlying byte representation of the string using the same encoding (UTF-16).
-                // So the data will be written in the same format it is passed, rather than converting to
-                // UTF-8 or UTF-32 when writen to Cloud Storage.
-                byte[] contentBuffer = Encoding.Unicode.GetBytes(Contents);
+                // We store string data as UTF-8, which is different from .NET's default encoding
+                // (UTF-16). But this simplifies several other issues.
+                objContentType = UTF8TextMimeType;
+                byte[] contentBuffer = Encoding.UTF8.GetBytes(Contents);
                 contentStream = new MemoryStream(contentBuffer);
+            }
+
+            // Use the user-specified content type instead of ours if provided.
+            if (string.IsNullOrEmpty(ContentType))
+            {
+                objContentType = ContentType;
             }
 
             using (contentStream)
@@ -225,7 +234,7 @@ namespace Google.PowerShell.CloudStorage
 
                 Object newGcsObject = UploadGcsObject(
                     service, Bucket, ObjectName, contentStream,
-                    ContentType, GetPredefinedAcl());
+                    objContentType, GetPredefinedAcl());
 
                 WriteObject(newGcsObject);
             }
@@ -582,6 +591,8 @@ namespace Google.PowerShell.CloudStorage
                         throw new PSArgumentException("Storage object does not exist. Use -Force to ignore.");
                     }
                 }
+                // TODO(chrsmith): In the -Force case we are using the default octet-stream MIME type. Guess
+                // the correct type based on file extension.
 
                 // Rewriting GCS objects is done by simply creating a new object with the
                 // same name. (i.e. this is functionally identical to New-GcsObject.)
