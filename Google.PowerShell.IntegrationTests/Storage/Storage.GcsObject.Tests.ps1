@@ -14,7 +14,7 @@ Describe "New-GcsObject" {
 
         $objectName = "43b75bdd-8869-496e-8c0d-3c12b49dcb18.txt"
 
-        $newObj = New-GcsObject $bucket $objectName $filename
+        $newObj = New-GcsObject $bucket $objectName -File $filename
         Remove-Item $filename
 
         $newObj.Name | Should Be $objectName
@@ -27,7 +27,7 @@ Describe "New-GcsObject" {
     }
 
     It "should fail if the file does not exist" {
-        { New-GcsObject $bucket "file-not-found.txt" "C:\file-404" } `
+        { New-GcsObject $bucket "file-not-found.txt" -File "C:\file-404" } `
             | Should Throw "File not found"
     }
 
@@ -38,7 +38,7 @@ Describe "New-GcsObject" {
         [System.IO.File]::WriteAllText($filename, "Huzzah!")
 
         $objectName = "C:\both-kinds/country\western"
-        $newObj = New-GcsObject $bucket $objectName $filename
+        $newObj = New-GcsObject $bucket $objectName -File $filename
         Remove-Item -Force $filename
 
         $newObj.Name | Should Be $objectName
@@ -62,7 +62,7 @@ Describe "New-GcsObject" {
             "local-file.txt")
         [System.IO.File]::WriteAllText($filePath, "file-contents")        
             
-        $newObj = New-GcsObject $bucket "on-gcs/file.txt" "local-file.txt"
+        $newObj = New-GcsObject $bucket "on-gcs/file.txt" -File "local-file.txt"
 
         $obj = Get-GcsObject $bucket "on-gcs/file.txt"
         $obj.Name | Should Be "on-gcs/file.txt"
@@ -75,7 +75,7 @@ Describe "New-GcsObject" {
         [System.IO.File]::WriteAllText($filename, "predefined ACL test")
 
         $objectName = "predefined-acl-test"
-        $newObj = New-GcsObject $bucket $objectName $filename -PredefinedAcl "publicRead"
+        $newObj = New-GcsObject $bucket $objectName -File $filename -PredefinedAcl "publicRead"
         # ACL[0] is from the user who created the object.
         # ACL[1]'s Id is like "gcps-object-testing/predefined-acl-test/1459867429211000/allUsers"
         $newObj.Acl[1].Id | Should Match "$bucket/$objectName/"
@@ -95,15 +95,15 @@ Describe "New-GcsObject" {
         [System.IO.File]::WriteAllText($tempFile, "existing-gcs-object")
 
         # Create
-        New-GcsObject $bucket $objectName $tempFile
+        New-GcsObject $bucket $objectName -File $tempFile
 
         # Confirm we won't clobber
-        { New-GcsObject $bucket $objectName $tempFile } `
+        { New-GcsObject $bucket $objectName -File $tempFile } `
             | Should Throw "Storage object already exists"
 
         # Confirm -Force works
         [System.IO.File]::WriteAllText($tempFile, "updated-object-contents")
-        New-GcsObject $bucket $objectName $tempFile -Force
+        New-GcsObject $bucket $objectName -File $tempFile -Force
         Remove-Item $tempFile
 
         # Confirm the contents are expected
@@ -114,6 +114,14 @@ Describe "New-GcsObject" {
         $fileContents | Should BeExactly "updated-object-contents"
 
         Remove-Item $tempFile2
+    }
+
+    It "will accept object contents from the pipeline" {
+        $objectName = "new-object-from-pipeline"
+        $objectContents = "Object contents from the PowerShell pipeline"
+        $objectContents | New-GcsObject $bucket $objectName -PredefinedAcl "publicRead"
+
+        Read-GcsObject $bucket $objectName | Should BeExactly $objectContents
     }
     # TODO(chrsmith): Confirm it works for 0-byte files (currently it doesn't).
 }
@@ -211,7 +219,7 @@ Describe "Read-GcsObject" {
         # Before each test, upload a new file to the GCS bucket.
         $filename = [System.IO.Path]::GetTempFileName()
         [System.IO.File]::WriteAllText($filename, $testFileContents)
-        New-GcsObject $bucket $testObjectName $filename -Force
+        New-GcsObject $bucket $testObjectName -File $filename -Force
         Remove-Item -Force $filename
     }
 
@@ -259,6 +267,22 @@ Describe "Read-GcsObject" {
         { Read-GcsObject $bucket $testObjectName "C:\windows\helloworld.txt" } `
             | Should Throw "is denied" 
     }
+
+    It "will write contents to pipeline if no -OutFile is set" {
+        $result = Read-GcsObject $bucket $testObjectName
+        $result | Should BeExactly $testFileContents
+        # TODO(chrsmith): Find out how to get Pester to confirm a cmdlet did not have any
+        # output, and confirm that -Outfile doesn't put anything in the pipeline.
+    }
+
+    It "will work in conjunction with the Out-File cmdlet" {
+        $tempFileName = [System.IO.Path]::GetTempFileName()
+        # Read contents from GCS, pipe them to a file.
+        Read-GcsObject $bucket $testObjectName `
+            | Out-File $tempFileName -Force -NoNewline
+        [System.IO.File]::ReadAllText($tempFileName) | Should Be $testFileContents
+    }
+
     # TODO(chrsmith): Confirm it throws a 403 if you don't have GCS access.
     # TODO(chrsmith): Confirm it fails if you don't have write access to disk.
 }
@@ -275,14 +299,14 @@ Describe "Write-GcsObject" {
         # Create the original file.
         $tempFile = [System.IO.Path]::GetTempFileName()
         [System.IO.File]::WriteAllText($tempFile, $originalContents)
-        New-GcsObject $bucket $objectName $tempFile
+        New-GcsObject $bucket $objectName -File $tempFile
         Remove-Item $tempFile
 
         # Rewrite its contents
         $tempFile = [System.IO.Path]::GetTempFileName()
         $newContents = "This is the NEW content."
         [System.IO.File]::WriteAllText($tempFile, $newContents)
-        Write-GcsObject $bucket $objectName $tempFile
+        Write-GcsObject $bucket $objectName -File $tempFile
         Remove-Item $tempFile
 
         # Confirm the contents have changed.
@@ -292,6 +316,28 @@ Describe "Write-GcsObject" {
         $fileContents = [System.IO.File]::ReadAllText($tempFile)
         $fileContents | Should BeExactly $newContents
         Remove-Item $tempFile
+    }
+
+    It "requires the -File or -Contents parameter be named (or from pipeline)" {
+        { Write-GcsObject "bucket-name" "object-name" "contents-or-file?" } `
+            | Should Throw "Parameter set cannot be resolved using the specified named parameters"
+    }
+
+    It "will accept contents from the pipeline" {
+        # Note that we aren't specifying the -Contents or -File parameter. Instead
+        # that is set by the pipeline.
+        $objectName = "write-gcsobject-from-pipeline"
+        $objectContents = "This is some text from the PowerShell pipeline"
+        { $objectContents | Write-GcsObject $bucket $objectName } `
+            | Should Throw "Storage object does not exist"
+
+        # Adding -Force does the trick. Confirm it worked.
+        $objectContents | Write-GcsObject $bucket $objectName -Force
+        Read-GcsObject $bucket $objectName | Should BeExactly $objectContents
+
+        # Exercise the explicit -Content parameter too.
+        Write-GcsObject $bucket ($objectName + "2") -Content $objectContents -Force
+        Read-GcsObject $bucket ($objectName + "2") | Should BeExactly $objectContents
     }
     # TODO(chrsmith): Confirm it works for 0-byte files (currently it doesn't).
     # TODO(chrsmith): Confirm Write-GcsObject doesn't remove object metadata, such

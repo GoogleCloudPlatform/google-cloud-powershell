@@ -71,3 +71,13 @@ At line:1 char:1
 # Works with -Force
 PS C:\> Copy-Item -Path temp.txt -Destination .\already-exists.txt -Force
 ````
+
+# Cmdlet parameter names SHOULD be as simple as possible
+
+Keep parameter names as simple as possible. For example, if uploading a file,
+avoid parameter names like `LocalFile` or `FileToUpload` and instead just
+go with `File`.
+
+At times a more descriptive name might be appropriate, such as `InputObjectName`
+when coupled with `OutputObjectName`. But in general, avoid adjectives modifying
+the parameter name if the purpose of the parameter is clear without it.

@@ -10,3 +10,8 @@ But you need to do this for _the x86 version of PowerShell_ that Visual Studio r
 run that command from:
 
     C:\Windows\syswow64\WindowsPowerShell\v1.0\powershell.exe
+
+If you only want to run a subset of the integration tests, use the `-TestName` parameter. e.g.
+
+    pester -TestName Read-GcsObject
+
