@@ -38,9 +38,9 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// Specific zone to lookup disks in, e.g. "us-central1-a".
+        /// Specific zone to lookup disks in, e.g. "us-central1-a". Partial names
+        /// like "us-" or "us-central1" will also work.
         /// </para>
-        /// </summary>
         [Parameter(Position = 1, Mandatory = false)]
         public string Zone { get; set; }
 
@@ -59,11 +59,9 @@ namespace Google.PowerShell.ComputeEngine
 
             DisksResource.AggregatedListRequest listReq = service.Disks.AggregatedList(Project);
             // The v1 version of the API only supports one filter at a time. So we need to
-            // specify a filter here and manually filter results later.
-            if (!String.IsNullOrEmpty(Zone))
-            {
-                listReq.Filter = $"zone eq \"{this.Zone}\"";
-            }
+            // specify a filter here and manually filter results later. Also, since the only
+            // operations are "eq" and "ne", we don't use the filter for zone so that we can
+            // can allow filtering by regions.
             if (!String.IsNullOrEmpty(DiskName))
             {
                 listReq.Filter = $"name eq \"{this.DiskName}\"";
@@ -106,7 +104,7 @@ namespace Google.PowerShell.ComputeEngine
                     continue;
                 }
 
-                if (!String.IsNullOrEmpty(Zone) && disk.Zone != Zone)
+                if (!String.IsNullOrEmpty(Zone) && !disk.Zone.Contains(Zone))
                 {
                     continue;
                 }
