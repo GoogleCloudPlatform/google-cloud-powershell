@@ -57,6 +57,16 @@ namespace Google.PowerShell.ComputeEngine
             base.ProcessRecord();
             var service = GetComputeService();
 
+            // Special case. If you specify the Project, Zone, and DiskName we use the Get command to
+            // get the specific disk. This will throw a 404 if it does not exist.
+            if (!String.IsNullOrEmpty(Project) && !String.IsNullOrEmpty(Zone) && !String.IsNullOrEmpty(DiskName))
+            {
+                DisksResource.GetRequest getReq = service.Disks.Get(Project, Zone, DiskName);
+                Disk disk = getReq.Execute();
+                WriteObject(disk);
+                return;
+            }
+
             DisksResource.AggregatedListRequest listReq = service.Disks.AggregatedList(Project);
             // The v1 version of the API only supports one filter at a time. So we need to
             // specify a filter here and manually filter results later. Also, since the only
@@ -194,12 +204,20 @@ namespace Google.PowerShell.ComputeEngine
             base.ProcessRecord();
             var service = GetComputeService();
 
+            // The GCE API requires disk types to be specified as URI-like things.
+            // If null will default to "pd-standard"
+            string diskTypeResource = DiskType;
+            if (diskTypeResource != null)
+            {
+                diskTypeResource = $"zones/{Zone}/diskTypes/{DiskType}";
+            }
 
             Disk newDisk = new Disk();
             newDisk.Name = DiskName;
+            newDisk.Description = Description;
             // Optional fields. OK if null.
             newDisk.SizeGb = SizeGb;
-            newDisk.Type = DiskType;
+            newDisk.Type = diskTypeResource;
 
             DisksResource.InsertRequest insertReq = service.Disks.Insert(newDisk, Project, Zone);
             insertReq.SourceImage = SourceImage;
@@ -216,6 +234,8 @@ namespace Google.PowerShell.ComputeEngine
             WriteObject(disk);
         }
     }
+
+    // TODO(chrsmith): Support -Force, -WhatIf, etc.
 
     /// <summary>
     /// <para type="synopsis">
@@ -257,7 +277,7 @@ namespace Google.PowerShell.ComputeEngine
         /// Specify the new size of the disk in GiB. Must be larger than the current disk size.
         /// </paratype>
         /// </summary>
-        [Parameter]
+        [Parameter(Position = 3, Mandatory = true)]
         public long NewSizeGb { get; set; }
 
         protected override void ProcessRecord()
@@ -280,6 +300,8 @@ namespace Google.PowerShell.ComputeEngine
             WriteObject(disk);
         }
     }
+
+    // TODO(chrsmith): Support -Force, -WhatIf, etc.
 
     /// <summary>
     /// <para type="synopsis">
@@ -317,6 +339,11 @@ namespace Google.PowerShell.ComputeEngine
         {
             base.ProcessRecord();
             var service = GetComputeService();
+
+            // First try to get the disk, this way the cmdlet fails with a 404 if the
+            // disk does not exist. (Otherwise the delete operation would succeed when
+            // trying to delete a non-existant disk.)
+            service.Disks.Get(Project, Zone, DiskName);
 
             DisksResource.DeleteRequest deleteReq = service.Disks.Delete(Project, Zone, DiskName);
 
