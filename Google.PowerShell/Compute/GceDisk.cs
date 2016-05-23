@@ -308,7 +308,7 @@ namespace Google.PowerShell.ComputeEngine
     /// Deletes a Compute Engine disk.
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Remove, "GceDisk")]
+    [Cmdlet(VerbsCommon.Remove, "GceDisk", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High)]
     public class RemoveGceDiskCmdlet : GceCmdlet
     {
         /// <summary>
@@ -335,10 +335,19 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(Position = 2, Mandatory = true), ValidatePattern("[a-z]([-a-z0-9]*[a-z0-9])?")]
         public string DiskName { get; set; }
 
+        [Parameter]
+        public SwitchParameter Force { get; set; }
+
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
             var service = GetComputeService();
+
+            base.ProcessRecord();
+            if (!base.ConfirmAction(Force.IsPresent, DiskName, "Remove-GceDisk (DeleteDisk)"))
+            {
+                return;
+            }
 
             // First try to get the disk, this way the cmdlet fails with a 404 if the
             // disk does not exist. (Otherwise the delete operation would succeed when

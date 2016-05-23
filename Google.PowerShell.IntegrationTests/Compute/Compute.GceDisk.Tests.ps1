@@ -127,14 +127,14 @@ Describe "Remove-GceDisk" {
         New-GceDisk -Project $project -Zone $zone -DiskName $diskName
 
         $disk = Get-GceDisk $project $zone $diskName
-        Remove-GceDisk $project $zone $diskName
+        Remove-GceDisk $project $zone $diskName -Force
         
         { Get-GceDisk $project $zone $diskName } `
             | Should Throw "404"
     }
 
     It "should fail to delete non-existant disks" {
-        { Remove-GceDisk $project $zone "does-not-exist" } `
+        { Remove-GceDisk $project $zone "does-not-exist" -Force } `
             | Should Throw "was not found [404]"
     }
 

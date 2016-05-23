@@ -71,7 +71,7 @@ namespace Google.PowerShell.Common
         /// the user confirms the action.
         /// 
         /// - Does not prompt if Force is set.
-        /// - Always prompts if WhatIF is set.
+        /// - Always prompts if WhatIf is set.
         /// </summary>
         protected bool ConfirmAction(bool force, string resource, string action)
         {
