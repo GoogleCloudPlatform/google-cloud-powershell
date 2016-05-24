@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Get-GcsBucket</title>
+  <meta name="description" content="">
+
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="canonical" href="/cmdlets/get-gcsbucket.html">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+<div class="wrapper">
+    <a class="site-title" href="/">Google Cloud Powershell Cmdlet Reference</a>
+</div>
+
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <style>
+pre {
+    white-space: pre-wrap;
+}
+</style>
+
+<h1>Get-GcsBucket</h1>
+<pre>
+NAME
+    Get-GcsBucket
+    
+SYNOPSIS
+    Gets the Google Cloud Storage bucket with a given name, or all buckets associated with a project.
+    
+SYNTAX
+    Get-GcsBucket [-Name] <string> [<CommonParameters>]
+    
+    Get-GcsBucket [-Project] <string> [<CommonParameters>]
+    
+    
+DESCRIPTION
+    Returns the Google Cloud Storate bucket by name, if the current gcloud user has access.
+    
+    If a Project is specified, will instead return all buckets owned by that project. Again, restricted to those that the gcloud user has access to view.
+    
+
+PARAMETERS
+    -Name <string>
+        The name of the bucket to return.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Project <string>
+        The project to check for Storage buckets.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    <CommonParameters>
+        This cmdlet supports the common parameters: Verbose, Debug,
+        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
+        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
+        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
+    
+INPUTS
+    
+OUTPUTS
+    
+    ----------  EXAMPLE 1  ----------
+    
+    Get the bucket named "widget-co-logs".
+    Get-GcsBucket "widget-co-logs"
+    
+    
+    
+    ----------  EXAMPLE 2  ----------
+    
+    Get all buckets for project "widget-co".
+    Get-GcsBucket -Project "widget-co"
+    
+    
+    
+    
+RELATED LINKS
+
+
+
+</pre>
+
+      </div>
+    </div>
+
+    <footer>
+</footer>
+
+
+  </body>
+
+</html>

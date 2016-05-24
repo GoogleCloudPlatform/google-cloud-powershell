@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>New-GcsObject</title>
+  <meta name="description" content="">
+
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="canonical" href="/cmdlets/new-gcsobject.html">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+<div class="wrapper">
+    <a class="site-title" href="/">Google Cloud Powershell Cmdlet Reference</a>
+</div>
+
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <style>
+pre {
+    white-space: pre-wrap;
+}
+</style>
+
+<h1>New-GcsObject</h1>
+<pre>
+NAME
+    New-GcsObject
+    
+SYNOPSIS
+    
+SYNTAX
+    New-GcsObject [-Bucket] <string> [-ObjectName] <string> [[-Contents] <string>] [-ContentType <string>] [-PredefinedAcl <string>] [-Force <SwitchParameter>] [<CommonParameters>]
+    
+    New-GcsObject [-Bucket] <string> [-ObjectName] <string> [-File] <string> [-ContentType <string>] [-PredefinedAcl <string>] [-Force <SwitchParameter>] [<CommonParameters>]
+    
+    
+DESCRIPTION
+    
+
+PARAMETERS
+    -Bucket <string>
+        The name of the bucket to upload to.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -ObjectName <string>
+        The name of the created Cloud Storage object.
+        
+        Required?                    true
+        Position?                    1
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Contents <string>
+        Text content to write to the Storage object. Ignored if File is specified.
+        
+        Required?                    false
+        Position?                    2
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -File <string>
+        Local path to the file to upload.
+        
+        Required?                    true
+        Position?                    2
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -ContentType <string>
+        Content type of the Cloud Storage object. e.g. "image/png" or "text/plain".
+        
+        Defaults to "application/octet-stream" if not set.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -PredefinedAcl <string>
+        Provide a predefined ACL to the object. e.g. "publicRead" where the project owner gets OWNER access, and allUsers get READER access.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Force <SwitchParameter>
+        Force the operation to succeed, overwriting existing Storage objects if needed.
+        
+        Required?                    false
+        Position?                    named
+        Default value                False
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    <CommonParameters>
+        This cmdlet supports the common parameters: Verbose, Debug,
+        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
+        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
+        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
+    
+INPUTS
+    System.String
+        Text content to write to the Storage object. Ignored if File is specified.
+    
+    
+OUTPUTS
+    
+    
+RELATED LINKS
+
+
+
+</pre>
+
+      </div>
+    </div>
+
+    <footer>
+</footer>
+
+
+  </body>
+
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Find-GcsObject</title>
+  <meta name="description" content="">
+
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="canonical" href="/cmdlets/find-gcsobject.html">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+<div class="wrapper">
+    <a class="site-title" href="/">Google Cloud Powershell Cmdlet Reference</a>
+</div>
+
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <style>
+pre {
+    white-space: pre-wrap;
+}
+</style>
+
+<h1>Find-GcsObject</h1>
+<pre>
+NAME
+    Find-GcsObject
+    
+SYNOPSIS
+    Returns all Cloud Storage objects identified by the given prefix string.
+    
+SYNTAX
+    Find-GcsObject [-Bucket] <string> [[-Prefix] <string>] [-Delimiter <string>] [<CommonParameters>]
+    
+    
+DESCRIPTION
+    Returns all Cloud Storage objects identified by the given prefix string. If no prefix string is provided, all objects in the bucket are returned.
+    
+    An optional delimiter may be provided. If used, will return results in a directory-like mode, delimited by the given string. e.g. with objects "1, "2", "subdir/3" and delimited "/"; 
+    "subdir/3" would not be returned. (There is no way to just return "subdir" in the previous example.)
+    
+
+PARAMETERS
+    -Bucket <string>
+        Name of the bucket to search.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Prefix <string>
+        Object prefix to use. e.g. "/logs/". If not specified all objects in the bucket will be returned.
+        
+        Required?                    false
+        Position?                    1
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Delimiter <string>
+        Returns results in a directory-like mode, delimited by the given string. e.g. with objects "1, "2", "subdir/3" and delimited "/", "subdir/3" would not be returned.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    <CommonParameters>
+        This cmdlet supports the common parameters: Verbose, Debug,
+        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
+        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
+        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
+    
+INPUTS
+    
+OUTPUTS
+    
+    
+RELATED LINKS
+
+
+
+</pre>
+
+      </div>
+    </div>
+
+    <footer>
+</footer>
+
+
+  </body>
+
+</html>

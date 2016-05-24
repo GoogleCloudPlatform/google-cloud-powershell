@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Write-GcsObject</title>
+  <meta name="description" content="">
+
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="canonical" href="/cmdlets/write-gcsobject.html">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+<div class="wrapper">
+    <a class="site-title" href="/">Google Cloud Powershell Cmdlet Reference</a>
+</div>
+
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <style>
+pre {
+    white-space: pre-wrap;
+}
+</style>
+
+<h1>Write-GcsObject</h1>
+<pre>
+NAME
+    Write-GcsObject
+    
+SYNOPSIS
+    Replaces the contents of a Cloud Storage object.
+    
+SYNTAX
+    Write-GcsObject [-Bucket] <string> [-ObjectName] <string> [[-Contents] <string>] [-Force <SwitchParameter>] [<CommonParameters>]
+    
+    Write-GcsObject [-Bucket] <string> [-ObjectName] <string> [[-File] <string>] [-Force <SwitchParameter>] [<CommonParameters>]
+    
+    
+DESCRIPTION
+    Replaces the contents of a Cloud Storage object with data from the local disk or a value from the pipeline.
+    
+
+PARAMETERS
+    -Bucket <string>
+        Name of the bucket containing the object.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -ObjectName <string>
+        Name of the object to write to.
+        
+        Required?                    true
+        Position?                    1
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Contents <string>
+        Text content to write to the Storage object. Ignored if File is specified.
+        
+        Required?                    false
+        Position?                    2
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -File <string>
+        Local file path to read, writing its contents into Cloud Storage.
+        
+        Required?                    false
+        Position?                    2
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Force <SwitchParameter>
+        Force the operation to succeed, ignoring errors if no existing Storage object exists.
+        
+        Required?                    false
+        Position?                    named
+        Default value                False
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    <CommonParameters>
+        This cmdlet supports the common parameters: Verbose, Debug,
+        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
+        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
+        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
+    
+INPUTS
+    System.String
+        Text content to write to the Storage object. Ignored if File is specified.
+    
+    
+OUTPUTS
+    
+    
+RELATED LINKS
+
+
+
+</pre>
+
+      </div>
+    </div>
+
+    <footer>
+</footer>
+
+
+  </body>
+
+</html>
