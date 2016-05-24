@@ -1,4 +1,9 @@
-﻿using Google.Apis.Compute.v1;
+﻿// Copyright 2016 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
+
+// Licensed under the Apache License Version 2.0.
+
+using Google.Apis.Compute.v1;
 using Google.Apis.Compute.v1.Data;
 using System;
 using System.Collections.Generic;
@@ -235,8 +240,6 @@ namespace Google.PowerShell.ComputeEngine
         }
     }
 
-    // TODO(chrsmith): Support -Force, -WhatIf, etc.
-
     /// <summary>
     /// <para type="synopsis">
     /// Resize a Compute Engine disk object.
@@ -300,8 +303,6 @@ namespace Google.PowerShell.ComputeEngine
             WriteObject(disk);
         }
     }
-
-    // TODO(chrsmith): Support -Force, -WhatIf, etc.
 
     /// <summary>
     /// <para type="synopsis">

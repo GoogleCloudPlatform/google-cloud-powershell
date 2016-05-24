@@ -2,14 +2,18 @@
 Install-GcloudCmdlets
 
 $project = "gcloud-powershell-testing"
-# Delete all disks associated with the project.
-$disks = Get-GceDisk $project
-Write-Host "Deleting any existing GCE disks..."
-foreach ($disk in $disks) {
-    gcloud compute disks delete --project $project $disk.Name --zone $disk.Zone --quiet
+
+# Delete all disks associated with a project.
+function Remove-ProjectDisks($project) {
+    Write-Host "Deleting all GCE disks for $project..."
+    $disks = Get-GceDisk $project
+    foreach ($disk in $disks) {
+        gcloud compute disks delete --project $project $disk.Name --zone $disk.Zone --quiet
+    }
 }
 
 Describe "Get-GceDisk" {
+    Remove-ProjectDisks($project)
     # Create test disks.
     gcloud compute disks create --project $project "test-disk-1" --zone "us-central1-a" --size 20 --quiet
     gcloud compute disks create --project $project "test-disk-2" --zone "us-central1-a" --size 20 --quiet
@@ -49,10 +53,7 @@ Describe "Get-GceDisk" {
             | Should Throw "404"
     }
 
-    # Cleanup of test disks.
-    gcloud compute disks delete --project $project "test-disk-1" --zone "us-central1-a" --quiet
-    gcloud compute disks delete --project $project "test-disk-2" --zone "us-central1-a" --quiet
-    gcloud compute disks delete --project $project "test-disk-1" --zone "us-central1-b" --quiet
+    Remove-ProjectDisks($project)
 }
 
 Describe "New-GceDisk" {
@@ -85,19 +86,21 @@ Describe "New-GceDisk" {
 
         # TODO(chrsmith): $disk.Zone is a URI, which will fail when the request is
         # made. This is a wart on the API, since it should accept the URI form of zones.
-        Remove-GceDisk -Project $project -Zone "us-central1-c" -DiskName $disk.Name
+        Remove-GceDisk -Project $project -Zone "us-central1-c" -DiskName $disk.Name -Force
     }
 
     It "should fail with invalid disk names" {
         { New-GceDisk -Project $project -Zone "us-central1-d" -DiskName "totally invalid!" } `
             | Should Throw "Invalid value for field 'resource.name'"
     }
+
+    Remove-ProjectDisks($project)
 }
 
 Describe "Resize-GceDisk" {
     $diskName = "resize-test"
     $zone = "us-central1-b"
-    gcloud compute disks delete --project $project $diskName --zone $zone --quiet
+    Remove-ProjectDisks($project)
     gcloud compute disks create --project $project $diskName --zone $zone --size 20 --quiet
  
     It "should fail with invalid disk names" {
@@ -116,7 +119,7 @@ Describe "Resize-GceDisk" {
             | Should Throw "must be larger than existing size '1337'. [400]"
     }
 
-    Remove-GceDisk $project $zone $diskName
+    Remove-ProjectDisks($project)
 }
 
 Describe "Remove-GceDisk" {
@@ -140,4 +143,5 @@ Describe "Remove-GceDisk" {
 
     # TODO(chrsmith): Confirm the error case if you try to delete a GCE disk and
     # the disk is in-use by a VM.
+    Remove-ProjectDisks($project)
 }
