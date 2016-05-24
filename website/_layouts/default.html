@@ -1,20 +1,15 @@
 <!DOCTYPE html>
-<html>
-
-  {% include head.html %}
-
-  <body>
-
-    {% include header.html %}
-
-    <div class="page-content">
-      <div class="wrapper">
-        {{ content }}
-      </div>
-    </div>
-
-    {% include footer.html %}
-
-  </body>
-
+<html class="google" lang="en">
+    {% include head.html %}
+    <body>
+        {% include header.html %}
+        <div id="maia-main" role="main">
+            <div class="maia-teleport" id="content">
+            {{ content }}
+            </div>
+        </div>
+        {% include footer.html %}
+        <script src="//www.google.com/js/maia.js">
+        </script>
+    </body>
 </html>

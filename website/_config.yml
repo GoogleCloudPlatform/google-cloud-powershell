@@ -1,7 +1,7 @@
 # Site settings
 title: Google Cloud Powershell Cmdlet Reference
-baseurl: ""
-url: ""
+baseurl: "/gcloud-powershell"
+url: "http://googlecloudplatform.github.io"
 
 # Build settings
 markdown: kramdown
