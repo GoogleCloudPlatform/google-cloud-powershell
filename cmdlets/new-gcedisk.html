@@ -8,9 +8,9 @@
     <meta content="initial-scale=1, minimum-scale=1, width=device-width" name="viewport">
     <meta name="description" content="">
     
-    <title>New-GcsBucket</title>
+    <title>New-GceDisk</title>
     <script src="//www.google.com/js/google.js"></script>
-    <link rel="canonical" href="http://googlecloudplatform.github.io/gcloud-powershell/cmdlets/new-gcsbucket.html">
+    <link rel="canonical" href="http://googlecloudplatform.github.io/gcloud-powershell/cmdlets/new-gcedisk.html">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
     <link rel="stylesheet" href="//www.google.com/css/maia.css">
 </head>
@@ -39,22 +39,25 @@ pre {
 }
 </style>
 
-<h1>New-GcsBucket</h1>
+<h1>New-GceDisk</h1>
 <pre>
 NAME
-    New-GcsBucket
+    New-GceDisk
     
 SYNOPSIS
+    Creates a new Google Compute Engine disk object.
     
 SYNTAX
-    New-GcsBucket [-Name] <string> [[-Project] <string>] [-StorageClass <string>] [-Location <string>] [<CommonParameters>]
+    New-GceDisk [-Project] <string> -Zone <string> -DiskName <string> [-Description <string>] [-SizeGb <long>] [-DiskType <string>] [-SourceImage <string>] [<CommonParameters>]
     
     
 DESCRIPTION
+    Creates a new Google Compute Engine disk object.
     
 
 PARAMETERS
-    -Name <string>
+    -Project <string>
+        The project to associate the new Compute Engine disk.
         
         Required?                    true
         Position?                    0
@@ -62,15 +65,25 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -Project <string>
+    -Zone <string>
+        Specific zone to create the disk in, e.g. "us-central1-a".
         
-        Required?                    false
-        Position?                    1
+        Required?                    true
+        Position?                    named
         Default value                
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -StorageClass <string>
+    -DiskName <string>
+        Name of the disk.
+        
+        Required?                    true
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Description <string>
         
         Required?                    false
         Position?                    named
@@ -78,7 +91,23 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -Location <string>
+    -SizeGb <long>
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -DiskType <string>
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -SourceImage <string>
         
         Required?                    false
         Position?                    named

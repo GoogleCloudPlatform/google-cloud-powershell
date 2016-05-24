@@ -8,9 +8,9 @@
     <meta content="initial-scale=1, minimum-scale=1, width=device-width" name="viewport">
     <meta name="description" content="">
     
-    <title>New-GcsBucket</title>
+    <title>Get-GceDisk</title>
     <script src="//www.google.com/js/google.js"></script>
-    <link rel="canonical" href="http://googlecloudplatform.github.io/gcloud-powershell/cmdlets/new-gcsbucket.html">
+    <link rel="canonical" href="http://googlecloudplatform.github.io/gcloud-powershell/cmdlets/get-gcedisk.html">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
     <link rel="stylesheet" href="//www.google.com/css/maia.css">
 </head>
@@ -39,22 +39,27 @@ pre {
 }
 </style>
 
-<h1>New-GcsBucket</h1>
+<h1>Get-GceDisk</h1>
 <pre>
 NAME
-    New-GcsBucket
+    Get-GceDisk
     
 SYNOPSIS
+    Gets the Google Compute Engine disks associated with a project.
     
 SYNTAX
-    New-GcsBucket [-Name] <string> [[-Project] <string>] [-StorageClass <string>] [-Location <string>] [<CommonParameters>]
+    Get-GceDisk [-Project] <string> [[-Zone] <string>] [[-DiskName] <string>] [<CommonParameters>]
     
     
 DESCRIPTION
+    Returns the project's Google Compute Engine disk objects.
+    
+    If a Project is specified, will instead return all disks owned by that project. Filters, such as Zone or Name, can be provided to restrict the objects returned.
     
 
 PARAMETERS
-    -Name <string>
+    -Project <string>
+        The project to check for Compute Engine disks.
         
         Required?                    true
         Position?                    0
@@ -62,7 +67,7 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -Project <string>
+    -Zone <string>
         
         Required?                    false
         Position?                    1
@@ -70,18 +75,11 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -StorageClass <string>
+    -DiskName <string>
+        Name of the disk you want to have returned.
         
         Required?                    false
-        Position?                    named
-        Default value                
-        Accept pipeline input?       false
-        Accept wildcard characters?  false
-        
-    -Location <string>
-        
-        Required?                    false
-        Position?                    named
+        Position?                    2
         Default value                
         Accept pipeline input?       false
         Accept wildcard characters?  false
@@ -95,6 +93,13 @@ PARAMETERS
 INPUTS
     
 OUTPUTS
+    
+    ----------  EXAMPLE 1  ----------
+    
+    Get the disk named "ppiper-frontend".
+    Get-GceDisk -Project "ppiper-prod" "ppiper-frontend"
+    
+    
     
     
 RELATED LINKS
