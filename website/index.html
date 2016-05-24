@@ -11,7 +11,7 @@ title: Cmdlet Reference
         <h2>{{ cmdlets.name }}</h2>
         <ul>
         {% for cmdlet in cmdlets.items %}
-            <li><a href="cmdlets/{{cmdlet.cmdletName}}.html">{{ cmdlet.cmdletName }}</a>
+            <li><a href="cmdlets/{{ cmdlet.cmdletName | downcase }}.html">{{ cmdlet.cmdletName }}</a>
         {% endfor %}
         </ul>
     {% endfor %}

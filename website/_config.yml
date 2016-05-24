@@ -6,6 +6,9 @@ url: "http://googlecloudplatform.github.io"
 # Build settings
 markdown: kramdown
 
+# Files to exclude when generating the website.
+exclude: [README.md]
+
 # Plug-in for generating pages based on files in the _data folder.
 page_gen:
   - data: cmdlets
