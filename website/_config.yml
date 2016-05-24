@@ -1,0 +1,14 @@
+# Site settings
+title: Google Cloud Powershell Cmdlet Reference
+baseurl: ""
+url: ""
+
+# Build settings
+markdown: kramdown
+
+# Plug-in for generating pages based on files in the _data folder.
+page_gen:
+  - data: cmdlets
+    template: cmdlet
+    name: cmdletName
+    dir: cmdlets

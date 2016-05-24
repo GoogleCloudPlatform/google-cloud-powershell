@@ -1,0 +1,13 @@
+---
+layout: default
+---
+
+<div class="home">
+    <h1>Cmdlet Reference</h1>
+    <p>This page contains information about the Google Cloud PowerShell cmdlets available.</p>
+    <ul>
+        {% for cmdlet in site.data.cmdlets %}
+            <li><a href="cmdlets/{{cmdlet.cmdletName}}.html">{{ cmdlet.cmdletName }}</a>
+        {% endfor %}
+    </ul>
+</div>
