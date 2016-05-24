@@ -11,7 +11,11 @@ foreach ($cmdlet in $cmdlets) {
     # Without Out-String the output of Get-Help will be a structured object,
     # which would be useful for a custom renderer of help output.
     $docText = Get-Help -Full $cmdlet.Name | Out-String
-    $cmdletDocObj = @{ "cmdletName"=$cmdlet.Name; "documentation"=$docText }
+    $cmdletDocObj = @{ `
+        "cmdletName"=$cmdlet.Name; `
+        "resource"=$cmdlet.Name.Split("-")[1];
+        "documentation"=$docText `
+    }
     
     $cmdletDocObjects += $cmdletDocObj
 }

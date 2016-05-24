@@ -6,9 +6,13 @@ title: Cmdlet Reference
 <div class="home">
     <h1>Cmdlet Reference</h1>
     <p>This page contains information about the Google Cloud PowerShell cmdlets available.</p>
-    <ul>
-        {% for cmdlet in site.data.cmdlets %}
+    {% assign cmdlets_by_resource = site.data.cmdlets | group_by:"resource" %}
+    {% for cmdlets in cmdlets_by_resource %}
+        <h2>{{ cmdlets.name }}</h2>
+        <ul>
+        {% for cmdlet in cmdlets.items %}
             <li><a href="cmdlets/{{cmdlet.cmdletName}}.html">{{ cmdlet.cmdletName }}</a>
         {% endfor %}
-    </ul>
+        </ul>
+    {% endfor %}
 </div>
