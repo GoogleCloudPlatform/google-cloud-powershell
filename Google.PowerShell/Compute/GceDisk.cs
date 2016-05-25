@@ -161,7 +161,7 @@ namespace Google.PowerShell.ComputeEngine
         /// Name of the disk.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true), ValidatePattern("[a-z]([-a-z0-9]*[a-z0-9])?")]
+        [Parameter(Mandatory = true)]
         public string DiskName { get; set; }
 
         /// <summary>
@@ -342,14 +342,12 @@ namespace Google.PowerShell.ComputeEngine
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            var service = GetComputeService();
-
-            base.ProcessRecord();
             if (!base.ConfirmAction(Force.IsPresent, DiskName, "Remove-GceDisk (DeleteDisk)"))
             {
                 return;
             }
 
+            var service = GetComputeService();
             // First try to get the disk, this way the cmdlet fails with a 404 if the
             // disk does not exist. (Otherwise the delete operation would succeed when
             // trying to delete a non-existant disk.)
