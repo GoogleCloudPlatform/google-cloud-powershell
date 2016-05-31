@@ -118,6 +118,7 @@
     <Compile Include="Common\GcloudCmdlet.cs" />
     <Compile Include="Common\MeasurementProtocolService.cs" />
     <Compile Include="Compute\GceCmdlet.cs" />
+    <Compile Include="Compute\PropertyByTypeTransformationAttribute.cs" />
     <Compile Include="Compute\Instances\GetGceInstance.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Storage\GcsBucket.cs" />

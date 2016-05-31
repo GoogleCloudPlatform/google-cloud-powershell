@@ -11,7 +11,7 @@ namespace Google.PowerShell.Compute.Instances
 {
     /// <summary>
     /// <para type="synopsis">
-    /// Gets the information about Google Compute Engine VM Instances.
+    /// Gets information about Google Compute Engine VM Instances.
     /// </para>
     /// <para type="description">
     /// </para>
@@ -27,6 +27,7 @@ namespace Google.PowerShell.Compute.Instances
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
+        [PropertyByTypeTransformation(Property = "Name", Type = typeof(Project))]
         public string Project { get; set; }
 
         /// <summary>
@@ -35,6 +36,7 @@ namespace Google.PowerShell.Compute.Instances
         /// </para>
         /// </summary>
         [Parameter(Position = 1, Mandatory = false)]
+        [PropertyByTypeTransformation(Property = "Name", Type = typeof(Zone))]
         public string Zone { get; set; }
 
         /// <summary>
@@ -43,6 +45,7 @@ namespace Google.PowerShell.Compute.Instances
         /// </para>
         /// </summary>
         [Parameter(Position = 3, Mandatory = false, ValueFromPipeline = true)]
+        [PropertyByTypeTransformation(Property = "Name", Type = typeof(Instance))]
         public string Name { get; set; }
         
         /// <summary>
@@ -57,6 +60,7 @@ namespace Google.PowerShell.Compute.Instances
         {
             if(Zone == null)
             {
+                WriteDebug($"Zone is null. Getting project {Project}");
                 string pageToken = GetAgListPage(null);
                 while (pageToken != null)
                 {
@@ -65,6 +69,7 @@ namespace Google.PowerShell.Compute.Instances
             }
             else if(Name == null)
             {
+                WriteDebug($"Name is null. Getting zone {Zone} and project {Project}");
                 string pageToken = GetListPage(null);
                 while (pageToken != null)
                 {
@@ -73,6 +78,7 @@ namespace Google.PowerShell.Compute.Instances
             }
             else
             {
+                WriteDebug($"Getting instance {Name} from zone {Zone} and project {Project}");
                 InstancesResource.GetRequest getRequest = Service.Instances.Get(Project, Zone, Name);
                 WriteObject(getRequest.Execute());
             }

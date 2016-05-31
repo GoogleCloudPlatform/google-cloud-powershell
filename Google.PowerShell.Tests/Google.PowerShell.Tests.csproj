@@ -62,14 +62,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\Compute\PropertyByTypeTransformationAttributeTest.cs" />
     <Compile Include="Common\GCloudCmdletTests.cs" />
     <Compile Include="Common\CloudSdkSettingsTests.cs" />
     <Compile Include="Common\MeasurementServiceProtocolTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
-    <None Include="packages.config" />
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>

@@ -2,7 +2,7 @@
 Install-GcloudCmdlets
 
 $project = "gcloud-powershell-testing"
-$zone1 = "us-central1-f"
+$zone = "us-central1-f"
 $zone2 = "us-central1-a"
 $noExistInstance = "gcps-instance-no-exist-$($env:USERNAME)"
 $existantInstance = "gcps-instance-exist-$($env:USERNAME)"
@@ -23,7 +23,6 @@ Describe "Get-GceInstance" {
         $instance = Get-GceInstance -Project $project -Zone $zone -Name $existantInstance
 		$instance.Name | Should Be $existantInstance
 		$instance.Kind | Should Be "compute#instance"
-		$instance.Status | Should Be "RUNNING"
     }
 
     It "should get only zone" {
@@ -41,6 +40,21 @@ Describe "Get-GceInstance" {
         # Don't know who created the "asdf" project.
         { Get-GceInstance -Project "asdf" } | Should Throw "403"
     }
+
+	Context "Object Transformer" {
+		$projectObj = New-Object Google.Apis.Compute.v1.Data.Project
+		$projectObj.Name = $project
+		$zoneObj = New-Object Google.Apis.Compute.v1.Data.Zone
+		$zoneObj.Name = $zone
+		$instanceObj = New-Object Google.Apis.Compute.v1.Data.Instance
+		$instanceObj.Name = $existantInstance
+		
+		It "should get one" {
+			$instance = Get-GceInstance -Project $projectObj -Zone $zoneObj -Name $instanceObj
+			$instance.Name | Should Be $existantInstance
+			$instance.Kind | Should Be "compute#instance"
+		}
+	}
 	
 	gcloud compute instances stop $existantInstance
 	gcloud compute instances stop $existantInstance2
