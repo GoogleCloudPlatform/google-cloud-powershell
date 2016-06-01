@@ -119,7 +119,7 @@
     <Compile Include="Common\MeasurementProtocolService.cs" />
     <Compile Include="Compute\GceCmdlet.cs" />
     <Compile Include="Compute\PropertyByTypeTransformationAttribute.cs" />
-    <Compile Include="Compute\Instances\GetGceInstance.cs" />
+    <Compile Include="Compute\Instances\GceInstanceCmdlets.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Storage\GcsBucket.cs" />
     <Compile Include="Storage\GcsBucketLogging.cs" />

@@ -18,9 +18,12 @@ namespace Google.PowerShell.Compute.Instances
     /// <para type="description">
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Get, "GceInstance")]
+    [Cmdlet(VerbsCommon.Get, "GceInstance", DefaultParameterSetName = ByName)]
     public class GetGceInstanceCmdlet : GceCmdlet
     {
+        private const string ByName = "ByName";
+        private const string ByInstanceGroup = "ByInstanceGroup";
+
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
@@ -44,9 +47,24 @@ namespace Google.PowerShell.Compute.Instances
         /// The name of the instance.
         /// </para>
         /// </summary>
-        [Parameter(Position = 3, Mandatory = false, ValueFromPipeline = true)]
+        [Parameter(Position = 3, Mandatory = false, ValueFromPipeline = true, ParameterSetName = ByName)]
         [PropertyByTypeTransformation(Property = "Name", Type = typeof(Instance))]
         public string Name { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the instance group to get the instances of.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ParameterSetName = ByInstanceGroup)]
+        public string InstanceGroup { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The state of the instances to get. Valid options are <code>ALL</code> and <code>RUNNING</code>. Defaults to ALL</para>
+        /// </summary>
+        [Parameter(ParameterSetName = ByInstanceGroup)]
+        public string InstanceState { get; set; }
         
         /// <summary>
         /// <para type="description">
@@ -58,7 +76,15 @@ namespace Google.PowerShell.Compute.Instances
 
         protected override void ProcessRecord()
         {
-            if(Zone == null)
+            if(InstanceGroup != null)
+            {
+                string pageToken = GetGroupList(null);
+                while(pageToken != null)
+                {
+                    pageToken = GetGroupList(pageToken);
+                }
+            }
+            else if(Zone == null)
             {
                 WriteDebug($"Zone is null. Getting project {Project}");
                 string pageToken = GetAgListPage(null);
@@ -82,6 +108,19 @@ namespace Google.PowerShell.Compute.Instances
                 InstancesResource.GetRequest getRequest = Service.Instances.Get(Project, Zone, Name);
                 WriteObject(getRequest.Execute());
             }
+        }
+
+        private string GetGroupList(string pageToken)
+        {
+            var request = Service.InstanceGroups.ListInstances(new InstanceGroupsListInstancesRequest { InstanceState = InstanceState }, Project, Zone, InstanceGroup);
+            request.Filter = Filter;
+            request.PageToken = pageToken;
+            var response = request.Execute();
+            foreach (InstanceWithNamedPorts i in response.Items)
+            {
+                WriteObject(i.Instance);
+            }
+            return response.NextPageToken;
         }
 
         private string GetAgListPage(string pageToken)
