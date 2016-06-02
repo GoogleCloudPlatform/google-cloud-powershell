@@ -5,7 +5,6 @@
 
 using Google.Apis.Compute.v1;
 using Google.Apis.Compute.v1.Data;
-using Google.PowerShell.Compute;
 using System;
 using System.Collections.Generic;
 using System.Linq;

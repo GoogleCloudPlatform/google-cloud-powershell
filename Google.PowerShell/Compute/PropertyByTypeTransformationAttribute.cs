@@ -6,7 +6,7 @@ using System.Management.Automation;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Google.PowerShell.Compute
+namespace Google.PowerShell.ComputeEngine
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
     public class PropertyByTypeTransformationAttribute : ArgumentTransformationAttribute

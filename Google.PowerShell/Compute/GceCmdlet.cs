@@ -8,7 +8,7 @@ using System;
 using System.Management.Automation;
 using System.Threading;
 
-namespace Google.PowerShell.Compute
+namespace Google.PowerShell.ComputeEngine
 {
     /// <summary>
     /// Base class for Google Compute Engine-based cmdlets. 

@@ -1,8 +1,8 @@
-﻿using Google.PowerShell.Compute;
+﻿using Google.PowerShell.ComputeEngine;
 using NUnit.Framework;
 using System.Management.Automation;
 
-namespace Google.PowerShell.Tests.Common.Compute
+namespace Google.PowerShell.Tests.Common.ComputeEngine
 {
     class TestType
     {
