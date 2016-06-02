@@ -4,16 +4,21 @@ Install-GcloudCmdlets
 $project = "gcloud-powershell-testing"
 $zone = "us-central1-f"
 $zone2 = "us-central1-a"
-$noExistInstance = "gcps-instance-no-exist-$($env:USERNAME)"
-$existantInstance = "gcps-instance-exist-$($env:USERNAME)"
-$existantInstance2 = "gcps-instance-exist2-$($env:USERNAME)"
-$existantInstance3 = "gcps-instance-exist3-$($env:USERNAME)"
 
 Describe "Get-GceInstance" {
 
-    gcloud compute instances create $existantInstance
-    gcloud compute instances create $existantInstance2
-    gcloud compute instances create $existantInstance3 --zone $zone2
+    $r = Get-Random
+	$noExistInstance = "gcps-instance-no-exist-$r"
+	$existantInstance = "gcps-instance-exist-$r"
+	$existantInstance2 = "gcps-instance-exist2-$r"
+	$existantInstance3 = "gcps-instance-exist3-$r"
+
+    $existantInstance, $existantInstance2 |
+		New-GceInstanceConfig -DiskImage "projects/debian-cloud/global/images/debian-8-jessie-v20160511" |
+		Add-GceInstance -Project $project -Zone $zone
+	$existantInstance3 |
+		New-GceInstanceConfig -DiskImage "projects/debian-cloud/global/images/debian-8-jessie-v20160511" |
+		Add-GceInstance -Project $project -Zone $zone2
 
 	It "should fail to return non-existing instances" {
         { Get-GceInstance -Project $project -Zone $zone -Name $noExistInstance } | Should Throw "404"
@@ -21,19 +26,26 @@ Describe "Get-GceInstance" {
 
     It "should get one" {
         $instance = Get-GceInstance -Project $project -Zone $zone -Name $existantInstance
+		($instance | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.Instance"
 		$instance.Name | Should Be $existantInstance
 		$instance.Kind | Should Be "compute#instance"
     }
 
+	It "should use the pipeline" {
+	    $instances = @($existantInstance, $existantInstance2) | Get-GceInstance -Project $project -Zone $zone
+		$instances.Count | Should Be 2
+	}
+
     It "should get only zone" {
-		$zoneInstances = Get-GceInstance -Project $project- Zone $zone
-        $zoneInstances.Length -gt 1 | Should Be $true
+		$zoneInstances = Get-GceInstance -Project $project -Zone $zone | Where {$_.Name -in $existantInstance, $existantInstance2, $existantInstance3}
+        $zoneInstances.Length | Should Be 2
 		$zoneInstances.Kind | Should Be "compute#instance"
-		$zoneInstances.Zone | Should Be $zone
+		$zoneInstances.Zone | Should Match $zone
     }
 
-    It "should list all buckets in a project" {
-        (Get-GceInstance -Project $project).Count -gt (Get-GceInstance -Project $project -Zone $zone).Count | Should Be $true
+    It "should list all instances in a project" {
+        $projectInstances = Get-GceInstance -Project $project| Where {$_.Name -in $existantInstance, $existantInstance2, $existantInstance3}
+		$projectInstances.Count | Should Be 3
     }
 
     It "should give access errors as appropriate" {
@@ -56,86 +68,117 @@ Describe "Get-GceInstance" {
 		}
 	}
 	
-	gcloud compute instances stop $existantInstance
-	gcloud compute instances stop $existantInstance2
-	gcloud compute instances stop $existantInstance3 --zone $zone2
-
-	gcloud compute instances delete $existantInstance
-	gcloud compute instances delete $existantInstance2
-	gcloud compute instances delete $existantInstance3 --zone $zone2
+	$existantInstance, $existantInstance2 | Remove-GceInstance -Project $project -Zone $zone
+	Remove-GceInstance -Project $project -Zone $zone2 -Name $existantInstance3
 
 }
-<#
-Describe "Create-GceInstance" {
 
-    # Should remove the bucket before/after each test to ensure we are in a good state.
-    BeforeEach {
-        gsutil rb gs://gcps-bucket-creation
-    }
+Describe "New-GceInstanceConfig" {
 
-    AfterEach {
-        gsutil rb gs://gcps-bucket-creation
-    }
+    $r = Get-Random
+	$instance = "gcps-instance-1-$r"
+	$instance2 = "gcps-instance-2-$r"
 
     It "should work" {
-        $bucket = New-GceInstance -Name "gcps-bucket-creation" -Project $project
-        $bucket.GetType().FullName | Should Match "Google.Apis.Storage.v1.Data.Bucket"
-        $bucket.Location | Should Match "US"
-        $bucket.StorageClass | Should Match "STANDARD"
+		$instanceConfig = New-GceInstanceConfig -Name $instance `
+			-MachineType "projects/$project/zones/$zone/machineTypes/n1-standard-2" `
+			-Disk @{"boot"=$true; "initializeParams" = @{"sourceImage" = "projects/debian-cloud/global/images/debian-8-jessie-v20160511"}} `
+			-NetworkInterface @{"network"="global/networks/fake"} `
+			-Tag "Testing"
+		$instanceConfig.MachineType | Should Be "projects/$project/zones/$zone/machineTypes/n1-standard-2"
+		$instanceConfig.Disks.Boot | Should Be $true
+		$instanceConfig.Tags.Items | Should Be "Testing"
+		$instanceConfig.NetworkInterfaces.Network | Should Be "global/networks/fake"
     }
 
-    It "supports Location and StorageClass parameters" {
-        $bucket = New-GceInstance `
-            -Name "gcps-bucket-creation" -Project $project `
-            -Location EU -StorageClass NEARLINE
-        $bucket.GetType().FullName | Should Match "Google.Apis.Storage.v1.Data.Bucket"
-        $bucket.Location | Should Match "EU"
-        $bucket.StorageClass | Should Match "NEARLINE"
+    It "should handle defaults" {
+		$instanceConfig = New-GceInstanceConfig -Name $instance `
+			-Disk @{"boot"=$true; "initializeParams" = @{"sourceImage" = "projects/debian-cloud/global/images/debian-8-jessie-v20160511"}}
+		$instanceConfig.MachineType | Should Be "n1-standard-4"
+		$instanceConfig.NetworkInterfaces.Network | Should Be "global/networks/default"
+		$instanceConfig.NetworkInterfaces.AccessConfigs.Type | Should Be "ONE_TO_ONE_NAT"
     }
+
+    It "should build disk from image" {
+		$instanceConfig = New-GceInstanceConfig -Name $instance -DiskImage "someImage"
+		$instanceConfig.Disks.Boot | Should Be $true
+		$instanceConfig.Disks.AutoDelete | Should Be $true
+		$instanceConfig.Disks.InitializeParams.SourceImage | Should Be "someImage"
+    }
+
+    It "should attach disk" {
+		$instanceConfig = New-GceInstanceConfig -Name $instance -DiskSource "someDisk"
+		$instanceConfig.Disks.Boot | Should Be $true
+		$instanceConfig.Disks.AutoDelete | Should Be $false
+		$instanceConfig.Disks.Source | Should Be "someDisk"
+		$instanceConfig.Disks.InitializeParams | Should BeNullOrEmpty
+    }
+
+	It "should use pipeline" {
+		$instanceConfigs = $instance, $instance2 | New-GceInstanceConfig -DiskImage "someImage"
+		$instanceConfigs.Count | Should Be 2
+		($instanceConfigs.Name | Where {$_ -eq $instance}).Count | Should Be 1
+		$instanceConfigs.MachineType | Should Be "n1-standard-4"
+	}
+}
+
+Describe "Add-GceInstance" {
+
+    $r = Get-Random
+	$instance = "gcps-instance-create-$r"
+	$instance2 = "gcps-instance-create2-$r"
+	$instance3 = "gcps-instance-create3-$r"
+	$instanceConfig = New-GceInstanceConfig -Name $instance -DiskImage "projects/debian-cloud/global/images/debian-8-jessie-v20160511"
+	$instanceConfig2 = New-GceInstanceConfig -Name $instance2 -DiskImage "projects/debian-cloud/global/images/debian-8-jessie-v20160511"
+	$instanceConfig3 = New-GceInstanceConfig -Name $instance3 -DiskImage "projects/debian-cloud/global/images/debian-8-jessie-v20160511"
+
+    It "should work" {
+		Add-GceInstance -Project $project -Zone $zone -Instance $instanceConfig
+		$runningInstance = Get-GceInstance -Project $project -Zone $zone -Name $instance
+		$runningInstance.Name | Should Be $instance
+    }
+
+    It "should use pipeline" {
+		$instanceConfig2, $instanceConfig3 | Add-GceInstance -Project $project -Zone $zone
+		$runningInstances = $instance2, $instance3 | Get-GceInstance -Project $project -Zone $zone
+		$runningInstances.Count | Should Be 2
+    }
+
+    It "should throw 403" {
+		{ Add-GceInstance -Project "asdf" -Zone $zone -Instance $instanceConfig } | Should Throw 403
+    }
+
+	$instance, $instance2, $instance3 | Remove-GceInstance -Project $project -Zone $zone
 }
 
 Describe "Remove-GceInstance" {
-    $bucket = "gcps-bucket-removal"
-    # Delete the test bucket before/after each test to ensure we are in a good state.
-    BeforeEach {
-        Create-TestBucket $project $bucket
-    }
 
-    # TODO(chrsmith): Confirm that the user gets prompted if -Force is not present.
-    # TODO(chrsmith): Confirm that the -WhatIf prameter prompts the user, even if -Force is added.
+	$r = Get-Random
+	$instance = "gcps-instance-remove-$r"
 
-    It "will work" {
-        Remove-GceInstance -Name $bucket -Force
-        { Get-GceInstance -Name $bucket } | Should Throw "404"
-    }
+    Context "Real Remove" {
+		BeforeEach {
+			 $instance |
+				New-GceInstanceConfig -DiskImage "projects/debian-cloud/global/images/debian-8-jessie-v20160511" |
+				Add-GceInstance -Project $project -Zone $zone
+		}
 
-    It "will fail to remove non-empty buckets" {
-        Add-TestFile $bucket "file.txt"
-        { Remove-GceInstance -Name $bucket -Force } | Should Throw "409"
-    }
+		It "Should Work" {
+			Remove-GceInstance -Project $project -Zone $zone -Name $instance
+			{ Get-GceInstance -Project $project -Zone $zone -Name $instance } | Should Throw 404
+		}
+		
+		It "Should Work with pipeline" {
+			$instance | Remove-GceInstance -Project $project -Zone $zone 
+			{ Get-GceInstance -Project $project -Zone $zone -Name $instance } | Should Throw 404
+		}
+	}
 
-    It "will be unstoppable with the DeleteObjects flag" {
-        # Place an object in the GCS bucket.
-        Add-TestFile $bucket "file.txt"
-
-        Remove-GceInstance -Name $bucket -DeleteObjects -Force
-        { Get-GceInstance -Name $bucket } | Should Throw "404"
-    }
+	It "Should Throw 404" {
+		{ Remove-GceInstance -Project $project -Zone $zone -Name $instance } | Should Throw 404
+	}
+	
+	It "Should Throw 403" {
+		{ Remove-GceInstance -Project "asdf" -Zone $zone -Name $instance } | Should Throw 403
+	}
 }
-
-Describe "Test-GceInstance" {
-
-    It "will work" {
-        # Our own bucket
-        $bucket = "gcps-test-GceInstance"
-        Create-TestBucket $project $bucket
-        Test-GceInstance -Name $bucket | Should Be $true
-        gsutil rb gs://gcps-test-GceInstance
-      
-        # Buckets that exists but we don't have access to.
-        Test-GceInstance -Name "asdf" | Should Be $true
-
-        Test-GceInstance -Name "yt4fm3blvo9shden" | Should Be $false
-    }
-}
-#>
