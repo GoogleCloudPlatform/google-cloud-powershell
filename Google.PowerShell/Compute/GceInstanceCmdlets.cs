@@ -19,9 +19,7 @@ namespace Google.PowerShell.ComputeEngine
     /// Gets information about Google Compute Engine VM Instances.
     /// </para>
     /// <para type="description">
-    /// Gets information about VM Instances. There are two parameter sets. The default will get instance
-    /// objects based on the Project, and optional Zone and instance Name. The Instance Group parameter set
-    /// will get instance objects based on Project, Zone, InstanceGroup name and optional InstanceState.
+    /// Gets information about VM Instances.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceInstance", DefaultParameterSetName = ParameterSetNames.Default)]
@@ -31,7 +29,6 @@ namespace Google.PowerShell.ComputeEngine
         internal class ParameterSetNames
         {
             public const string Default = "Default";
-            public const string InstanceGroup = "InstanceGroup";
         }
 
         /// <summary>
@@ -64,23 +61,6 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The name of the instance group to get the instances of.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.InstanceGroup)]
-        public string InstanceGroup { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The state of the instances to get. Valid options are ALL and RUNNING.
-        /// Defaults to ALL
-        /// </para>
-        /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.InstanceGroup)]
-        public string InstanceState { get; set; }
-
-        /// <summary>
-        /// <para type="description">
         /// A filter to send along with the request. This has the name of the property to filter on, either eq
         /// or ne, and a constant to test against.
         /// </para>
@@ -93,16 +73,13 @@ namespace Google.PowerShell.ComputeEngine
             IEnumerable<Instance> output;
             switch (ParameterSetName)
             {
-                case ParameterSetNames.InstanceGroup:
-                    output = GetGroupInstances();
-                    break;
                 case ParameterSetNames.Default:
                     output = GetInstancesDefault();
                     break;
                 default:
                     throw new InvalidOperationException(
                         $"{ParameterSetName} is not a valid ParameterSet. " +
-                        $"Should be {ParameterSetNames.Default} or {ParameterSetNames.InstanceGroup}");
+                        $"Should be {ParameterSetNames.Default}");
             }
 
             foreach (Instance instance in output)
@@ -129,30 +106,6 @@ namespace Google.PowerShell.ComputeEngine
             {
                 return GetExactInstance();
             }
-        }
-
-        private IEnumerable<Instance> GetGroupInstances()
-        {
-            string pageToken = null;
-            do
-            {
-                var requestData = new InstanceGroupsListInstancesRequest { InstanceState = InstanceState };
-                var listRequest = Service.InstanceGroups.ListInstances(requestData, Project, Zone, InstanceGroup);
-                listRequest.Filter = Filter;
-                listRequest.PageToken = pageToken;
-                var response = listRequest.Execute();
-                if (response.Items != null)
-                {
-                    foreach (InstanceWithNamedPorts i in response.Items)
-                    {
-                        var instanceName = i.Instance.Split('/', '\\').Last();
-                        var getRequest = Service.Instances.Get(Project, Zone, instanceName);
-                        yield return getRequest.Execute();
-                    }
-                }
-                pageToken = response.NextPageToken;
-            }
-            while (pageToken != null);
         }
 
         private IEnumerable<Instance> GetAllProjectInstances()
