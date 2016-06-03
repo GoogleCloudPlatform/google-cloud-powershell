@@ -19,9 +19,9 @@ namespace Google.PowerShell.ComputeEngine
     /// Gets information about Google Compute Engine VM Instances.
     /// </para>
     /// <para type="description">
-    /// Gets information about VM Instances. The default parameter will return 
-    /// Google.Apis.Compute.v1.Data.Instance. The parameter set InstanceGroup will return the names of the 
-    /// instances as strings.
+    /// Gets information about VM Instances. There are two parameter sets. The default will get instance
+    /// objects based on the Project, and optional Zone and instance Name. The Instance Group parameter set
+    /// will get instance objects based on Project, Zone, InstanceGroup name and optional InstanceState.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceInstance", DefaultParameterSetName = ParameterSetNames.Default)]
@@ -90,48 +90,19 @@ namespace Google.PowerShell.ComputeEngine
 
         protected override void ProcessRecord()
         {
+            IEnumerable<Instance> output;
             switch (ParameterSetName)
             {
                 case ParameterSetNames.InstanceGroup:
-                    ProcessInstanceGroupRecord();
+                    output = GetGroupInstances();
                     break;
                 case ParameterSetNames.Default:
-                    ProcessDefaultRecord();
+                    output = GetInstancesDefault();
                     break;
                 default:
                     throw new InvalidOperationException(
                         $"{ParameterSetName} is not a valid ParameterSet. " +
                         $"Should be {ParameterSetNames.Default} or {ParameterSetNames.InstanceGroup}");
-            }
-        }
-
-        //ProcessRecord of the ByInstanceGroup ParameterSet
-        private void ProcessInstanceGroupRecord()
-        {
-            foreach (string instanceName in GetGroupInstanceNames())
-            {
-                WriteObject(instanceName);
-            }
-        }
-
-        /// <summary>
-        /// ProcessRecord for the default ParameterSet
-        /// </summary>
-        private void ProcessDefaultRecord()
-        {
-            IEnumerable<Instance> output;
-            if (String.IsNullOrEmpty(Zone))
-            {
-                output = GetAllProjectInstances();
-
-            }
-            else if (String.IsNullOrEmpty(Name))
-            {
-                output = GetZoneInstances();
-            }
-            else
-            {
-                output = GetExactInstance();
             }
 
             foreach (Instance instance in output)
@@ -140,25 +111,44 @@ namespace Google.PowerShell.ComputeEngine
             }
         }
 
-        private IEnumerable<Instance> GetExactInstance()
+        /// <summary>
+        /// Gets instances for the Default parameter set
+        /// </summary>
+        private IEnumerable<Instance> GetInstancesDefault()
         {
-            InstancesResource.GetRequest getRequest = Service.Instances.Get(Project, Zone, Name);
-            yield return getRequest.Execute();
+            if (String.IsNullOrEmpty(Zone))
+            {
+                return GetAllProjectInstances();
+
+            }
+            else if (String.IsNullOrEmpty(Name))
+            {
+                return GetZoneInstances();
+            }
+            else
+            {
+                return GetExactInstance();
+            }
         }
 
-        private IEnumerable<string> GetGroupInstanceNames()
+        private IEnumerable<Instance> GetGroupInstances()
         {
             string pageToken = null;
             do
             {
                 var requestData = new InstanceGroupsListInstancesRequest { InstanceState = InstanceState };
-                var request = Service.InstanceGroups.ListInstances(requestData, Project, Zone, InstanceGroup);
-                request.Filter = Filter;
-                request.PageToken = pageToken;
-                var response = request.Execute();
-                foreach (InstanceWithNamedPorts i in response.Items)
+                var listRequest = Service.InstanceGroups.ListInstances(requestData, Project, Zone, InstanceGroup);
+                listRequest.Filter = Filter;
+                listRequest.PageToken = pageToken;
+                var response = listRequest.Execute();
+                if (response.Items != null)
                 {
-                    yield return i.Instance;
+                    foreach (InstanceWithNamedPorts i in response.Items)
+                    {
+                        var instanceName = i.Instance.Split('/', '\\').Last();
+                        var getRequest = Service.Instances.Get(Project, Zone, instanceName);
+                        yield return getRequest.Execute();
+                    }
                 }
                 pageToken = response.NextPageToken;
             }
@@ -210,6 +200,12 @@ namespace Google.PowerShell.ComputeEngine
                 pageToken = response.NextPageToken;
             }
             while (pageToken != null);
+        }
+
+        private IEnumerable<Instance> GetExactInstance()
+        {
+            InstancesResource.GetRequest getRequest = Service.Instances.Get(Project, Zone, Name);
+            yield return getRequest.Execute();
         }
     }
 
