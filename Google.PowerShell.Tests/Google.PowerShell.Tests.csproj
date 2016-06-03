@@ -62,7 +62,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Common\Compute\PropertyByTypeTransformationAttributeTest.cs" />
+    <Compile Include="Common\PropertyByTypeTransformationAttributeTest.cs" />
     <Compile Include="Common\GCloudCmdletTests.cs" />
     <Compile Include="Common\CloudSdkSettingsTests.cs" />
     <Compile Include="Common\MeasurementServiceProtocolTests.cs" />

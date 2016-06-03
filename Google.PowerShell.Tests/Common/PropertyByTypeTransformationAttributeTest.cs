@@ -1,8 +1,8 @@
-﻿using Google.PowerShell.Compute;
+﻿using Google.PowerShell.Common;
 using NUnit.Framework;
 using System.Management.Automation;
 
-namespace Google.PowerShell.Tests.Common.Compute
+namespace Google.PowerShell.Tests.Common.ComputeEngine
 {
     class TestType
     {
@@ -17,7 +17,7 @@ namespace Google.PowerShell.Tests.Common.Compute
         [Test]
         public void TestStringPassThrough()
         {
-            var attribute = new PropertyByTypeTransformationAttribute { Property = "name", Type = typeof(TestType) };
+            var attribute = new PropertyByTypeTransformationAttribute { Property = "name", TypeToTransform = typeof(TestType) };
             object result = attribute.Transform(null, testString);
             Assert.AreEqual(result, testString);
         }
@@ -26,7 +26,7 @@ namespace Google.PowerShell.Tests.Common.Compute
         public void TestProjectConversion()
         {
             TestType project = new TestType { Name = testString };
-            var attribute = new PropertyByTypeTransformationAttribute { Property = "name", Type = typeof(TestType) };
+            var attribute = new PropertyByTypeTransformationAttribute { Property = "name", TypeToTransform = typeof(TestType) };
             object result = attribute.Transform(null, project);
             Assert.AreEqual(testString,result );
         }
@@ -36,7 +36,7 @@ namespace Google.PowerShell.Tests.Common.Compute
         {
             TestType project = new TestType { Name = testString };
             PSObject obj = new PSObject(project);
-            var attribute = new PropertyByTypeTransformationAttribute { Property = "name", Type = typeof(TestType) };
+            var attribute = new PropertyByTypeTransformationAttribute { Property = "name", TypeToTransform = typeof(TestType) };
             object result = attribute.Transform(null, obj);
             Assert.AreEqual(result, testString);
         }
@@ -46,7 +46,7 @@ namespace Google.PowerShell.Tests.Common.Compute
         {
             TestType project = new TestType { Name = testString };
             PSObject obj = new PSObject(project);
-            var attribute = new PropertyByTypeTransformationAttribute { Property = "name", Type = typeof(TestType) };
+            var attribute = new PropertyByTypeTransformationAttribute { Property = "name", TypeToTransform = typeof(TestType) };
             object result = attribute.Transform(null, new PSObject(obj));
             Assert.AreEqual(result, testString);
         }
