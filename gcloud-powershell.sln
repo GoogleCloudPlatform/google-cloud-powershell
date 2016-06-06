@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Google.PowerShell", "Google.PowerShell\Google.PowerShell.csproj", "{D338C5D3-5FC3-408F-9F7F-D53E7B213505}"
 EndProject
@@ -14,7 +14,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFiles", "SolutionFi
 		cmdlet-style-guide.md = cmdlet-style-guide.md
 		CONTRIBUTING.md = CONTRIBUTING.md
 		LICENSE = LICENSE
-		nuget.config = nuget.config
 		README.md = README.md
 	EndProjectSection
 EndProject

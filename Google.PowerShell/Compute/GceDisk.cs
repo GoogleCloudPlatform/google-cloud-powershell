@@ -60,19 +60,18 @@ namespace Google.PowerShell.ComputeEngine
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            var service = GetComputeService();
 
             // Special case. If you specify the Project, Zone, and DiskName we use the Get command to
             // get the specific disk. This will throw a 404 if it does not exist.
             if (!String.IsNullOrEmpty(Project) && !String.IsNullOrEmpty(Zone) && !String.IsNullOrEmpty(DiskName))
             {
-                DisksResource.GetRequest getReq = service.Disks.Get(Project, Zone, DiskName);
+                DisksResource.GetRequest getReq = Service.Disks.Get(Project, Zone, DiskName);
                 Disk disk = getReq.Execute();
                 WriteObject(disk);
                 return;
             }
 
-            DisksResource.AggregatedListRequest listReq = service.Disks.AggregatedList(Project);
+            DisksResource.AggregatedListRequest listReq = Service.Disks.AggregatedList(Project);
             // The v1 version of the API only supports one filter at a time. So we need to
             // specify a filter here and manually filter results later. Also, since the only
             // operations are "eq" and "ne", we don't use the filter for zone so that we can
@@ -207,7 +206,6 @@ namespace Google.PowerShell.ComputeEngine
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            var service = GetComputeService();
 
             // The GCE API requires disk types to be specified as URI-like things.
             // If null will default to "pd-standard"
@@ -224,16 +222,16 @@ namespace Google.PowerShell.ComputeEngine
             newDisk.SizeGb = SizeGb;
             newDisk.Type = diskTypeResource;
 
-            DisksResource.InsertRequest insertReq = service.Disks.Insert(newDisk, Project, Zone);
+            DisksResource.InsertRequest insertReq = Service.Disks.Insert(newDisk, Project, Zone);
             insertReq.SourceImage = SourceImage;
             // TODO(chrsmith): Support creating disks based on existing snapshots. See
             // comment above for more info.
 
             Operation op = insertReq.Execute();
-            WaitForZoneOperation(service, Project, Zone, op);
+            WaitForZoneOperation(Service, Project, Zone, op);
 
             // Return the newly created disk.
-            DisksResource.GetRequest getReq = service.Disks.Get(Project, Zone, DiskName);
+            DisksResource.GetRequest getReq = Service.Disks.Get(Project, Zone, DiskName);
             Disk disk = getReq.Execute();
 
             WriteObject(disk);
@@ -286,18 +284,17 @@ namespace Google.PowerShell.ComputeEngine
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            var service = GetComputeService();
 
             DisksResizeRequest diskResizeReq = new DisksResizeRequest();
             diskResizeReq.SizeGb = NewSizeGb;
 
-            DisksResource.ResizeRequest resizeReq = service.Disks.Resize(diskResizeReq, Project, Zone, DiskName);
+            DisksResource.ResizeRequest resizeReq = Service.Disks.Resize(diskResizeReq, Project, Zone, DiskName);
 
             Operation op = resizeReq.Execute();
-            WaitForZoneOperation(service, Project, Zone, op);
+            WaitForZoneOperation(Service, Project, Zone, op);
 
             // Return the updated disk.
-            DisksResource.GetRequest getReq = service.Disks.Get(Project, Zone, DiskName);
+            DisksResource.GetRequest getReq = Service.Disks.Get(Project, Zone, DiskName);
             Disk disk = getReq.Execute();
 
             WriteObject(disk);
@@ -346,17 +343,16 @@ namespace Google.PowerShell.ComputeEngine
             {
                 return;
             }
-
-            var service = GetComputeService();
+            
             // First try to get the disk, this way the cmdlet fails with a 404 if the
             // disk does not exist. (Otherwise the delete operation would succeed when
             // trying to delete a non-existant disk.)
-            service.Disks.Get(Project, Zone, DiskName);
+            Service.Disks.Get(Project, Zone, DiskName);
 
-            DisksResource.DeleteRequest deleteReq = service.Disks.Delete(Project, Zone, DiskName);
+            DisksResource.DeleteRequest deleteReq = Service.Disks.Delete(Project, Zone, DiskName);
 
             Operation op = deleteReq.Execute();
-            WaitForZoneOperation(service, Project, Zone, op);
+            WaitForZoneOperation(Service, Project, Zone, op);
         }
     }
 }
