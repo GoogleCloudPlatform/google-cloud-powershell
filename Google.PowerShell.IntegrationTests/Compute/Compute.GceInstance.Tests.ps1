@@ -25,33 +25,6 @@ Describe "Get-GceInstance" {
         New-GceInstanceConfig -DiskImage $image -MachineType "f1-micro" |
         Add-GceInstance -Project $project -Zone $zone2
 
-    <#TODO: Find a test that consistantly succeds for groups
-    Context "Instance Group" {
-
-        $instanceGroupName = "instance-group-$r"
-        #TODO: Replace with powershell cmdlet
-        gcloud compute instance-groups managed create $instanceGroupName `
-            --size 1 --template instance-template-1
-
-        It "should get one" {
-            $result = Get-GceInstance -Project $project -Zone $zone -InstanceGroup $instanceGroupName
-            $result.Name | Should Match $instanceGroupName
-            $result.Name | Should Not Be $instanceGroupName
-            $result.Kind | Should Be "compute#instance"
-            $result.Count | Should Be 1
-        }
-
-        It "should fail for wrong instance group" {
-            { Get-GceInstance -Project $project -Zone $zone -InstanceGroup "fake" } | Should Throw 404
-        }
-
-        It "should fail for wrong project" {
-            { Get-GceInstance -Project "asdf" -Zone $zone -InstanceGroup "fake" } | Should Throw 403
-        }
-
-        gcloud compute instance-groups managed delete $instanceGroupname -q
-    }#>
-
 
     It "should fail to return non-existing instances" {
         {
