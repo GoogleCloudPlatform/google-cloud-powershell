@@ -61,6 +61,7 @@ Describe "Get-GceInstance" {
         { Get-GceInstance -Project "asdf" } | Should Throw "403"
     }
 
+    #Test that the PropertyByTypeTransformationAttribute works the way we think
     Context "Object Transformer" {
         $projectObj = New-Object Google.Apis.Compute.v1.Data.Project
         $projectObj.Name = $project
@@ -91,10 +92,10 @@ Describe "New-GceInstanceConfig" {
             -MachineType "f1-micro" `
             -Disk @{"boot"=$true; "initializeParams" = @{"sourceImage" = $image}} `
             -NetworkInterface @{"network"="global/networks/fake"} `
-            -Tag "Testing", "AnotherTag"
+            -Tag "alpha", "beta"
         $instanceConfig.MachineType | Should Be "f1-micro"
         $instanceConfig.Disks.Boot | Should Be $true
-        $instanceConfig.Tags.Items | Should Be @("Testing", "AnotherTag")
+        $instanceConfig.Tags.Items | Should Be @("alpha", "beta")
         $instanceConfig.NetworkInterfaces.Network | Should Be "global/networks/fake"
     }
 

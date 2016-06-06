@@ -19,17 +19,12 @@ namespace Google.PowerShell.ComputeEngine
     /// Gets information about Google Compute Engine VM Instances.
     /// </para>
     /// <para type="description">
-    /// Gets information about VM Instances.
+    /// Gets information about VM instances.
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Get, "GceInstance", DefaultParameterSetName = ParameterSetNames.Default)]
+    [Cmdlet(VerbsCommon.Get, "GceInstance")]
     public class GetGceInstanceCmdlet : GceCmdlet
     {
-        // The names of the parameter sets of this cmdlet
-        internal class ParameterSetNames
-        {
-            public const string Default = "Default";
-        }
 
         /// <summary>
         /// <para type="description">
@@ -55,7 +50,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(Position = 2, Mandatory = false,
-            ValueFromPipeline = true, ParameterSetName = ParameterSetNames.Default)]
+            ValueFromPipeline = true)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Instance))]
         public string Name { get; set; }
 
@@ -71,40 +66,23 @@ namespace Google.PowerShell.ComputeEngine
         protected override void ProcessRecord()
         {
             IEnumerable<Instance> output;
-            switch (ParameterSetName)
+            if (String.IsNullOrEmpty(Zone))
             {
-                case ParameterSetNames.Default:
-                    output = GetInstancesDefault();
-                    break;
-                default:
-                    throw new InvalidOperationException(
-                        $"{ParameterSetName} is not a valid ParameterSet. " +
-                        $"Should be {ParameterSetNames.Default}");
+                output = GetAllProjectInstances();
+
+            }
+            else if (String.IsNullOrEmpty(Name))
+            {
+                output = GetZoneInstances();
+            }
+            else
+            {
+                output = new Instance[] { GetExactInstance() };
             }
 
             foreach (Instance instance in output)
             {
                 WriteObject(instance);
-            }
-        }
-
-        /// <summary>
-        /// Gets instances for the Default parameter set
-        /// </summary>
-        private IEnumerable<Instance> GetInstancesDefault()
-        {
-            if (String.IsNullOrEmpty(Zone))
-            {
-                return GetAllProjectInstances();
-
-            }
-            else if (String.IsNullOrEmpty(Name))
-            {
-                return GetZoneInstances();
-            }
-            else
-            {
-                return GetExactInstance();
             }
         }
 
@@ -155,227 +133,10 @@ namespace Google.PowerShell.ComputeEngine
             while (pageToken != null);
         }
 
-        private IEnumerable<Instance> GetExactInstance()
+        private Instance GetExactInstance()
         {
             InstancesResource.GetRequest getRequest = Service.Instances.Get(Project, Zone, Name);
-            yield return getRequest.Execute();
-        }
-    }
-
-
-    /// <summary>
-    /// <para type="synopsis">
-    /// Makes a new Google Compute Engine VM instance description.
-    /// </para>
-    /// <para type="description"> 
-    /// Makes a new Google Compute Engine VM instance description.
-    /// Use Add-GceInstance to instantiate the instance.
-    /// </para>
-    /// </summary>
-    [Cmdlet(VerbsCommon.New, "GceInstanceConfig")]
-    public class NewGceInstanceCmdlet : GceCmdlet
-    {
-        internal class ParameterSetNames
-        {
-            public const string DiskByObject = "DiskByObject";
-            public const string DiskByImage = "DiskByImage";
-            public const string DiskBySource = "DiskBySource";
-        }
-
-        /// <summary>
-        /// <para type="description">
-        /// The name of the instance. The name must be 1-63 characters long and
-        /// match [a-z]([-a-z0-9]*[a-z0-9])?
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true)]
-        public string Name { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// Allows this instance to send and receive packets with non-matching destination
-        /// or source IPs. This is required if you plan to use this instance to forward routes.
-        /// </para>
-        /// </summary>
-        [Parameter]
-        public bool? CanIpForward { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// A description of this resource.
-        /// </para>
-        /// </summary>
-        [Parameter]
-        public string Description { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// Disks associated with this instance.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.DiskByObject)]
-        public List<AttachedDisk> Disk { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The path to the boot disk image.
-        /// For example: "projects/debian-cloud/global/images/debian-8-jessie-v20160511".
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.DiskByImage)]
-        public string DiskImage { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The path to the boot disk.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.DiskBySource)]
-        public string DiskSource { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// A string describing the machine type. This can be either just the machine type name,
-        /// or the full url. For example: n1-standard-4
-        /// <para type="description">
-        /// </summary>
-        [Parameter(Mandatory = true)]
-        public string MachineType { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The metadata key/value pairs assigned to this instance. This includes custom
-        /// metadata and predefined keys.
-        /// </para>
-        /// </summary>
-        [Parameter]
-        public Hashtable Metadata { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// An array of configurations for this interface. This specifies how this interface
-        /// is configured to interact with other network services, such as connecting to
-        /// the internet.
-        /// </para>
-        /// </summary>
-        [Parameter]
-        public List<NetworkInterface> NetworkInterface { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// Scheduling options for this instance.
-        /// </para>
-        /// </summary>
-        [Parameter]
-        public Scheduling Scheduling { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// A list of service accounts, with their specified scopes, authorized for this
-        /// instance. Service accounts generate access tokens that can be accessed through
-        /// the metadata server and used to authenticate applications on the instance. See
-        /// Authenticating from Google Compute Engine for more information.
-        /// </para>
-        /// </summary>
-        [Parameter]
-        public List<ServiceAccount> ServiceAccount { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// A list of tags to apply to this instance. Tags are used to identify valid sources
-        /// or targets for network firewalls. Each tag within
-        /// the list must comply with RFC1035.
-        /// </para>
-        /// </summary>
-        [Parameter]
-        public List<string> Tag { get; set; }
-
-        protected override void ProcessRecord()
-        {
-            Instance newInstance = ProduceInstance();
-
-            WriteObject(newInstance);
-        }
-
-        private Instance ProduceInstance()
-        {
-            Instance newInstance = new Instance
-            {
-                Name = Name,
-                CanIpForward = CanIpForward,
-                Description = Description,
-                MachineType = MachineType,
-                Scheduling = Scheduling,
-                ServiceAccounts = ServiceAccount,
-            };
-
-            if (NetworkInterface != null)
-            {
-                newInstance.NetworkInterfaces = NetworkInterface;
-            }
-            else
-            {
-                newInstance.NetworkInterfaces = new List<NetworkInterface> {
-                    new NetworkInterface {
-                        Network = "global/networks/default",
-                        AccessConfigs = new List<AccessConfig> {
-                            new AccessConfig {
-                                Type = "ONE_TO_ONE_NAT"
-                            }
-                        }
-                    }
-                };
-            }
-
-            newInstance.Disks = GetDisk();
-
-            if (Metadata != null)
-            {
-                IList<Metadata.ItemsData> items = new List<Metadata.ItemsData>();
-                for (var e = Metadata.GetEnumerator(); e.MoveNext();)
-                {
-                    items.Add(new Metadata.ItemsData { Key = e.Key.ToString(), Value = e.Value.ToString() });
-                }
-                newInstance.Metadata = new Metadata
-                {
-                    Items = items
-                };
-            }
-
-            if (Tag != null)
-            {
-                newInstance.Tags = new Tags { Items = Tag.ToList() };
-            }
-
-            return newInstance;
-        }
-
-        private IList<AttachedDisk> GetDisk()
-        {
-            switch (ParameterSetName)
-            {
-                case ParameterSetNames.DiskByObject:
-                    return Disk.ToList();
-                case ParameterSetNames.DiskByImage:
-                    return new List<AttachedDisk> {
-                        new AttachedDisk {
-                            Boot = true,
-                            AutoDelete = true,
-                            InitializeParams = new AttachedDiskInitializeParams {
-                                SourceImage = DiskImage
-                            }
-                        }
-                    };
-                case ParameterSetNames.DiskBySource:
-                    return new List<AttachedDisk> {
-                        new AttachedDisk { Boot = true, AutoDelete = false, Source = DiskSource } };
-                default:
-                    throw new InvalidOperationException(
-                        $"{ParameterSetName} is not a valid ParameterSet. " +
-                        $"Should be one of {ParameterSetNames.DiskByObject}, " +
-                        $"{ParameterSetNames.DiskByImage}, or {ParameterSetNames.DiskBySource}");
-
-            }
+            return getRequest.Execute();
         }
     }
 
@@ -398,7 +159,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
-        public override string Project { get; set; }
+        public string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -407,7 +168,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter(Position = 1, Mandatory = true)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
-        public override string Zone { get; set; }
+        public string Zone { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -434,7 +195,7 @@ namespace Google.PowerShell.ComputeEngine
 
             InstancesResource.InsertRequest request = Service.Instances.Insert(Instance, Project, Zone);
             Operation operation = request.Execute();
-            operations.Add(operation);
+            AddOperation(Project, Zone, operation);
         }
     }
 
@@ -457,7 +218,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
-        public override string Project { get; set; }
+        public string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -466,7 +227,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter(Position = 1, Mandatory = true)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
-        public override string Zone { get; set; }
+        public string Zone { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -480,7 +241,7 @@ namespace Google.PowerShell.ComputeEngine
         {
             var request = Service.Instances.Delete(Project, Zone, Name);
             var operation = request.Execute();
-            operations.Add(operation);
+            AddOperation(Project, Zone, operation);
         }
     }
 }
