@@ -616,11 +616,14 @@ namespace Google.PowerShell.ComputeEngine
 
             foreach (object diskParam in AddDisk)
             {
+                //Allow for taking AttachedDisk and Disk objects, and strings.
                 AttachedDisk newDisk;
                 if (diskParam is AttachedDisk)
                 {
                     newDisk = diskParam as AttachedDisk;
-                } else {
+                }
+                else
+                {
                     Disk disk = diskParam as Disk ??
                         Service.Disks.Get(Project, Zone, diskParam.ToString()).Execute();
 
