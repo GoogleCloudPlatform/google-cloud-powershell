@@ -71,6 +71,11 @@ namespace Google.PowerShell.ComputeEngine
                 }
             }
         }
+
+        public static string GetZoneNameFromUri(string zoneUri)
+        {
+            return zoneUri.Split('/', '\\').Last();
+        }
     }
     
     /// <summary>

@@ -61,7 +61,7 @@ Describe "Get-GceInstance" {
         { Get-GceInstance -Project "asdf" } | Should Throw "403"
     }
 
-    #Test that the PropertyByTypeTransformationAttribute works the way we think
+    # Test that the PropertyByTypeTransformationAttribute works the way we think
     Context "Object Transformer" {
         $projectObj = New-Object Google.Apis.Compute.v1.Data.Project
         $projectObj.Name = $project
@@ -178,22 +178,22 @@ Describe "Remove-GceInstance" {
                 Add-GceInstance -Project $project -Zone $zone
         }
 
-        It "Should Work" {
+        It "should Work" {
             Remove-GceInstance -Project $project -Zone $zone -Name $instance
             { Get-GceInstance -Project $project -Zone $zone -Name $instance } | Should Throw 404
         }
         
-        It "Should Work with pipeline" {
+        It "should Work with pipeline" {
             $instance | Remove-GceInstance -Project $project -Zone $zone 
             { Get-GceInstance -Project $project -Zone $zone -Name $instance } | Should Throw 404
         }
     }
 
-    It "Should fail removing non existing instances" {
+    It "should fail removing non existing instances" {
         { Remove-GceInstance -Project $project -Zone $zone -Name $instance } | Should Throw 404
     }
     
-    It "Should fail removing instance in wrong project" {
+    It "should fail removing instance in wrong project" {
         { Remove-GceInstance -Project "asdf" -Zone $zone -Name $instance } | Should Throw 403
     }
 }
@@ -202,11 +202,11 @@ Describe "Start-GceInstance" {
     $r = Get-Random
     $instance = "gcps-instance-start-$r"
 
-    It "Should fail starting wrong project" {
+    It "should fail starting wrong project" {
         { Start-GceInstance -Project "asdf" -Zone $zone -Name $instance } | Should Throw 403
     }
 
-    It "Should fail starting non existing instance" {
+    It "should fail starting non existing instance" {
         { Start-GceInstance -Project $project -Zone $zone -Name $instance} | Should Throw 404
     }
 
@@ -216,7 +216,7 @@ Describe "Start-GceInstance" {
     
     Stop-GceInstance -Project $project -Zone $zone -Name $instance
 
-    It "Should work" {
+    It "should work" {
         Start-GceInstance -Project $project -Zone $zone -Name $instance
         (Get-GceInstance $project $zone $instance).Status | Should Be "RUNNING"
     }
@@ -228,11 +228,11 @@ Describe "Stop-GceInstance" {
     $r = Get-Random
     $instance = "gcps-instance-stop-$r"
 
-    It "Should fail stoping wrong project" {
+    It "should fail stoping wrong project" {
         { Stop-GceInstance -Project "asdf" -Zone $zone -Name $instance } | Should Throw 403
     }
 
-    It "Should fail stoping non existing instance" {
+    It "should fail stoping non existing instance" {
         { Stop-GceInstance -Project $project -Zone $zone -Name $instance} | Should Throw 404
     }
 
@@ -240,7 +240,8 @@ Describe "Stop-GceInstance" {
         New-GceInstanceConfig -DiskImage $image -MachineType "f1-micro" |
         Add-GceInstance -Project $project -Zone $zone
     
-    It "Should work " {
+    It "should work " {
+        (Get-GceInstance $project $zone $instance).Status | Should Be "RUNNING"
         Stop-GceInstance -Project $project -Zone $zone -Name $instance
         (Get-GceInstance $project $zone $instance).Status | Should Be "TERMINATED"
     }
@@ -252,11 +253,11 @@ Describe "Restart-GceInstance" {
     $r = Get-Random
     $instance = "gcps-instance-restart-$r"
 
-    It "Should fail restarting wrong project" {
+    It "should fail restarting wrong project" {
         { Restart-GceInstance -Project "asdf" -Zone $zone -Name $instance } | Should Throw 403
     }
 
-    It "Should fail restarting non existing instance" {
+    It "should fail restarting non existing instance" {
         { Restart-GceInstance -Project $project -Zone $zone -Name $instance} | Should Throw 404
     }
 
@@ -264,17 +265,18 @@ Describe "Restart-GceInstance" {
         New-GceInstanceConfig -DiskImage $image -MachineType "f1-micro" |
         Add-GceInstance -Project $project -Zone $zone
 
-    It "Should show restart in log" {
+    It "should show restart in log" {
         $before = (Get-Date).ToUniversalTime()
         Restart-GceInstance -Project $project -Zone $zone -Name $instance
         Start-Sleep 5
-        #read and parse SerialPortOutput to see when the last startup happened.
+        # Read and parse serial port output to see when the last startup happened.
         $portString = (Get-GceInstance $project $zone $instance -SerialPortOutput)
         $portLines = $portString -split [System.Environment]::NewLine
-        $restartLine = $portLines -match "\w\w\w  \d \d\d:\d\d:\d\d\s$instance kernel:" -match "0.000000]" |
+        $restartLine = $portLines -match "(\w+)\s+(\d+)\s+(\d+):(\d+):(\d+)\s$instance kernel:" -match "0.000000]" |
             Select-Object -Last 1
-        $dateString = $restartLine.Substring(0,15)
-        $restartTime = [DateTime]::ParseExact($dateString, "MMM  d HH:mm:ss", $null)
+        $dateString -match "(\w+)\s+(\d+)\s(\d+):(\d+):(\d+)"
+        $month, $day, $hour, $minute, $second = $matches.1, $matches.2, $matches.3, $matches.4, $matches.5
+        $restartTime = [DateTime]::ParseExact("$month $day $hour $minute $second", "MMM d HH mm ss", $null)
         $restartTime -gt $before | Should Be $true
     }
 
@@ -285,11 +287,11 @@ Describe "Set-GceInstance" {
     $r = Get-Random
     $instance = "gcps-instance-set-$r"
     
-    It "Should fail changing wrong project" {
+    It "should fail changing wrong project" {
         { Set-GceInstance -Project "asdf" -Zone $zone -Instance $instance -AddTag "alpha" } | Should Throw 403
     }
 
-    It "Should fail changinon existing instance" {
+    It "should fail changinon existing instance" {
         { Set-GceInstance -Project $project -Zone $zone -Instance $instance -AddTag "alpha" } |
             Should Throw 404
     }
@@ -298,35 +300,50 @@ Describe "Set-GceInstance" {
         New-GceInstanceConfig -DiskImage $image -MachineType "f1-micro" -Metadata @{"k" = "v"} -Tag "beta" |
         Add-GceInstance -Project $project -Zone $zone
 
-    It "Should change tags" {
+    It "should change tags" {
         Set-GceInstance -Project $project -Zone $zone -Instance $instance -RemoveTag "beta" -AddTag "alpha"
         (Get-GceInstance $project $zone $instance).Tags.Items | Should Be "alpha"
     }
 
-    It "Should change metadata" {
+    It "should change metadata" {
+        # Test adding and removing
         Set-GceInstance $project $zone $instance -RemoveMetadata "k" -AddMetadata @{"newKey" = "newValue"}
+
         $instanceObj = Get-GceInstance $project $zone $instance
         $instanceObj.Metadata.Items.Key | Should Be "newKey"
         $instanceObj.Metadata.Items.Value | Should Be "newValue"
+
+        # Test removing only
         Set-GceInstance $project $zone $instance -RemoveMetadata "newKey"
+
         $instanceObj = Get-GceInstance $project $zone $instance
         $instanceObj.Metadata.Items.Count | Should Be 0
+
+        # Test adding only
         Set-GceInstance $project $zone $instance -AddMetadata @{"newKey2" = "newValue2"}
+
         $instanceObj = Get-GceInstance $project $zone $instance
         $instanceObj.Metadata.Items.Key | Should Be "newKey2"
         $instanceObj.Metadata.Items.Value | Should Be "newValue2"
 
     }
 
-    It "Should change AccessConfigs" {
+    It "should change AccessConfigs" {
+
+        # Find the existing values
         $instanceObj = Get-GceInstance $project $zone $instance
         $interfaceName = $instanceObj.NetworkInterfaces.Name
         $configName = $instanceObj.NetworkInterfaces.AccessConfigs.Name
+        
+        # Build a new AccessConfig
         [Google.Apis.Compute.v1.Data.AccessConfig] $newConfig = @{}
         $newConfig.Kind = "ONE_TO_ONE_NAT"
         $newConfig.Name = "NewConfig$r"
+
+        # Test adding and deleting
         Set-GceInstance $project $zone $instance -NetworkInterface $interfaceName `
             -DeleteAccessConfig $configName -NewAccessConfig $newConfig
+
         $instanceObj = Get-GceInstance $project $zone $instance
         $instanceObj.NetworkInterfaces.AccessConfigs.Name | Should Be "NewConfig$r"
     }
@@ -335,7 +352,7 @@ Describe "Set-GceInstance" {
         $newDiskName = "attach-disk-test-$r"
         $newDisk = New-GceDisk -Project $project -Zone $zone -DiskName $newDiskName -Size 1
 
-        It "Should change Disk" {
+        It "should change Disk" {
             Set-GceInstance $project $zone $instance -AddDisk $newDiskName
             $instanceObj = Get-GceInstance $project $zone $instance
             $instanceObj.Disks.Count | Should Be 2

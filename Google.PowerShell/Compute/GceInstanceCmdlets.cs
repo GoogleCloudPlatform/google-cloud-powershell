@@ -11,7 +11,6 @@ using System.Linq;
 using System.Management.Automation;
 using System.Text;
 using System.Threading.Tasks;
-using static Google.Apis.Compute.v1.InstancesResource;
 
 namespace Google.PowerShell.ComputeEngine
 {
@@ -76,55 +75,31 @@ namespace Google.PowerShell.ComputeEngine
 
         protected override void ProcessRecord()
         {
-            IEnumerable<Instance> output;
+            IEnumerable<Instance> instances;
             if (String.IsNullOrEmpty(Zone))
             {
-                output = GetAllProjectInstances();
+                instances = GetAllProjectInstances();
 
             }
             else if (String.IsNullOrEmpty(Name))
             {
-                output = GetZoneInstances();
+                instances = GetZoneInstances();
             }
             else
             {
-                output = new Instance[] { GetExactInstance() };
+                instances = new Instance[] { GetExactInstance() };
             }
 
-            var tasks = new List<Task<string>>();
-
-            foreach (Instance instance in output)
+            if (SerialPortOutput)
             {
-                if (SerialPortOutput)
-                {
-                    tasks.Add(GetSerialPortOutputAsync(instance));
-                }
-                else
+                WriteSerialPortOutoput(instances);
+            }
+            else
+            {
+                foreach (Instance instance in instances)
                 {
                     WriteObject(instance);
                 }
-            }
-
-            var exceptions = new List<Exception>();
-            foreach (Task<string> task in tasks)
-            {
-                try
-                {
-                    WriteObject(task.Result);
-                }
-                catch (Exception e)
-                {
-                    exceptions.Add(e);
-                }
-            }
-
-            if (exceptions.Count == 1)
-            {
-                throw exceptions.First();
-            }
-            else if (exceptions.Count > 1)
-            {
-                throw new AggregateException(exceptions);
             }
         }
 
@@ -181,9 +156,36 @@ namespace Google.PowerShell.ComputeEngine
             return getRequest.Execute();
         }
 
+        private void WriteSerialPortOutoput(IEnumerable<Instance> instances)
+        {
+            var tasks = instances.Select(i => GetSerialPortOutputAsync(i));
+
+            var exceptions = new List<Exception>();
+            foreach (Task<string> task in tasks)
+            {
+                try
+                {
+                    WriteObject(task.Result);
+                }
+                catch (Exception e)
+                {
+                    exceptions.Add(e);
+                }
+            }
+
+            if (exceptions.Count == 1)
+            {
+                throw exceptions.First();
+            }
+            else if (exceptions.Count > 1)
+            {
+                throw new AggregateException(exceptions);
+            }
+        }
+
         private async Task<string> GetSerialPortOutputAsync(Instance instance)
         {
-            string zone = instance.Zone.Split('/', '\\').Last();
+            string zone = GetZoneNameFromUri(instance.Zone);
             InstancesResource.GetSerialPortOutputRequest request =
                 Service.Instances.GetSerialPortOutput(Project, zone, instance.Name);
             SerialPortOutput output = await request.ExecuteAsync();
@@ -305,9 +307,8 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Start, "GceInstance")]
-    public class StartGceInstance : GceConcurrentCmdlet
+    public class StartGceInstanceCmdlet : GceConcurrentCmdlet
     {
-
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
@@ -352,9 +353,8 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Stop, "GceInstance")]
-    public class StopGceInstance : GceConcurrentCmdlet
+    public class StopGceInstanceCmdlet : GceConcurrentCmdlet
     {
-
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
@@ -399,9 +399,8 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Restart, "GceInstance")]
-    public class RestartGceInstance : GceConcurrentCmdlet
+    public class RestartGceInstanceCmdlet : GceConcurrentCmdlet
     {
-
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
@@ -580,15 +579,14 @@ namespace Google.PowerShell.ComputeEngine
         }
 
         /// <summary>
-        /// ProcessRecord for AccessConfig Parameter Set
+        /// ProcessRecord for AccessConfig parameter set.
         /// </summary>
         private void ProcessAccessConfig()
         {
             foreach (string configName in DeleteAccessConfig)
             {
-                DeleteAccessConfigRequest request =
-                    Service.Instances.DeleteAccessConfig(
-                        Project, Zone, Instance, configName, NetworkInterface);
+                InstancesResource.DeleteAccessConfigRequest request = Service.Instances.DeleteAccessConfig(
+                    Project, Zone, Instance, configName, NetworkInterface);
                 Operation operation = request.Execute();
                 AddOperation(Project, Zone, operation);
             }
@@ -603,20 +601,21 @@ namespace Google.PowerShell.ComputeEngine
         }
 
         /// <summary>
-        /// ProcessRecord for Disk Parameter Set
+        /// ProcessRecord for Disk parameter set.
         /// </summary>
         private void ProcessDisk()
         {
             foreach (string diskName in DetachDisk)
             {
-                DetachDiskRequest request = Service.Instances.DetachDisk(Project, Zone, Instance, diskName);
+                InstancesResource.DetachDiskRequest request = Service.Instances.DetachDisk(
+                    Project, Zone, Instance, diskName);
                 Operation operation = request.Execute();
                 AddOperation(Project, Zone, operation);
             }
 
             foreach (object diskParam in AddDisk)
             {
-                //Allow for taking AttachedDisk and Disk objects, and strings.
+                // Allow for taking Disk, AttachedDisk, and string objects.
                 AttachedDisk newDisk;
                 if (diskParam is AttachedDisk)
                 {
@@ -624,12 +623,15 @@ namespace Google.PowerShell.ComputeEngine
                 }
                 else
                 {
-                    Disk disk = diskParam as Disk ??
-                        Service.Disks.Get(Project, Zone, diskParam.ToString()).Execute();
-
+                    Disk disk = diskParam as Disk;
+                    if(disk == null)
+                    {
+                        disk = Service.Disks.Get(Project, Zone, diskParam.ToString()).Execute();
+                    }
                     newDisk = new AttachedDisk { Source = disk.SelfLink, DeviceName = disk.Name };
                 }
-                AttachDiskRequest request =
+
+                InstancesResource.AttachDiskRequest request =
                     Service.Instances.AttachDisk(newDisk, Project, Zone, Instance);
                 Operation operation = request.Execute();
                 AddOperation(Project, Zone, operation);
@@ -637,11 +639,11 @@ namespace Google.PowerShell.ComputeEngine
         }
 
         /// <summary>
-        /// ProcessRecord for Metadata Parameter Set
+        /// ProcessRecord for Metadata parameter set.
         /// </summary>
         private void ProcessMetadata()
         {
-            GetRequest getRequest = Service.Instances.Get(Project, Zone, Instance);
+            InstancesResource.GetRequest getRequest = Service.Instances.Get(Project, Zone, Instance);
             Instance instance = getRequest.Execute();
             Metadata metadata = instance.Metadata ?? new Metadata();
             metadata.Items = metadata.Items ?? new List<Metadata.ItemsData>();
@@ -654,22 +656,23 @@ namespace Google.PowerShell.ComputeEngine
                     Value = entry.Value.ToString()
                 });
             }
-            SetMetadataRequest request =
+            InstancesResource.SetMetadataRequest request =
                 Service.Instances.SetMetadata(metadata, Project, Zone, Instance);
             AddOperation(Project, Zone, request.Execute());
         }
 
         /// <summary>
-        /// ProcessRecord for Tag Parameter Set
+        /// ProcessRecord for Tag parameter set.
         /// </summary>
         private void ProcessTag()
         {
-            GetRequest getRequest = Service.Instances.Get(Project, Zone, Instance);
+            InstancesResource.GetRequest getRequest = Service.Instances.Get(Project, Zone, Instance);
             Instance instance = getRequest.Execute();
             Tags tags = instance.Tags ?? new Tags();
             tags.Items = tags.Items ?? new List<string>();
             tags.Items = tags.Items.Where(tag => !RemoveTag.Contains(tag)).Concat(AddTag).ToList();
-            SetTagsRequest setRequest = Service.Instances.SetTags(tags, Project, Zone, Instance);
+            InstancesResource.SetTagsRequest setRequest =
+                Service.Instances.SetTags(tags, Project, Zone, Instance);
             Operation operation = setRequest.Execute();
             AddOperation(Project, Zone, operation);
         }
