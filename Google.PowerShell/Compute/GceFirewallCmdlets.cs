@@ -132,6 +132,9 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(ValueFromPipeline = true, ParameterSetName = ParameterSetNames.AppendPipeline)]
         public object Pipeline;
 
+        /// <summary>
+        /// Actually create the new object and append it to either the pipeline or the given IList.
+        /// </summary>
         protected override void EndProcessing()
         {
             var newData = new Firewall.AllowedData
@@ -168,8 +171,10 @@ namespace Google.PowerShell.ComputeEngine
 
     /// <summary>
     /// <para type="synopsis">
+    /// Adds a new firewall rule.
     /// </para>
     /// <para type="description">
+    /// Adds a new firewall rule.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceFirewall")]
@@ -177,6 +182,7 @@ namespace Google.PowerShell.ComputeEngine
     {
         /// <summary>
         /// <para type="description">
+        /// The name of the project to add the firewall to.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0)]
@@ -185,6 +191,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
+        /// The name of the new firewall
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 1)]
@@ -192,6 +199,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
+        /// A list of allowed protocols and ports.
         /// </para>
         /// </summary>
         [Parameter]
@@ -199,6 +207,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
+        /// The description of this firewall
         /// </para>
         /// </summary>
         [Parameter]
@@ -206,6 +215,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
+        /// Url of the network resource for this firewall rule.
         /// </para>
         /// </summary>
         [Parameter]
@@ -213,6 +223,9 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
+        /// The IP address block that this rule applies to, expressed in CIDR format. One or both of
+        /// SourceRange and SourceTag may be set. If both parameters are set, an inbound connection is allowed
+        /// if it matches either SourceRange or SourceTag.
         /// </para>
         /// </summary>
         [Parameter]
@@ -220,6 +233,11 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
+        /// The instance tag which this rule applies to. One or both of SourceRange and SourceTag may be set.
+        /// If both parameters are set, an inbound connection is allowed it matches either SourceRange or
+        /// SourceTag. Source tags cannot be used to allow access to an instance's external IP address.
+        /// Source tags can only be used to control traffic traveling from an instance inside the same network
+        /// as the firewall.
         /// </para>
         /// </summary>
         [Parameter]
@@ -227,6 +245,9 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
+        /// An instance tag indicating sets of instances located in the network that may make network
+        /// connections as specified in allowed[]. If TargetTag is not specified, the firewall rule applies to
+        /// all instances on the specified network.
         /// </para>
         /// </summary>
         [Parameter]
@@ -251,8 +272,10 @@ namespace Google.PowerShell.ComputeEngine
 
     /// <summary>
     /// <para type="synopsis">
+    /// Removes a firewall from a project.
     /// </para>
     /// <para type="description">
+    /// Removes a firewall from a project.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceFirewall")]
@@ -260,6 +283,7 @@ namespace Google.PowerShell.ComputeEngine
     {
         /// <summary>
         /// <para type="description">
+        /// The name of the project from which to remove the firewall.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0)]
@@ -268,6 +292,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
+        /// The name of the firewall to remove.
         /// </para>
         /// </summary>
         [Parameter(Position = 1, ValueFromPipeline = true)]
@@ -284,8 +309,10 @@ namespace Google.PowerShell.ComputeEngine
 
     /// <summary>
     /// <para type="synopsis">
+    /// Sets the data of a firewall.
     /// </para>
     /// <para type="description">
+    /// Overwrites all data about a firewall.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceFirewall")]
@@ -293,6 +320,7 @@ namespace Google.PowerShell.ComputeEngine
     {
         /// <summary>
         /// <para type="description">
+        /// The name of the project that owns the firewall to change.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0)]
@@ -301,6 +329,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
+        /// The new firewall data.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 1)]
@@ -308,18 +337,21 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
+        /// If you are changing the name of the firewall, OldName is required. Otherwise, the name will be
+        /// taken from the Firewall data.
         /// </para>
         /// </summary>
         [Parameter]
-        public string Name { get; set; }
+        [Alias("Name")]
+        public string OldName { get; set; }
 
         protected override void ProcessRecord()
         {
-            if(Name == null)
+            if(OldName == null)
             {
-                Name = Firewall.Name;
+                OldName = Firewall.Name;
             }
-            Operation operation = Service.Firewalls.Update(Firewall, Project, Name).Execute();
+            Operation operation = Service.Firewalls.Update(Firewall, Project, OldName).Execute();
             WaitForGlobalOperation(Project, operation);
 
         }
