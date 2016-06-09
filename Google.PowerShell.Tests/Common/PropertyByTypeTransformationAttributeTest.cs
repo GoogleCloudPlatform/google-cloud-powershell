@@ -1,6 +1,9 @@
-﻿using Google.PowerShell.Common;
-using NUnit.Framework;
+﻿// Copyright 2016 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
+
 using System.Management.Automation;
+using Google.PowerShell.Common;
+using NUnit.Framework;
 
 namespace Google.PowerShell.Tests.Common.ComputeEngine
 {

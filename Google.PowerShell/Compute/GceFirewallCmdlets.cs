@@ -1,13 +1,10 @@
-﻿using Google.Apis.Compute.v1;
+﻿// Copyright 2016 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
+
+using System.Collections.Generic;
+using System.Management.Automation;
 using Google.Apis.Compute.v1.Data;
 using Google.PowerShell.Common;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Management.Automation;
-using System.Text;
-using System.Threading.Tasks;
 using static Google.Apis.Compute.v1.FirewallsResource;
 
 namespace Google.PowerShell.ComputeEngine

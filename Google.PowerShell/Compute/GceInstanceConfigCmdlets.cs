@@ -1,11 +1,12 @@
-﻿using Google.Apis.Compute.v1.Data;
+﻿// Copyright 2016 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
-using System.Text;
-using System.Threading.Tasks;
+using Google.Apis.Compute.v1.Data;
 
 namespace Google.PowerShell.ComputeEngine
 {
