@@ -163,14 +163,14 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter]
         public List<string> TargetTag { get; set; }
 
-        private List<Firewall.AllowedData> allAllowed = new List<Firewall.AllowedData>();
+        private List<Firewall.AllowedData> _allAllowed = new List<Firewall.AllowedData>();
 
         /// <summary>
         /// Collect allowed from the pipeline.
         /// </summary>
         protected override void ProcessRecord()
         {
-            allAllowed.AddRange(AllowedProtocol);
+            _allAllowed.AddRange(AllowedProtocol);
         }
 
         /// <summary>
@@ -181,7 +181,7 @@ namespace Google.PowerShell.ComputeEngine
             var firewall = new Firewall
             {
                 Name = Name,
-                Allowed = allAllowed,
+                Allowed = _allAllowed,
                 Description = Description,
                 Network = Network,
                 SourceRanges = SourceRange,

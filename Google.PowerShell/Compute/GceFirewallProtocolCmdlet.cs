@@ -7,7 +7,6 @@ using Google.Apis.Compute.v1.Data;
 
 namespace Google.PowerShell.ComputeEngine
 {
-
     /// <summary>
     /// <para type="synopsis">
     /// Creates a new object that tells a firewall to allow a protocol.

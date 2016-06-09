@@ -10,7 +10,6 @@ using Google.Apis.Compute.v1.Data;
 
 namespace Google.PowerShell.ComputeEngine
 {
-
     /// <summary>
     /// <para type="synopsis">
     /// Makes a new Google Compute Engine VM instance description.
@@ -241,7 +240,6 @@ namespace Google.PowerShell.ComputeEngine
 
                 default:
                     throw new InvalidOperationException($"{ParameterSetName} is not a valid ParameterSet.");
-
             }
         }
     }

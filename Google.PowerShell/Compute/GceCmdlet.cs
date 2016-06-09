@@ -17,14 +17,13 @@ namespace Google.PowerShell.ComputeEngine
     /// </summary>
     public abstract class GceCmdlet : GCloudCmdlet
     {
-
         // The Servcie for the Google Compute API
         public ComputeService Service { get; private set; }
 
         public GceCmdlet() : this(null)
         {
         }
-        
+
         public GceCmdlet(ComputeService service)
         {
             if (service == null)
@@ -70,7 +69,7 @@ namespace Google.PowerShell.ComputeEngine
         protected void WaitForGlobalOperation(string project, Operation operation)
         {
             WriteWarnings(operation);
-            while(operation.Status != "DONE")
+            while (operation.Status != "DONE")
             {
                 Thread.Sleep(150);
                 operation = Service.GlobalOperations.Get(project, operation.Name).Execute();
@@ -94,7 +93,7 @@ namespace Google.PowerShell.ComputeEngine
             }
         }
     }
-    
+
     /// <summary>
     /// This class is used write cmdlet that run concurrent Gce operations. A class inheriting this should add
     /// ongoing operations to the operations field in the BeginProcessing() and ProcessRecord() methods. These
@@ -103,7 +102,6 @@ namespace Google.PowerShell.ComputeEngine
     /// </summary>
     public abstract class GceConcurrentCmdlet : GceCmdlet
     {
-
         /// <summary>
         /// Container class for all information needed to wait on an operation.
         /// </summary>
@@ -124,7 +122,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// A place to store in progress operations to be waitied on in EndProcessing().
         /// </summary>
-        private IList<ZoneOperation> operations = new List<ZoneOperation>();
+        private IList<ZoneOperation> _operations = new List<ZoneOperation>();
 
         /// <summary>
         /// Used by child classes to add operations to wait on.
@@ -134,7 +132,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <param name="operation">The Operation object to wait on.</param>
         protected void AddOperation(string project, string zone, Operation operation)
         {
-            operations.Add(new ZoneOperation(project, zone, operation));
+            _operations.Add(new ZoneOperation(project, zone, operation));
         }
 
         /// <summary>
@@ -143,7 +141,7 @@ namespace Google.PowerShell.ComputeEngine
         protected override void EndProcessing()
         {
             var exceptions = new List<Exception>();
-            foreach (ZoneOperation operation in operations)
+            foreach (ZoneOperation operation in _operations)
             {
                 try
                 {

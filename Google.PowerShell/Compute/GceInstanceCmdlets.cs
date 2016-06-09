@@ -26,7 +26,6 @@ namespace Google.PowerShell.ComputeEngine
     [Cmdlet(VerbsCommon.Get, "GceInstance")]
     public class GetGceInstanceCmdlet : GceCmdlet
     {
-
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
@@ -80,7 +79,6 @@ namespace Google.PowerShell.ComputeEngine
             if (String.IsNullOrEmpty(Zone))
             {
                 output = GetAllProjectInstances();
-
             }
             else if (String.IsNullOrEmpty(Name))
             {
@@ -154,7 +152,6 @@ namespace Google.PowerShell.ComputeEngine
             string pageToken = null;
             do
             {
-
                 InstancesResource.ListRequest listRequest = Service.Instances.List(Project, Zone);
                 listRequest.Filter = Filter;
                 listRequest.PageToken = pageToken;
@@ -261,7 +258,6 @@ namespace Google.PowerShell.ComputeEngine
     [Cmdlet(VerbsCommon.Remove, "GceInstance")]
     public class RemoveGceInstanceCmdlet : GceConcurrentCmdlet
     {
-
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
@@ -304,7 +300,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter]
         public SwitchParameter Force { get; set; }
-        
+
         protected override void ProcessRecord()
         {
             if (WhatIf)
@@ -331,7 +327,6 @@ namespace Google.PowerShell.ComputeEngine
     [Cmdlet(VerbsLifecycle.Start, "GceInstance")]
     public class StartGceInstance : GceConcurrentCmdlet
     {
-
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
@@ -378,7 +373,6 @@ namespace Google.PowerShell.ComputeEngine
     [Cmdlet(VerbsLifecycle.Stop, "GceInstance")]
     public class StopGceInstance : GceConcurrentCmdlet
     {
-
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
@@ -425,7 +419,6 @@ namespace Google.PowerShell.ComputeEngine
     [Cmdlet(VerbsLifecycle.Restart, "GceInstance")]
     public class RestartGceInstance : GceConcurrentCmdlet
     {
-
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
@@ -473,7 +466,6 @@ namespace Google.PowerShell.ComputeEngine
     [Cmdlet(VerbsCommon.Set, "GceInstance")]
     public class UpdateGceInstanceCmdlet : GceConcurrentCmdlet
     {
-
         internal class ParameterSetNames
         {
             public const string AccessConfig = "AccessConfig";

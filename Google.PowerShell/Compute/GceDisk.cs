@@ -343,7 +343,7 @@ namespace Google.PowerShell.ComputeEngine
             {
                 return;
             }
-            
+
             // First try to get the disk, this way the cmdlet fails with a 404 if the
             // disk does not exist. (Otherwise the delete operation would succeed when
             // trying to delete a non-existant disk.)
