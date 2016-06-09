@@ -1,18 +1,37 @@
----
-layout: default
-title: Cmdlet Reference
----
+<!doctype html>
+<html>
 
-<div class="home">
-    <h1>Cmdlet Reference</h1>
-    <p>This page contains information about the Google Cloud PowerShell cmdlets available.</p>
-    {% assign cmdlets_by_resource = site.data.cmdlets | group_by:"resource" %}
-    {% for cmdlets in cmdlets_by_resource %}
-        <h2>{{ cmdlets.name }}</h2>
-        <ul>
-        {% for cmdlet in cmdlets.items %}
-            <li><a href="cmdlets/{{ cmdlet.cmdletName | downcase }}.html">{{ cmdlet.cmdletName }}</a>
-        {% endfor %}
-        </ul>
-    {% endfor %}
-</div>
+<head>
+  <meta charset="utf-8">
+  <title>Google Cloud PowerShell</title>
+  <meta name="description" content="Documentation for Google Cloud Platform PowerShell cmdlets">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
+  <link rel="stylesheet" href="src/vendor-d362a4bbd8.css">
+  <link rel="stylesheet" href="src/app-a103c713b2.css">
+</head>
+
+<body>
+  <!--[if lt IE 10]>
+ <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+ <![endif]-->
+  <main ui-view="" autoscroll="true"></main><script src="src/vendor-d6198d67f2.js"></script><script src="src/app-780bf1f09e.js"></script><script>
+      (function() {
+        var $injector = angular.injector(['ng']);
+        var $http = $injector.get('$http');
+
+        $http.get('manifest.json')
+          .then(function(response) {
+            angular
+              .module('gcloud.manifest', [])
+              .constant('manifest', response.data);
+
+            angular.element(document)
+              .ready(function() {
+                angular.bootstrap(document, ['gcloud']);
+              });
+          });
+      }());
+    </script></body>
+
+</html>

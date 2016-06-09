@@ -1,0 +1,14 @@
+{
+  "lang": "powershell",
+  "friendlyLang": "PowerShell",
+  "markdown": "powershell",
+  "versions": [
+    "master"
+  ],
+  "content": "content",
+  "home": "home.html",
+  "package": {
+    "title": "npm",
+    "href": "https://www.npmjs.com/package/gcloud"
+  }
+}

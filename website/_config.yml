@@ -3,6 +3,9 @@ title: Google Cloud Powershell Cmdlet Reference
 baseurl: "/gcloud-powershell"
 url: "http://googlecloudplatform.github.io"
 
+# Enable cust plug-ins.
+safe: false
+
 # Build settings
 markdown: kramdown
 
@@ -10,8 +13,21 @@ markdown: kramdown
 exclude: [README.md]
 
 # Plug-in for generating pages based on files in the _data folder.
+#
+# Generate a page for every single cmdlet. This will contain the
+# reference documentation for the cmdlet.
+#
+# Generate a page for each "product", e.g. Google Cloud Storage.
+# This is the overview page containing information about the
+# cmdlets for that product.
 page_gen:
   - data: cmdlets
     template: cmdlet
     name: cmdletName
     dir: cmdlets
+
+  - data: products
+    template: product
+    name: productName
+    dir: cmdlets
+
