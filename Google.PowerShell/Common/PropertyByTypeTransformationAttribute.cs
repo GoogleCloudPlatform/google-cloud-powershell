@@ -19,7 +19,7 @@ namespace Google.PowerShell.Common
     /// </code>
     /// Transforms any Zone objects given to the ZoneName Parameter into zoneObject.Name
     /// </example>
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
     public class PropertyByTypeTransformationAttribute : ArgumentTransformationAttribute
     {
         /// <summary>

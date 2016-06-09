@@ -63,26 +63,40 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(Mandatory = false)]
         public string Filter { get; set; }
 
+
+        /// <summary>
+        /// <para type="description">
+        /// When this switch is set, the cmdlet will output the string contents of the serial port of the
+        /// instance rather than the normal data about the instance.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        public SwitchParameter SerialPortOutput { get; set; }
+
         protected override void ProcessRecord()
         {
-            IEnumerable<Instance> output;
+            IEnumerable<Instance> instances;
             if (String.IsNullOrEmpty(Zone))
             {
-                output = GetAllProjectInstances();
+                instances = GetAllProjectInstances();
 
             }
             else if (String.IsNullOrEmpty(Name))
             {
-                output = GetZoneInstances();
+                instances = GetZoneInstances();
             }
             else
             {
-                output = new Instance[] { GetExactInstance() };
+                instances = new Instance[] { GetExactInstance() };
             }
 
-            foreach (Instance instance in output)
+            if (SerialPortOutput)
             {
-                WriteObject(instance);
+                WriteSerialPortOutput(instances);
+            }
+            else
+            {
+                WriteObject(instances, true);
             }
         }
 
@@ -137,6 +151,42 @@ namespace Google.PowerShell.ComputeEngine
         {
             InstancesResource.GetRequest getRequest = Service.Instances.Get(Project, Zone, Name);
             return getRequest.Execute();
+        }
+
+        private void WriteSerialPortOutput(IEnumerable<Instance> instances)
+        {
+            var tasks = instances.Select(i => GetSerialPortOutputAsync(i));
+
+            var exceptions = new List<Exception>();
+            foreach (Task<string> task in tasks)
+            {
+                try
+                {
+                    WriteObject(task.Result);
+                }
+                catch (Exception e)
+                {
+                    exceptions.Add(e);
+                }
+            }
+
+            if (exceptions.Count == 1)
+            {
+                throw exceptions.First();
+            }
+            else if (exceptions.Count > 1)
+            {
+                throw new AggregateException(exceptions);
+            }
+        }
+
+        private async Task<string> GetSerialPortOutputAsync(Instance instance)
+        {
+            string zone = GetZoneNameFromUri(instance.Zone);
+            InstancesResource.GetSerialPortOutputRequest request =
+                Service.Instances.GetSerialPortOutput(Project, zone, instance.Name);
+            SerialPortOutput output = await request.ExecuteAsync();
+            return output.Contents;
         }
     }
 
@@ -241,6 +291,386 @@ namespace Google.PowerShell.ComputeEngine
         {
             var request = Service.Instances.Delete(Project, Zone, Name);
             var operation = request.Execute();
+            AddOperation(Project, Zone, operation);
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Starts a Google Compute Engine VM instance.
+    /// </para>
+    /// <para type="description">
+    /// Starts a Google Compute Engine VM instance.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsLifecycle.Start, "GceInstance")]
+    public class StartGceInstanceCmdlet : GceConcurrentCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The project that owns the instances.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true)]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The zone in which the instance resides.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 1, Mandatory = true)]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
+        public string Zone { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the instance to start.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 2, Mandatory = true, ValueFromPipeline = true)]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Instance))]
+        public string Name { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            InstancesResource.StartRequest request = Service.Instances.Start(Project, Zone, Name);
+            Operation operation = request.Execute();
+            AddOperation(Project, Zone, operation);
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Stops a Google Compute Engine VM instance.
+    /// </para>
+    /// <para type="description">
+    /// Stops a Google Compute Engine VM instance.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsLifecycle.Stop, "GceInstance")]
+    public class StopGceInstanceCmdlet : GceConcurrentCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The project that owns the instances.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true)]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The zone in which the instance resides.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 1, Mandatory = true)]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
+        public string Zone { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the instance to stop.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 2, Mandatory = true, ValueFromPipeline = true)]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Instance))]
+        public string Name { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            InstancesResource.StopRequest request = Service.Instances.Stop(Project, Zone, Name);
+            Operation operation = request.Execute();
+            AddOperation(Project, Zone, operation);
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Resets a Google Compute Engine VM instance.
+    /// </para>
+    /// <para type="description">
+    /// Resets a Google Compute Engine VM instance.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsLifecycle.Restart, "GceInstance")]
+    public class RestartGceInstanceCmdlet : GceConcurrentCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The project that owns the instances.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true)]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The zone in which the instance resides.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 1, Mandatory = true)]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
+        public string Zone { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the instance to reset.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 2, Mandatory = true, ValueFromPipeline = true)]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Instance))]
+        public string Name { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            InstancesResource.ResetRequest request = Service.Instances.Reset(Project, Zone, Name);
+            Operation operation = request.Execute();
+            AddOperation(Project, Zone, operation);
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Sets various attributes of a VM instance.
+    /// </para>
+    /// <para type="description">
+    /// With this cmdlet, you can update metadata, attach and detach disks, add and remove acces configs,
+    /// or add and remove tags.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Set, "GceInstance")]
+    public class UpdateGceInstanceCmdlet : GceConcurrentCmdlet
+    {
+
+        internal class ParameterSetNames
+        {
+            public const string AccessConfig = "AccessConfig";
+            public const string Disk = "Disk";
+            public const string Metadata = "Metadata";
+            public const string Tag = "Tag";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// The project that owns the instance to update.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true)]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The zone in which the instance resides.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 1, Mandatory = true)]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
+        public string Zone { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the instance to update.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 2, Mandatory = true)]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Instance))]
+        public string Instance { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the network interface to add or remove access configs.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.AccessConfig)]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(NetworkInterface))]
+        public string NetworkInterface { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The new access config to add to a network interface.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.AccessConfig)]
+        public List<AccessConfig> NewAccessConfig { get; set; } = new List<AccessConfig>();
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the access config to remove from the network interface.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.AccessConfig)]
+        public List<string> DeleteAccessConfig { get; set; } = new List<string>();
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the disk to attach.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.Disk)]
+        public List<object> AddDisk { get; set; } = new List<object>();
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the disk to detach.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.Disk)]
+        public List<string> DetachDisk { get; set; } = new List<string>();
+
+        /// <summary>
+        /// <para type="description">
+        /// The keys and values of the metadata to add.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.Metadata)]
+        public Hashtable AddMetadata { get; set; } = new Hashtable();
+
+        /// <summary>
+        /// <para type="description">
+        /// The keys of the metadata to remove.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.Metadata)]
+        public List<string> RemoveMetadata { get; set; } = new List<string>();
+
+        /// <summary>
+        /// <para type="description">
+        /// The tag to add.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.Tag)]
+        public List<string> AddTag { get; set; } = new List<string>();
+
+        /// <summary>
+        /// <para type="description">
+        /// The tag to remove.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.Tag)]
+        public List<string> RemoveTag { get; set; } = new List<string>();
+
+        protected override void ProcessRecord()
+        {
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.AccessConfig:
+                    ProcessAccessConfig();
+                    break;
+                case ParameterSetNames.Disk:
+                    ProcessDisk();
+                    break;
+                case ParameterSetNames.Metadata:
+                    ProcessMetadata();
+                    break;
+                case ParameterSetNames.Tag:
+                    ProcessTag();
+                    break;
+                default:
+                    throw new PSInvalidOperationException($"{ParameterSetName} is not a valid ParameterSet");
+            }
+        }
+
+        /// <summary>
+        /// ProcessRecord for AccessConfig parameter set.
+        /// </summary>
+        private void ProcessAccessConfig()
+        {
+            foreach (string configName in DeleteAccessConfig)
+            {
+                InstancesResource.DeleteAccessConfigRequest request = Service.Instances.DeleteAccessConfig(
+                    Project, Zone, Instance, configName, NetworkInterface);
+                Operation operation = request.Execute();
+                AddOperation(Project, Zone, operation);
+            }
+
+            foreach (AccessConfig accessConfig in NewAccessConfig)
+            {
+                InstancesResource.AddAccessConfigRequest request = Service.Instances.AddAccessConfig(
+                    accessConfig, Project, Zone, Instance, NetworkInterface);
+                Operation response = request.Execute();
+                AddOperation(Project, Zone, response);
+            }
+        }
+
+        /// <summary>
+        /// ProcessRecord for Disk parameter set.
+        /// </summary>
+        private void ProcessDisk()
+        {
+            foreach (string diskName in DetachDisk)
+            {
+                InstancesResource.DetachDiskRequest request = Service.Instances.DetachDisk(
+                    Project, Zone, Instance, diskName);
+                Operation operation = request.Execute();
+                AddOperation(Project, Zone, operation);
+            }
+
+            foreach (object diskParam in AddDisk)
+            {
+                // Allow for taking Disk, AttachedDisk, and string objects.
+                AttachedDisk newDisk;
+                if (diskParam is AttachedDisk)
+                {
+                    newDisk = diskParam as AttachedDisk;
+                }
+                else
+                {
+                    Disk disk = diskParam as Disk;
+                    if (disk == null)
+                    {
+                        disk = Service.Disks.Get(Project, Zone, diskParam.ToString()).Execute();
+                    }
+                    newDisk = new AttachedDisk { Source = disk.SelfLink, DeviceName = disk.Name };
+                }
+
+                InstancesResource.AttachDiskRequest request =
+                    Service.Instances.AttachDisk(newDisk, Project, Zone, Instance);
+                Operation operation = request.Execute();
+                AddOperation(Project, Zone, operation);
+            }
+        }
+
+        /// <summary>
+        /// ProcessRecord for Metadata parameter set.
+        /// </summary>
+        private void ProcessMetadata()
+        {
+            InstancesResource.GetRequest getRequest = Service.Instances.Get(Project, Zone, Instance);
+            Instance instance = getRequest.Execute();
+            Metadata metadata = instance.Metadata ?? new Metadata();
+            metadata.Items = metadata.Items ?? new List<Metadata.ItemsData>();
+            metadata.Items = metadata.Items.Where(id => !RemoveMetadata.Contains(id.Key)).ToList();
+            foreach (DictionaryEntry entry in AddMetadata)
+            {
+                metadata.Items.Add(new Metadata.ItemsData
+                {
+                    Key = entry.Key.ToString(),
+                    Value = entry.Value.ToString()
+                });
+            }
+            InstancesResource.SetMetadataRequest request =
+                Service.Instances.SetMetadata(metadata, Project, Zone, Instance);
+            AddOperation(Project, Zone, request.Execute());
+        }
+
+        /// <summary>
+        /// ProcessRecord for Tag parameter set.
+        /// </summary>
+        private void ProcessTag()
+        {
+            InstancesResource.GetRequest getRequest = Service.Instances.Get(Project, Zone, Instance);
+            Instance instance = getRequest.Execute();
+            Tags tags = instance.Tags ?? new Tags();
+            tags.Items = tags.Items ?? new List<string>();
+            tags.Items = tags.Items.Where(tag => !RemoveTag.Contains(tag)).Concat(AddTag).ToList();
+            InstancesResource.SetTagsRequest setRequest =
+                Service.Instances.SetTags(tags, Project, Zone, Instance);
+            Operation operation = setRequest.Execute();
             AddOperation(Project, Zone, operation);
         }
     }
