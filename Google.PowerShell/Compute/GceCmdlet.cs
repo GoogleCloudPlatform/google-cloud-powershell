@@ -72,6 +72,15 @@ namespace Google.PowerShell.ComputeEngine
             }
         }
 
+        /// <summary>
+        /// Library method to pull the name of a zone from a uri of the zone.
+        /// </summary>
+        /// <param name="zoneUri">
+        /// A uri to of a zone.
+        /// </param>
+        /// <returns>
+        /// The name of the zone, which is the last path element of a zone uri.
+        /// </returns>
         public static string GetZoneNameFromUri(string zoneUri)
         {
             return zoneUri.Split('/', '\\').Last();

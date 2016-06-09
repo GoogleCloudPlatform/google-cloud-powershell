@@ -92,14 +92,11 @@ namespace Google.PowerShell.ComputeEngine
 
             if (SerialPortOutput)
             {
-                WriteSerialPortOutoput(instances);
+                WriteSerialPortOutput(instances);
             }
             else
             {
-                foreach (Instance instance in instances)
-                {
-                    WriteObject(instance);
-                }
+                WriteObject(instances, true);
             }
         }
 
@@ -156,7 +153,7 @@ namespace Google.PowerShell.ComputeEngine
             return getRequest.Execute();
         }
 
-        private void WriteSerialPortOutoput(IEnumerable<Instance> instances)
+        private void WriteSerialPortOutput(IEnumerable<Instance> instances)
         {
             var tasks = instances.Select(i => GetSerialPortOutputAsync(i));
 
@@ -624,7 +621,7 @@ namespace Google.PowerShell.ComputeEngine
                 else
                 {
                     Disk disk = diskParam as Disk;
-                    if(disk == null)
+                    if (disk == null)
                     {
                         disk = Service.Disks.Get(Project, Zone, diskParam.ToString()).Execute();
                     }
