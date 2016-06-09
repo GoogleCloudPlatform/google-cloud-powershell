@@ -1,9 +1,9 @@
 ﻿// Copyright 2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
+using Google.Apis.Compute.v1.Data;
 using System;
 using System.Linq;
-using Google.Apis.Compute.v1.Data;
 
 namespace Google.PowerShell.ComputeEngine
 {
@@ -15,8 +15,26 @@ namespace Google.PowerShell.ComputeEngine
         public Operation.ErrorData OperationError { get; private set; }
 
         public GoogleComputeOperationException(Operation.ErrorData errorData) :
-            this(errorData?.Errors?.First()?.Message ?? "Unknown error", errorData)
+            this(GetErrorMessaage(errorData), errorData)
         {
+        }
+
+        /// <summary>
+        /// Gets the first error message, or "Unknown error" if there is none.
+        /// </summary>
+        /// <param name="errorData">
+        /// </param>
+        /// <returns></returns>
+        private static string GetErrorMessaage(Operation.ErrorData errorData)
+        {
+            if (errorData?.Errors != null && errorData.Errors.Count > 0)
+            {
+                return errorData.Errors.First().Message;
+            }
+            else
+            {
+                return "Unknown error";
+            }
         }
 
         public GoogleComputeOperationException(string message, Operation.ErrorData errorData) : base(message)
