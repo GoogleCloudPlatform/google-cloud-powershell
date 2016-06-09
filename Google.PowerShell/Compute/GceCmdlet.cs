@@ -3,14 +3,12 @@
 
 using Google.Apis.Compute.v1;
 using Google.Apis.Compute.v1.Data;
-using Google.Apis.Requests;
 using Google.PowerShell.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
 using System.Threading;
-using static Google.Apis.Compute.v1.Data.Operation;
 
 namespace Google.PowerShell.ComputeEngine
 {
@@ -40,22 +38,63 @@ namespace Google.PowerShell.ComputeEngine
         }
 
         /// <summary>
-        /// Waits for the provided RegionOperation to complete. This way cmdlets can return newly
+        /// Waits for the provided zone operation to complete. This way cmdlets can return newly
         /// created objects once they are finished being created, rather than returning thunks.
         /// 
         /// Will throw an exception if the operation fails for any reason.
         /// </summary>
         protected void WaitForZoneOperation(string project, string zone, Operation op)
         {
-            new ZoneOperation(project, zone, op).Wait(Service, CommandRuntime);
+            WriteWarnings(op);
+
+            while (op.Status != "DONE")
+            {
+                Thread.Sleep(150);
+                ZoneOperationsResource.GetRequest getReq = Service.ZoneOperations.Get(project, zone, op.Name);
+                op = getReq.Execute();
+                WriteWarnings(op);
+            }
+
+            if (op.Error != null)
+            {
+                throw new GoogleComputeOperationException(op.Error);
+            }
         }
 
+        /// <summary>
+        /// Waits for the provided global operation to complete. This way cmdlets can return newly
+        /// created objects once they are finished being created, rather than returning thunks.
+        /// 
+        /// Will throw an exception if the operation fails for any reason.
+        /// </summary>
         protected void WaitForGlobalOperation(string project, Operation operation)
         {
-            new GlobalOperation(project, operation).Wait(Service, CommandRuntime);
+            WriteWarnings(operation);
+            while(operation.Status != "DONE")
+            {
+                Thread.Sleep(150);
+                operation = Service.GlobalOperations.Get(project, operation.Name).Execute();
+                WriteWarnings(operation);
+            }
+
+            if (operation.Error != null)
+            {
+                throw new GoogleComputeOperationException(operation.Error);
+            }
+        }
+
+        private void WriteWarnings(Operation op)
+        {
+            if (op.Warnings != null)
+            {
+                foreach (Operation.WarningsData warning in op.Warnings)
+                {
+                    WriteWarning(warning.Message);
+                }
+            }
         }
     }
-
+    
     /// <summary>
     /// This class is used write cmdlet that run concurrent Gce operations. A class inheriting this should add
     /// ongoing operations to the operations field in the BeginProcessing() and ProcessRecord() methods. These
@@ -66,9 +105,26 @@ namespace Google.PowerShell.ComputeEngine
     {
 
         /// <summary>
+        /// Container class for all information needed to wait on an operation.
+        /// </summary>
+        private class ZoneOperation
+        {
+            public string Project { get; private set; }
+            public string Zone { get; private set; }
+            public Operation Operation { get; private set; }
+
+            public ZoneOperation(string project, string zone, Operation operation)
+            {
+                Project = project;
+                Zone = zone;
+                Operation = operation;
+            }
+        }
+
+        /// <summary>
         /// A place to store in progress operations to be waitied on in EndProcessing().
         /// </summary>
-        private IList<ComputeOperation> operations = new List<ComputeOperation>();
+        private IList<ZoneOperation> operations = new List<ZoneOperation>();
 
         /// <summary>
         /// Used by child classes to add operations to wait on.
@@ -87,11 +143,11 @@ namespace Google.PowerShell.ComputeEngine
         protected override void EndProcessing()
         {
             var exceptions = new List<Exception>();
-            foreach (ComputeOperation operation in operations)
+            foreach (ZoneOperation operation in operations)
             {
                 try
                 {
-                    operation.Wait(Service, CommandRuntime);
+                    WaitForZoneOperation(operation.Project, operation.Zone, operation.Operation);
                 }
                 catch (Exception e)
                 {
@@ -106,109 +162,6 @@ namespace Google.PowerShell.ComputeEngine
             {
                 throw exceptions.First();
             }
-        }
-    }
-
-    interface IComputeOperation
-    {
-        void Wait(ComputeService service, ICommandRuntime runtime);
-    }
-
-    abstract class ComputeOperation : IComputeOperation
-    {
-        public abstract void Wait(ComputeService service, ICommandRuntime runtime);
-
-        protected void WriteWarnings(Operation op, ICommandRuntime runtime)
-        {
-            if (op.Warnings != null)
-            {
-                foreach (Operation.WarningsData warning in op.Warnings)
-                {
-                    runtime.WriteWarning(warning.Message);
-                }
-            }
-        }
-
-        protected void ThrowErrors(Operation op)
-        {
-            if (op.Error != null)
-            {
-                Exception e;
-                if (op.Error.Errors == null || op.Error.Errors.Count == 0)
-                {
-                    throw new GoogleApiException("Compute", "Error waiting for zone operation");
-                }
-                else if (op.Error.Errors.Count == 1)
-                {
-                    throw new GoogleApiException("Compute",
-                        $"Error waiting for zone operation:{op.Error.Errors.First().Message}");
-                }
-                else
-                {
-                    throw new AggregateException("Error waiting for zone operation",
-                        op.Error.Errors.Select(error => new GoogleApiException("Compute", error.Message)));
-                }
-            }
-        }
-    }
-
-
-    /// <summary>
-    /// Container class for all information needed to wait on an operation.
-    /// </summary>
-    class ZoneOperation : ComputeOperation
-    {
-        public string Project { get; private set; }
-        public string Zone { get; private set; }
-        public Operation Operation { get; private set; }
-
-        public ZoneOperation(string project, string zone, Operation operation)
-        {
-            Project = project;
-            Zone = zone;
-            Operation = operation;
-        }
-
-        public override void Wait(ComputeService service, ICommandRuntime runtime)
-        {
-            Operation op = Operation;
-            var warnings = new List<WarningsData>();
-            WriteWarnings(op, runtime);
-            while (op.Status != "DONE")
-            {
-                Thread.Sleep(150);
-                ZoneOperationsResource.GetRequest getReq = service.ZoneOperations.Get(Project, Zone, op.Name);
-                op = getReq.Execute();
-                WriteWarnings(op, runtime);
-            }
-            ThrowErrors(op);
-        }
-    }
-
-    class GlobalOperation : ComputeOperation
-    {
-        public string Project { get; private set; }
-        public Operation Operation { get; private set; }
-
-        public GlobalOperation(string project, Operation operation)
-        {
-            Project = project;
-            Operation = operation;
-        }
-
-        public override void Wait(ComputeService service, ICommandRuntime runtime)
-        {
-            Operation op = Operation;
-            var warnings = new List<WarningsData>();
-            WriteWarnings(op, runtime);
-            while (op.Status != "DONE")
-            {
-                Thread.Sleep(150);
-                GlobalOperationsResource.GetRequest getReq = service.GlobalOperations.Get(Project, op.Name);
-                op = getReq.Execute();
-                WriteWarnings(op, runtime);
-            }
-            ThrowErrors(op);
         }
     }
 }

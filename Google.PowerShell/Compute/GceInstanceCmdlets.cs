@@ -288,11 +288,35 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(Position = 2, Mandatory = true, ValueFromPipeline = true)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Instance))]
         public string Name { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Shows what would happen if the cmdlet runs.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        public SwitchParameter WhatIf { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Skip the confirmation dialog.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        public SwitchParameter Force { get; set; }
+        
         protected override void ProcessRecord()
         {
-            var request = Service.Instances.Delete(Project, Zone, Name);
-            var operation = request.Execute();
-            AddOperation(Project, Zone, operation);
+            if (WhatIf)
+            {
+                WriteObject($"WhatIf: Delete VM instance {Name} in zone {Zone} of project {Project}");
+            }
+            else if (ConfirmAction(Force, $"VM instance {Name} in zone {Zone} of project {Project}", "Remove"))
+            {
+                var request = Service.Instances.Delete(Project, Zone, Name);
+                var operation = request.Execute();
+                AddOperation(Project, Zone, operation);
+            }
         }
     }
 
