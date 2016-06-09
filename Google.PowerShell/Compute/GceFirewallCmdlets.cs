@@ -68,9 +68,12 @@ namespace Google.PowerShell.ComputeEngine
                 ListRequest request = Service.Firewalls.List(Project);
                 request.PageToken = pageToken;
                 FirewallList response = request.Execute();
-                foreach (Firewall firewall in response.Items)
+                if (response.Items != null)
                 {
-                    yield return firewall;
+                    foreach (Firewall firewall in response.Items)
+                    {
+                        yield return firewall;
+                    }
                 }
                 pageToken = response.NextPageToken;
             } while (pageToken != null);
@@ -113,8 +116,8 @@ namespace Google.PowerShell.ComputeEngine
         /// allowed Example inputs include: "22", "80","443", and "12345-12349".
         /// </para>
         /// </summary>
-        [Parameter(Position = 1, ValueFromRemainingArguments = true)]
-        public List<string> Ports { get; set; }
+        [Parameter]
+        public List<string> Port { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -140,7 +143,7 @@ namespace Google.PowerShell.ComputeEngine
             var newData = new Firewall.AllowedData
             {
                 IPProtocol = IPProtocol,
-                Ports = Ports
+                Ports = Port
             };
 
             switch (ParameterSetName)
@@ -174,7 +177,8 @@ namespace Google.PowerShell.ComputeEngine
     /// Adds a new firewall rule.
     /// </para>
     /// <para type="description">
-    /// Adds a new firewall rule.
+    /// Adds a new firewall rule. When given a pipeline of many Firewall.AllowedData, will collect them all and
+    /// create a single new firewall.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceFirewall")]
@@ -202,7 +206,7 @@ namespace Google.PowerShell.ComputeEngine
         /// A list of allowed protocols and ports.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(Mandatory = true, ValueFromPipeline = true)]
         public List<Firewall.AllowedData> Allowed { get; set; }
 
         /// <summary>
@@ -253,11 +257,25 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter]
         public List<string> TargetTag { get; set; }
 
+        private List<Firewall.AllowedData> AllAllowed { get; set; } = new List<Firewall.AllowedData>();
+
+        /// <summary>
+        /// Collect allowed from the pipeline.
+        /// </summary>
         protected override void ProcessRecord()
         {
-            var firewall = new Firewall {
+            AllAllowed.AddRange(Allowed);
+        }
+
+        /// <summary>
+        /// Create the firewall.
+        /// </summary>
+        protected override void EndProcessing()
+        {
+            var firewall = new Firewall
+            {
                 Name = Name,
-                Allowed = Allowed,
+                Allowed = AllAllowed,
                 Description = Description,
                 Network = Network,
                 SourceRanges = SourceRange,
@@ -335,23 +353,9 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(Mandatory = true, Position = 1)]
         public Firewall Firewall { get; set; }
 
-        /// <summary>
-        /// <para type="description">
-        /// If you are changing the name of the firewall, OldName is required. Otherwise, the name will be
-        /// taken from the Firewall data.
-        /// </para>
-        /// </summary>
-        [Parameter]
-        [Alias("Name")]
-        public string OldName { get; set; }
-
         protected override void ProcessRecord()
         {
-            if(OldName == null)
-            {
-                OldName = Firewall.Name;
-            }
-            Operation operation = Service.Firewalls.Update(Firewall, Project, OldName).Execute();
+            Operation operation = Service.Firewalls.Update(Firewall, Project, Firewall.Name).Execute();
             WaitForGlobalOperation(Project, operation);
 
         }
