@@ -1,24 +1,9 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
 
+$project, $zone, $oldConfig, $newConfigName = Set-GcloudConfig
 
-$project = "gcloud-powershell-testing"
-$zone = "us-central1-f"
 $zone2 = "us-central1-a"
-
-# parse the configurations list, creating objects with properties named by the first line of output.
-$configList = gcloud config configurations list
-$oldActiveConfig = $configList -split [System.Environment]::NewLine |
-     % {$_ -split "\s+" -join ","} | ConvertFrom-Csv | Where {$_.IS_ACTIVE -match "True"}
-
-$configRandom = Get-Random
-$configName = "testing$configRandom"
-gcloud config configurations create $configName
-gcloud config configurations activate $configName
-gcloud config set core/account $oldActiveConfig.ACCOUNT
-gcloud config set core/project $project
-gcloud config set compute/zone $zone
-
 
 $image = "projects/debian-cloud/global/images/debian-8-jessie-v20160511"
 
@@ -383,5 +368,4 @@ Describe "Set-GceInstance" {
     Remove-GceInstance $instance
 }
 
-gcloud config configurations activate $oldActiveConfig.NAME
-gcloud config configurations delete $configName -q
+Reset-GcloudConfig $oldConfig $newConfigName

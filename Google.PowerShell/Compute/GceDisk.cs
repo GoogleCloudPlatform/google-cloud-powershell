@@ -1,16 +1,10 @@
 ﻿// Copyright 2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
-// Licensed under the Apache License Version 2.0.
-
 using Google.Apis.Compute.v1;
 using Google.Apis.Compute.v1.Data;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Management.Automation;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Google.PowerShell.ComputeEngine
 {
@@ -31,9 +25,8 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceDisk")]
-    public class GetGceDiskCmdlet : GceZoneCmdlet
+    public class GetGceDiskCmdlet : GceProjectCmdlet
     {
-
         /// <summary>
         /// <para type="description">
         /// Specific zone to lookup disks in, e.g. "us-central1-a". Partial names
@@ -56,7 +49,7 @@ namespace Google.PowerShell.ComputeEngine
 
             // Special case. If you specify the Project, Zone, and DiskName we use the Get command to
             // get the specific disk. This will throw a 404 if it does not exist.
-            if (!String.IsNullOrEmpty(Project) && !String.IsNullOrEmpty(Zone) && !String.IsNullOrEmpty(DiskName))
+            if (!string.IsNullOrEmpty(Zone) && !string.IsNullOrEmpty(DiskName))
             {
                 DisksResource.GetRequest getReq = Service.Disks.Get(Project, Zone, DiskName);
                 Disk disk = getReq.Execute();
@@ -69,9 +62,9 @@ namespace Google.PowerShell.ComputeEngine
             // specify a filter here and manually filter results later. Also, since the only
             // operations are "eq" and "ne", we don't use the filter for zone so that we can
             // can allow filtering by regions.
-            if (!String.IsNullOrEmpty(DiskName))
+            if (!string.IsNullOrEmpty(DiskName))
             {
-                listReq.Filter = $"name eq \"{this.DiskName}\"";
+                listReq.Filter = $"name eq \"{DiskName}\"";
             }
 
             // First page. AggregatedList.Items is a dictionary of zone to disks.
@@ -106,12 +99,12 @@ namespace Google.PowerShell.ComputeEngine
 
             foreach (Disk disk in disks)
             {
-                if (!String.IsNullOrEmpty(DiskName) && disk.Name != DiskName)
+                if (!string.IsNullOrEmpty(DiskName) && disk.Name != DiskName)
                 {
                     continue;
                 }
 
-                if (!String.IsNullOrEmpty(Zone) && !disk.Zone.Contains(Zone))
+                if (!string.IsNullOrEmpty(Zone) && !disk.Zone.Contains(Zone))
                 {
                     continue;
                 }

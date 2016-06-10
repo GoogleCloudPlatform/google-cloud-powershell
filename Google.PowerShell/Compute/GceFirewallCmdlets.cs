@@ -18,17 +18,8 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceFirewall")]
-    public class GetGceFirewallCmdlet : GceCmdlet
+    public class GetGceFirewallCmdlet : GceProjectCmdlet
     {
-        /// <summary>
-        /// <para type="description">
-        /// The Project to get the firewall rule of.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
-        public string Project { get; set; }
-
         /// <summary>
         /// <para type="description">
         /// The name of the firewall rule to get.
@@ -87,17 +78,8 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceFirewall")]
-    public class AddGceFirewallCmdlet : GceCmdlet
+    public class AddGceFirewallCmdlet : GceProjectCmdlet
     {
-        /// <summary>
-        /// <para type="description">
-        /// The name of the project to add the firewall rule to.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = true, Position = 0)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
-        public string Project { get; set; }
-
         /// <summary>
         /// <para type="description">
         /// The name of the new firewall rule.
@@ -203,17 +185,8 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceFirewall", SupportsShouldProcess = true)]
-    public class RemoveGceFirewallCmdlet : GceCmdlet
+    public class RemoveGceFirewallCmdlet : GceProjectCmdlet
     {
-        /// <summary>
-        /// <para type="description">
-        /// The name of the project from which to remove the firewall.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = true, Position = 0)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
-        public string Project { get; set; }
-
         /// <summary>
         /// <para type="description">
         /// The name of the firewall rule to remove.
@@ -243,17 +216,8 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceFirewall")]
-    public class SetGceFirewallCmdlet : GceCmdlet
+    public class SetGceFirewallCmdlet : GceProjectCmdlet
     {
-        /// <summary>
-        /// <para type="description">
-        /// The name of the project that owns the firewall rule to change.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = true, Position = 0)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
-        public string Project { get; set; }
-
         /// <summary>
         /// <para type="description">
         /// The new firewall rule data.

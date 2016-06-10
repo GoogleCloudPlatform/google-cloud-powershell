@@ -176,4 +176,118 @@ namespace Google.PowerShell.ComputeEngine
             }
         }
     }
+    public abstract class GceZoneConcurrentCmdlet : GceConcurrentCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The project of this command.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The zone of this command.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
+        public string Zone { get; set; }
+
+        protected override void BeginProcessing()
+        {
+            Project = GceProjectCmdlet.PopulateProjectOrThrow(Project);
+            Zone = GceZoneCmdlet.PopulateZoneOrThrow(Zone);
+        }
+    }
+
+    public abstract class GceProjectCmdlet : GceCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The project of this command.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
+        public string Project { get; set; }
+
+        protected override void BeginProcessing()
+        {
+            Project = PopulateProjectOrThrow(Project);
+        }
+
+        /// <summary>
+        /// Populates an empty project parameter.
+        /// </summary>
+        /// <param name="project">
+        /// The incomming project parameter.
+        /// </param>
+        /// <returns>
+        /// The incomming project parameter if it is not empty, or the default project.
+        /// </returns>
+        /// <exception cref="PSInvalidOperationException">
+        /// If the incomming parameter is empty and there is no default.
+        /// </exception>
+        public static string PopulateProjectOrThrow(string project)
+        {
+            if (string.IsNullOrEmpty(project))
+            {
+                project = CloudSdkSettings.GetDefaultProject();
+                if (string.IsNullOrEmpty(project))
+                {
+                    throw new PSInvalidOperationException(
+                        "Parameter Project was not specified and has no default value.");
+                }
+            }
+            return project;
+        }
+    }
+
+    public abstract class GceZoneCmdlet : GceProjectCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The zone of this command.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
+        public string Zone { get; set; }
+
+        protected override void BeginProcessing()
+        {
+            base.BeginProcessing();
+
+            Zone = PopulateZoneOrThrow(Zone);
+        }
+
+        /// <summary>
+        /// Populates an empty project parameter.
+        /// </summary>
+        /// <param name="zone">
+        /// The incomming project parameter.
+        /// </param>
+        /// <returns>
+        /// The incomming project parameter if it is not empty, or the default project.
+        /// </returns>
+        /// <exception cref="PSInvalidOperationException">
+        /// If the incomming parameter is empty and there is no default.
+        /// </exception>
+        public static string PopulateZoneOrThrow(string zone)
+        {
+            if (string.IsNullOrEmpty(zone))
+            {
+                zone = CloudSdkSettings.GetDefaultZone();
+                if (string.IsNullOrEmpty(zone))
+                {
+                    throw new PSInvalidOperationException(
+                        "Parameter Zone was not specified and has no default value.");
+                }
+            }
+            return zone;
+        }
+    }
 }
