@@ -9,7 +9,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Google.PowerShell.ComputeEngine
@@ -25,7 +24,6 @@ namespace Google.PowerShell.ComputeEngine
     [Cmdlet(VerbsCommon.Get, "GceInstance")]
     public class GetGceInstanceCmdlet : GceCmdlet
     {
-
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
@@ -105,11 +103,12 @@ namespace Google.PowerShell.ComputeEngine
             string pageToken = null;
             do
             {
-                var aggListRequest = Service.Instances.AggregatedList(Project);
+                InstancesResource.AggregatedListRequest aggListRequest =
+                    Service.Instances.AggregatedList(Project);
                 aggListRequest.Filter = Filter;
                 aggListRequest.PageToken = pageToken;
                 var aggList = aggListRequest.Execute();
-                string nextPageToken = aggList.NextPageToken;
+                pageToken = aggList.NextPageToken;
                 var instances = aggList.Items.Values
                     .Where(l => l.Instances != null)
                     .SelectMany(l => l.Instances);
@@ -126,7 +125,6 @@ namespace Google.PowerShell.ComputeEngine
             string pageToken = null;
             do
             {
-
                 InstancesResource.ListRequest listRequest = Service.Instances.List(Project, Zone);
                 listRequest.Filter = Filter;
                 listRequest.PageToken = pageToken;
@@ -257,10 +255,9 @@ namespace Google.PowerShell.ComputeEngine
     /// Deletes a Google Compute Engine VM instance.
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Remove, "GceInstance")]
+    [Cmdlet(VerbsCommon.Remove, "GceInstance", SupportsShouldProcess = true)]
     public class RemoveGceInstanceCmdlet : GceConcurrentCmdlet
     {
-
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
@@ -287,11 +284,15 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(Position = 2, Mandatory = true, ValueFromPipeline = true)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Instance))]
         public string Name { get; set; }
+
         protected override void ProcessRecord()
         {
-            var request = Service.Instances.Delete(Project, Zone, Name);
-            var operation = request.Execute();
-            AddOperation(Project, Zone, operation);
+            if (ShouldProcess($"{Project}/{Zone}/{Name}", "Remove VM instance"))
+            {
+                var request = Service.Instances.Delete(Project, Zone, Name);
+                var operation = request.Execute();
+                AddOperation(Project, Zone, operation);
+            }
         }
     }
 
@@ -445,7 +446,6 @@ namespace Google.PowerShell.ComputeEngine
     [Cmdlet(VerbsCommon.Set, "GceInstance")]
     public class UpdateGceInstanceCmdlet : GceConcurrentCmdlet
     {
-
         internal class ParameterSetNames
         {
             public const string AccessConfig = "AccessConfig";
@@ -627,7 +627,6 @@ namespace Google.PowerShell.ComputeEngine
                     }
                     newDisk = new AttachedDisk { Source = disk.SelfLink, DeviceName = disk.Name };
                 }
-
                 InstancesResource.AttachDiskRequest request =
                     Service.Instances.AttachDisk(newDisk, Project, Zone, Instance);
                 Operation operation = request.Execute();
