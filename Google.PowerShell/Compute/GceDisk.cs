@@ -31,15 +31,8 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceDisk")]
-    public class GetGceDiskCmdlet : GceCmdlet
+    public class GetGceDiskCmdlet : GceZoneCmdlet
     {
-        /// <summary>
-        /// <para type="description">
-        /// The project to check for Compute Engine disks.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
-        public string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -137,24 +130,8 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GceDisk")]
-    public class NewGceDiskCmdlet : GceCmdlet
+    public class NewGceDiskCmdlet : GceZoneCmdlet
     {
-        /// <summary>
-        /// <para type="description">
-        /// The project to associate the new Compute Engine disk.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
-        public string Project { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// Specific zone to create the disk in, e.g. "us-central1-a".
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = true)]
-        public string Zone { get; set; }
-
         /// <summary>
         /// <para type="description">
         /// Name of the disk.
@@ -247,24 +224,8 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet("Resize", "GceDisk")]
-    public class ResizeGceDiskCmdlet : GceCmdlet
+    public class ResizeGceDiskCmdlet : GceZoneCmdlet
     {
-        /// <summary>
-        /// <para type="description">
-        /// The project to associate the new Compute Engine disk.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
-        public string Project { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// Specific zone to create the disk in, e.g. "us-central1-a".
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 1, Mandatory = true)]
-        public string Zone { get; set; }
-
         /// <summary>
         /// <para type="description">
         /// Name of the disk.
@@ -307,24 +268,8 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceDisk", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High)]
-    public class RemoveGceDiskCmdlet : GceCmdlet
+    public class RemoveGceDiskCmdlet : GceZoneCmdlet
     {
-        /// <summary>
-        /// <para type="description">
-        /// The project to associate the new Compute Engine disk.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
-        public string Project { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// Specific zone to create the disk in, e.g. "us-central1-a".
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 1, Mandatory = true)]
-        public string Zone { get; set; }
-
         /// <summary>
         /// <para type="description">
         /// Name of the disk.
@@ -343,7 +288,7 @@ namespace Google.PowerShell.ComputeEngine
             {
                 return;
             }
-            
+
             // First try to get the disk, this way the cmdlet fails with a 404 if the
             // disk does not exist. (Otherwise the delete operation would succeed when
             // trying to delete a non-existant disk.)
