@@ -1,10 +1,10 @@
 ﻿// Copyright 2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
-using System.Collections.Generic;
-using System.Management.Automation;
 using Google.Apis.Compute.v1.Data;
 using Google.PowerShell.Common;
+using System.Collections.Generic;
+using System.Management.Automation;
 using static Google.Apis.Compute.v1.FirewallsResource;
 
 namespace Google.PowerShell.ComputeEngine
@@ -202,7 +202,7 @@ namespace Google.PowerShell.ComputeEngine
     /// Removes a firewall rule from a project.
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Remove, "GceFirewall")]
+    [Cmdlet(VerbsCommon.Remove, "GceFirewall", SupportsShouldProcess = true)]
     public class RemoveGceFirewallCmdlet : GceCmdlet
     {
         /// <summary>
@@ -224,29 +224,9 @@ namespace Google.PowerShell.ComputeEngine
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Firewall))]
         public string FirewallName { get; set; }
 
-        /// <summary>
-        /// <para type="description">
-        /// Shows what would happen if the cmdlet runs.
-        /// </para>
-        /// </summary>
-        [Parameter]
-        public SwitchParameter WhatIf { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// Skip the confirmation dialog.
-        /// </para>
-        /// </summary>
-        [Parameter]
-        public SwitchParameter Force { get; set; }
-
         protected override void ProcessRecord()
         {
-            if (WhatIf)
-            {
-                WriteObject($"What if: Removing firewall {FirewallName} from project {Project}");
-            }
-            else if (ConfirmAction(Force, $"Firewall {FirewallName}", "Remove"))
+            if (ShouldProcess($"{Project}/{FirewallName}", "Remove Firewall"))
             {
                 DeleteRequest request = Service.Firewalls.Delete(Project, FirewallName);
                 WaitForGlobalOperation(Project, request.Execute());

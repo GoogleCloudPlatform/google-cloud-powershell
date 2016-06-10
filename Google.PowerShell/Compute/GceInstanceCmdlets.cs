@@ -9,9 +9,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
-using System.Text;
 using System.Threading.Tasks;
-using static Google.Apis.Compute.v1.InstancesResource;
 
 namespace Google.PowerShell.ComputeEngine
 {
@@ -131,11 +129,12 @@ namespace Google.PowerShell.ComputeEngine
             string pageToken = null;
             do
             {
-                var aggListRequest = Service.Instances.AggregatedList(Project);
+                InstancesResource.AggregatedListRequest aggListRequest =
+                    Service.Instances.AggregatedList(Project);
                 aggListRequest.Filter = Filter;
                 aggListRequest.PageToken = pageToken;
                 var aggList = aggListRequest.Execute();
-                string nextPageToken = aggList.NextPageToken;
+                pageToken = aggList.NextPageToken;
                 var instances = aggList.Items.Values
                     .Where(l => l.Instances != null)
                     .SelectMany(l => l.Instances);
@@ -255,7 +254,7 @@ namespace Google.PowerShell.ComputeEngine
     /// Deletes a Google Compute Engine VM instance.
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Remove, "GceInstance")]
+    [Cmdlet(VerbsCommon.Remove, "GceInstance", SupportsShouldProcess = true)]
     public class RemoveGceInstanceCmdlet : GceConcurrentCmdlet
     {
         /// <summary>
@@ -285,29 +284,9 @@ namespace Google.PowerShell.ComputeEngine
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Instance))]
         public string Name { get; set; }
 
-        /// <summary>
-        /// <para type="description">
-        /// Shows what would happen if the cmdlet runs.
-        /// </para>
-        /// </summary>
-        [Parameter]
-        public SwitchParameter WhatIf { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// Skip the confirmation dialog.
-        /// </para>
-        /// </summary>
-        [Parameter]
-        public SwitchParameter Force { get; set; }
-
         protected override void ProcessRecord()
         {
-            if (WhatIf)
-            {
-                WriteObject($"WhatIf: Delete VM instance {Name} in zone {Zone} of project {Project}");
-            }
-            else if (ConfirmAction(Force, $"VM instance {Name} in zone {Zone} of project {Project}", "Remove"))
+            if (ShouldProcess($"{Project}/{Zone}/{Name}", "Remove VM instance"))
             {
                 var request = Service.Instances.Delete(Project, Zone, Name);
                 var operation = request.Execute();
@@ -602,7 +581,7 @@ namespace Google.PowerShell.ComputeEngine
         {
             foreach (string configName in DeleteAccessConfig)
             {
-                DeleteAccessConfigRequest request =
+                InstancesResource.DeleteAccessConfigRequest request =
                     Service.Instances.DeleteAccessConfig(
                         Project, Zone, Instance, configName, NetworkInterface);
                 Operation operation = request.Execute();
@@ -625,7 +604,7 @@ namespace Google.PowerShell.ComputeEngine
         {
             foreach (string diskName in DetachDisk)
             {
-                DetachDiskRequest request = Service.Instances.DetachDisk(Project, Zone, Instance, diskName);
+                InstancesResource.DetachDiskRequest request = Service.Instances.DetachDisk(Project, Zone, Instance, diskName);
                 Operation operation = request.Execute();
                 AddOperation(Project, Zone, operation);
             }
@@ -645,7 +624,7 @@ namespace Google.PowerShell.ComputeEngine
 
                     newDisk = new AttachedDisk { Source = disk.SelfLink, DeviceName = disk.Name };
                 }
-                AttachDiskRequest request =
+                InstancesResource.AttachDiskRequest request =
                     Service.Instances.AttachDisk(newDisk, Project, Zone, Instance);
                 Operation operation = request.Execute();
                 AddOperation(Project, Zone, operation);
@@ -657,7 +636,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         private void ProcessMetadata()
         {
-            GetRequest getRequest = Service.Instances.Get(Project, Zone, Instance);
+            InstancesResource.GetRequest getRequest = Service.Instances.Get(Project, Zone, Instance);
             Instance instance = getRequest.Execute();
             Metadata metadata = instance.Metadata ?? new Metadata();
             metadata.Items = metadata.Items ?? new List<Metadata.ItemsData>();
@@ -670,7 +649,7 @@ namespace Google.PowerShell.ComputeEngine
                     Value = entry.Value.ToString()
                 });
             }
-            SetMetadataRequest request =
+            InstancesResource.SetMetadataRequest request =
                 Service.Instances.SetMetadata(metadata, Project, Zone, Instance);
             AddOperation(Project, Zone, request.Execute());
         }
@@ -680,12 +659,12 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         private void ProcessTag()
         {
-            GetRequest getRequest = Service.Instances.Get(Project, Zone, Instance);
+            InstancesResource.GetRequest getRequest = Service.Instances.Get(Project, Zone, Instance);
             Instance instance = getRequest.Execute();
             Tags tags = instance.Tags ?? new Tags();
             tags.Items = tags.Items ?? new List<string>();
             tags.Items = tags.Items.Where(tag => !RemoveTag.Contains(tag)).Concat(AddTag).ToList();
-            SetTagsRequest setRequest = Service.Instances.SetTags(tags, Project, Zone, Instance);
+            InstancesResource.SetTagsRequest setRequest = Service.Instances.SetTags(tags, Project, Zone, Instance);
             Operation operation = setRequest.Execute();
             AddOperation(Project, Zone, operation);
         }
