@@ -9,7 +9,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Google.PowerShell.ComputeEngine
@@ -25,7 +24,6 @@ namespace Google.PowerShell.ComputeEngine
     [Cmdlet(VerbsCommon.Get, "GceInstance")]
     public class GetGceInstanceCmdlet : GceProjectCmdlet
     {
-
         /// <summary>
         /// <para type="description">
         /// The zone in which the instance resides.
@@ -95,7 +93,8 @@ namespace Google.PowerShell.ComputeEngine
             string pageToken = null;
             do
             {
-                var aggListRequest = Service.Instances.AggregatedList(Project);
+                InstancesResource.AggregatedListRequest aggListRequest =
+                    Service.Instances.AggregatedList(Project);
                 aggListRequest.Filter = Filter;
                 aggListRequest.PageToken = pageToken;
                 var aggList = aggListRequest.Execute();
@@ -116,7 +115,6 @@ namespace Google.PowerShell.ComputeEngine
             string pageToken = null;
             do
             {
-
                 InstancesResource.ListRequest listRequest = Service.Instances.List(Project, Zone);
                 listRequest.Filter = Filter;
                 listRequest.PageToken = pageToken;
@@ -239,7 +237,7 @@ namespace Google.PowerShell.ComputeEngine
     /// Deletes a Google Compute Engine VM instance.
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Remove, "GceInstance")]
+    [Cmdlet(VerbsCommon.Remove, "GceInstance", SupportsShouldProcess = true)]
     public class RemoveGceInstanceCmdlet : GceZoneConcurrentCmdlet
     {
         /// <summary>
@@ -253,9 +251,12 @@ namespace Google.PowerShell.ComputeEngine
 
         protected override void ProcessRecord()
         {
-            var request = Service.Instances.Delete(Project, Zone, Name);
-            var operation = request.Execute();
-            AddOperation(Project, Zone, operation);
+            if (ShouldProcess($"{Project}/{Zone}/{Name}", "Remove VM instance"))
+            {
+                var request = Service.Instances.Delete(Project, Zone, Name);
+                var operation = request.Execute();
+                AddOperation(Project, Zone, operation);
+            }
         }
     }
 
@@ -518,7 +519,6 @@ namespace Google.PowerShell.ComputeEngine
                     }
                     newDisk = new AttachedDisk { Source = disk.SelfLink, DeviceName = disk.Name };
                 }
-
                 InstancesResource.AttachDiskRequest request =
                     Service.Instances.AttachDisk(newDisk, Project, Zone, Instance);
                 Operation operation = request.Execute();
