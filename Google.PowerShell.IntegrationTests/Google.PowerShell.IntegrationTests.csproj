@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Compute\Compute.GceDisk.Tests.ps1" />
+    <None Include="Compute\Compute.GceFirewall.Tests.ps1" />
     <None Include="Compute\Compute.GceInstance.Tests.ps1" />
     <None Include="GcloudCmdlets.ps1" />
     <None Include="README.md" />

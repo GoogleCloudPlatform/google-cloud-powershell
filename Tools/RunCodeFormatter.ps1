@@ -13,7 +13,7 @@
 # https://github.com/dotnet/codeformatter/releases
 # TODO(chrsmith): Use the GitHub API and automate this, see:
 # https://developer.github.com/v3/repos/releases/
-$release = "v1.0.0-alpha5"
+$release = "v1.0.0-alpha6"
 $latestBinaryDrop = "https://github.com/dotnet/codeformatter/releases/download/${release}/CodeFormatter.zip"
 
 $installPath = "${env:LOCALAPPDATA}\CodeFormatter-${release}\"
@@ -37,7 +37,7 @@ $solutionPath = Join-Path $PSScriptRoot "\..\gcloud-powershell.sln"
 
 # Generate the copyright header.
 $copyrightHeader = [IO.Path]::GetTempFileName() 
-"// Copyright 2015 Google Inc. All Rights Reserved." | Out-File -FilePath $copyrightHeader
+"// Copyright 2015-2016 Google Inc. All Rights Reserved." | Out-File -FilePath $copyrightHeader
 "// Licensed under the Apache License Version 2.0."  | Out-File -FilePath $copyrightHeader -Append
 
 $args = """${solutionPath}"" /copyright:""${copyrightHeader}"""

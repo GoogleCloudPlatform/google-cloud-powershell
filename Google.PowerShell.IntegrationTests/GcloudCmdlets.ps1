@@ -2,9 +2,9 @@
 
 # Install the GCP cmdlets module into the current PowerShell session.
 function Install-GcloudCmdlets() {
-	# TODO(chrsmith): Check both the Debug and Release, use most recent.
-	$pathToCmdlets = "${PSScriptRoot}\..\Google.PowerShell\bin\Debug\Google.PowerShell.dll"
-	Import-Module $pathToCmdlets -Verbose
+    $dll = Get-ChildItem $PSScriptRoot\..\Google.PowerShell\bin -Recurse -Include Google.PowerShell.dll |
+        sort -Property CreationTime | select -First 1
+    Import-Module $dll -Verbose
 }
 
 # Creates a GCS bucket owned associated with the project, deleting any existing
