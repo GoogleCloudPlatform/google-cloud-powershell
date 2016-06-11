@@ -1,17 +1,18 @@
 ﻿// Copyright 2015 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
-using System.Management.Automation;
-
 using Google;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Download;
 using Google.Apis.Services;
 using Google.Apis.Storage.v1;
 using Google.Apis.Storage.v1.Data;
-using System.Net;
-
 using Google.PowerShell.Common;
+using System;
+using System.Collections.Generic;
+using System.Management.Automation;
+using System.Net;
+using System.Threading.Tasks;
 
 namespace Google.PowerShell.CloudStorage
 {
@@ -118,18 +119,16 @@ namespace Google.PowerShell.CloudStorage
         }
     }
 
-    [Cmdlet(VerbsCommon.Remove, "GcsBucket", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High)]
+    [Cmdlet(VerbsCommon.Remove, "GcsBucket", SupportsShouldProcess = true)]
     public class RemoveGcsBucketCmdlet : GcsCmdlet
     {
+        /// <summary>
+        /// Used for generating progress activity ids.
+        /// </summary>
+        private static readonly Random ActivityIdGenerator = new Random();
+
         [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true)]
         public string Name { get; set; }
-
-        // TODO(chrsmith): Should this be Force instead?
-        /// <summary>
-        /// Delete the objects too. By default, you cannot delete non-empty buckets.
-        /// </summary>
-        [Parameter]
-        public SwitchParameter DeleteObjects { get; set; }
 
         [Parameter]
         public SwitchParameter Force { get; set; }
@@ -137,40 +136,98 @@ namespace Google.PowerShell.CloudStorage
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            if (!base.ConfirmAction(Force.IsPresent, Name, "Remove-GcsBucket (DeleteBucket)"))
+            if (!ShouldProcess($"{Name}", "Delete Bucket"))
             {
                 return;
             }
-
-            // TODO(chrsmith): What is the idiomatic way to support the WhatIf flag. Print
-            // what objects would have been deleted?
             var service = GetStorageService();
             try
             {
                 service.Buckets.Delete(Name).Execute();
             }
-            // TODO(chrsmith): What is the specific exception type?
             catch (GoogleApiException re)
             {
                 if (re.HttpStatusCode == HttpStatusCode.Conflict)
                 {
                     WriteVerbose("Got RequestError[409]. Bucket not empty.");
-                }
-                if (!DeleteObjects.IsPresent)
-                {
-                    throw;
-                }
-                // TODO(chrsmith): Provide some progress output? Deleting thousands of GCS objects takes a while.
-                // TODO(chrsmith): Multi-threaded delete? e.g. the -m parameter to gsutil?
-                // TODO(chrsmith): What about buckets with TONS of objects, and paging?
-                Objects bucketObjects = service.Objects.List(Name).Execute();
-                foreach (Apis.Storage.v1.Data.Object bucketObject in bucketObjects.Items)
-                {
-                    service.Objects.Delete(Name, bucketObject.Name).Execute();
-                }
 
-                service.Buckets.Delete(Name).Execute();
+                    List<Task<string>> deleteTasks = AskDeleteObjects(service);
+
+                    WaitDeleteTasks(deleteTasks);
+
+                    service.Buckets.Delete(Name).Execute();
+                }
             }
+        }
+
+        /// <summary>
+        /// Asks the user about deleting bucke objects, and starts asynchornis tasks to do so.
+        /// </summary>
+        /// <param name="service"></param>
+        /// <returns></returns>
+        private List<Task<string>> AskDeleteObjects(StorageService service)
+        {
+            List<Task<string>> deleteTasks = new List<Task<string>>();
+            bool yesAll = false;
+            bool noAll = false;
+
+            ObjectsResource.ListRequest request = service.Objects.List(Name);
+            do
+            {
+                Objects bucketObjects = request.Execute();
+                foreach (var bucketObject in bucketObjects.Items)
+                {
+                    string query = $"Delete bucket object {bucketObject.Name}?";
+                    string caption;
+                    if (bucketObjects.NextPageToken == null)
+                    {
+                        caption = $"Deleting {bucketObjects.Items.Count} bucket objects";
+                    }
+                    else
+                    {
+                        caption = $"Deleting more than {bucketObjects.Items.Count} bucket objects";
+                    }
+                    if (Force || ShouldContinue(query, caption, ref yesAll, ref noAll))
+                    {
+                        deleteTasks.Add(service.Objects.Delete(Name, bucketObject.Name).ExecuteAsync());
+                    }
+                }
+                request.PageToken = bucketObjects.NextPageToken;
+            } while (request.PageToken != null && !noAll);
+
+            return deleteTasks;
+        }
+
+        /// <summary>
+        /// Waits on the list of delete tasks to compelet, updating progress as it does so.
+        /// </summary>
+        /// <param name="deleteTasks">
+        /// The list of delete tasks to wait on.
+        /// </param>
+        private void WaitDeleteTasks(List<Task<string>> deleteTasks)
+        {
+            int totalTasks = deleteTasks.Count;
+            int finishedTasks = 0;
+            int activityId = ActivityIdGenerator.Next();
+
+            foreach (var deleteTask in deleteTasks)
+            {
+                deleteTask.Wait();
+                finishedTasks++;
+                WriteProgress(
+                    new ProgressRecord(activityId, "Delete bucket objects", "Deleting objects")
+                    {
+                        PercentComplete = (finishedTasks * 100) / totalTasks,
+                        RecordType = ProgressRecordType.Processing
+                    });
+            }
+
+            WriteProgress(
+                new ProgressRecord(activityId, "Delete bucket objects", "Objects deleted")
+                {
+                    PercentComplete = 100,
+                    RecordType = ProgressRecordType.Completed
+                });
         }
     }
 

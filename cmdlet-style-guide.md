@@ -6,15 +6,23 @@ free to submit an issue for discussion.
 
 [RFC2119](http://www.ietf.org/rfc/rfc2119.txt)
 
-# Cmdlets SHOULD call `ShouldProcess` during unexpected situations
+# Cmdlets SHOULD call `ShouldProcess` during data destroying situations (Deleting a GceDisk or GcsBucket).
 
-A cmdlet can call the [ShouldProcess](https://msdn.microsoft.com/en-us/library/system.management.automation.cmdlet.shouldprocess.aspx)
-method to prompt the user before proceeding.
+A cmdlet can call the [ShouldProcess](https://msdn.microsoft.com/en-us/library/ms570256.aspx)
+method to prompt the user before proceeding. Cmdlets that do so MUST set the `SupportsShouldProcess` property
+of the Cmdlet attribute. ConfirmImpact should usually remain default and never be set to High.
 
-This allows the user to adjudicate any unexpected situations. For example, when
-the `Remove-Item` cmdlet is used and it would delete a folder but the
-`-Recurse` flag is not set, `ShouldProcess` is called to prompt the user to
-confirm this is what they want.
+This allows the user to run in a protected environment, where they can adjudicate any unexpected situations. It
+also gives free acces to the `WhatIf` and `Confirm` flags.
+
+# Cmdlets SHOULD call `ShouldContinue` during unexpected/hidden data destroying operations (Deleting a GcsBucket with Objects still inside).
+
+A cmdlet can call the [ShouldContinue](https://msdn.microsoft.com/en-us/library/ms570255.aspx) method to prompt
+the user before proceeding. Cmdlets that call this method must include a `Force` flag. This method ignroes
+and ConfirmImpact setting.
+
+`ShouldContinue` should be used sparingly, and only when a cmdlet unexpectidly is going beyond its obvious
+contract. There should be at least one normal path a cmdlet can take that does not call `ShouldContinue`
 
 ````
 # Removing a folder with a child item prompts
@@ -41,12 +49,10 @@ parameter automatically get `-WhatIf` and `-Confirm` parameters.
 to not actually complete its action. It is used so you can test "what if" the
 command were actually run.
 
-Note that passing `-WhatIf` does not prevent the `ShouldProcess` prompt from
-appearing. In fact, you may still get multiple `ShouldProcess` prompts (just
-like you would if `-WhatIf` were not added.)
+Note that passing `-WhatIf` prevents the `ShouldProcess` prompt from
+appearing. 
 
-`-Confirm` is used to bypass the confirmation prompt by `ShouldProcess` and to
-proceed with the operation silently.
+`-Confirm` is used to ensure the confirmation prompt of `ShouldProcess` appears.
 
 # Cmdlets MAY add `-Force` to bypass basic restrictions
 

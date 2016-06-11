@@ -1,16 +1,11 @@
 ﻿// Copyright 2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
-// Licensed under the Apache License Version 2.0.
-
 using Google.Apis.Compute.v1;
 using Google.Apis.Compute.v1.Data;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Management.Automation;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Google.PowerShell.ComputeEngine
 {
@@ -78,7 +73,7 @@ namespace Google.PowerShell.ComputeEngine
             // can allow filtering by regions.
             if (!String.IsNullOrEmpty(DiskName))
             {
-                listReq.Filter = $"name eq \"{this.DiskName}\"";
+                listReq.Filter = $"name eq \"{DiskName}\"";
             }
 
             // First page. AggregatedList.Items is a dictionary of zone to disks.
@@ -306,7 +301,7 @@ namespace Google.PowerShell.ComputeEngine
     /// Deletes a Compute Engine disk.
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Remove, "GceDisk", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High)]
+    [Cmdlet(VerbsCommon.Remove, "GceDisk", SupportsShouldProcess = true)]
     public class RemoveGceDiskCmdlet : GceCmdlet
     {
         /// <summary>
@@ -333,13 +328,9 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(Position = 2, Mandatory = true), ValidatePattern("[a-z]([-a-z0-9]*[a-z0-9])?")]
         public string DiskName { get; set; }
 
-        [Parameter]
-        public SwitchParameter Force { get; set; }
-
         protected override void ProcessRecord()
         {
-            base.ProcessRecord();
-            if (!base.ConfirmAction(Force.IsPresent, DiskName, "Remove-GceDisk (DeleteDisk)"))
+            if (!ShouldProcess($"{Project}/{Zone}/{DiskName}", "Delete Disk"))
             {
                 return;
             }
