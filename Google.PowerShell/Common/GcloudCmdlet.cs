@@ -1,12 +1,12 @@
 ﻿// Copyright 2015 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
-using System;
-using System.Management.Automation;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
-using System.Threading.Tasks;
+using System;
+using System.Management.Automation;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Google.PowerShell.Common
 {
@@ -64,30 +64,6 @@ namespace Google.PowerShell.Common
                 HttpClientInitializer = getCredsTask.Result,
                 ApplicationName = "Google Cloud PowerShell",
             };
-        }
-
-        /// <summary>
-        /// Prompt the user that they are about to perform the given action. Returns true IFF
-        /// the user confirms the action.
-        /// 
-        /// - Does not prompt if Force is set.
-        /// - Always prompts if WhatIf is set.
-        /// </summary>
-        protected bool ConfirmAction(bool force, string resource, string action)
-        {
-            // Always prompt if -WhatIf is added.
-            bool whatIfFlagValue = false;
-            if (base.MyInvocation.BoundParameters.ContainsKey("WhatIf"))
-            {
-                SwitchParameter whatIfFlag = (SwitchParameter)base.MyInvocation.BoundParameters["WhatIf"];
-                whatIfFlagValue = whatIfFlag.ToBool();
-            }
-            if (whatIfFlagValue)
-            {
-                return ShouldProcess(resource, action);
-            }
-
-            return force || ShouldProcess(resource, action);
         }
 
         /// <summary>
