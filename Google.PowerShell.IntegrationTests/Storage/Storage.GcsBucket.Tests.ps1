@@ -14,7 +14,7 @@ Describe "Get-GcsBucket" {
     It "should work" {
         gsutil mb -p gcloud-powershell-testing gs://gcps-testbucket
         $bucket = Get-GcsBucket -Name "gcps-testbucket"
-		$bucket.GetType().FullName | Should Match "Google.Apis.Storage.v1.Data.Bucket"
+        $bucket.GetType().FullName | Should Match "Google.Apis.Storage.v1.Data.Bucket"
 
         $bucket.StorageClass | Should Match "STANDARD"
         $bucket.Id | Should Match "gcps-testbucket"
@@ -51,6 +51,13 @@ Describe "Create-GcsBucket" {
 
     It "should work" {
         $bucket = New-GcsBucket -Name "gcps-bucket-creation" -Project $project
+        $bucket.GetType().FullName | Should Match "Google.Apis.Storage.v1.Data.Bucket"
+        $bucket.Location | Should Match "US"
+        $bucket.StorageClass | Should Match "STANDARD"
+    }
+
+    It "should work with pipeline" {
+        $bucket = "gcps-bucket-creation" | New-GcsBucket -Project $project
         $bucket.GetType().FullName | Should Match "Google.Apis.Storage.v1.Data.Bucket"
         $bucket.Location | Should Match "US"
         $bucket.StorageClass | Should Match "STANDARD"
