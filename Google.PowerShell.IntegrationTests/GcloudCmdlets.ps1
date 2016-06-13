@@ -10,15 +10,15 @@ function Install-GcloudCmdlets() {
 # Creates a GCS bucket owned associated with the project, deleting any existing
 # buckets with that name and all of their contents.
 function Create-TestBucket($project, $bucket) {
-    gsutil -m rm -r "gs://${bucket}/*"
-    gsutil rb "gs://${bucket}"
-    gsutil mb -p $project "gs://${bucket}"
+    gsutil -m rm -r "gs://${bucket}/*" 2>$null
+    gsutil rb "gs://${bucket}" 2>$null
+    gsutil mb -p $project "gs://${bucket}" 2>$null
 }
 
 # Copies a 0-byte file from the local machine to Google Cloud Storage.
 function Add-TestFile($bucket, $objName) {
     $filename = [System.IO.Path]::GetTempFileName()
-    gsutil ls "gs://${bucket}"
-    gsutil cp $filename "gs://${bucket}/${objName}"
+    gsutil ls "gs://${bucket}" 2>$null
+    gsutil cp $filename "gs://${bucket}/${objName}" 2>$null
     Remove-Item -Force $filename
 }

@@ -12,15 +12,15 @@ Describe "Get-GcsBucket" {
     }
 
     It "should work" {
-        gsutil mb -p gcloud-powershell-testing gs://gcps-testbucket
+        gsutil mb -p gcloud-powershell-testing gs://gcps-testbucket 2>$null
         $bucket = Get-GcsBucket -Name "gcps-testbucket"
-		$bucket.GetType().FullName | Should Match "Google.Apis.Storage.v1.Data.Bucket"
+        $bucket.GetType().FullName | Should Match "Google.Apis.Storage.v1.Data.Bucket"
 
         $bucket.StorageClass | Should Match "STANDARD"
         $bucket.Id | Should Match "gcps-testbucket"
         $bucket.SelfLink | Should Match "https://www.googleapis.com/storage/v1/b/gcps-testbucket"
 
-        gsutil rb gs://gcps-testbucket
+        gsutil rb gs://gcps-testbucket 2>$null
     }
 
     It "should contain ACL information" {
@@ -42,11 +42,11 @@ Describe "Create-GcsBucket" {
 
     # Should remove the bucket before/after each test to ensure we are in a good state.
     BeforeEach {
-        gsutil rb gs://gcps-bucket-creation
+        gsutil rb gs://gcps-bucket-creation 2>$null
     }
 
     AfterEach {
-        gsutil rb gs://gcps-bucket-creation
+        gsutil rb gs://gcps-bucket-creation 2>$null
     }
 
     It "should work" {
@@ -81,16 +81,16 @@ Describe "Remove-GcsBucket" {
         { Get-GcsBucket -Name $bucket } | Should Throw "404"
     }
 
-    It "will fail to remove non-empty buckets" {
-        Add-TestFile $bucket "file.txt"
-        { Remove-GcsBucket -Name $bucket -Force } | Should Throw "409"
+    It "will work with pipeline" {
+        $bucket | Remove-GcsBucket -Force
+        { Get-GcsBucket -Name $bucket } | Should Throw "404"
     }
 
-    It "will be unstoppable with the DeleteObjects flag" {
+    It "will be unstoppable with the Force flag" {
         # Place an object in the GCS bucket.
         Add-TestFile $bucket "file.txt"
 
-        Remove-GcsBucket -Name $bucket -DeleteObjects -Force
+        Remove-GcsBucket -Name $bucket -Force
         { Get-GcsBucket -Name $bucket } | Should Throw "404"
     }
 }
@@ -102,7 +102,7 @@ Describe "Test-GcsBucket" {
         $bucket = "gcps-test-gcsbucket"
         Create-TestBucket $project $bucket
         Test-GcsBucket -Name $bucket | Should Be $true
-        gsutil rb gs://gcps-test-gcsbucket
+        gsutil rb gs://gcps-test-gcsbucket 2>$null
       
         # Buckets that exists but we don't have access to.
         Test-GcsBucket -Name "asdf" | Should Be $true
