@@ -123,13 +123,19 @@ namespace Google.PowerShell.CloudStorage
     public class RemoveGcsBucketCmdlet : GcsCmdlet
     {
         /// <summary>
-        /// Used for generating progress activity ids.
+        /// Used for generating activity ids used by WriteProgress.
         /// </summary>
         private static readonly Random ActivityIdGenerator = new Random();
 
         [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true)]
         public string Name { get; set; }
 
+        /// <summary>
+        /// <para typedef="description">
+        /// When deleting a bucket with objects still inside, use Force to proceed with the deletion without
+        /// a prompt.
+        /// </para>
+        /// </summary>
         [Parameter]
         public SwitchParameter Force { get; set; }
 
@@ -175,18 +181,15 @@ namespace Google.PowerShell.CloudStorage
             do
             {
                 Objects bucketObjects = request.Execute();
+                string caption = $"Deleting {bucketObjects.Items.Count} bucket objects";
+                if (bucketObjects.NextPageToken != null)
+                {
+                    caption = $"Deleting more than {bucketObjects.Items.Count} bucket objects";
+                }
                 foreach (var bucketObject in bucketObjects.Items)
                 {
                     string query = $"Delete bucket object {bucketObject.Name}?";
-                    string caption;
-                    if (bucketObjects.NextPageToken == null)
-                    {
-                        caption = $"Deleting {bucketObjects.Items.Count} bucket objects";
-                    }
-                    else
-                    {
-                        caption = $"Deleting more than {bucketObjects.Items.Count} bucket objects";
-                    }
+
                     if (Force || ShouldContinue(query, caption, ref yesAll, ref noAll))
                     {
                         deleteTasks.Add(service.Objects.Delete(Name, bucketObject.Name).ExecuteAsync());
