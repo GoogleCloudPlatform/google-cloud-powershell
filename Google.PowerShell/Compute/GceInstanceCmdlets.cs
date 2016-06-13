@@ -22,23 +22,14 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceInstance")]
-    public class GetGceInstanceCmdlet : GceCmdlet
+    public class GetGceInstanceCmdlet : GceProjectCmdlet
     {
-        /// <summary>
-        /// <para type="description">
-        /// The project that owns the instances.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
-        public string Project { get; set; }
-
         /// <summary>
         /// <para type="description">
         /// The zone in which the instance resides.
         /// </para>
         /// </summary>
-        [Parameter(Position = 1, Mandatory = false)]
+        [Parameter]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
         public string Zone { get; set; }
 
@@ -47,8 +38,7 @@ namespace Google.PowerShell.ComputeEngine
         /// The name of the instance.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = false,
-            ValueFromPipeline = true)]
+        [Parameter(Position = 0, ValueFromPipeline = true)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Instance))]
         public string Name { get; set; }
 
@@ -74,18 +64,18 @@ namespace Google.PowerShell.ComputeEngine
         protected override void ProcessRecord()
         {
             IEnumerable<Instance> instances;
-            if (String.IsNullOrEmpty(Zone))
+            if (!string.IsNullOrEmpty(Name))
             {
-                instances = GetAllProjectInstances();
-
+                instances = new[] { GetExactInstance() };
             }
-            else if (String.IsNullOrEmpty(Name))
+            else if (!string.IsNullOrEmpty(Zone))
             {
                 instances = GetZoneInstances();
+
             }
             else
             {
-                instances = new Instance[] { GetExactInstance() };
+                instances = GetAllProjectInstances();
             }
 
             if (SerialPortOutput)
@@ -147,13 +137,22 @@ namespace Google.PowerShell.ComputeEngine
 
         private Instance GetExactInstance()
         {
+            if (string.IsNullOrEmpty(Zone))
+            {
+                Zone = CloudSdkSettings.GetDefaultZone();
+                if (string.IsNullOrEmpty(Zone))
+                {
+                    throw new PSInvalidOperationException(
+                        "Parameter Zone was not given a value and does not have a default.");
+                }
+            }
             InstancesResource.GetRequest getRequest = Service.Instances.Get(Project, Zone, Name);
             return getRequest.Execute();
         }
 
         private void WriteSerialPortOutput(IEnumerable<Instance> instances)
         {
-            var tasks = instances.Select(i => GetSerialPortOutputAsync(i));
+            IEnumerable<Task<string>> tasks = instances.Select(i => GetSerialPortOutputAsync(i));
 
             var exceptions = new List<Exception>();
             foreach (Task<string> task in tasks)
@@ -198,25 +197,8 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceInstance")]
-    public class AddGceInstanceCmdlet : GceConcurrentCmdlet
+    public class AddGceInstanceCmdlet : GceZoneConcurrentCmdlet
     {
-        /// <summary>
-        /// <para type="description">
-        /// The project that will own the instances.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
-        public string Project { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The zone in which the instance will reside.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 1, Mandatory = true)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
-        public string Zone { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -256,26 +238,8 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceInstance", SupportsShouldProcess = true)]
-    public class RemoveGceInstanceCmdlet : GceConcurrentCmdlet
+    public class RemoveGceInstanceCmdlet : GceZoneConcurrentCmdlet
     {
-        /// <summary>
-        /// <para type="description">
-        /// The project that owns the instances.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
-        public string Project { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The zone in which the instance resides.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 1, Mandatory = true)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
-        public string Zone { get; set; }
-
         /// <summary>
         /// <para type="description">
         /// The name of the instance to delete.
@@ -305,26 +269,8 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Start, "GceInstance")]
-    public class StartGceInstanceCmdlet : GceConcurrentCmdlet
+    public class StartGceInstanceCmdlet : GceZoneConcurrentCmdlet
     {
-        /// <summary>
-        /// <para type="description">
-        /// The project that owns the instances.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
-        public string Project { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The zone in which the instance resides.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 1, Mandatory = true)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
-        public string Zone { get; set; }
-
         /// <summary>
         /// <para type="description">
         /// The name of the instance to start.
@@ -351,26 +297,8 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Stop, "GceInstance")]
-    public class StopGceInstanceCmdlet : GceConcurrentCmdlet
+    public class StopGceInstanceCmdlet : GceZoneConcurrentCmdlet
     {
-        /// <summary>
-        /// <para type="description">
-        /// The project that owns the instances.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
-        public string Project { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The zone in which the instance resides.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 1, Mandatory = true)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
-        public string Zone { get; set; }
-
         /// <summary>
         /// <para type="description">
         /// The name of the instance to stop.
@@ -397,26 +325,8 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Restart, "GceInstance")]
-    public class RestartGceInstanceCmdlet : GceConcurrentCmdlet
+    public class RestartGceInstanceCmdlet : GceZoneConcurrentCmdlet
     {
-        /// <summary>
-        /// <para type="description">
-        /// The project that owns the instances.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
-        public string Project { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The zone in which the instance resides.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 1, Mandatory = true)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
-        public string Zone { get; set; }
-
         /// <summary>
         /// <para type="description">
         /// The name of the instance to reset.
@@ -444,33 +354,15 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceInstance")]
-    public class UpdateGceInstanceCmdlet : GceConcurrentCmdlet
+    public class UpdateGceInstanceCmdlet : GceZoneConcurrentCmdlet
     {
-        internal class ParameterSetNames
+        private class ParameterSetNames
         {
             public const string AccessConfig = "AccessConfig";
             public const string Disk = "Disk";
             public const string Metadata = "Metadata";
             public const string Tag = "Tag";
         }
-
-        /// <summary>
-        /// <para type="description">
-        /// The project that owns the instance to update.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
-        public string Project { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The zone in which the instance resides.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 1, Mandatory = true)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
-        public string Zone { get; set; }
 
         /// <summary>
         /// <para type="description">

@@ -4,8 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -132,6 +132,15 @@ namespace Google.PowerShell.Common
         public static string GetDefaultProject()
         {
             return GetSettingsValue("project");
+        }
+
+        /// <summary>
+        /// Returns the default zone of the Google Cloud SDK.
+        /// </summary>
+        /// <returns></returns>
+        public static string GetDefaultZone()
+        {
+            return GetSettingsValue("zone");
         }
 
         /// <summary>

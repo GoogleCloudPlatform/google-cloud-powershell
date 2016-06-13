@@ -1,19 +1,19 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
 
-$project = "gcloud-powershell-testing"
+$project, $zone, $oldConfig, $newConfigName = Set-GCloudConfig
 
 # Delete all disks associated with a project.
 function Remove-ProjectDisks($project) {
     Write-Host "Deleting all GCE disks for $project..."
-    $disks = Get-GceDisk $project
+    $disks = Get-GceDisk
     foreach ($disk in $disks) {
-        gcloud compute disks delete --project $project $disk.Name --zone $disk.Zone --quiet
+        gcloud compute disks delete --project $project $disk.Name --zone $disk.Zone --quiet 2>$null
     }
 }
 
 Describe "Get-GceDisk" {
-    Remove-ProjectDisks($project)
+    Remove-ProjectDisks
     # Create test disks.
     gcloud compute disks create --project $project "test-disk-1" --zone "us-central1-a" --size 20 --quiet
     gcloud compute disks create --project $project "test-disk-2" --zone "us-central1-a" --size 20 --quiet
@@ -49,11 +49,11 @@ Describe "Get-GceDisk" {
         $disks | Should BeNullOrEmpty
 
         # If getting a specific disk (zone and disk name) fail.
-        { Get-GceDisk $project "us-central1-a" "xxxxx" } `
+        { Get-GceDisk -Zone "us-central1-a" "xxxxx" } `
             | Should Throw "404"
     }
 
-    Remove-ProjectDisks($project)
+    Remove-ProjectDisks $project
 }
 
 Describe "New-GceDisk" {
@@ -94,32 +94,31 @@ Describe "New-GceDisk" {
             | Should Throw "Invalid value for field 'resource.name'"
     }
 
-    Remove-ProjectDisks($project)
+    Remove-ProjectDisks $project
 }
 
 Describe "Resize-GceDisk" {
     $diskName = "resize-test"
-    $zone = "us-central1-b"
-    Remove-ProjectDisks($project)
+    Remove-ProjectDisks
     gcloud compute disks create --project $project $diskName --zone $zone --size 20 --quiet
  
     It "should fail with invalid disk names" {
-        $disk = Get-GceDisk $project $zone $diskName
+        $disk = Get-GceDisk $zone $diskName
         $disk.SizeGb | Should BeExactly 20
         
-        $disk = Resize-GceDisk $project $zone $diskName 1337
+        $disk = Resize-GceDisk $diskName 1337
         $disk.SizeGb | Should BeExactly 1337
 
-        $disk = Get-GceDisk $project $zone $diskName
+        $disk = Get-GceDisk $zone $diskName
         $disk.SizeGb | Should BeExactly 1337
     }
 
     It "should fail if the disk size is smaller" {
-        { Resize-GceDisk $project $zone $diskName -NewSizeGb 10 } `
+        { Resize-GceDisk $diskName -NewSizeGb 10 } `
             | Should Throw "must be larger than existing size '1337'. [400]"
     }
 
-    Remove-ProjectDisks($project)
+    Remove-ProjectDisks $project
 }
 
 Describe "Remove-GceDisk" {
@@ -129,19 +128,21 @@ Describe "Remove-GceDisk" {
         $diskName = "remove-disk-test"
         New-GceDisk -Project $project -Zone $zone -DiskName $diskName
 
-        $disk = Get-GceDisk $project $zone $diskName
-        Remove-GceDisk $project $zone $diskName -Force
+        $disk = Get-GceDisk $zone $diskName
+        Remove-GceDisk $diskName -Zone $zone -Force
         
-        { Get-GceDisk $project $zone $diskName } `
+        { Get-GceDisk $zone $diskName } `
             | Should Throw "404"
     }
 
     It "should fail to delete non-existant disks" {
-        { Remove-GceDisk $project $zone "does-not-exist" -Force } `
+        { Remove-GceDisk "does-not-exist" -Force } `
             | Should Throw "was not found [404]"
     }
 
     # TODO(chrsmith): Confirm the error case if you try to delete a GCE disk and
     # the disk is in-use by a VM.
-    Remove-ProjectDisks($project)
+    Remove-ProjectDisks $project
 }
+
+Reset-GCloudConfig $oldConfig $newConfigName
