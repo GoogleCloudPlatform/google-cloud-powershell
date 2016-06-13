@@ -6,36 +6,23 @@ free to submit an issue for discussion.
 
 [RFC2119](http://www.ietf.org/rfc/rfc2119.txt)
 
-# Cmdlets which destroy data MUST use `SupportsShouldProcess`
-# Cmdlets MUST call `ShouldProcess` during data destroying situations (e.g. Deleting a GceDisk or GcsBucket).
+# Cmdlets SHOULD call `ShouldProcess` during data destroying situations (Deleting a GceDisk or GcsBucket).
 
-In order to avoid accidentally destroying data (deleting a file, shutting down a
-virtual machine, etc.) users should be prompt to confirm the operation.
-
-Cmdlets decorated with `Cmdlet`'s [SupportsShouldProcess](https://msdn.microsoft.com/en-us/library/system.management.automation.cmdletcommonmetadataattribute.supportsshouldprocess.aspx)
-parameter automatically get `-WhatIf` and `-Confirm` parameters, which modify the functionality of `ShouldProcess`
-
-`-WhatIf` is used for a cmdlet to "go through the motions" of its operation, but
-to not actually complete its action. It is used so you can test "what if" the
-command were actually run. ShouldProcess automatically returns false.
-
-Note that passing `-WhatIf` prevents the `ShouldProcess` prompt from appearing.
-
-`-Confirm` is used to ensure the confirmation prompt of `ShouldProcess` appears, regardless of the value of `$ConfirmPreference` and 
-
-A cmdlet can call  the [ShouldProcess](https://msdn.microsoft.com/en-us/library/system.management.automation.cmdlet.shouldprocess.aspx)
+A cmdlet can call the [ShouldProcess](https://msdn.microsoft.com/en-us/library/ms570256.aspx)
 method to prompt the user before proceeding. Cmdlets that do so MUST set the `SupportsShouldProcess` property
-of the Cmdlet attribute. [ConfirmImpact](https://msdn.microsoft.com/en-us/library/system.management.automation.cmdletcommonmetadataattribute.confirmimpact.aspx)
-MAY be default and SHOULD NOT be set to High.
+of the Cmdlet attribute. ConfirmImpact should usually remain default and never be set to High.
 
-# Cmdlets SHOULD call `ShouldContinue` during unexpected/hidden data destroying operations (e.g. Deleting a GcsBucket with Objects still inside).
+This allows the user to run in a protected environment, where they can adjudicate any unexpected situations. It
+also gives free acces to the `WhatIf` and `Confirm` flags.
 
-A cmdlet can call the [ShouldContinue](https://msdn.microsoft.com/en-us/library/system.management.automation.cmdlet.shouldcontinue.aspx) method to prompt
+# Cmdlets SHOULD call `ShouldContinue` during unexpected/hidden data destroying operations (Deleting a GcsBucket with Objects still inside).
+
+A cmdlet can call the [ShouldContinue](https://msdn.microsoft.com/en-us/library/ms570255.aspx) method to prompt
 the user before proceeding. Cmdlets that call this method must include a `Force` flag. This method ignroes
 and ConfirmImpact setting.
 
 `ShouldContinue` should be used sparingly, and only when a cmdlet unexpectidly is going beyond its obvious
-contract. There MUST be at least one normal path a cmdlet can take that does not call `ShouldContinue`.
+contract. There should be at least one normal path a cmdlet can take that does not call `ShouldContinue`
 
 ````
 # Removing a folder with a child item prompts
@@ -50,9 +37,24 @@ PS C:\> Remove-Item "C:\Users\chrsmith\AppData\Local\Temp\VSD92CC.tmp"
 PS C:\>
 ````
 
+# Cmdlets which destroy data MUST use `SupportsShouldProcess`
+
+In order to avoid accidentally destroying data (deleting a file, shutting down a
+virtual machine, etc.) users should be prompt to confirm the operation.
+
+Cmdlets decorated with `Cmdlet`'s [SupportsShouldProcess](https://msdn.microsoft.com/en-us/library/system.management.automation.cmdletcommonmetadataattribute.supportsshouldprocess.aspx)
+parameter automatically get `-WhatIf` and `-Confirm` parameters.
+
+`-WhatIf` is used for a cmdlet to "go through the motions" of its operation, but
+to not actually complete its action. It is used so you can test "what if" the
+command were actually run.
+
+Note that passing `-WhatIf` prevents the `ShouldProcess` prompt from
+appearing. 
+
+`-Confirm` is used to ensure the confirmation prompt of `ShouldProcess` appears.
 
 # Cmdlets MAY add `-Force` to bypass basic restrictions
-# Cmdlets calling `ShouldContinue` MUST add `-Force`
 
 There are classes of restrictions which are not that important, but should
 prevent cmdlets from doing harm. For example, when copying a file if a file
