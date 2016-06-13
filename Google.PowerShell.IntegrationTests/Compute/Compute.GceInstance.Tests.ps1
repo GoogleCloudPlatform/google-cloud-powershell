@@ -1,7 +1,7 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
 
-$project, $zone, $oldConfig, $newConfigName = Set-GcloudConfig
+$project, $zone, $oldConfig, $newConfigName = Set-GCloudConfig
 
 $zone2 = "us-central1-a"
 
@@ -368,4 +368,4 @@ Describe "Set-GceInstance" {
     Remove-GceInstance $instance
 }
 
-Reset-GcloudConfig $oldConfig $newConfigName
+Reset-GCloudConfig $oldConfig $newConfigName

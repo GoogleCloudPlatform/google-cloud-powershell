@@ -1,7 +1,7 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
 
-$project, $zone, $oldConfig, $newConfigName = Set-GcloudConfig
+$project, $zone, $oldConfig, $newConfigName = Set-GCloudConfig
 
 Get-GceFirewall -Project $project | Remove-GceFirewall -Project $project
 
@@ -117,4 +117,4 @@ Describe "Set-GceFirewall" {
     Remove-GceFirewall $name
 }
 
-Reset-GcloudConfig $oldConfig $newConfigName
+Reset-GCloudConfig $oldConfig $newConfigName

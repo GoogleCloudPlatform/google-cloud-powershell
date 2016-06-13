@@ -1,16 +1,14 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
 
-$project, $zone, $oldConfig, $newConfigName = Set-GcloudConfig
+$project, $zone, $oldConfig, $newConfigName = Set-GCloudConfig
 
 # Delete all disks associated with a project.
-function Remove-ProjectDisks() {
+function Remove-ProjectDisks($project) {
     Write-Host "Deleting all GCE disks for $project..."
     $disks = Get-GceDisk
     foreach ($disk in $disks) {
-        $ErrorActionPreference = 'SilentlyContinue'
-        gcloud compute disks delete --project $project $disk.Name --zone $disk.Zone --quiet
-        $ErrorActionPreference = 'Continue'
+        gcloud compute disks delete --project $project $disk.Name --zone $disk.Zone --quiet 2>$null
     }
 }
 
@@ -55,7 +53,7 @@ Describe "Get-GceDisk" {
             | Should Throw "404"
     }
 
-    Remove-ProjectDisks
+    Remove-ProjectDisks $project
 }
 
 Describe "New-GceDisk" {
@@ -96,7 +94,7 @@ Describe "New-GceDisk" {
             | Should Throw "Invalid value for field 'resource.name'"
     }
 
-    Remove-ProjectDisks
+    Remove-ProjectDisks $project
 }
 
 Describe "Resize-GceDisk" {
@@ -120,7 +118,7 @@ Describe "Resize-GceDisk" {
             | Should Throw "must be larger than existing size '1337'. [400]"
     }
 
-    Remove-ProjectDisks
+    Remove-ProjectDisks $project
 }
 
 Describe "Remove-GceDisk" {
@@ -144,7 +142,7 @@ Describe "Remove-GceDisk" {
 
     # TODO(chrsmith): Confirm the error case if you try to delete a GCE disk and
     # the disk is in-use by a VM.
-    Remove-ProjectDisks
+    Remove-ProjectDisks $project
 }
 
-Reset-GcloudConfig $oldConfig $newConfigName
+Reset-GCloudConfig $oldConfig $newConfigName
