@@ -218,10 +218,10 @@ Describe "Start-GceInstance" {
 
     It "should work" {
         Start-GceInstance -Project $project -Zone $zone -Name $instance
-        (Get-GceInstance $project $zone $instance).Status | Should Be "RUNNING"
+        (Get-GceInstance -Project $project -Zone $zone $instance).Status | Should Be "RUNNING"
     }
 
-    Remove-GceInstance $project $zone $instance
+    Remove-GceInstance -Project $project -Zone $zone $instance
 }
 
 Describe "Stop-GceInstance" {
@@ -241,12 +241,12 @@ Describe "Stop-GceInstance" {
         Add-GceInstance -Project $project -Zone $zone
     
     It "should work " {
-        (Get-GceInstance $project $zone $instance).Status | Should Be "RUNNING"
+        (Get-GceInstance -Project $project -Zone $zone $instance).Status | Should Be "RUNNING"
         Stop-GceInstance -Project $project -Zone $zone -Name $instance
-        (Get-GceInstance $project $zone $instance).Status | Should Be "TERMINATED"
+        (Get-GceInstance -Project $project -Zone $zone $instance).Status | Should Be "TERMINATED"
     }
 
-    Remove-GceInstance $project $zone $instance
+    Remove-GceInstance -Project $project -Zone $zone $instance
 }
 
 Describe "Restart-GceInstance" {
@@ -270,17 +270,16 @@ Describe "Restart-GceInstance" {
         Restart-GceInstance -Project $project -Zone $zone -Name $instance
         Start-Sleep 5
         # Read and parse serial port output to see when the last startup happened.
-        $portString = (Get-GceInstance $project $zone $instance -SerialPortOutput)
+        $portString = (Get-GceInstance -Project $project -Zone $zone $instance -SerialPortOutput)
         $portLines = $portString -split [System.Environment]::NewLine
         $restartLine = $portLines -match "(\w+)\s+(\d+)\s+(\d+):(\d+):(\d+)\s$instance kernel:" -match "0.000000]" |
             Select-Object -Last 1
-        $dateString -match "(\w+)\s+(\d+)\s(\d+):(\d+):(\d+)"
-        $month, $day, $hour, $minute, $second = $matches.1, $matches.2, $matches.3, $matches.4, $matches.5
-        $restartTime = [DateTime]::ParseExact("$month $day $hour $minute $second", "MMM d HH mm ss", $null)
+        $restartLine -match "(\w+)\s+(\d+)\s(\d+):(\d+):(\d+)"
+        $restartTime = [DateTime]::ParseExact($Matches[1..5] -join " ", "MMM d HH mm ss", $null)
         $restartTime -gt $before | Should Be $true
     }
 
-    Remove-GceInstance $project $zone $instance
+    Remove-GceInstance  -Project $project -Zone $zone $instance
 }
 
 Describe "Set-GceInstance" {
@@ -302,27 +301,28 @@ Describe "Set-GceInstance" {
 
     It "should change tags" {
         Set-GceInstance -Project $project -Zone $zone -Instance $instance -RemoveTag "beta" -AddTag "alpha"
-        (Get-GceInstance $project $zone $instance).Tags.Items | Should Be "alpha"
+        (Get-GceInstance -Project $project -Zone $zone $instance).Tags.Items | Should Be "alpha"
     }
 
     It "should change metadata" {
         # Test adding and removing
-        Set-GceInstance $project $zone $instance -RemoveMetadata "k" -AddMetadata @{"newKey" = "newValue"}
+        Set-GceInstance -Project $project -Zone $zone $instance `
+            -RemoveMetadata "k" -AddMetadata @{"newKey" = "newValue"}
 
-        $instanceObj = Get-GceInstance $project $zone $instance
+        $instanceObj = Get-GceInstance -Project $project -Zone $zone $instance
         $instanceObj.Metadata.Items.Key | Should Be "newKey"
         $instanceObj.Metadata.Items.Value | Should Be "newValue"
 
         # Test removing only
-        Set-GceInstance $project $zone $instance -RemoveMetadata "newKey"
+        Set-GceInstance -Project $project -Zone $zone $instance -RemoveMetadata "newKey"
 
-        $instanceObj = Get-GceInstance $project $zone $instance
+        $instanceObj = Get-GceInstance -Project $project -Zone $zone $instance
         $instanceObj.Metadata.Items.Count | Should Be 0
 
         # Test adding only
-        Set-GceInstance $project $zone $instance -AddMetadata @{"newKey2" = "newValue2"}
+        Set-GceInstance -Project $project -Zone $zone $instance -AddMetadata @{"newKey2" = "newValue2"}
 
-        $instanceObj = Get-GceInstance $project $zone $instance
+        $instanceObj = Get-GceInstance -Project $project -Zone $zone $instance
         $instanceObj.Metadata.Items.Key | Should Be "newKey2"
         $instanceObj.Metadata.Items.Value | Should Be "newValue2"
 
@@ -331,7 +331,7 @@ Describe "Set-GceInstance" {
     It "should change AccessConfigs" {
 
         # Find the existing values
-        $instanceObj = Get-GceInstance $project $zone $instance
+        $instanceObj = Get-GceInstance -Project $project -Zone $zone $instance
         $interfaceName = $instanceObj.NetworkInterfaces.Name
         $configName = $instanceObj.NetworkInterfaces.AccessConfigs.Name
         
@@ -341,10 +341,10 @@ Describe "Set-GceInstance" {
         $newConfig.Name = "NewConfig$r"
 
         # Test adding and deleting
-        Set-GceInstance $project $zone $instance -NetworkInterface $interfaceName `
+        Set-GceInstance -Project $project -Zone $zone $instance -NetworkInterface $interfaceName `
             -DeleteAccessConfig $configName -NewAccessConfig $newConfig
 
-        $instanceObj = Get-GceInstance $project $zone $instance
+        $instanceObj = Get-GceInstance -Project $project -Zone $zone $instance
         $instanceObj.NetworkInterfaces.AccessConfigs.Name | Should Be "NewConfig$r"
     }
 
@@ -353,17 +353,17 @@ Describe "Set-GceInstance" {
         $newDisk = New-GceDisk -Project $project -Zone $zone -DiskName $newDiskName -Size 1
 
         It "should change Disk" {
-            Set-GceInstance $project $zone $instance -AddDisk $newDiskName
-            $instanceObj = Get-GceInstance $project $zone $instance
+            Set-GceInstance -Project $project -Zone $zone $instance -AddDisk $newDiskName
+            $instanceObj = Get-GceInstance -Project $project -Zone $zone $instance
             $instanceObj.Disks.Count | Should Be 2
             ($instanceObj.Disks | Where {$_.DeviceName -eq $newDiskName}).Count | Should Be 1
 
-            Set-GceInstance $project $zone $instance -DetachDisk $newDiskName
-            (Get-GceInstance $project $zone $instance).Disks.Count | Should Be 1
+            Set-GceInstance -Project $project -Zone $zone $instance -DetachDisk $newDiskName
+            (Get-GceInstance -Project $project -Zone $zone $instance).Disks.Count | Should Be 1
         }
 
-        Remove-GceDisk -Project $project -Zone $zone -DiskName $newDiskName -Force
+        Remove-GceDisk -Project $project -Zone $zone -DiskName $newDiskName
     }
 
-    Remove-GceInstance $project $zone $instance
+    Remove-GceInstance -Project $project -Zone $zone $instance
 }

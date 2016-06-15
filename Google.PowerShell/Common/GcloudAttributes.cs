@@ -48,4 +48,24 @@ namespace Google.PowerShell.Common
             }
         }
     }
+
+    /// <summary>
+    /// This attribute indicates which property of the gcloud config provides the default for this parameter.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+    public class ConfigDefaultAttribute : Attribute
+    {
+        /// <summary>
+        /// The gcloud config property that holds the default for this attribute.
+        /// </summary>
+        /// <example>
+        /// project, zone
+        /// </example>
+        public string Property { get; }
+
+        public ConfigDefaultAttribute(string property)
+        {
+            Property = property;
+        }
+    }
 }
