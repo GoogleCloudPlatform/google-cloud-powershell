@@ -67,11 +67,52 @@ namespace Google.PowerShell.Common
         }
 
         /// <summary>
+        /// Sets Properties and fields decordated with ConfigDefaultAttributes to their defaults, if necessary.
+        /// </summary>
+        // TODO(jimwp): Add new function called by this to replace capability in childeren.
+        protected sealed override void BeginProcessing()
+        {
+            foreach (PropertyInfo property in GetType().GetProperties())
+            {
+                ConfigDefaultAttribute configDefault = (ConfigDefaultAttribute)Attribute.GetCustomAttribute(
+                        property, typeof(ConfigDefaultAttribute));
+                if (configDefault != null && property.GetMethod.Invoke(this, null) == null)
+                {
+                    string settingsValue = CloudSdkSettings.GetSettingsValue(configDefault.Property);
+                    if (string.IsNullOrEmpty(settingsValue))
+                    {
+                        throw new PSInvalidOperationException(
+                            $"Parameter {property.Name} was not set and does not have a default value.");
+                    }
+
+                    property.SetMethod.Invoke(this, new object[] { settingsValue });
+                }
+            }
+
+            foreach (FieldInfo field in GetType().GetFields())
+            {
+                ConfigDefaultAttribute configDefault = (ConfigDefaultAttribute)Attribute.GetCustomAttribute(
+                        field, typeof(ConfigDefaultAttribute));
+                if (configDefault != null && field.GetValue(this) == null)
+                {
+                    string settingsValue = CloudSdkSettings.GetSettingsValue(configDefault.Property);
+                    if (string.IsNullOrEmpty(settingsValue))
+                    {
+                        throw new PSInvalidOperationException(
+                            $"Parameter {field.Name} was not set and does not have a default value.");
+                    }
+
+                    field.SetValue(this, settingsValue);
+                }
+            }
+        }
+
+        /// <summary>
         /// Provides a one-time, post-processing functionality for the cmdlet.
         /// </summary>
+        // TODO(jimwp): seal this and replace with new function for childern to override.
         protected override void EndProcessing()
         {
-            base.EndProcessing();
             // EndProcessing is not called if the cmdlet threw an exception or the user cancelled
             // the execution. We use IDispose.Dispose to perform the final telemetry reporting.
             _cmdletInvocationSuccessful = true;

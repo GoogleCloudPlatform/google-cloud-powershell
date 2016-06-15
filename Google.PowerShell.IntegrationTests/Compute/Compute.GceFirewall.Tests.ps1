@@ -12,21 +12,21 @@ Describe "Get-GceFirewall" {
     $allowed = New-GceFirewallProtocol "tcp" -Port 5, 7 |
         New-GceFirewallProtocol "esp"
 
-    Add-GceFirewall $project $name -Allowed $allowed -Description "one for test $r" `
+    Add-GceFirewall -Project $project $name -Allowed $allowed -Description "one for test $r" `
         -SourceTag "alpha" -TargetTag "beta"
         
-    Add-GceFirewall $project $name2 -Allowed $allowed -Description "another for test $r" `
+    Add-GceFirewall -Project $project $name2 -Allowed $allowed -Description "another for test $r" `
         -SourceTag "alpha2" -TargetTag "beta2"
 
     It "should get one firewall" {
-        $firewall = Get-GceFirewall $project $name
+        $firewall = Get-GceFirewall -Project $project $name
         $firewall.Count | Should Be 1
         $firewall.Description | Should Be "one for test $r"
         $firewall.SourceTags | Should Be "alpha"
     }
 
     It "should get all project firewalls" {
-        $firewall = Get-GceFirewall $project
+        $firewall = Get-GceFirewall -Project $project
         $firewall.Count | Should Be 2
         $firewall.Allowed.Count | Should Be 4
         ($firewall.Allowed.IPProtocol -match "esp").Count | Should Be 2
@@ -37,8 +37,8 @@ Describe "Get-GceFirewall" {
         
     }
 
-    Remove-GceFirewall $project $name
-    Remove-GceFirewall $project $name2
+    Remove-GceFirewall -Project $project $name
+    Remove-GceFirewall -Project $project $name2
 }
 
 Describe "New-GceFirewallProtocol" {
@@ -66,7 +66,7 @@ Describe "Add-GceFirewall" {
         New-GceFirewallProtocol "esp"
 
     It "should work" {
-        $firewall = Add-GceFirewall $project $name -Allowed $allowed -Description "test Add $r" `
+        $firewall = Add-GceFirewall -Project $project $name -Allowed $allowed -Description "test Add $r" `
             -SourceRange "192.168.100.0/22", "2001:db8::/48" -SourceTag "alpha" -TargetTag "beta"
         $firewall.Description | Should Be "test Add $r"
         $firewall.SourceRanges.Count | Should Be 2
@@ -76,22 +76,22 @@ Describe "Add-GceFirewall" {
         $firewall.TargetTags | Should Be "beta"
     }
 
-    Remove-GceFirewall $project $name
+    Remove-GceFirewall -Project $project $name
 }
 
 Describe "Remove-GceFirewall" {
     $r = Get-Random
     $name = "test-remove-firewall-$r"
     New-GceFirewallProtocol "tcp" -Port 5, 7 |
-        Add-GceFirewall $project $name
+        Add-GceFirewall -Project $project $name
 
     It "should work" {
-        Remove-GceFirewall $project $name
-        {Get-GceFirewall $project $name } | Should throw 404
+        Remove-GceFirewall -Project $project $name
+        {Get-GceFirewall -Project $project $name } | Should throw 404
     }
 
     It "should throw on non-existant firewall" {
-        { Remove-GceFirewall $project $name } | Should throw 404
+        { Remove-GceFirewall -Project $project $name } | Should throw 404
     }
 }
 
@@ -99,20 +99,20 @@ Describe "Set-GceFirewall" {
     $r = Get-Random
     $name = "test-set-firewall-$r"
     New-GceFirewallProtocol "tcp" -Port 5, 7 |
-        Add-GceFirewall $project $name
+        Add-GceFirewall -Project $project $name
 
     It "should change data" {
-        $firewall = Get-GceFirewall $project $name
+        $firewall = Get-GceFirewall -Project $project $name
         $firewall.SourceRanges = [string[]] "192.168.100.0/24"
         $firewall.SourceTags = [string[]] "gamma"
         $firewall.TargetTags = [string[]] "delta"
-        Set-GceFirewall $project $firewall
+        Set-GceFirewall -Project $project $firewall
 
-        $updatedFirewall = Get-GceFirewall $project $name
+        $updatedFirewall = Get-GceFirewall -Project $project $name
         $updatedFirewall.SourceRanges | Should Be "192.168.100.0/24"
         $updatedFirewall.SourceTags | Should Be "gamma"
         $updatedFirewall.TargetTags | Should Be "delta"
     }
 
-    Remove-GceFirewall $project $name
+    Remove-GceFirewall -Project $project $name
 }

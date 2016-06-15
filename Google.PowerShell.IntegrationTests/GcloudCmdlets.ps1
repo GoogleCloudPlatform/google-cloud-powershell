@@ -4,7 +4,7 @@
 function Install-GcloudCmdlets() {
     $dll = Get-ChildItem $PSScriptRoot\..\Google.PowerShell\bin -Recurse -Include Google.PowerShell.dll |
         sort -Property CreationTime | select -First 1
-    Import-Module $dll -Verbose
+    Import-Module $dll
 }
 
 # Creates a GCS bucket owned associated with the project, deleting any existing
