@@ -54,7 +54,7 @@ namespace Google.PowerShell.CloudStorage
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = "BucketsByProject")]
-        [ConfigDefault(CloudSdkSettings.CommonProperties.Project)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
         protected override void ProcessRecord()
@@ -91,7 +91,7 @@ namespace Google.PowerShell.CloudStorage
         /// default to the Cloud SDK's DefaultProject property.
         /// </summary>
         [Parameter]
-        [ConfigDefault(CloudSdkSettings.CommonProperties.Project)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
         [Parameter(Mandatory = false)]

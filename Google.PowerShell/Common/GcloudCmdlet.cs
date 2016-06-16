@@ -4,6 +4,7 @@
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using System;
+using System.Linq;
 using System.Management.Automation;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -67,44 +68,52 @@ namespace Google.PowerShell.Common
         }
 
         /// <summary>
-        /// Sets Properties and fields decordated with ConfigDefaultAttributes to their defaults, if necessary.
+        /// Sets properties and fields decordated with ConfigPropertyNameAttribute to their defaults, if necessary.
         /// </summary>
         // TODO(jimwp): Add new function called by this to replace capability in childeren.
         protected sealed override void BeginProcessing()
         {
             foreach (PropertyInfo property in GetType().GetProperties())
             {
-                ConfigDefaultAttribute configDefault = (ConfigDefaultAttribute)Attribute.GetCustomAttribute(
-                        property, typeof(ConfigDefaultAttribute));
-                if (configDefault != null && property.GetMethod.Invoke(this, null) == null)
+                ConfigPropertyNameAttribute configPropertyName =
+                    (ConfigPropertyNameAttribute)Attribute.GetCustomAttribute(
+                        property, typeof(ConfigPropertyNameAttribute));
+                if (configPropertyName != null && IsActiveParameter(property))
                 {
-                    string settingsValue = CloudSdkSettings.GetSettingsValue(configDefault.Property);
-                    if (string.IsNullOrEmpty(settingsValue))
-                    {
-                        throw new PSInvalidOperationException(
-                            $"Parameter {property.Name} was not set and does not have a default value.");
-                    }
-
-                    property.SetMethod.Invoke(this, new object[] { settingsValue });
+                    configPropertyName.SetConfigDefault(property, this);
                 }
             }
 
             foreach (FieldInfo field in GetType().GetFields())
             {
-                ConfigDefaultAttribute configDefault = (ConfigDefaultAttribute)Attribute.GetCustomAttribute(
-                        field, typeof(ConfigDefaultAttribute));
-                if (configDefault != null && field.GetValue(this) == null)
+                ConfigPropertyNameAttribute configPropertyName =
+                    (ConfigPropertyNameAttribute)Attribute.GetCustomAttribute(
+                        field, typeof(ConfigPropertyNameAttribute));
+                if (configPropertyName != null && IsActiveParameter(field))
                 {
-                    string settingsValue = CloudSdkSettings.GetSettingsValue(configDefault.Property);
-                    if (string.IsNullOrEmpty(settingsValue))
-                    {
-                        throw new PSInvalidOperationException(
-                            $"Parameter {field.Name} was not set and does not have a default value.");
-                    }
-
-                    field.SetValue(this, settingsValue);
+                    configPropertyName.SetConfigDefault(field, this);
                 }
             }
+        }
+
+        /// <summary>
+        /// Checks if the member is a powershell parameter that applys to the currently active parameter set.
+        /// </summary>
+        /// <param name="member">
+        /// The member of the cmdlet to check.
+        /// </param>
+        /// <returns>
+        /// True if the member is a powershell parameter of the current parameter set, false otherwise.
+        /// </returns>
+        private bool IsActiveParameter(MemberInfo member)
+        {
+            var parameterAttributes = Attribute.GetCustomAttributes(member, typeof(ParameterAttribute))
+                .OfType<ParameterAttribute>()
+                .Where(pa => string.IsNullOrEmpty(pa.ParameterSetName) ||
+                        pa.ParameterSetName.Equals("__AllParameterSets") ||
+                        pa.ParameterSetName.Equals(ParameterSetName)
+                 );
+            return parameterAttributes.Any();
         }
 
         /// <summary>

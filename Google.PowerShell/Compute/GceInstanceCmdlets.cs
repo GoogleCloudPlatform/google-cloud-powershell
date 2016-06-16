@@ -30,7 +30,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        [ConfigDefault(CloudSdkSettings.CommonProperties.Project)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
         public string Project { get; set; }
 
@@ -207,7 +207,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        [ConfigDefault(CloudSdkSettings.CommonProperties.Project)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
         public string Project { get; set; }
 
@@ -217,7 +217,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        [ConfigDefault(CloudSdkSettings.CommonProperties.Zone)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
         public string Zone { get; set; }
 
@@ -267,7 +267,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        [ConfigDefault(CloudSdkSettings.CommonProperties.Project)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
         public string Project { get; set; }
 
@@ -277,7 +277,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        [ConfigDefault(CloudSdkSettings.CommonProperties.Zone)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
         public string Zone { get; set; }
 
@@ -318,7 +318,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        [ConfigDefault(CloudSdkSettings.CommonProperties.Project)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
         public string Project { get; set; }
 
@@ -328,7 +328,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        [ConfigDefault(CloudSdkSettings.CommonProperties.Zone)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
         public string Zone { get; set; }
 
@@ -366,7 +366,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        [ConfigDefault(CloudSdkSettings.CommonProperties.Project)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
         public string Project { get; set; }
 
@@ -376,7 +376,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        [ConfigDefault(CloudSdkSettings.CommonProperties.Zone)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
         public string Zone { get; set; }
 
@@ -414,7 +414,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        [ConfigDefault(CloudSdkSettings.CommonProperties.Project)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
         public string Project { get; set; }
 
@@ -424,7 +424,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        [ConfigDefault(CloudSdkSettings.CommonProperties.Zone)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
         public string Zone { get; set; }
 
@@ -471,7 +471,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        [ConfigDefault(CloudSdkSettings.CommonProperties.Project)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
         public string Project { get; set; }
 
@@ -481,7 +481,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        [ConfigDefault(CloudSdkSettings.CommonProperties.Zone)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
         public string Zone { get; set; }
 

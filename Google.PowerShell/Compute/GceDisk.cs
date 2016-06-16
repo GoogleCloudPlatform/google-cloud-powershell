@@ -35,7 +35,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        [ConfigDefault(CloudSdkSettings.CommonProperties.Project)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
         /// <summary>
@@ -142,7 +142,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        [ConfigDefault(CloudSdkSettings.CommonProperties.Project)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
         /// <summary>
@@ -151,7 +151,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        [ConfigDefault(CloudSdkSettings.CommonProperties.Zone)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         public string Zone { get; set; }
 
         /// <summary>
@@ -254,7 +254,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        [ConfigDefault(CloudSdkSettings.CommonProperties.Project)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
         /// <summary>
@@ -263,7 +263,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        [ConfigDefault(CloudSdkSettings.CommonProperties.Zone)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         public string Zone { get; set; }
 
         /// <summary>
@@ -316,7 +316,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        [ConfigDefault(CloudSdkSettings.CommonProperties.Project)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
         /// <summary>
@@ -325,7 +325,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        [ConfigDefault(CloudSdkSettings.CommonProperties.Zone)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         public string Zone { get; set; }
 
         /// <summary>

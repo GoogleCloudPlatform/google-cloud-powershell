@@ -13,7 +13,8 @@ namespace Google.PowerShell.Tests.Common
     {
         internal class TestGCloudCmdlet : GCloudCmdlet
         {
-            [ConfigDefault("project")]
+            [ConfigPropertyName("project")]
+            [Parameter]
             public string Project { get; set; }
 
             public void TestBeginProcessing()
@@ -24,7 +25,8 @@ namespace Google.PowerShell.Tests.Common
 
         internal class TestFailGCloudCmdlet : GCloudCmdlet
         {
-            [ConfigDefault("not_a_gcloud_config_parameter")]
+            [ConfigPropertyName("not_a_gcloud_config_parameter")]
+            [Parameter]
             public string Project { get; set; }
 
             public void TestBeginProcessing()
