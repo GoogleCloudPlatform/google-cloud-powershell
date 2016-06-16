@@ -53,7 +53,8 @@ namespace Google.PowerShell.CloudStorage
         /// The project to check for Storage buckets.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true, ParameterSetName = "BucketsByProject")]
+        [Parameter(ParameterSetName = "BucketsByProject")]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
         protected override void ProcessRecord()
@@ -71,7 +72,7 @@ namespace Google.PowerShell.CloudStorage
 
             if (ParameterSetName == "BucketsByProject")
             {
-                var req = service.Buckets.List(Project ?? CloudSdkSettings.GetDefaultProject());
+                var req = service.Buckets.List(Project);
                 req.Projection = BucketsResource.ListRequest.ProjectionEnum.Full;
                 Buckets buckets = req.Execute();
                 WriteObject(buckets.Items, true);
@@ -89,7 +90,8 @@ namespace Google.PowerShell.CloudStorage
         /// The name of the project associated with the command. If not set via PowerShell parameter processing, will
         /// default to the Cloud SDK's DefaultProject property.
         /// </summary>
-        [Parameter(Position = 1, Mandatory = false)]
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
         [Parameter(Mandatory = false)]

@@ -4,6 +4,7 @@
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using System;
+using System.Linq;
 using System.Management.Automation;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -67,11 +68,60 @@ namespace Google.PowerShell.Common
         }
 
         /// <summary>
+        /// Sets properties and fields decordated with ConfigPropertyNameAttribute to their defaults, if necessary.
+        /// </summary>
+        // TODO(jimwp): Add new function called by this to replace capability in childeren.
+        protected sealed override void BeginProcessing()
+        {
+            foreach (PropertyInfo property in GetType().GetProperties())
+            {
+                ConfigPropertyNameAttribute configPropertyName =
+                    (ConfigPropertyNameAttribute)Attribute.GetCustomAttribute(
+                        property, typeof(ConfigPropertyNameAttribute));
+                if (configPropertyName != null && IsActiveParameter(property))
+                {
+                    configPropertyName.SetConfigDefault(property, this);
+                }
+            }
+
+            foreach (FieldInfo field in GetType().GetFields())
+            {
+                ConfigPropertyNameAttribute configPropertyName =
+                    (ConfigPropertyNameAttribute)Attribute.GetCustomAttribute(
+                        field, typeof(ConfigPropertyNameAttribute));
+                if (configPropertyName != null && IsActiveParameter(field))
+                {
+                    configPropertyName.SetConfigDefault(field, this);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks if the member is a powershell parameter that applys to the currently active parameter set.
+        /// </summary>
+        /// <param name="member">
+        /// The member of the cmdlet to check.
+        /// </param>
+        /// <returns>
+        /// True if the member is a powershell parameter of the current parameter set, false otherwise.
+        /// </returns>
+        private bool IsActiveParameter(MemberInfo member)
+        {
+            var parameterAttributes = Attribute.GetCustomAttributes(member, typeof(ParameterAttribute))
+                .OfType<ParameterAttribute>()
+                .Where(pa => string.IsNullOrEmpty(pa.ParameterSetName) ||
+                        pa.ParameterSetName.Equals("__AllParameterSets") ||
+                        pa.ParameterSetName.Equals(ParameterSetName)
+                 );
+            return parameterAttributes.Any();
+        }
+
+        /// <summary>
         /// Provides a one-time, post-processing functionality for the cmdlet.
         /// </summary>
+        // TODO(jimwp): seal this and replace with new function for childern to override.
         protected override void EndProcessing()
         {
-            base.EndProcessing();
             // EndProcessing is not called if the cmdlet threw an exception or the user cancelled
             // the execution. We use IDispose.Dispose to perform the final telemetry reporting.
             _cmdletInvocationSuccessful = true;

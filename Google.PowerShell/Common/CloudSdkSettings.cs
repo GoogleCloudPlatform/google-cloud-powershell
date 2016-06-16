@@ -4,8 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -18,6 +18,12 @@ namespace Google.PowerShell.Common
     /// </summary>
     public class CloudSdkSettings
     {
+        public class CommonProperties
+        {
+            public const string Project = "project";
+            public const string Zone = "zone";
+        }
+
         /// <summary>Environment variable which contains the Application Data settings.</summary>
         private const string AppdataEnvironmentVariable = "APPDATA";
 
@@ -92,7 +98,7 @@ namespace Google.PowerShell.Common
         /// <summary>
         /// Returns the setting with the given name from the currently active gcloud configuration.
         /// </summary>
-        protected static string GetSettingsValue(string settingName)
+        public static string GetSettingsValue(string settingName)
         {
             string configFile = GetCurrentConfigurationFilePath();
             if (configFile == null)
