@@ -9,7 +9,7 @@
 @{
 
 # Script module or binary module file associated with this manifest.
-# RootModule = ''
+RootModule = '.\Google.PowerShell.dll'
 
 # Version number of this module.
 ModuleVersion = '0.1.0'
@@ -51,19 +51,19 @@ ProcessorArchitecture = 'None'
 # RequiredModules = @()
 
 # Assemblies that must be loaded prior to importing this module
-# RequiredAssemblies = @()
+RequiredAssemblies = @('.\Google.PowerShell.dll')
 
 # Script files (.ps1) that are run in the caller's environment prior to importing this module.
 # ScriptsToProcess = @()
 
 # Type files (.ps1xml) to be loaded when importing this module
-# TypesToProcess = @()
+TypesToProcess = @('.\GoogleCloud.Types.ps1xml')
 
 # Format files (.ps1xml) to be loaded when importing this module
 # FormatsToProcess = @()
 
 # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
-NestedModules = @('.\Google.PowerShell.dll')
+NestedModules = @()
 
 # Functions to export from this module
 FunctionsToExport = '*'
@@ -81,7 +81,7 @@ AliasesToExport = '*'
 # DscResourcesToExport = @()
 
 # List of all modules packaged with this module
-ModuleList = @()
+ModuleList = @('.\Google.PowerShell.dll')
 
 # List of all files packaged with this module
 # FileList = @()

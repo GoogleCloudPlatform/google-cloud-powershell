@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace Google.PowerShell.ComputeEngine
@@ -18,22 +19,15 @@ namespace Google.PowerShell.ComputeEngine
     public abstract class GceCmdlet : GCloudCmdlet
     {
         // The Servcie for the Google Compute API
-        public ComputeService Service { get; private set; }
+        public ComputeService Service { get; }
 
-        public GceCmdlet() : this(null)
+        protected GceCmdlet() : this(null)
         {
         }
 
-        public GceCmdlet(ComputeService service)
+        protected GceCmdlet(ComputeService service)
         {
-            if (service == null)
-            {
-                Service = new ComputeService(GetBaseClientServiceInitializer());
-            }
-            else
-            {
-                Service = service;
-            }
+            Service = service ?? new ComputeService(GetBaseClientServiceInitializer());
         }
 
         /// <summary>
@@ -94,17 +88,33 @@ namespace Google.PowerShell.ComputeEngine
         }
 
         /// <summary>
-        /// Library method to pull the name of a zone from a uri of the zone.
+        /// Library method to pull the name of a zone from a uri.
         /// </summary>
-        /// <param name="zoneUri">
-        /// A uri to of a zone.
+        /// <param name="uri">
+        /// A uri that includes the zone.
         /// </param>
         /// <returns>
-        /// The name of the zone, which is the last path element of a zone uri.
+        /// The name of the zone part of the uri.
         /// </returns>
-        public static string GetZoneNameFromUri(string zoneUri)
+        public static string GetZoneNameFromUri(string uri)
         {
-            return zoneUri.Split('/', '\\').Last();
+            Match match = Regex.Match(uri, "zones/(?<zone>[^/]*)");
+            return match.Groups["zone"].Value;
+        }
+
+        /// <summary>
+        /// Library method to pull the name of a project from a uri.
+        /// </summary>
+        /// <param name="uri">
+        /// The uri that includes the project.
+        /// </param>
+        /// <returns>
+        /// The name of the project.
+        /// </returns>
+        public static string GetProjectNameFromUri(string uri)
+        {
+            Match match = Regex.Match(uri, "projects/(?<project>[^/]*)");
+            return match.Groups["project"].Value;
         }
     }
 

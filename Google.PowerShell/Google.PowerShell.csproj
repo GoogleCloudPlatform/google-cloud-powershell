@@ -123,8 +123,10 @@
     <Compile Include="Compute\GceInstanceCmdlets.cs" />
     <Compile Include="Compute\GceDisk.cs" />
     <Compile Include="Compute\GceInstanceConfigCmdlets.cs" />
+    <Compile Include="Compute\GceInstanceTemplateCmdlets.cs" />
     <Compile Include="Compute\GoogleComputeOperationException.cs" />
     <Compile Include="Compute\GceFirewallProtocolCmdlet.cs" />
+    <Compile Include="Compute\InstanceMetadataConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Storage\GcsBucket.cs" />
     <Compile Include="Storage\GcsBucketLogging.cs" />
@@ -141,6 +143,7 @@
     </None>
     <None Include="README.md" />
     <None Include="ReleaseFiles\BootstrapGoogleCloudPowerShell.ps1" />
+    <None Include="ReleaseFiles\GoogleCloud.Types.ps1xml" />
     <None Include="ReleaseFiles\GoogleCloudPowerShell.psd1" />
     <None Include="ReleaseFiles\PatchMachineConfig.cmd" />
     <None Include="ReleaseFiles\PatchMachineConfig.ps1" />
