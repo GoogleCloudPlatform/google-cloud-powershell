@@ -1,7 +1,7 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
 
-$project = "gcloud-powershell-testing"
+$project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Get-GceFirewall -Project $project | Remove-GceFirewall -Project $project
 
@@ -20,6 +20,13 @@ Describe "Get-GceFirewall" {
 
     It "should get one firewall" {
         $firewall = Get-GceFirewall -Project $project $name
+        $firewall.Count | Should Be 1
+        $firewall.Description | Should Be "one for test $r"
+        $firewall.SourceTags | Should Be "alpha"
+    }
+
+    It "should infer project from gcloud config" {
+        $firewall = Get-GceFirewall $name
         $firewall.Count | Should Be 1
         $firewall.Description | Should Be "one for test $r"
         $firewall.SourceTags | Should Be "alpha"
@@ -116,3 +123,5 @@ Describe "Set-GceFirewall" {
 
     Remove-GceFirewall -Project $project $name
 }
+
+Reset-GCloudConfig $oldActiveConfig $configName

@@ -3,6 +3,7 @@
 
 using System;
 using System.Management.Automation;
+using System.Reflection;
 
 namespace Google.PowerShell.Common
 {
@@ -53,7 +54,7 @@ namespace Google.PowerShell.Common
     /// This attribute indicates which property of the gcloud config provides the default for this parameter.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-    public class ConfigDefaultAttribute : Attribute
+    public class ConfigPropertyNameAttribute : Attribute
     {
         /// <summary>
         /// The gcloud config property that holds the default for this attribute.
@@ -63,9 +64,57 @@ namespace Google.PowerShell.Common
         /// </example>
         public string Property { get; }
 
-        public ConfigDefaultAttribute(string property)
+        public ConfigPropertyNameAttribute(string property)
         {
             Property = property;
+        }
+
+        /// <summary>
+        /// Gives the property a default value from the gcould config.
+        /// </summary>
+        /// <param name="property">
+        /// The property info.
+        /// </param>
+        /// <param name="instance">
+        /// The instance the property is a member of.
+        /// </param>
+        public void SetConfigDefault(PropertyInfo property, object instance)
+        {
+            if (property.GetValue(instance) == null)
+            {
+                string settingsValue = CloudSdkSettings.GetSettingsValue(Property);
+                if (string.IsNullOrEmpty(settingsValue))
+                {
+                    throw new PSInvalidOperationException(
+                        $"Parameter {property.Name} was not set and does not have a default value.");
+                }
+
+                property.SetValue(instance, settingsValue);
+            }
+        }
+
+        /// <summary>
+        /// Gives the field a default value from the gcould config.
+        /// </summary>
+        /// <param name="field">
+        /// The field info.
+        /// </param>
+        /// <param name="instance">
+        /// The instance the field is a member of.
+        /// </param>
+        public void SetConfigDefault(FieldInfo field, object instance)
+        {
+            if (field.GetValue(instance) == null)
+            {
+                string settingsValue = CloudSdkSettings.GetSettingsValue(Property);
+                if (string.IsNullOrEmpty(settingsValue))
+                {
+                    throw new PSInvalidOperationException(
+                        $"Parameter {field.Name} was not set and does not have a default value.");
+                }
+
+                field.SetValue(instance, settingsValue);
+            }
         }
     }
 }
