@@ -15,13 +15,15 @@ namespace Google.PowerShell.ComputeEngine
     /// Add-GceInstanceTemplate.
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.New, "GceInstanceDiskConfig", DefaultParameterSetName = ParameterSetNames.Default)]
-    public class NewGceInstanceDiskConfigCmdlet : GceCmdlet
+    [Cmdlet(VerbsCommon.New, "GceAttachedDiskConfig", DefaultParameterSetName = ParameterSetNames.Default)]
+    public class NewGceAttachedDiskConfigCmdlet : GceCmdlet
     {
         private class ParameterSetNames
         {
             public const string Default = "Default";
+            public const string DefaultPipeline = "DefaultPipeline";
             public const string New = "New";
+            public const string NewPipeline = "NewPipeline";
         }
 
         /// <summary>
@@ -42,10 +44,20 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
+        /// Pipeline values to be passed on to the next cmdlet.
+        /// </para>
+        /// </summary>
+        [Parameter(ValueFromPipeline = true, ParameterSetName = ParameterSetNames.DefaultPipeline)]
+        [Parameter(ValueFromPipeline = true, ParameterSetName = ParameterSetNames.NewPipeline)]
+        public object Pipeline { get; set; }
+
+        /// <summary>
+        /// <para type="description">
         /// The name of the disk to create.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.New)]
+        [Parameter(ParameterSetName = ParameterSetNames.NewPipeline)]
         public string Name { get; set; }
 
         /// <summary>
@@ -68,6 +80,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.New)]
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.NewPipeline)]
         public string SourceImage { get; set; }
 
         /// <summary>
@@ -76,6 +89,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.New)]
+        [Parameter(ParameterSetName = ParameterSetNames.NewPipeline)]
         public string DiskType { get; set; }
 
         /// <summary>
@@ -84,6 +98,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.Default)]
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.DefaultPipeline)]
         public string Source { get; set; }
 
         /// <summary>
@@ -108,9 +123,21 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.New)]
+        [Parameter(ParameterSetName = ParameterSetNames.NewPipeline)]
         public long? Size { get; set; }
 
         protected override void ProcessRecord()
+        {
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.NewPipeline:
+                case ParameterSetNames.DefaultPipeline:
+                    WriteObject(Pipeline);
+                    break;
+            }
+        }
+
+        protected override void EndProcessing()
         {
             var attachedDisk = new AttachedDisk
             {
@@ -134,6 +161,8 @@ namespace Google.PowerShell.ComputeEngine
                 };
             }
             WriteObject(attachedDisk);
+
+            base.EndProcessing();
         }
     }
 }

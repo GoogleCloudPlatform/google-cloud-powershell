@@ -4,9 +4,11 @@
 using Google.Apis.Compute.v1;
 using Google.Apis.Compute.v1.Data;
 using Google.PowerShell.Common;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Management.Automation;
+using System.Text.RegularExpressions;
 
 namespace Google.PowerShell.ComputeEngine
 {
@@ -110,9 +112,12 @@ namespace Google.PowerShell.ComputeEngine
             do
             {
                 InstanceTemplateList result = request.Execute();
-                foreach (InstanceTemplate template in result.Items)
+                if (result.Items != null)
                 {
-                    yield return template;
+                    foreach (InstanceTemplate template in result.Items)
+                    {
+                        yield return template;
+                    }
                 }
                 request.PageToken = result.NextPageToken;
             } while (request.PageToken != null && !Stopping);
@@ -127,7 +132,7 @@ namespace Google.PowerShell.ComputeEngine
     /// Adds an instance template to Google Compute Engine.
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Add, "GceInstanceTemplate")]
+    [Cmdlet(VerbsCommon.Add, "GceInstanceTemplate", DefaultParameterSetName = ParameterSetNames.ByValues)]
     public class AddGceInstanceTemplateCmdlet : GceConcurrentCmdlet
     {
         private struct ParameterSetNames
@@ -135,14 +140,6 @@ namespace Google.PowerShell.ComputeEngine
             public const string FromObject = "FromObject";
             public const string ByValues = "ByValues";
         }
-
-        /// <summary>
-        /// <para type="description">
-        /// An instance template object to add to Google Compute Engine.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.FromObject)]
-        public InstanceTemplate Template { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -155,11 +152,27 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
+        /// An instance template object to add to Google Compute Engine.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.FromObject)]
+        public InstanceTemplate Object { get; set; }
+
+        /// <summary>
+        /// <para type="description">
         /// The name of the new instance template.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.ByValues)]
         public string Name { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the machine type for this template.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 1, Mandatory = true, ParameterSetName = ParameterSetNames.ByValues)]
+        public string MachineType { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -193,24 +206,16 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public List<string> ExtraDiskName { get; set; }
+        public string[] ExtraDiskName { get; set; }
 
         /// <summary>
         /// <para type="description">
         /// An AttachedDisk object specifying a disk to attach. Do not specify `-BootDiskImage` if this is a
-        /// boot disk
+        /// boot disk. You can build one using New-GceAttachedDiskConfig.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public List<AttachedDisk> Disk { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The name of the machine type for this template.
-        /// </para>
-        /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public string MachineType { get; set; }
+        public AttachedDisk[] Disk { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -266,7 +271,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public List<ServiceAccount> ServiceAccount { get; set; }
+        public ServiceAccount[] ServiceAccount { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -274,7 +279,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public List<string> Tag { get; set; }
+        public string[] Tag { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -282,7 +287,7 @@ namespace Google.PowerShell.ComputeEngine
             switch (ParameterSetName)
             {
                 case ParameterSetNames.FromObject:
-                    instanceTemplate = Template;
+                    instanceTemplate = Object;
                     break;
                 case ParameterSetNames.ByValues:
                     instanceTemplate = BuildNewTemplate();
@@ -362,7 +367,14 @@ namespace Google.PowerShell.ComputeEngine
 
         private Metadata BuildMetadata()
         {
-            return InstanceMetadataPSConverter.BuildMetadata(Metadata);
+            if (Metadata != null)
+            {
+                return InstanceMetadataPSConverter.BuildMetadata(Metadata);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -379,11 +391,22 @@ namespace Google.PowerShell.ComputeEngine
 
             if (BootDiskImage != null)
             {
+                string imageSource;
+                try
+                {
+                    imageSource = FindImageOrThrow();
+                }
+                catch (Exception e)
+                {
+                    WriteError(new ErrorRecord(e, null, ErrorCategory.ObjectNotFound, BootDiskImage));
+                    imageSource = BootDiskImage;
+                }
+
                 disks.Add(new AttachedDisk
                 {
                     Boot = true,
                     AutoDelete = true,
-                    InitializeParams = new AttachedDiskInitializeParams { SourceImage = BootDiskImage }
+                    InitializeParams = new AttachedDiskInitializeParams { SourceImage = imageSource }
                 });
             }
 
@@ -400,6 +423,32 @@ namespace Google.PowerShell.ComputeEngine
             }
 
             return disks;
+        }
+
+        private string FindImageOrThrow()
+        {
+            var familyMatch = Regex.Match(BootDiskImage, "projects/(?<project>[^/]*)/global/images/family/(?<family>.*)");
+            if (familyMatch.Success)
+            {
+                var imageFamily = familyMatch.Groups["family"].Value;
+                var imageProject = familyMatch.Groups["project"].Value;
+                return Service.Images.GetFromFamily(imageProject, imageFamily).Execute().SelfLink;
+            }
+            var imageMatch = Regex.Match(BootDiskImage, "projects/(?<project>[^/]*)/global/images/(?<image>.*)");
+            if (imageMatch.Success)
+            {
+                var imageName = imageMatch.Groups["image"].Value;
+                var imageProject = imageMatch.Groups["project"].Value;
+                return Service.Images.Get(imageProject, imageName).Execute().SelfLink;
+            }
+            var customMatch = Regex.Match(BootDiskImage, "global/images/(?<name>)");
+            if (customMatch.Success)
+            {
+                var imageName = customMatch.Groups["name"].Value;
+                return Service.Images.Get(Project, imageName).Execute().SelfLink;
+            }
+            WriteWarning($"{BootDiskImage} does not seem to be a link to an image");
+            return BootDiskImage;
         }
     }
 

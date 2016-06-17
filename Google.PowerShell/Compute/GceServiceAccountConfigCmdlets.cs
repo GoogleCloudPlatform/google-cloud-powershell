@@ -186,6 +186,7 @@ namespace Google.PowerShell.ComputeEngine
         /// Used to collect scopes from the pipeline to be used in EndProcessing.
         /// </summary>
         private readonly List<string> _scopeUris = new List<string>();
+
         protected override void ProcessRecord()
         {
             switch (ParameterSetName)
