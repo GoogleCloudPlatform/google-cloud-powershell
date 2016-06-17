@@ -4,16 +4,20 @@
 using Google.Apis.Compute.v1;
 using Google.Apis.Compute.v1.Data;
 using Google.PowerShell.Common;
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
 using System.Management.Automation;
-using System.Threading;
 
 namespace Google.PowerShell.ComputeEngine
 {
+    /// <summary>
+    /// <para type="synopsis">
+    /// Gets Google Compute Engine instance templates.
+    /// </para>
+    /// <para type="description"> 
+    /// Gets Google Compute Engine instance templates.
+    /// </para>
+    /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceInstanceTemplate", DefaultParameterSetName = ParameterSetNames.Default)]
     public class GetGceInstanceTemplateCmdlet : GceCmdlet
     {
@@ -24,20 +28,33 @@ namespace Google.PowerShell.ComputeEngine
             public const string ByObject = "byObject";
         }
 
+        /// <summary>
+        /// <para type="description">
+        /// The project that owns the template.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Default)]
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
-        [ConfigDefault("project")]
+        [ConfigPropertyName("project")]
         public string Project { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The name of the tempate to get.
+        /// </para>
+        /// </summary>
         [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true,
             ParameterSetName = ParameterSetNames.ByName)]
         public string Name { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// A template object. It must have valid SelfLink and Name attributes.
+        /// </para>
+        /// </summary>
         [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true,
             ParameterSetName = ParameterSetNames.ByObject)]
-        public InstanceTemplate Template { get; set; }
-
-        private readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
+        public InstanceTemplate Object { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -57,38 +74,59 @@ namespace Google.PowerShell.ComputeEngine
             }
         }
 
+        /// <summary>
+        /// Pulls information from an InstanceTemplate object to get a new version
+        /// </summary>
+        /// <returns>
+        /// The version of the object on the Google Cloud service.
+        /// </returns>
         private InstanceTemplate GetTemplateByObject()
         {
-            var project = GetProjectNameFromUri(Template.SelfLink);
-            var name = Template.Name;
-            return Service.InstanceTemplates.Get(project, name).ExecuteAsync(_cancellationSource.Token).Result;
+            var project = GetProjectNameFromUri(Object.SelfLink);
+            var name = Object.Name;
+            return Service.InstanceTemplates.Get(project, name).Execute();
         }
 
+        /// <summary>
+        /// Gets an InstanceTemplate by project and name
+        /// </summary>
+        /// <returns>
+        /// A single InstanceTemplate
+        /// </returns>
         private InstanceTemplate GetTemplateByName()
         {
-            return Service.InstanceTemplates.Get(Project, Name).ExecuteAsync(_cancellationSource.Token).Result;
+            return Service.InstanceTemplates.Get(Project, Name).Execute();
         }
 
+        /// <summary>
+        /// Gets a list of InstanceTemplates for a project.
+        /// </summary>
+        /// <returns>
+        /// The InstanceTemplates of a project.
+        /// </returns>
         private IEnumerable<InstanceTemplate> GetProjectTemplates()
         {
             InstanceTemplatesResource.ListRequest request = Service.InstanceTemplates.List(Project);
             do
             {
-                InstanceTemplateList result = request.ExecuteAsync(_cancellationSource.Token).Result;
+                InstanceTemplateList result = request.Execute();
                 foreach (InstanceTemplate template in result.Items)
                 {
                     yield return template;
                 }
                 request.PageToken = result.NextPageToken;
-            } while (request.PageToken != null);
-        }
-
-        protected override void StopProcessing()
-        {
-            _cancellationSource.Cancel();
+            } while (request.PageToken != null && !Stopping);
         }
     }
 
+    /// <summary>
+    /// <para type="synopsis">
+    /// Adds an instance template to Google Compute Engine.
+    /// </para>
+    /// <para type="description"> 
+    /// Adds an instance template to Google Compute Engine.
+    /// </para>
+    /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceInstanceTemplate")]
     public class AddGceInstanceTemplateCmdlet : GceConcurrentCmdlet
     {
@@ -98,37 +136,145 @@ namespace Google.PowerShell.ComputeEngine
             public const string ByValues = "ByValues";
         }
 
+        /// <summary>
+        /// <para type="description">
+        /// An instance template object to add to Google Compute Engine.
+        /// </para>
+        /// </summary>
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.FromObject)]
         public InstanceTemplate Template { get; set; }
 
-        [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        [ConfigDefault("project")]
+        /// <summary>
+        /// <para type="description">
+        /// The project that will own the instance template.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [ConfigPropertyName("project")]
         public string Project { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The name of the new instance template.
+        /// </para>
+        /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByValues)]
         public string Name { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// Enables instances to send and receive packets for IP addresses other than their own. Switch on if
+        /// these instances will be used as an IP gateway or it will be set as the next-hop in a Route
+        /// resource.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
         public SwitchParameter CanIpForward { get; set; }
 
-
+        /// <summary>
+        /// <para type="description">
+        /// Human readable description of this instance template
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
         public string Description { get; set; }
 
-
+        /// <summary>
+        /// <para type="description">
+        /// The path to the image to be used to create the boot disk.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public List<string> DiskImage { get; set; }
+        public string BootDiskImage { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// Name of existing disk to attach in read only mode.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        public List<string> ExtraDiskName { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// An AttachedDisk object specifying a disk to attach. Do not specify `-BootDiskImage` if this is a
+        /// boot disk
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        public List<AttachedDisk> Disk { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the machine type for this template.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
         public string MachineType { get; set; }
 
-
+        /// <summary>
+        /// <para type="description">
+        /// The keys and values of the Metadata of this instance.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
         public IDictionary Metadata { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The name of the network to use. If not specified, is default.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public List<string> Network { get; set; }
+        public string Network { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// If set, the instances will not have an external ip address.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        public SwitchParameter NoExternalIp { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// If set, the instances will be preemptible.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        public SwitchParameter Preemptible { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// If set, the instances will not restart when shut down by Google Compute Engine.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        public SwitchParameter Killable { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// If set, the instances will terminate rather than migrate when the host undergoes maintenance.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        public SwitchParameter TerminateOnMaintenance { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The ServiceAccount used to specify access tokens.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        public List<ServiceAccount> ServiceAccount { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// A tag of this instance.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        public List<string> Tag { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -144,53 +290,74 @@ namespace Google.PowerShell.ComputeEngine
                 default:
                     throw new PSInvalidOperationException($"{ParameterSetName} is not a valid parameter set");
             }
-            Service.InstanceTemplates.Insert(instanceTemplate, Project);
+            AddOperation(Project, Service.InstanceTemplates.Insert(instanceTemplate, Project).Execute());
         }
 
+        /// <summary>
+        /// Builds an InstanceTemplate from parameter values.
+        /// </summary>
+        /// <returns>
+        /// The new instance template to create.
+        /// </returns>
         private InstanceTemplate BuildNewTemplate()
         {
-            var newTemplate = new InstanceTemplate();
-            newTemplate.Name = Name;
-            var properties = new InstanceProperties();
-            properties.CanIpForward = CanIpForward;
-            properties.Description = Description;
-            properties.Disks = BuildNewDisks();
-            properties.MachineType = MachineType;
-            properties.Metadata = BuildMetadata();
-            properties.NetworkInterfaces = BuildNetworkInterfaces();
-
-            newTemplate.Properties = properties;
-
-
-            return newTemplate;
+            return new InstanceTemplate
+            {
+                Name = Name,
+                Properties = new InstanceProperties
+                {
+                    CanIpForward = CanIpForward,
+                    Description = Description,
+                    Disks = BuildAttachedDisks(),
+                    MachineType = MachineType,
+                    Metadata = BuildMetadata(),
+                    NetworkInterfaces = BuildNetworkInterfaces(),
+                    Scheduling = new Scheduling
+                    {
+                        AutomaticRestart = !Killable && !Preemptible,
+                        Preemptible = Preemptible,
+                        OnHostMaintenance = TerminateOnMaintenance ? "TERMINATE" : "MIGRATE"
+                    },
+                    ServiceAccounts = ServiceAccount,
+                    Tags = new Tags
+                    {
+                        Items = Tag
+                    }
+                }
+            };
         }
 
         private IList<NetworkInterface> BuildNetworkInterfaces()
         {
-            var interfaces = new List<NetworkInterface>();
-            if (Network == null || Network.Count == 0)
+            var accessConfigs = new List<AccessConfig>();
+            if (!NoExternalIp)
             {
-                interfaces.Add(new NetworkInterface
+                accessConfigs.Add(new AccessConfig
                 {
-                    Network = "global/networks/default"
+                    Name = "External NAT",
+                    Type = "ONE_TO_ONE_NAT"
                 });
             }
-            else
+
+            string networkUri = Network;
+            if (string.IsNullOrEmpty(networkUri))
             {
-                foreach (var networkName in Network)
-                {
-                    string networkUri = networkName;
-                    if (!networkUri.Contains("/networks/"))
-                    {
-                        networkUri = $"projects/{Project}/global/networks/{networkName}";
-                    }
-                    interfaces.Add(new NetworkInterface
-                    {
-                        Network = networkUri
-                    });
-                }
+                networkUri = "default";
             }
-            return interfaces;
+
+            if (!networkUri.Contains("global/networks"))
+            {
+                networkUri = $"projects/{Project}/global/networks/{networkUri}";
+            }
+
+            return new List<NetworkInterface>
+            {
+                new NetworkInterface
+                {
+                    Network = networkUri,
+                    AccessConfigs = accessConfigs
+                }
+            };
         }
 
         private Metadata BuildMetadata()
@@ -198,22 +365,111 @@ namespace Google.PowerShell.ComputeEngine
             return InstanceMetadataPSConverter.BuildMetadata(Metadata);
         }
 
-
-        private IList<AttachedDisk> BuildNewDisks()
+        /// <summary>
+        /// Creates a list of AttachedDisk objects form Disk, BootDiskImage, and ExtraDiskName.
+        /// </summary>
+        /// <returns></returns>
+        private IList<AttachedDisk> BuildAttachedDisks()
         {
-            bool boot = true;
-            var newDisks = new List<AttachedDisk>();
-            foreach (var imageName in DiskImage)
+            var disks = new List<AttachedDisk>();
+            if (Disk != null)
             {
-                newDisks.Add(new AttachedDisk
-                {
-                    Boot = boot,
-                    AutoDelete = true,
-                    InitializeParams = new AttachedDiskInitializeParams { SourceImage = imageName }
-                });
-                boot = false;
+                disks.AddRange(Disk);
             }
-            return newDisks;
+
+            if (BootDiskImage != null)
+            {
+                disks.Add(new AttachedDisk
+                {
+                    Boot = true,
+                    AutoDelete = true,
+                    InitializeParams = new AttachedDiskInitializeParams { SourceImage = BootDiskImage }
+                });
+            }
+
+            if (ExtraDiskName != null)
+            {
+                foreach (var diskName in ExtraDiskName)
+                {
+                    disks.Add(new AttachedDisk
+                    {
+                        Source = diskName,
+                        Mode = "READ_ONLY"
+                    });
+                }
+            }
+
+            return disks;
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Deletes a Google Compute Engine instance templates.
+    /// </para>
+    /// <para type="description"> 
+    /// Deletes a Google Compute Engine instance templates.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Remove, "GceInstanceTemplate", SupportsShouldProcess = true, DefaultParameterSetName = ParamterSetNames.ByName)]
+    public class RemoveGceInstanceTemplateCmdlet : GceConcurrentCmdlet
+    {
+        private class ParamterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByObject = "ByObject";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// The project that owns the template.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParamterSetNames.ByName)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the template to delete.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true,
+            ParameterSetName = ParamterSetNames.ByName)]
+        public string Name { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The instance tempate object to delete.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true,
+            ParameterSetName = ParamterSetNames.ByObject)]
+        public InstanceTemplate Object { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            string project;
+            string name;
+            switch (ParameterSetName)
+            {
+                case ParamterSetNames.ByName:
+                    project = Project;
+                    name = Name;
+                    break;
+                case ParamterSetNames.ByObject:
+                    project = GetProjectNameFromUri(Object.SelfLink);
+                    name = Object.Name;
+                    break;
+                default:
+                    throw new PSInvalidOperationException(
+                        $"{ParameterSetName} is not a valid parameter set");
+            }
+
+            if (ShouldProcess($"{project}/{name}", "Remove GceInstanceTemplate"))
+            {
+                AddOperation(project, Service.InstanceTemplates.Delete(project, name).Execute());
+            }
         }
     }
 }

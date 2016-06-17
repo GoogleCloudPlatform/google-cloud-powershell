@@ -85,3 +85,8 @@ go with `File`.
 At times a more descriptive name might be appropriate, such as `InputObjectName`
 when coupled with `OutputObjectName`. But in general, avoid adjectives modifying
 the parameter name if the purpose of the parameter is clear without it.
+
+# Cmdlets SHOULD mark one parameter with ValueFromPipeline = true for every parameter set
+
+The pipeline is a very useful feature of PowerShell, and cmdlets should endevor to make use of it.
+

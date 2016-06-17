@@ -119,11 +119,13 @@
     <Compile Include="Common\MeasurementProtocolService.cs" />
     <Compile Include="Compute\GceCmdlet.cs" />
     <Compile Include="Common\GcloudAttributes.cs" />
+    <Compile Include="Compute\GceDiskConfigCmdlets.cs" />
     <Compile Include="Compute\GceFirewallCmdlets.cs" />
     <Compile Include="Compute\GceInstanceCmdlets.cs" />
     <Compile Include="Compute\GceDisk.cs" />
     <Compile Include="Compute\GceInstanceConfigCmdlets.cs" />
     <Compile Include="Compute\GceInstanceTemplateCmdlets.cs" />
+    <Compile Include="Compute\GceServiceAccountConfigCmdlets.cs" />
     <Compile Include="Compute\GoogleComputeOperationException.cs" />
     <Compile Include="Compute\GceFirewallProtocolCmdlet.cs" />
     <Compile Include="Compute\InstanceMetadataConverter.cs" />
