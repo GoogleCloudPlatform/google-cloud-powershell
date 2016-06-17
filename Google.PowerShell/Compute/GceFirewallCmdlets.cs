@@ -25,7 +25,8 @@ namespace Google.PowerShell.ComputeEngine
         /// The Project to get the firewall rule of.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
         public string Project { get; set; }
 
@@ -94,7 +95,8 @@ namespace Google.PowerShell.ComputeEngine
         /// The name of the project to add the firewall rule to.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0)]
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
         public string Project { get; set; }
 
@@ -191,6 +193,7 @@ namespace Google.PowerShell.ComputeEngine
             InsertRequest request = Service.Firewalls.Insert(firewall, Project);
             WaitForGlobalOperation(Project, request.Execute());
             WriteObject(Service.Firewalls.Get(Project, Name).Execute());
+            base.EndProcessing();
         }
     }
 
@@ -210,7 +213,8 @@ namespace Google.PowerShell.ComputeEngine
         /// The name of the project from which to remove the firewall.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0)]
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
         public string Project { get; set; }
 
@@ -250,7 +254,8 @@ namespace Google.PowerShell.ComputeEngine
         /// The name of the project that owns the firewall rule to change.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0)]
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
         public string Project { get; set; }
 

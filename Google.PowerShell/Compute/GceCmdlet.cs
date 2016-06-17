@@ -174,6 +174,7 @@ namespace Google.PowerShell.ComputeEngine
             {
                 throw exceptions.First();
             }
+            base.EndProcessing();
         }
     }
 }

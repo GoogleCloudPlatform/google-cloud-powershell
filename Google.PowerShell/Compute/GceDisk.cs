@@ -3,6 +3,7 @@
 
 using Google.Apis.Compute.v1;
 using Google.Apis.Compute.v1.Data;
+using Google.PowerShell.Common;
 using System;
 using System.Collections.Generic;
 using System.Management.Automation;
@@ -33,7 +34,8 @@ namespace Google.PowerShell.ComputeEngine
         /// The project to check for Compute Engine disks.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
         /// <summary>
@@ -139,7 +141,8 @@ namespace Google.PowerShell.ComputeEngine
         /// The project to associate the new Compute Engine disk.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
         /// <summary>
@@ -147,7 +150,8 @@ namespace Google.PowerShell.ComputeEngine
         /// Specific zone to create the disk in, e.g. "us-central1-a".
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true)]
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         public string Zone { get; set; }
 
         /// <summary>
@@ -179,7 +183,7 @@ namespace Google.PowerShell.ComputeEngine
         /// Type of disk, e.g. pd-ssd or pd-standard.
         /// </paratype>
         /// </summary>
-        [Parameter, ValidateSet(new string[] { "pd-ssd", "pd-standard" })]
+        [Parameter, ValidateSet("pd-ssd", "pd-standard")]
         public string DiskType { get; set; }
 
         /// <summary>
@@ -249,7 +253,8 @@ namespace Google.PowerShell.ComputeEngine
         /// The project to associate the new Compute Engine disk.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
         /// <summary>
@@ -257,7 +262,8 @@ namespace Google.PowerShell.ComputeEngine
         /// Specific zone to create the disk in, e.g. "us-central1-a".
         /// </para>
         /// </summary>
-        [Parameter(Position = 1, Mandatory = true)]
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         public string Zone { get; set; }
 
         /// <summary>
@@ -309,7 +315,8 @@ namespace Google.PowerShell.ComputeEngine
         /// The project to associate the new Compute Engine disk.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
         /// <summary>
@@ -317,7 +324,8 @@ namespace Google.PowerShell.ComputeEngine
         /// Specific zone to create the disk in, e.g. "us-central1-a".
         /// </para>
         /// </summary>
-        [Parameter(Position = 1, Mandatory = true)]
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         public string Zone { get; set; }
 
         /// <summary>
