@@ -10,47 +10,11 @@ using System.Management.Automation;
 
 namespace Google.PowerShell.ComputeEngine
 {
-    public class InstanceMetadataPSConverter : PSTypeConverter
+    /// <summary>
+    /// Library class for transforming tables into metadata.
+    /// </summary>
+    public class InstanceMetadataPSConverter
     {
-        public override bool CanConvertFrom(object sourceValue, Type destinationType)
-        {
-            return sourceValue is Metadata && destinationType.IsAssignableFrom(typeof(Hashtable));
-        }
-
-        public override object ConvertFrom(object sourceValue, Type destinationType, IFormatProvider formatProvider, bool ignoreCase)
-        {
-            var table = new Hashtable();
-            var metadata = sourceValue as Metadata;
-            if (metadata == null)
-            {
-                return null;
-            }
-
-            foreach (var item in metadata.Items)
-            {
-                table.Add(item.Key, item.Value);
-            }
-            return table;
-        }
-
-        public override bool CanConvertTo(object sourceValue, Type destinationType)
-        {
-            return sourceValue is IDictionary && destinationType.IsAssignableFrom(typeof(Metadata));
-        }
-
-        public override object ConvertTo(object sourceValue, Type destinationType, IFormatProvider formatProvider, bool ignoreCase)
-        {
-
-            var table = sourceValue as IDictionary;
-            if (table == null)
-            {
-                return null;
-            }
-
-            var metadata = BuildMetadata(table);
-            return metadata;
-        }
-
         public static Metadata BuildMetadata(IDictionary table)
         {
             var metadata = new Metadata

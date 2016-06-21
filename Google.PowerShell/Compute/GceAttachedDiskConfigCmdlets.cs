@@ -2,6 +2,9 @@
 // Licensed under the Apache License Version 2.0.
 
 using Google.Apis.Compute.v1.Data;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Management.Automation;
 
 namespace Google.PowerShell.ComputeEngine
@@ -21,9 +24,7 @@ namespace Google.PowerShell.ComputeEngine
         private class ParameterSetNames
         {
             public const string Default = "Default";
-            public const string DefaultPipeline = "DefaultPipeline";
             public const string New = "New";
-            public const string NewPipeline = "NewPipeline";
         }
 
         /// <summary>
@@ -47,8 +48,7 @@ namespace Google.PowerShell.ComputeEngine
         /// Pipeline values to be passed on to the next cmdlet.
         /// </para>
         /// </summary>
-        [Parameter(ValueFromPipeline = true, ParameterSetName = ParameterSetNames.DefaultPipeline)]
-        [Parameter(ValueFromPipeline = true, ParameterSetName = ParameterSetNames.NewPipeline)]
+        [Parameter(ValueFromPipeline = true)]
         public object Pipeline { get; set; }
 
         /// <summary>
@@ -57,14 +57,13 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.New)]
-        [Parameter(ParameterSetName = ParameterSetNames.NewPipeline)]
         public string Name { get; set; }
 
         /// <summary>
         /// <para type="description">
         /// When set, the disk interface will be NVME rather than SCSI.
         [Parameter]
-        public SwitchParameter NVME { get; set; }
+        public SwitchParameter Nvme { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -80,25 +79,22 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.New)]
-        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.NewPipeline)]
         public string SourceImage { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// Specifies the type of the disk. Defaults to pd-standard
+        /// Specifies the type of the disk. Defaults to pd-standard.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.New)]
-        [Parameter(ParameterSetName = ParameterSetNames.NewPipeline)]
         public string DiskType { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// The url of the preexisting disk to attach to an instance.
+        /// The URI of the preexisting disk to attach to an instance.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.Default)]
-        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.DefaultPipeline)]
         public string Source { get; set; }
 
         /// <summary>
@@ -111,29 +107,18 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// Set to make the disk type SCRATCH rather than PERSISTENT
-        /// </para>
-        /// </summary>
-        [Parameter]
-        public SwitchParameter Scratch { get; set; }
-
-        /// <summary>
-        /// <para type="description">
         /// The size of the disk to create, in GB.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.New)]
-        [Parameter(ParameterSetName = ParameterSetNames.NewPipeline)]
         public long? Size { get; set; }
 
         protected override void ProcessRecord()
         {
-            switch (ParameterSetName)
+            ICollection<string> keys = MyInvocation.BoundParameters.Keys;
+            if (keys.Any(k => k.Equals("Pipeline", StringComparison.OrdinalIgnoreCase)))
             {
-                case ParameterSetNames.NewPipeline:
-                case ParameterSetNames.DefaultPipeline:
-                    WriteObject(Pipeline);
-                    break;
+                WriteObject(Pipeline);
             }
         }
 
@@ -144,13 +129,12 @@ namespace Google.PowerShell.ComputeEngine
                 AutoDelete = AutoDelete,
                 Boot = Boot,
                 DeviceName = DeviceName,
-                Interface__ = NVME ? "NVME" : "SCSI",
+                Interface__ = Nvme ? "NVME" : "SCSI",
                 Mode = ReadOnly ? "READ_ONLY" : "READ_WRITE",
                 Source = Source,
-                Type = Scratch ? "SCRATCH" : "PERSISTENT"
             };
 
-            if (ParameterSetName.Equals(ParameterSetNames.New))
+            if (ParameterSetName == ParameterSetNames.New)
             {
                 attachedDisk.InitializeParams = new AttachedDiskInitializeParams
                 {

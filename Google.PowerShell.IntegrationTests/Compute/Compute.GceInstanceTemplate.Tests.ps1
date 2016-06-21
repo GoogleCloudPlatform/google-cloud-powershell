@@ -5,6 +5,7 @@ $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 $image = "projects/windows-cloud/global/images/family/windows-2012-r2"
 $machineType = "f1-micro"
 
+# Delete all instance templates for the current project.
 Get-GceInstanceTemplate | Remove-GceInstanceTemplate
 
 Describe "Get-GceInstanceTemplate" {
@@ -25,6 +26,7 @@ Describe "Get-GceInstanceTemplate" {
 
     It "should get one" {
         $template = Get-GceInstanceTemplate $name
+        ($template | gm).TypeName | Should Be "Google.Apis.Compute.v1.Data.InstanceTemplate"
         $template.Count | Should Be 1
         $template.Name | Should Be $name
         $template.Properties.MachineType | Should Be $machineType
@@ -33,49 +35,32 @@ Describe "Get-GceInstanceTemplate" {
     It "should get both" {
         $templates = Get-GceInstanceTemplate
         $templates.Count | Should Be 2
+        ($templates.Name -match $name).Count | Should Be 1
+        ($templates.Name -match $name2).Count | Should Be 1
     }
 
     Get-GceInstanceTemplate | Remove-GceInstanceTemplate
-}
-
-Describe "New-GceServiceAccountConfig" {
-    $email = "email@address.tld"
-
-    It "should get defaults" {
-        $account = New-GceServiceAccountConfig -Email $email
-        $account.Scopes.Count | Should Be 5
-    }
-
-    It "should get none" {
-        $account = New-GceServiceAccountConfig $email -Storage None -CloudLogging None -CloudMonitoring None `
-            -ServiceControl $false -ServiceManagement $false
-        $account.Scopes.Count | Should Be 0
-    }
-
-    It "should set bigquery" {
-        $account = New-GceServiceAccountConfig $email -Storage None -CloudLogging None -CloudMonitoring None `
-            -ServiceControl $false -ServiceManagement $false -BigQuery
-        $account.Scopes -match "bigquery" | Should Be $true
-    }
-
-    It "should set bigquery" {
-        $account = New-GceServiceAccountConfig $email -Storage None -CloudLogging None -CloudMonitoring None `
-            -ServiceControl $false -ServiceManagement $false -BigQuery
-        $account.Scopes -match "bigquery" | Should Be $true
-    }
 }
 
 Describe "Add-GceInstanceTemplate" {
     
     $r = Get-Random
     $name = "test-add-template-$r"
-    $nmae2 = "test-add-template2-$r"
+    $name2 = "test-add-template2-$r"
+    $name3 = "test-add-template3-$r"
+
     $serviceAccount = New-GceServiceAccountConfig default -BigQuery
+    
+
+    It "should error with bad image" {
+        { Add-GceInstanceTemplate $name -MachineType $machineType -BootDiskImage "not an image" `
+            -WarningAction SilentlyContinue } | Should Throw 503
+    }
 
     It "should work" {
         Add-GceInstanceTemplate $name -MachineType $machineType -BootDiskImage $image -CanIpForward `
             -Metadata @{"key" = "value"} -Description "desc" -Network default -NoExternalIp -Preemptible `
-            -Killable -TerminateOnMaintenance -Tag alpha, beta -ServiceAccount $serviceAccount
+            -TerminateOnMaintenance -Tag alpha, beta -ServiceAccount $serviceAccount
         $template = Get-GceInstanceTemplate $name
         $template.Name | Should Be $name
         $prop = $template.Properties
@@ -84,7 +69,7 @@ Describe "Add-GceInstanceTemplate" {
         $prop.Disks.Count | Should Be 1
         $prop.Disks.Boot | Should Be $true
         $prop.Disks.InitializeParams.SourceImage -match $image | Should Be $false
-        $prop.Disks.InitializeParams.SourceImage -match "windows-server-2012" | Should Be $true
+        $prop.Disks.InitializeParams.SourceImage -match "windows" | Should Be $true
         $prop.MachineType | Should Be $machineType
         $prop.Metadata.Items.Count | Should Be 1
         $prop.Metadata.Items.Key | Should Be "key"
@@ -109,6 +94,18 @@ Describe "Add-GceInstanceTemplate" {
         (Compare-Object $newTemplate.Properties $oldTemplate.Properties).Count | Should Be 0
     }
 
+    It "should work with attached disk configs" {
+        $diskConfigs = New-GceAttachedDiskConfig -SourceImage $image -Boot
+        Add-GceInstanceTemplate $name3 -MachineType $machineType -Disk $diskConfigs
+        $template = Get-GceInstanceTemplate $name3
+        $template.Name | Should Be $name3
+        $prop = $template.Properties
+        $prop.Disks.Count | Should Be 1
+        $prop.Disks.Boot | Should Be $true
+        $prop.Disks.InitializeParams.SourceImage -match "windows" | Should Be $true
+        $prop.MachineType | Should Be $machineType
+    }
+
     Get-GceInstanceTemplate | Remove-GceInstanceTemplate
 }
 
@@ -117,7 +114,7 @@ Describe "Remove-GceInstanceTemplate" {
     $r = Get-Random
     $name = "test-remove-template-$r"
 
-    It "should fail" {
+    It "should fail on nonexistant template" {
         { Remove-GceInstanceTemplate $name } | Should Throw 404
     }
     
@@ -131,7 +128,18 @@ Describe "Remove-GceInstanceTemplate" {
             { Get-GceInstanceTemplate $name } | Should Throw 404
         }
 
+        It "should work from pipeline" {
+            $name | Remove-GceInstanceTemplate
+            { Get-GceInstanceTemplate $name } | Should Throw 404
+        }
+
         It "should work with object" {
+            $object = Get-GceInstanceTemplate $name
+            Remove-GceInstanceTemplate $object
+            { Get-GceInstanceTemplate $name } | Should Throw 404
+        }
+
+        It "should work with object from pipeline" {
             Get-GceInstanceTemplate $name | Remove-GceInstanceTemplate
             { Get-GceInstanceTemplate $name } | Should Throw 404
         }

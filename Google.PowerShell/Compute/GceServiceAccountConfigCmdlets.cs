@@ -14,7 +14,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// <para type="description">
     /// Creates a new ServiceAccount object. These objects are used by New-GceInstanceConfig and 
-    /// Add-GceInstanceTempalte cmdlets to link to service accounts and define scopes.
+    /// Add-GceInstanceTemplate cmdlets to link to service accounts and define scopes.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GceServiceAccountConfig", DefaultParameterSetName = ParameterSetNames.FromFlags)]
@@ -54,7 +54,8 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.FromScopeUris)]
-        [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.FromFlags)]
+        [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true,
+            ParameterSetName = ParameterSetNames.FromFlags)]
         public string Email { get; set; }
 
         /// <summary>
@@ -64,7 +65,8 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.FromScopeUris)]
-        public List<string> ScopeUri { get; set; }
+        [Parameter(ParameterSetName = ParameterSetNames.FromFlags)]
+        public string[] ScopeUri { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -106,7 +108,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.FromFlags)]
         [ValidateSet("None", "Read", "Write", "Full")]
-        public ReadWrite CloudLogging { get; set; } = ReadWrite.Write;
+        public ReadWrite CloudLogging { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -115,7 +117,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.FromFlags)]
         [ValidateSet("None", "Read", "Write", "Full")]
-        public ReadWrite CloudMonitoring { get; set; } = ReadWrite.Write;
+        public ReadWrite CloudMonitoring { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -148,7 +150,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.FromFlags)]
-        public bool ServiceControl { get; set; } = true;
+        public bool ServiceControl { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -156,7 +158,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.FromFlags)]
-        public bool ServiceManagement { get; set; } = true;
+        public bool ServiceManagement { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -164,7 +166,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.FromFlags)]
-        public ReadWrite Storage { get; set; } = ReadWrite.Read;
+        public ReadWrite Storage { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -185,14 +187,14 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// Used to collect scopes from the pipeline to be used in EndProcessing.
         /// </summary>
-        private readonly List<string> _scopeUris = new List<string>();
+        private readonly List<string> _scopeUrisList = new List<string>();
 
         protected override void ProcessRecord()
         {
             switch (ParameterSetName)
             {
                 case ParameterSetNames.FromScopeUris:
-                    _scopeUris.AddRange(ScopeUri);
+                    _scopeUrisList.AddRange(ScopeUri);
                     break;
                 case ParameterSetNames.FromFlags:
                     WriteObject(BuildFromFlags());
@@ -207,16 +209,131 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         protected override void EndProcessing()
         {
-            if (_scopeUris.Count > 0)
+            if (_scopeUrisList.Count > 0)
             {
                 WriteObject(new ServiceAccount
                 {
                     Email = Email,
-                    Scopes = _scopeUris
+                    Scopes = _scopeUrisList
                 });
             }
             base.EndProcessing();
         }
+
+        /// <summary>
+        /// Because we are looking at bound parameters, we can't just set parameters to their default values
+        /// </summary>
+        private readonly Dictionary<string, object> _defaultParameterValues = new Dictionary<string, object>
+        {
+            {"cloudlogging", ReadWrite.Write},
+            {"cloudmonitoring", ReadWrite.Write },
+            {"servicecontrol", true },
+            {"servicemanagement", true },
+            {"storage", ReadWrite.Read }
+
+        };
+
+        /// <summary>
+        /// Mapping of parameter and value to scope string.
+        /// </summary>
+        private readonly Dictionary<string, IDictionary<object, string>> _scopeUriMap =
+            new Dictionary<string, IDictionary<object, string>>
+            {
+                {
+                    "bigquery", new Dictionary<object, string>
+                    {
+                        {SwitchParameter.Present, "bigquery"}
+                    }
+                },
+                {
+                    "bigtableadmin", new Dictionary<object, string>
+                    {
+                        {BigTableAdminEnum.Tables, "bigtable.admin.table"},
+                        {BigTableAdminEnum.Full, "bigtable.admin"}
+                    }
+                },
+                {
+                    "bigtabledata", new Dictionary<object, string>
+                    {
+                        {ReadWrite.Read, "bigtable.data.readonly"},
+                        {ReadWrite.ReadWrite, "bigtable.data"}
+                    }
+                },
+                {
+                    "clouddatastore", new Dictionary<object, string>
+                    {
+                        {SwitchParameter.Present, "datastore"}
+                    }
+                },
+                {
+                    "cloudlogging", new Dictionary<object, string>
+                    {
+                        {ReadWrite.Write, "logging.write"},
+                        {ReadWrite.Read, "logging.read"},
+                        {ReadWrite.Full, "logging.admin"}
+                    }
+                },
+                {
+                    "cloudmonitoring", new Dictionary<object, string>
+                    {
+                        {ReadWrite.Write, "monitoring.write"},
+                        {ReadWrite.Read, "monitoring.read"},
+                        {ReadWrite.Full, "monitoring"}
+                    }
+                },
+                {
+                    "cloudpubsub", new Dictionary<object, string>
+                    {
+                        {SwitchParameter.Present, "pubsub"}
+                    }
+                },
+                {
+                    "cloudsql", new Dictionary<object, string>
+                    {
+                        {SwitchParameter.Present, "sqlservice.admin"}
+                    }
+                },
+                {
+                    "compute", new Dictionary<object, string>
+                    {
+                        {ReadWrite.Read, "compute.readonly"},
+                        {ReadWrite.ReadWrite, "compute"}
+                    }
+                },
+                {
+                    "servicecontrol", new Dictionary<object, string>
+                    {
+                        {true, "servicecontrol"}
+                    }
+                },
+                {
+                    "servicemanagement", new Dictionary<object, string>
+                    {
+                        {true, "service.management"}
+                    }
+                },
+                {
+                    "storage", new Dictionary<object, string>
+                    {
+                        {ReadWrite.Read, "devstorage.read_only"},
+                        {ReadWrite.Write, "devstorage.write_only"},
+                        {ReadWrite.ReadWrite, "devstorage.read_write"},
+                        {ReadWrite.Full, "devstorage.full_control"}
+                    }
+                },
+                {
+                    "taskqueue", new Dictionary<object, string>
+                    {
+                        {SwitchParameter.Present, "taskqueue"}
+                    }
+                },
+                {
+                    "userinfo", new Dictionary<object, string>
+                    {
+                        {SwitchParameter.Present, "userinfo.email"}
+                    }
+                }
+            };
 
         /// <summary>
         /// Creates a ServiceAccount object from the email and uses the given flags to add scopes.
@@ -224,126 +341,50 @@ namespace Google.PowerShell.ComputeEngine
         /// <returns></returns>
         private ServiceAccount BuildFromFlags()
         {
-            var serviceAccount = new ServiceAccount
+            var scopes = new List<string>();
+            if (ScopeUri != null)
+            {
+                scopes.AddRange(ScopeUri);
+            }
+
+            foreach (KeyValuePair<string, object> boundParameter in MyInvocation.BoundParameters)
+            {
+                AddScope(boundParameter, scopes);
+            }
+
+            foreach (KeyValuePair<string, object> defaultParameter in _defaultParameterValues)
+            {
+                if (!MyInvocation.BoundParameters.ContainsKey(defaultParameter.Key))
+                {
+                    AddScope(defaultParameter, scopes);
+                }
+            }
+
+            return new ServiceAccount
             {
                 Email = Email,
-                Scopes = new List<string>()
+                Scopes = scopes
             };
+        }
+
+        /// <summary>
+        /// Adds the scope uri of the parameter, if it has one.
+        /// </summary>
+        /// <param name="parameter"></param>
+        /// <param name="scopes"></param>
+        private void AddScope(KeyValuePair<string, object> parameter, List<string> scopes)
+        {
             const string baseUri = "https://www.googleapis.com/auth/";
 
-            if (BigQuery)
+            string scopeType = parameter.Key.ToLower();
+            if (_scopeUriMap.ContainsKey(scopeType))
             {
-                serviceAccount.Scopes.Add($"{baseUri}bigquery");
+                if (_scopeUriMap[scopeType].ContainsKey(parameter.Value))
+                {
+                    string scopeString = _scopeUriMap[scopeType][parameter.Value];
+                    scopes.Add($"{baseUri}{scopeString}");
+                }
             }
-
-            switch (BigtableAdmin)
-            {
-                case BigTableAdminEnum.Tables:
-                    serviceAccount.Scopes.Add($"{baseUri}bigtable.admin.table");
-                    break;
-                case BigTableAdminEnum.Full:
-                    serviceAccount.Scopes.Add($"{baseUri}bigtable.admin");
-                    break;
-            }
-
-            switch (BigtableData)
-            {
-                case ReadWrite.Read:
-                    serviceAccount.Scopes.Add($"{baseUri}bigtable.data.readonly");
-                    break;
-                case ReadWrite.ReadWrite:
-                    serviceAccount.Scopes.Add($"{baseUri}bigtable.data");
-                    break;
-            }
-
-            if (CloudDatastore)
-            {
-                serviceAccount.Scopes.Add($"{baseUri}datastore");
-            }
-
-            switch (CloudLogging)
-            {
-                case ReadWrite.Write:
-                    serviceAccount.Scopes.Add($"{baseUri}logging.write");
-                    break;
-                case ReadWrite.Read:
-                    serviceAccount.Scopes.Add($"{baseUri}logging.read");
-                    break;
-                case ReadWrite.Full:
-                    serviceAccount.Scopes.Add($"{baseUri}logging.admin");
-                    break;
-            }
-
-            switch (CloudMonitoring)
-            {
-                case ReadWrite.Write:
-                    serviceAccount.Scopes.Add($"{baseUri}monitoring.write");
-                    break;
-                case ReadWrite.Read:
-                    serviceAccount.Scopes.Add($"{baseUri}monitoring.read");
-                    break;
-                case ReadWrite.Full:
-                    serviceAccount.Scopes.Add($"{baseUri}monitoring");
-                    break;
-            }
-
-            if (CloudPubSub)
-            {
-                serviceAccount.Scopes.Add($"{baseUri}pubsub");
-            }
-
-            if (CloudSQL)
-            {
-                serviceAccount.Scopes.Add($"{baseUri}sqlservice.admin");
-            }
-
-            switch (Compute)
-            {
-                case ReadWrite.Read:
-                    serviceAccount.Scopes.Add($"{baseUri}compute.readonly");
-                    break;
-                case ReadWrite.ReadWrite:
-                    serviceAccount.Scopes.Add($"{baseUri}compute");
-                    break;
-            }
-
-            if (ServiceControl)
-            {
-                serviceAccount.Scopes.Add($"{baseUri}servicecontrol");
-            }
-
-            if (ServiceManagement)
-            {
-                serviceAccount.Scopes.Add($"{baseUri}service.management");
-            }
-
-            switch (Storage)
-            {
-                case ReadWrite.Read:
-                    serviceAccount.Scopes.Add($"{baseUri}devstorage.read_only");
-                    break;
-                case ReadWrite.Write:
-                    serviceAccount.Scopes.Add($"{baseUri}devstorage.write_only");
-                    break;
-                case ReadWrite.ReadWrite:
-                    serviceAccount.Scopes.Add($"{baseUri}devstorage.read_write");
-                    break;
-                case ReadWrite.Full:
-                    serviceAccount.Scopes.Add($"{baseUri}devstorage.full_control");
-                    break;
-            }
-
-            if (TaskQueue)
-            {
-                serviceAccount.Scopes.Add($"{baseUri}taskqueue");
-            }
-
-            if (UserInfo)
-            {
-                serviceAccount.Scopes.Add($"{baseUri}userinfo.email");
-            }
-
-            return serviceAccount;
         }
     }
 }

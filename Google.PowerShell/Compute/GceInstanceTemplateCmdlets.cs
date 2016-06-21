@@ -37,7 +37,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Default)]
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
-        [ConfigPropertyName("project")]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
         /// <summary>
@@ -84,16 +84,16 @@ namespace Google.PowerShell.ComputeEngine
         /// </returns>
         private InstanceTemplate GetTemplateByObject()
         {
-            var project = GetProjectNameFromUri(Object.SelfLink);
-            var name = Object.Name;
+            string project = GetProjectNameFromUri(Object.SelfLink);
+            string name = Object.Name;
             return Service.InstanceTemplates.Get(project, name).Execute();
         }
 
         /// <summary>
-        /// Gets an InstanceTemplate by project and name
+        /// Gets an InstanceTemplate by project and name.
         /// </summary>
         /// <returns>
-        /// A single InstanceTemplate
+        /// A single InstanceTemplate.
         /// </returns>
         private InstanceTemplate GetTemplateByName()
         {
@@ -147,7 +147,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        [ConfigPropertyName("project")]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
         /// <summary>
@@ -155,7 +155,8 @@ namespace Google.PowerShell.ComputeEngine
         /// An instance template object to add to Google Compute Engine.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.FromObject)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
+            ParameterSetName = ParameterSetNames.FromObject)]
         public InstanceTemplate Object { get; set; }
 
         /// <summary>
@@ -186,7 +187,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// Human readable description of this instance template
+        /// Human readable description of this instance template.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
@@ -202,7 +203,8 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// Name of existing disk to attach in read only mode.
+        /// Name of existing disk to attach in read-only mode. All instances of this template will be able to
+        /// read this disk.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
@@ -243,7 +245,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// If set, the instances will be preemptible.
+        /// If set, the instances will be preemptible. If set, AutomaticRestart will be false.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
@@ -255,7 +257,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public SwitchParameter Killable { get; set; }
+        public bool AutomaticRestart { get; set; } = true;
 
         /// <summary>
         /// <para type="description">
@@ -316,10 +318,10 @@ namespace Google.PowerShell.ComputeEngine
                     Disks = BuildAttachedDisks(),
                     MachineType = MachineType,
                     Metadata = BuildMetadata(),
-                    NetworkInterfaces = BuildNetworkInterfaces(),
+                    NetworkInterfaces = new List<NetworkInterface> { BuildNetworkInterfaces() },
                     Scheduling = new Scheduling
                     {
-                        AutomaticRestart = !Killable && !Preemptible,
+                        AutomaticRestart = AutomaticRestart && !Preemptible,
                         Preemptible = Preemptible,
                         OnHostMaintenance = TerminateOnMaintenance ? "TERMINATE" : "MIGRATE"
                     },
@@ -332,7 +334,7 @@ namespace Google.PowerShell.ComputeEngine
             };
         }
 
-        private IList<NetworkInterface> BuildNetworkInterfaces()
+        private NetworkInterface BuildNetworkInterfaces()
         {
             var accessConfigs = new List<AccessConfig>();
             if (!NoExternalIp)
@@ -355,13 +357,10 @@ namespace Google.PowerShell.ComputeEngine
                 networkUri = $"projects/{Project}/global/networks/{networkUri}";
             }
 
-            return new List<NetworkInterface>
+            return new NetworkInterface
             {
-                new NetworkInterface
-                {
-                    Network = networkUri,
-                    AccessConfigs = accessConfigs
-                }
+                Network = networkUri,
+                AccessConfigs = accessConfigs
             };
         }
 
@@ -380,7 +379,6 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// Creates a list of AttachedDisk objects form Disk, BootDiskImage, and ExtraDiskName.
         /// </summary>
-        /// <returns></returns>
         private IList<AttachedDisk> BuildAttachedDisks()
         {
             var disks = new List<AttachedDisk>();
@@ -425,16 +423,23 @@ namespace Google.PowerShell.ComputeEngine
             return disks;
         }
 
+
+        /// <summary>
+        /// Because a wrong image name error is a 503 with no message, try to make sure the image exists, and
+        /// if it doen't give the user a helpful warning.
+        /// </summary>
         private string FindImageOrThrow()
         {
-            var familyMatch = Regex.Match(BootDiskImage, "projects/(?<project>[^/]*)/global/images/family/(?<family>.*)");
+            var familyMatch = Regex.Match(
+                BootDiskImage, "projects/(?<project>[^/]*)/global/images/family/(?<family>.*)");
             if (familyMatch.Success)
             {
                 var imageFamily = familyMatch.Groups["family"].Value;
                 var imageProject = familyMatch.Groups["project"].Value;
                 return Service.Images.GetFromFamily(imageProject, imageFamily).Execute().SelfLink;
             }
-            var imageMatch = Regex.Match(BootDiskImage, "projects/(?<project>[^/]*)/global/images/(?<image>.*)");
+            var imageMatch = Regex.Match(
+                BootDiskImage, "projects/(?<project>[^/]*)/global/images/(?<image>.*)");
             if (imageMatch.Success)
             {
                 var imageName = imageMatch.Groups["image"].Value;
@@ -460,7 +465,8 @@ namespace Google.PowerShell.ComputeEngine
     /// Deletes a Google Compute Engine instance templates.
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Remove, "GceInstanceTemplate", SupportsShouldProcess = true, DefaultParameterSetName = ParamterSetNames.ByName)]
+    [Cmdlet(VerbsCommon.Remove, "GceInstanceTemplate", SupportsShouldProcess = true,
+        DefaultParameterSetName = ParamterSetNames.ByName)]
     public class RemoveGceInstanceTemplateCmdlet : GceConcurrentCmdlet
     {
         private class ParamterSetNames

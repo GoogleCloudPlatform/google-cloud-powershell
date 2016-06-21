@@ -145,7 +145,6 @@
     </None>
     <None Include="README.md" />
     <None Include="ReleaseFiles\BootstrapGoogleCloudPowerShell.ps1" />
-    <None Include="ReleaseFiles\GoogleCloud.Types.ps1xml" />
     <None Include="ReleaseFiles\GoogleCloudPowerShell.psd1" />
     <None Include="ReleaseFiles\PatchMachineConfig.cmd" />
     <None Include="ReleaseFiles\PatchMachineConfig.ps1" />

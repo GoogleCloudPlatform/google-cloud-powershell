@@ -1,8 +1,0 @@
-﻿<Types>
-  <Type>
-    <Name>Google.Apis.Compute.v1.Data.Metadata</Name>
-    <TypeConverter>
-      <TypeName>Google.PowerShell.ComputeEngine.InstanceMetadataPSConverter</TypeName>
-    </TypeConverter>
-  </Type>
-</Types>
