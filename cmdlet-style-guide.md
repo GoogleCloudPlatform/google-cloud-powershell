@@ -85,3 +85,18 @@ go with `File`.
 At times a more descriptive name might be appropriate, such as `InputObjectName`
 when coupled with `OutputObjectName`. But in general, avoid adjectives modifying
 the parameter name if the purpose of the parameter is clear without it.
+
+# Cmdlets SHOULD mark one parameter with ValueFromPipeline = true for every parameter set
+
+The pipeline is a very useful feature of PowerShell, and cmdlets should endevor to make use of it. Enabling
+usage of the pipeline is usually a simple matter of setting a parameters to have `ValueFromPipeline = true`, and
+ensuring the work requiring the pipelined parameter is done in the `ProcessRecord` method, as `BeginProcess`
+and `EndProcess` will leave the pipeline parameter uninitalized, and `ProcessRecord` is called for every 
+pipeline value.
+
+#Cmdlets SHOULD prefer to use simple arrays such as string[] to generic lists such as List<string> for their parameters.
+
+When using the Get-Help cmdlet, generic lists appear as List`, hiding the type they contain. Arrays, however,
+appear as the correct string[]. Additionally, usage of the two from a user perspective is essentially
+identical, due to PowerShell's type conversion magic.
+
