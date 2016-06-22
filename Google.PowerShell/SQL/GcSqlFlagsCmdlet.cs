@@ -31,8 +31,7 @@ namespace Google.PowerShell.SQL
         {
             FlagsResource.ListRequest flags = Service.Flags.List();
             FlagsListResponse response = flags.Execute();
-            WriteObject("Items:");
-            WriteObject(response.Items);
+            WriteObject(response.Items,true);
         }
     }
 }

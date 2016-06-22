@@ -14,14 +14,12 @@ namespace Google.PowerShell.SQL
     public abstract class GcSqlCmdlet : GCloudCmdlet
     {
 
-      //The service for the Google Cloud SQL API
-      public SQLAdminService Service { get; private set; }
+        //The service for the Google Cloud SQL API
+        public SQLAdminService Service { get; private set; }
 
-      public GcSqlCmdlet()
-      {
-          Service = new SQLAdminService(GetBaseClientServiceInitializer());
-      }
-    
-      //TODO: Do I need all the other functions that Jim put in his GceCmdlet?
+        public GcSqlCmdlet()
+        {
+            Service = new SQLAdminService(GetBaseClientServiceInitializer());
+        }
     }
 }
