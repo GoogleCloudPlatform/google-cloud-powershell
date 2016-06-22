@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright 2016 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,13 +27,13 @@ namespace Google.PowerShell.SQL
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlFlags")]
-    public class GcSqlFlagsCmdlet : GcSqlCmdlet
+    public class GetGcSqlFlagsCmdlet : GcSqlCmdlet
     {
         protected override void ProcessRecord()
         {
             FlagsResource.ListRequest flags = Service.Flags.List();
             FlagsListResponse response = flags.Execute();
-            WriteObject(response.Items,true);
+            WriteObject(response.Items, true);
         }
     }
 }
