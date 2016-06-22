@@ -11,13 +11,22 @@ namespace Google.PowerShell.ComputeEngine
 {
     /// <summary>
     /// <para type="synopsis">
-    /// Creates a new AttachedDisk object. 
+    /// Creates a single new AttachedDisk object. 
     /// </para>
     /// <para type="description">
-    /// Creates a new AttachedDisk object. These objects are used by New-GceInstanceConfig and
+    /// Creates a single new AttachedDisk object. These objects are used by New-GceInstanceConfig and
     /// Add-GceInstanceTemplate.
     /// </para>
     /// </summary>
+    /// <example>
+    /// <para>
+    /// <code>
+    /// $disks = New-GceAttachedDisk -Boot -AutoDelete -SourceImage "projects/debian-cloud/global/images/family/debian-8" |
+    ///     New-GceAttachedDis -Source "projectDiskName" -ReadOnly
+    /// 
+    /// Add-GceinstanceTemplate -Name "instanceName" -MachineType n1-standard-1 -Disk $disks 
+    /// </code>
+    /// </para> </example>
     [Cmdlet(VerbsCommon.New, "GceAttachedDiskConfig", DefaultParameterSetName = ParameterSetNames.Default)]
     public class NewGceAttachedDiskConfigCmdlet : GceCmdlet
     {
@@ -113,15 +122,22 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(ParameterSetName = ParameterSetNames.New)]
         public long? Size { get; set; }
 
+        /// <summary>
+        /// Move objects from the input pipeline to the output pipeline.
+        /// </summary>
         protected override void ProcessRecord()
         {
+            // If pipeline is a bound parameter, it has a value. Pass that value on to the next cmdlet.
             ICollection<string> keys = MyInvocation.BoundParameters.Keys;
-            if (keys.Any(k => k.Equals("Pipeline", StringComparison.OrdinalIgnoreCase)))
+            if (keys.Any(k => k == "Pipeline"))
             {
                 WriteObject(Pipeline);
             }
         }
 
+        /// <summary>
+        /// Create the AttachedDisk object and add it to the end of the pipeline.
+        /// </summary>
         protected override void EndProcessing()
         {
             var attachedDisk = new AttachedDisk

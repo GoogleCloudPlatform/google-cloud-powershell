@@ -88,9 +88,11 @@ the parameter name if the purpose of the parameter is clear without it.
 
 # Cmdlets SHOULD mark one parameter with ValueFromPipeline = true for every parameter set
 
-The pipeline is a very useful feature of PowerShell, and cmdlets should endevor to make use of it. Enableing
-usage of the pipeline is usually a simple matter of setting a parameters to have ValueFromPipeline = true, and
-ensuring most of the work is done in the `ProcessRecord` method.
+The pipeline is a very useful feature of PowerShell, and cmdlets should endevor to make use of it. Enabling
+usage of the pipeline is usually a simple matter of setting a parameters to have `ValueFromPipeline = true`, and
+ensuring the work requiring the pipelined parameter is done in the `ProcessRecord` method, as `BeginProcess`
+and `EndProcess` will leave the pipeline parameter uninitalized, and `ProcessRecord` is called for every 
+pipeline value.
 
 #Cmdlets SHOULD prefer to use simple arrays such as string[] to generic lists such as List<string> for their parameters.
 

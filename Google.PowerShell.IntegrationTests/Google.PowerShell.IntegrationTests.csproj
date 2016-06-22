@@ -58,9 +58,6 @@
     <None Include="Storage\Storage.GcsObject.Tests.ps1" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Compute\Compute.GceServiceAccount.Tests.ps1" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Compute\Compute.GceAttachedDiskConfig.Tests.ps1" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

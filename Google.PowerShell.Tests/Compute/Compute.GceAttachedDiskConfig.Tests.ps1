@@ -1,6 +1,12 @@
-﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
-Install-GcloudCmdlets
+﻿$path = $PSScriptRoot
 
+while($child -eq $null) {
+    $child = Get-ChildItem GcloudCmdlets.ps1 -Recurse -Path $path 
+    $path = Split-Path $path
+}
+
+. $child.FullName
+Install-GcloudCmdlets
 
 Describe "New-GceAttachedDiskConfig" {
     It "should set defaults for persistant disks" {

@@ -11,7 +11,7 @@ using System.Management.Automation;
 namespace Google.PowerShell.ComputeEngine
 {
     /// <summary>
-    /// Library class for transforming tables into metadata.
+    /// Library class for transforming IDictionary objects into Compute Engine Metadata objects.
     /// </summary>
     public class InstanceMetadataPSConverter
     {

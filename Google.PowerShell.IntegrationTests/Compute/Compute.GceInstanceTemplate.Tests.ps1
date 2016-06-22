@@ -50,7 +50,6 @@ Describe "Add-GceInstanceTemplate" {
     $name3 = "test-add-template3-$r"
 
     $serviceAccount = New-GceServiceAccountConfig default -BigQuery
-    
 
     It "should error with bad image" {
         { Add-GceInstanceTemplate $name -MachineType $machineType -BootDiskImage "not an image" `

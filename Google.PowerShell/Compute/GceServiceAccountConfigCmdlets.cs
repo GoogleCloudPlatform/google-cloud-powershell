@@ -221,52 +221,61 @@ namespace Google.PowerShell.ComputeEngine
         }
 
         /// <summary>
-        /// Because we are looking at bound parameters, we can't just set parameters to their default values
+        /// Mapping of parameters to their default values.
+        /// Because this cmdlet uses MyInvocation.BoundParameters to get the parameter values, we can't just
+        /// set the respective porperties to their default values, as they would not be bound.
         /// </summary>
-        private readonly Dictionary<string, object> _defaultParameterValues = new Dictionary<string, object>
-        {
-            {"cloudlogging", ReadWrite.Write},
-            {"cloudmonitoring", ReadWrite.Write },
-            {"servicecontrol", true },
-            {"servicemanagement", true },
-            {"storage", ReadWrite.Read }
+        private static readonly IDictionary<string, object> DefaultParameterValues =
+            new Dictionary<string, object>
+            {
+                {"CloudLogging", ReadWrite.Write},
+                {"CloudMonitoring", ReadWrite.Write},
+                {"ServiceControl", true},
+                {"ServiceManagement", true},
+                {"Storage", ReadWrite.Read}
 
-        };
+            };
 
         /// <summary>
-        /// Mapping of parameter and value to scope string.
+        /// Maps parameter names to a sub dictionary. each sub dictionary maps parameter values to their scope
+        /// strings.
         /// </summary>
-        private readonly Dictionary<string, IDictionary<object, string>> _scopeUriMap =
+        /// <example>
+        /// If BigtableAdmin is a bound parameter, and is bound to the value BigTableAdminEnum.Tables, you can
+        /// get the related sope with 
+        /// <code> string scope = NamevalueScopeMap["BigtableAdmin"][BigTableAdminEnum.Tables]</code>
+        /// </example>
+        private static readonly IDictionary<string, IDictionary<object, string>> NameValueScopeMap =
             new Dictionary<string, IDictionary<object, string>>
             {
                 {
-                    "bigquery", new Dictionary<object, string>
+                    "BigQuery", new Dictionary<object, string>
                     {
                         {SwitchParameter.Present, "bigquery"}
                     }
                 },
                 {
-                    "bigtableadmin", new Dictionary<object, string>
+                    "BigtableAdmin", new Dictionary<object, string>
                     {
                         {BigTableAdminEnum.Tables, "bigtable.admin.table"},
                         {BigTableAdminEnum.Full, "bigtable.admin"}
                     }
                 },
                 {
-                    "bigtabledata", new Dictionary<object, string>
+                    "BigtableData", new Dictionary<object, string>
                     {
                         {ReadWrite.Read, "bigtable.data.readonly"},
                         {ReadWrite.ReadWrite, "bigtable.data"}
                     }
                 },
                 {
-                    "clouddatastore", new Dictionary<object, string>
+                    "CloudDatastore", new Dictionary<object, string>
                     {
                         {SwitchParameter.Present, "datastore"}
                     }
                 },
                 {
-                    "cloudlogging", new Dictionary<object, string>
+                    "CloudLogging", new Dictionary<object, string>
                     {
                         {ReadWrite.Write, "logging.write"},
                         {ReadWrite.Read, "logging.read"},
@@ -274,7 +283,7 @@ namespace Google.PowerShell.ComputeEngine
                     }
                 },
                 {
-                    "cloudmonitoring", new Dictionary<object, string>
+                    "CloudMonitoring", new Dictionary<object, string>
                     {
                         {ReadWrite.Write, "monitoring.write"},
                         {ReadWrite.Read, "monitoring.read"},
@@ -282,38 +291,38 @@ namespace Google.PowerShell.ComputeEngine
                     }
                 },
                 {
-                    "cloudpubsub", new Dictionary<object, string>
+                    "CloudPubSub", new Dictionary<object, string>
                     {
                         {SwitchParameter.Present, "pubsub"}
                     }
                 },
                 {
-                    "cloudsql", new Dictionary<object, string>
+                    "CloudSQL", new Dictionary<object, string>
                     {
                         {SwitchParameter.Present, "sqlservice.admin"}
                     }
                 },
                 {
-                    "compute", new Dictionary<object, string>
+                    "Compute", new Dictionary<object, string>
                     {
                         {ReadWrite.Read, "compute.readonly"},
                         {ReadWrite.ReadWrite, "compute"}
                     }
                 },
                 {
-                    "servicecontrol", new Dictionary<object, string>
+                    "ServiceControl", new Dictionary<object, string>
                     {
                         {true, "servicecontrol"}
                     }
                 },
                 {
-                    "servicemanagement", new Dictionary<object, string>
+                    "ServiceManagement", new Dictionary<object, string>
                     {
                         {true, "service.management"}
                     }
                 },
                 {
-                    "storage", new Dictionary<object, string>
+                    "Storage", new Dictionary<object, string>
                     {
                         {ReadWrite.Read, "devstorage.read_only"},
                         {ReadWrite.Write, "devstorage.write_only"},
@@ -322,13 +331,13 @@ namespace Google.PowerShell.ComputeEngine
                     }
                 },
                 {
-                    "taskqueue", new Dictionary<object, string>
+                    "TaskQueue", new Dictionary<object, string>
                     {
                         {SwitchParameter.Present, "taskqueue"}
                     }
                 },
                 {
-                    "userinfo", new Dictionary<object, string>
+                    "UserInfo", new Dictionary<object, string>
                     {
                         {SwitchParameter.Present, "userinfo.email"}
                     }
@@ -338,7 +347,6 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// Creates a ServiceAccount object from the email and uses the given flags to add scopes.
         /// </summary>
-        /// <returns></returns>
         private ServiceAccount BuildFromFlags()
         {
             var scopes = new List<string>();
@@ -347,16 +355,18 @@ namespace Google.PowerShell.ComputeEngine
                 scopes.AddRange(ScopeUri);
             }
 
+            // Add scopes for bound parameters.
             foreach (KeyValuePair<string, object> boundParameter in MyInvocation.BoundParameters)
             {
-                AddScope(boundParameter, scopes);
+                AddScope(scopes, boundParameter);
             }
 
-            foreach (KeyValuePair<string, object> defaultParameter in _defaultParameterValues)
+            // Add scopes for parameters with default values that were not bound.
+            foreach (KeyValuePair<string, object> defaultParameter in DefaultParameterValues)
             {
                 if (!MyInvocation.BoundParameters.ContainsKey(defaultParameter.Key))
                 {
-                    AddScope(defaultParameter, scopes);
+                    AddScope(scopes, defaultParameter);
                 }
             }
 
@@ -370,18 +380,18 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// Adds the scope uri of the parameter, if it has one.
         /// </summary>
-        /// <param name="parameter"></param>
-        /// <param name="scopes"></param>
-        private void AddScope(KeyValuePair<string, object> parameter, List<string> scopes)
+        /// <param name="parameter">A KeyValuePair containing the name of the parameter as the key and the 
+        /// value of the parameter as the value</param>
+        private static void AddScope(List<string> scopes, KeyValuePair<string, object> parameter)
         {
             const string baseUri = "https://www.googleapis.com/auth/";
 
-            string scopeType = parameter.Key.ToLower();
-            if (_scopeUriMap.ContainsKey(scopeType))
+            string scopeType = parameter.Key;
+            if (NameValueScopeMap.ContainsKey(scopeType))
             {
-                if (_scopeUriMap[scopeType].ContainsKey(parameter.Value))
+                if (NameValueScopeMap[scopeType].ContainsKey(parameter.Value))
                 {
-                    string scopeString = _scopeUriMap[scopeType][parameter.Value];
+                    string scopeString = NameValueScopeMap[scopeType][parameter.Value];
                     scopes.Add($"{baseUri}{scopeString}");
                 }
             }

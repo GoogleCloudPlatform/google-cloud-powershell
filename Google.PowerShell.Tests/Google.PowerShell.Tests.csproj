@@ -114,6 +114,8 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="Compute\Compute.GceAttachedDiskConfig.Tests.ps1" />
+    <None Include="Compute\Compute.GceServiceAccount.Tests.ps1" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
