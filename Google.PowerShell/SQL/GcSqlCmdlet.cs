@@ -1,5 +1,8 @@
-﻿// Copyright 2016 Google Inc. All Rights Reserved.
+﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
+
+// Licensed under the Apache License Version 2.0.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +18,6 @@ namespace Google.PowerShell.SQL
     /// </summary>
     public abstract class GcSqlCmdlet : GCloudCmdlet
     {
-
         //The service for the Google Cloud SQL API
         public SQLAdminService Service { get; private set; }
 
