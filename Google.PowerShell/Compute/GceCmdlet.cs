@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace Google.PowerShell.ComputeEngine
@@ -18,22 +19,15 @@ namespace Google.PowerShell.ComputeEngine
     public abstract class GceCmdlet : GCloudCmdlet
     {
         // The Servcie for the Google Compute API
-        public ComputeService Service { get; private set; }
+        public ComputeService Service { get; }
 
-        public GceCmdlet() : this(null)
+        protected GceCmdlet() : this(null)
         {
         }
 
-        public GceCmdlet(ComputeService service)
+        protected GceCmdlet(ComputeService service)
         {
-            if (service == null)
-            {
-                Service = new ComputeService(GetBaseClientServiceInitializer());
-            }
-            else
-            {
-                Service = service;
-            }
+            Service = service ?? new ComputeService(GetBaseClientServiceInitializer());
         }
 
         /// <summary>
@@ -46,7 +40,7 @@ namespace Google.PowerShell.ComputeEngine
         {
             WriteWarnings(op);
 
-            while (op.Status != "DONE")
+            while (op.Status != "DONE" && !Stopping)
             {
                 Thread.Sleep(150);
                 ZoneOperationsResource.GetRequest getReq = Service.ZoneOperations.Get(project, zone, op.Name);
@@ -69,7 +63,7 @@ namespace Google.PowerShell.ComputeEngine
         protected void WaitForGlobalOperation(string project, Operation operation)
         {
             WriteWarnings(operation);
-            while (operation.Status != "DONE")
+            while (operation.Status != "DONE" && !Stopping)
             {
                 Thread.Sleep(150);
                 operation = Service.GlobalOperations.Get(project, operation.Name).Execute();
@@ -94,17 +88,33 @@ namespace Google.PowerShell.ComputeEngine
         }
 
         /// <summary>
-        /// Library method to pull the name of a zone from a uri of the zone.
+        /// Library method to pull the name of a zone from a uri.
         /// </summary>
-        /// <param name="zoneUri">
-        /// A uri to of a zone.
+        /// <param name="uri">
+        /// A uri that includes the zone.
         /// </param>
         /// <returns>
-        /// The name of the zone, which is the last path element of a zone uri.
+        /// The name of the zone part of the uri.
         /// </returns>
-        public static string GetZoneNameFromUri(string zoneUri)
+        public static string GetZoneNameFromUri(string uri)
         {
-            return zoneUri.Split('/', '\\').Last();
+            Match match = Regex.Match(uri, "zones/(?<zone>[^/]*)");
+            return match.Groups["zone"].Value;
+        }
+
+        /// <summary>
+        /// Library method to pull the name of a project from a uri.
+        /// </summary>
+        /// <param name="uri">
+        /// The uri that includes the project.
+        /// </param>
+        /// <returns>
+        /// The name of the project.
+        /// </returns>
+        public static string GetProjectNameFromUri(string uri)
+        {
+            Match match = Regex.Match(uri, "projects/(?<project>[^/]*)");
+            return match.Groups["project"].Value;
         }
     }
 
@@ -117,13 +127,13 @@ namespace Google.PowerShell.ComputeEngine
     public abstract class GceConcurrentCmdlet : GceCmdlet
     {
         /// <summary>
-        /// Container class for all information needed to wait on an operation.
+        /// Container class for all information needed to wait on a zone operation.
         /// </summary>
         private class ZoneOperation
         {
-            public string Project { get; private set; }
-            public string Zone { get; private set; }
-            public Operation Operation { get; private set; }
+            public string Project { get; }
+            public string Zone { get; }
+            public Operation Operation { get; }
 
             public ZoneOperation(string project, string zone, Operation operation)
             {
@@ -132,21 +142,48 @@ namespace Google.PowerShell.ComputeEngine
                 Operation = operation;
             }
         }
+        /// <summary>
+        /// Container class for all information needed to wait on a gobal operation.
+        /// </summary>
+        private class GlobalOperation
+        {
+            public string Project { get; }
+            public Operation Operation { get; }
+
+            public GlobalOperation(string project, Operation operation)
+            {
+                Project = project;
+                Operation = operation;
+            }
+        }
 
         /// <summary>
         /// A place to store in progress operations to be waitied on in EndProcessing().
         /// </summary>
-        private IList<ZoneOperation> _operations = new List<ZoneOperation>();
+        private IList<ZoneOperation> _zoneOperations = new List<ZoneOperation>();
+
+        private IList<GlobalOperation> _globalOperations = new List<GlobalOperation>();
 
         /// <summary>
-        /// Used by child classes to add operations to wait on.
+        /// Used by child classes to add zone operations to wait on.
         /// </summary>
         /// <param name="project">The name of the Google Cloud project</param>
         /// <param name="zone">The name of the zone</param>
         /// <param name="operation">The Operation object to wait on.</param>
         protected void AddOperation(string project, string zone, Operation operation)
         {
-            _operations.Add(new ZoneOperation(project, zone, operation));
+            _zoneOperations.Add(new ZoneOperation(project, zone, operation));
+        }
+
+        /// <summary>
+        /// Used by child classes to add global operations to wait on.
+        /// </summary>
+        /// <param name="project">The name of the Google Cloud project</param>
+        /// <param name="zone">The name of the zone</param>
+        /// <param name="operation">The Operation object to wait on.</param>
+        protected void AddOperation(string project, Operation operation)
+        {
+            _globalOperations.Add(new GlobalOperation(project, operation));
         }
 
         /// <summary>
@@ -155,7 +192,7 @@ namespace Google.PowerShell.ComputeEngine
         protected override void EndProcessing()
         {
             var exceptions = new List<Exception>();
-            foreach (ZoneOperation operation in _operations)
+            foreach (ZoneOperation operation in _zoneOperations)
             {
                 try
                 {
@@ -166,6 +203,19 @@ namespace Google.PowerShell.ComputeEngine
                     exceptions.Add(e);
                 }
             }
+
+            foreach (GlobalOperation operation in _globalOperations)
+            {
+                try
+                {
+                    WaitForGlobalOperation(operation.Project, operation.Operation);
+                }
+                catch (Exception e)
+                {
+                    exceptions.Add(e);
+                }
+            }
+
             if (exceptions.Count > 1)
             {
                 throw new AggregateException(exceptions);
