@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 using Google.PowerShell.Common;
 using Google.Apis.SQLAdmin.v1beta4;
 
-
-
 namespace Google.PowerShell.SQL
 {
     /// <summary>
@@ -18,8 +16,6 @@ namespace Google.PowerShell.SQL
 
       //The service for the Google Cloud SQL API
       public SQLAdminService Service { get; private set; }
-
-
 
       public GcSqlCmdlet()
       {
