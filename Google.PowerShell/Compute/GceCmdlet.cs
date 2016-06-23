@@ -98,8 +98,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </returns>
         public static string GetZoneNameFromUri(string uri)
         {
-            Match match = Regex.Match(uri, "zones/(?<zone>[^/]*)");
-            return match.Groups["zone"].Value;
+            return GetUriPart("zones", uri);
         }
 
         /// <summary>
@@ -113,8 +112,13 @@ namespace Google.PowerShell.ComputeEngine
         /// </returns>
         public static string GetProjectNameFromUri(string uri)
         {
-            Match match = Regex.Match(uri, "projects/(?<project>[^/]*)");
-            return match.Groups["project"].Value;
+            return GetUriPart("projects", uri);
+        }
+
+        public static string GetUriPart(string part, string uri)
+        {
+            Match match = Regex.Match(uri, $"{part}/(?<value>[^/]*)");
+            return match.Groups["value"].Value;
         }
     }
 

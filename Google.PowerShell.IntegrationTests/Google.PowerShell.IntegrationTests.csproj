@@ -50,6 +50,7 @@
     <None Include="Compute\Compute.GceFirewall.Tests.ps1" />
     <None Include="Compute\Compute.GceInstance.Tests.ps1" />
     <None Include="Compute\Compute.GceInstanceTemplate.Tests.ps1" />
+    <None Include="Compute\Compute.GceServiceAccount.Tests.ps1" />
     <None Include="GcloudCmdlets.ps1" />
     <None Include="README.md" />
     <None Include="Storage\Storage.GcsBucket.Tests.ps1" />
