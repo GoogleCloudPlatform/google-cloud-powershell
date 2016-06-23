@@ -58,10 +58,6 @@
       <HintPath>..\packages\Google.Apis.Core.1.13.1\lib\net45\Google.Apis.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Google.Apis.Dns.v1, Version=1.13.1.517, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Apis.Dns.v1.1.13.1.517\lib\portable-net45+netcore45+wpa81+wp8\Google.Apis.Dns.v1.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Google.Apis.PlatformServices, Version=1.13.1.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
       <HintPath>..\packages\Google.Apis.1.13.1\lib\net45\Google.Apis.PlatformServices.dll</HintPath>
       <Private>True</Private>
@@ -133,7 +129,6 @@
     <Compile Include="Compute\GoogleComputeOperationException.cs" />
     <Compile Include="Compute\GceFirewallProtocolCmdlet.cs" />
     <Compile Include="Compute\InstanceMetadataConverter.cs" />
-    <Compile Include="Dns\GcdManagedZones.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Storage\GcsBucket.cs" />
     <Compile Include="Storage\GcsBucketLogging.cs" />
