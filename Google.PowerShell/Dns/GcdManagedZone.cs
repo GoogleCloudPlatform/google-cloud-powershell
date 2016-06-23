@@ -57,21 +57,18 @@ namespace Google.PowerShell.Dns
         {
             base.ProcessRecord();
 
-            if (!String.IsNullOrEmpty(Project))
+            if (!String.IsNullOrEmpty(ManagedZone))
             {
-                if (!String.IsNullOrEmpty(ManagedZone))
-                {
-                   ManagedZonesResource.GetRequest zoneGetRequest = Service.ManagedZones.Get(Project, ManagedZone);
-                   ManagedZone zone = zoneGetRequest.Execute();
-                   WriteObject(zone);
-                }
-                else
-                {
-                    ManagedZonesResource.ListRequest zonesListRequest = Service.ManagedZones.List(Project);
-                    ManagedZonesListResponse zonesListResponse = zonesListRequest.Execute();
-                    IList<ManagedZone> zonesList = zonesListResponse.ManagedZones;
-                    WriteObject(zonesList, true);
-                }
+                ManagedZonesResource.GetRequest zoneGetRequest = Service.ManagedZones.Get(Project, ManagedZone);
+                ManagedZone zone = zoneGetRequest.Execute();
+                WriteObject(zone);
+            }
+            else
+            {
+                ManagedZonesResource.ListRequest zonesListRequest = Service.ManagedZones.List(Project);
+                ManagedZonesListResponse zonesListResponse = zonesListRequest.Execute();
+                IList<ManagedZone> zonesList = zonesListResponse.ManagedZones;
+                WriteObject(zonesList, true);
             }
         }
     }
