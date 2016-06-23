@@ -63,7 +63,7 @@ Describe "Get-GcdManagedZone" {
         # The type and Kind should be the same for all managed zones
         $zones[0].GetType().FullName | Should Match "Google.Apis.Dns.v1.Data.ManagedZone"
         $zones[1].GetType().FullName | Should Match "Google.Apis.Dns.v1.Data.ManagedZone"
-        ($zones.Kind -match "dns#managedZone").Count | Should Be 2
+        $zones.Kind | Should Match "dns#managedZone"
 
         ($zones.Description -match "testing zone, 1").Count | Should Be 1
         ($zones.DnsName -match "gcloudexample.com").Count | Should Be 1
