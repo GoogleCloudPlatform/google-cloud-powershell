@@ -34,7 +34,7 @@ Describe "Get-GcdManagedZone" {
         (Get-GcdManagedZone -Project $project).Count -eq 0 | Should Be $true
     }
 
-	#Create zone for testing 
+	# Create zone for testing 
 	gcloud dns managed-zones create --dns-name="gcloudexample.com." --description="testing zone, 1" "test1"
 
 	It "should list exactly 1 managed zone in project" {
@@ -50,7 +50,7 @@ Describe "Get-GcdManagedZone" {
 		$zones.Name | Should Match "test1"
 	}
 
-	#Create 2nd zone for testing
+	# Create second zone for testing
 	gcloud dns managed-zones create --dns-name="gcloudexample2.com." --description="testing zone, 2" "test2"
 
 	It "should list exactly 2 managed zones in project" {
@@ -60,7 +60,7 @@ Describe "Get-GcdManagedZone" {
 	It "should work and list the 2 managed zones just created" {
         $zones = Get-GcdManagedZone -Project $project
 
-		# Type and Kind should be the same for all zones
+		# The type and Kind should be the same for all managed zones
 		$zones[0].GetType().FullName | Should Match "Google.Apis.Dns.v1.Data.ManagedZone"
 		$zones[1].GetType().FullName | Should Match "Google.Apis.Dns.v1.Data.ManagedZone"
 		($zones.Kind -match "dns#managedZone").Count | Should Be 2
@@ -92,7 +92,7 @@ Describe "Get-GcdManagedZone" {
 		$zones.Name | Should Match "test2"
 	}
 
-	#Delete test zones
+	# Delete test zones
 	gcloud dns managed-zones delete "test1"
 	gcloud dns managed-zones delete "test2"
 }

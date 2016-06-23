@@ -3,10 +3,10 @@
 
 using Google;
 using Google.Apis.Auth.OAuth2;
-using Google.Apis.Download;
-using Google.Apis.Services; 
 using Google.Apis.Dns.v1;
 using Google.Apis.Dns.v1.Data;
+using Google.Apis.Download;
+using Google.Apis.Services;
 using Google.PowerShell.Common;
 using System;
 using System.Collections.Generic;
@@ -39,7 +39,7 @@ namespace Google.PowerShell.Dns
     {
         /// <summary>
         /// <para type="description">
-        /// The project to check for managed zones.
+        /// Get the project to check for managed zones.
         /// </para>
         /// </summary>
         [Parameter]
@@ -48,7 +48,7 @@ namespace Google.PowerShell.Dns
 
         /// <summary>
         /// <para type="description">
-        /// Specific ManagedZone to return (name or id permitted).
+        /// Get the specific ManagedZone to return (name or id permitted).
         /// </para>
         [Parameter(Position = 1, Mandatory = false)]
         public string ManagedZone { get; set; }
@@ -68,7 +68,8 @@ namespace Google.PowerShell.Dns
                 else
                 {
                     ManagedZonesResource.ListRequest zonesListRequest = Service.ManagedZones.List(Project);
-                    IList<ManagedZone> zonesList = zonesListRequest.Execute().ManagedZones;
+                    ManagedZonesListResponse zonesListResponse = zonesListRequest.Execute();
+                    IList<ManagedZone> zonesList = zonesListResponse.ManagedZones;
                     WriteObject(zonesList, true);
                 }
             }
