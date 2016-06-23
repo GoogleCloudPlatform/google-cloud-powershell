@@ -16,7 +16,7 @@ namespace Google.PowerShell.Dns
 {
     /// <summary>
     /// <para type="synopsis">
-    /// Gets the Google DNS ManagedZones that have been created but not yet deleted within a project.
+    /// Gets the Google DNS ManagedZones within a project.
     /// </para>
     /// <para type="description">
     /// Lists the project's ManagedZones.
@@ -29,7 +29,7 @@ namespace Google.PowerShell.Dns
     ///   <para>Get the managed zones for the project "testing."</para>
     ///   <para><code>Get-GcdManagedZones -Project "testing" </code></para>
     /// </example>
-    /// /// <example>
+    /// <example>
     ///   <para>Get the managed zone "test1" for the project "testing."</para>
     ///   <para><code>Get-GcdManagedZones -Project "testing" -ManagedZone "test1" </code></para>
     /// </example>
@@ -50,6 +50,7 @@ namespace Google.PowerShell.Dns
         /// <para type="description">
         /// Get the specific ManagedZone to return (name or id permitted).
         /// </para>
+        /// </summary>
         [Parameter(Position = 1, Mandatory = false)]
         public string ManagedZone { get; set; }
 
