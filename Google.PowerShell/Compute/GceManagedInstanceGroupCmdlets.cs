@@ -6,8 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace Google.PowerShell.Compute
 {
@@ -358,7 +357,15 @@ namespace Google.PowerShell.Compute
         }
     }
 
-    [Cmdlet(VerbsCommon.Remove, "GceManagedInstanceGroup")]
+    /// <summary>
+    /// <para type="synopsis">
+    /// Removes a Google Compute Engine instance group manager.
+    /// </para>
+    /// <para type="description"> 
+    /// Removes a Google Compute Engine instance group manager.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Remove, "GceManagedInstanceGroup", SupportsShouldProcess = true)]
     public class RemoveManagedInstanceGroupCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
@@ -422,12 +429,364 @@ namespace Google.PowerShell.Compute
             string project = GetProjectNameFromUri(Object.SelfLink);
             string zone = Object.Zone;
             string name = Object.Name;
-            AddOperation(project, zone, Service.InstanceGroupManagers.Delete(project, zone, name).Execute());
+            if (ShouldProcess($"{project}/{zone}/{name}", "Remove Instance Group Manager"))
+            {
+                AddOperation(project, zone, Service.InstanceGroupManagers.Delete(project, zone, name).Execute());
+            }
         }
 
         private void DeleteByName()
         {
-            AddOperation(Project, Zone, Service.InstanceGroupManagers.Delete(Project, Zone, Name).Execute());
+            if (ShouldProcess($"{Project}/{Zone}/{Name}", "Remove Instance Group Manager"))
+            {
+                AddOperation(Project, Zone, Service.InstanceGroupManagers.Delete(Project, Zone, Name).Execute());
+            }
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Changes the data of a Google Compute Engine instance group manager.
+    /// </para>
+    /// <para type="description"> 
+    /// Changes the data of a Google Compute Engine instance group manager. As a whole, the group can be
+    /// resized, have its template set, and have its target pools set. Member instances can be abandoned,
+    /// deleted and recreated.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Set, "GceManagedInstanceGroup", SupportsShouldProcess = true)]
+    public class SetGceManagedInstanceGroupCmdelt : GceConcurrentCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string AbandonUri = "AbandonUri";
+            public const string AbandonObject = "AbandonObject";
+            public const string DeleteUri = "DeleteUri";
+            public const string DeleteObject = "DeleteObject";
+            public const string RecreateUri = "RecreateUri";
+            public const string RecreateObject = "RecreateObject";
+            public const string Resize = "Resize";
+            public const string SetTemplate = "SetTemplate";
+            public const string SetTargetPools = "SetTargetPools";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// The project that owns the managed instance group.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The zone the managed instance group is in.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
+        public string Zone { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the managed instance group to change.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0)]
+        public string Name { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// If set, will abandon the instance specified by InstanceUri or InstanceObject.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.AbandonUri, Mandatory = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.AbandonObject, Mandatory = true)]
+        public SwitchParameter Abandon { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// If set, will delete the instance specified by InstanceUri or InstanceObject.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.DeleteUri, Mandatory = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.DeleteObject, Mandatory = true)]
+        public SwitchParameter Delete { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// If set, will recreate the instance specified by InstanceUri or InstanceObject.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.RecreateUri, Mandatory = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.RecreateObject, Mandatory = true)]
+        public SwitchParameter Recreate { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The uri of the instance to Abandon, Delete or Recreate.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.AbandonUri, Mandatory = true,
+            ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.DeleteUri, Mandatory = true,
+            ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.RecreateUri, Mandatory = true,
+            ValueFromPipeline = true)]
+        public string[] InstanceUri { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The Instance object to Abandon, Delete or Recreate.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.AbandonObject, Mandatory = true,
+            ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.DeleteObject, Mandatory = true,
+            ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.RecreateObject, Mandatory = true,
+            ValueFromPipeline = true)]
+        public Instance[] InstanceObject { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The new target size of the instance group.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.Resize, Mandatory = true)]
+        public int Size { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Uri to the new template of the instance group.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.SetTemplate, Mandatory = true)]
+        [PropertyByTypeTransformation(Property = "SelfLink", TypeToTransform = typeof(InstanceTemplate))]
+        public string Template { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The uris of the new set of target pools.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.SetTargetPools, Mandatory = true)]
+        public string[] TargetPoolUri { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.AbandonUri:
+                    AbandonUri();
+                    break;
+                case ParameterSetNames.AbandonObject:
+                    AbandonObject();
+                    break;
+                case ParameterSetNames.DeleteUri:
+                    DeleteUri();
+                    break;
+                case ParameterSetNames.DeleteObject:
+                    DeleteObject();
+                    break;
+                case ParameterSetNames.RecreateUri:
+                    RecreateUri();
+                    break;
+                case ParameterSetNames.RecreateObject:
+                    RecreateObject();
+                    break;
+                case ParameterSetNames.Resize:
+                    Resize();
+                    break;
+                case ParameterSetNames.SetTemplate:
+                    SetTemplate();
+                    break;
+                case ParameterSetNames.SetTargetPools:
+                    SetTargetPools();
+                    break;
+                default:
+                    throw new PSInvalidOperationException($"{ParameterSetName} is not a valid parameter set");
+            }
+        }
+
+        private void SetTemplate()
+        {
+            InstanceGroupManagersSetInstanceTemplateRequest body =
+                new InstanceGroupManagersSetInstanceTemplateRequest
+                {
+                    InstanceTemplate = Template
+                };
+            if (ShouldProcess($"{Project}/{Zone}/{Name}", "Set Template"))
+            {
+                InstanceGroupManagersResource.SetInstanceTemplateRequest request =
+                    Service.InstanceGroupManagers.SetInstanceTemplate(body, Project, Zone, Name);
+                AddOperation(Project, Zone, request.Execute());
+            }
+        }
+
+
+        private void SetTargetPools()
+        {
+            var body = new InstanceGroupManagersSetTargetPoolsRequest()
+            {
+                TargetPools = TargetPoolUri
+            };
+            if (ShouldProcess($"{Project}/{Zone}/{Name}", "Set Target Pools"))
+            {
+                InstanceGroupManagersResource.SetTargetPoolsRequest request =
+                    Service.InstanceGroupManagers.SetTargetPools(body, Project, Zone, Name);
+                AddOperation(Project, Zone, request.Execute());
+            }
+        }
+
+        private void Resize()
+        {
+            if (ShouldProcess($"{Project}/{Zone}/{Name}", "Resize"))
+            {
+                Operation operation = Service.InstanceGroupManagers.Resize(Project, Zone, Name, Size).Execute();
+                AddOperation(Project, Zone, operation);
+            }
+        }
+
+        private void RecreateObject()
+        {
+            var body = new InstanceGroupManagersRecreateInstancesRequest
+            {
+                Instances = InstanceObject.Select(i => i.SelfLink).ToList()
+            };
+            if (ShouldProcess("Recreating instances: \n" + string.Join("\n", body.Instances), null,
+                $"Managed Instance Group {Project}/{Zone}/{Name}"))
+            {
+                InstanceGroupManagersResource.RecreateInstancesRequest request =
+                    Service.InstanceGroupManagers.RecreateInstances(body, Project, Zone, Name);
+                AddOperation(Project, Zone, request.Execute());
+            }
+        }
+
+        private void RecreateUri()
+        {
+            var body = new InstanceGroupManagersRecreateInstancesRequest
+            {
+                Instances = InstanceUri
+            };
+            if (ShouldProcess("Recreating instances: \n" + string.Join("\n", body.Instances), null,
+                $"Managed Instance Group {Project}/{Zone}/{Name}"))
+            {
+                InstanceGroupManagersResource.RecreateInstancesRequest request =
+                    Service.InstanceGroupManagers.RecreateInstances(body, Project, Zone, Name);
+                AddOperation(Project, Zone, request.Execute());
+            }
+        }
+
+        private void DeleteObject()
+        {
+            var body = new InstanceGroupManagersDeleteInstancesRequest
+            {
+                Instances = InstanceObject.Select(i => i.SelfLink).ToList()
+            };
+            if (ShouldProcess("Deleting instances: \n" + string.Join("\n", body.Instances), null,
+                $"Managed Instance Group {Project}/{Zone}/{Name}"))
+            {
+                InstanceGroupManagersResource.DeleteInstancesRequest request =
+                    Service.InstanceGroupManagers.DeleteInstances(body, Project, Zone, Name);
+                AddOperation(Project, Zone, request.Execute());
+            }
+        }
+
+        private void DeleteUri()
+        {
+            var body = new InstanceGroupManagersDeleteInstancesRequest
+            {
+                Instances = InstanceUri
+            };
+            if (ShouldProcess("Deleting instances: \n" + string.Join("\n", body.Instances), null,
+                $"Managed Instance Group {Project}/{Zone}/{Name}"))
+            {
+                InstanceGroupManagersResource.DeleteInstancesRequest request =
+                    Service.InstanceGroupManagers.DeleteInstances(body, Project, Zone, Name);
+                AddOperation(Project, Zone, request.Execute());
+            }
+        }
+
+        private void AbandonObject()
+        {
+            var body = new InstanceGroupManagersAbandonInstancesRequest
+            {
+                Instances = InstanceObject.Select(i => i.SelfLink).ToList()
+            };
+            if (ShouldProcess("Abandoning instances: \n" + string.Join("\n", body.Instances), null,
+                $"Managed Instance Group {Project}/{Zone}/{Name}"))
+            {
+                InstanceGroupManagersResource.AbandonInstancesRequest request =
+                    Service.InstanceGroupManagers.AbandonInstances(body, Project, Zone, Name);
+                AddOperation(Project, Zone, request.Execute());
+            }
+        }
+
+        private void AbandonUri()
+        {
+            var body = new InstanceGroupManagersAbandonInstancesRequest
+            {
+                Instances = InstanceUri
+            };
+            if (ShouldProcess("Abandoning instances: \n" + string.Join("\n", body.Instances), null,
+                $"Managed Instance Group {Project}/{Zone}/{Name}"))
+            {
+                InstanceGroupManagersResource.AbandonInstancesRequest request =
+                    Service.InstanceGroupManagers.AbandonInstances(body, Project, Zone, Name);
+                AddOperation(Project, Zone, request.Execute());
+            }
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Waits for a Google Compute Engine managed instance group to be stable.
+    /// </para>
+    /// <para type="description"> 
+    /// Waits for all of the instances of a managed instance group to reach normal running state.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsLifecycle.Wait, "GceManagedInstanceGroup")]
+    public class WaitGceManagedInstanceGroupCmdlet : GceCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The project that owns the managed instance group.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The zone the managed instance group is in.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
+        public string Zone { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the managed instance group to change.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0)]
+        public string Name { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            IList<ManagedInstance> instances;
+            do
+            {
+                Thread.Sleep(150);
+                InstanceGroupManagersListManagedInstancesResponse response =
+                    Service.InstanceGroupManagers.ListManagedInstances(Project, Zone, Name).Execute();
+                instances = response.ManagedInstances;
+            } while (instances.Any(i => i.CurrentAction != "NONE") && !Stopping);
         }
     }
 }
