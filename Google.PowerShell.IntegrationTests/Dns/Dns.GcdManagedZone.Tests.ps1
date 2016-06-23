@@ -5,7 +5,7 @@ $project = "gcloud-powershell-testing"
 
 Describe "Get-GcdManagedZone" {
 
-    It "should fail to return managed zones of non-existent project" {
+	It "should fail to return managed zones of non-existent project" {
         { Get-GcdManagedZone -Project "project-no-exist" } | Should Throw "400"
     }
 
