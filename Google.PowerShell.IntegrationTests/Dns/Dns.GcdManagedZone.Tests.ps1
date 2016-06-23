@@ -7,12 +7,12 @@ Describe "Get-GcdManagedZone" {
 
 	It "should fail to return managed zones of non-existent project" {
         { Get-GcdManagedZone -Project "project-no-exist" } | Should Throw "400"
-    }
+	}
 
 	It "should give access errors as appropriate" {
         # Don't know who created the "asdf" project.
         { Get-GcdManagedZone -Project "asdf" } | Should Throw "403"
-    }
+	}
 
 	# Delete all existing zones
 	$preExistingZones = gcloud dns managed-zones list --project $project
@@ -28,11 +28,11 @@ Describe "Get-GcdManagedZone" {
 
 	It "should fail to return non-existent managed zones of existing project" {
         { Get-GcdManagedZone -Project $project -ManagedZone "managedZone-no-exist" } | Should Throw "404"
-    }
+	}
 
 	It "should list exactly 0 managed zones in project" {
         (Get-GcdManagedZone -Project $project).Count -eq 0 | Should Be $true
-    }
+	}
 
 	# Create zone for testing 
 	gcloud dns managed-zones create --dns-name="gcloudexample.com." --description="testing zone, 1" "test1"
