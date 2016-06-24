@@ -19,7 +19,7 @@ namespace Google.PowerShell.Dns
     /// If a project is specified, will instead return the representation of that project. 
     /// </para>
     /// <example>
-    ///   <para>Get the representation of the project “testing”</para>
+    ///   <para>Get the representation of the project "testing"</para>
     ///   <para><code>Get-GcdProject -Project "testing" </code></para>
     /// </example>
     /// </summary>
