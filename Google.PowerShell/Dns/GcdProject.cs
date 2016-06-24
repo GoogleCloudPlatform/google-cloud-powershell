@@ -28,7 +28,7 @@ namespace Google.PowerShell.Dns
     {
         /// <summary>
         /// <para type="description">
-        /// Get the project to return a representation of.
+        /// Get the project to return the representation of.
         /// </para>
         /// </summary>
         [Parameter]
@@ -39,8 +39,8 @@ namespace Google.PowerShell.Dns
         {
             base.ProcessRecord();
 
-            ProjectsResource.GetRequest projectRequest = Service.Projects.Get(Project);
-            Project projectResponse = projectRequest.Execute();
+            ProjectsResource.GetRequest projectGetRequest = Service.Projects.Get(Project);
+            Project projectResponse = projectGetRequest.Execute();
             WriteObject(projectResponse);
         }
     }
