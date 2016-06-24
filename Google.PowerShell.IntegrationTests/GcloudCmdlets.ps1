@@ -3,7 +3,8 @@
 # Install the GCP cmdlets module into the current PowerShell session.
 function Install-GcloudCmdlets() {
     $dll = Get-ChildItem $PSScriptRoot\..\Google.PowerShell\bin -Recurse -Include Google.PowerShell.dll |
-        sort -Property CreationTime | select -First 1
+        sort -Descending -Property LastWriteTime |
+        select -First 1
     Import-Module $dll
 }
 

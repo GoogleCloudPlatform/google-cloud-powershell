@@ -1,5 +1,5 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
-Install-GcloudCmdlets
+Install-GCloudCmdlets
 
 $project = "gcloud-powershell-testing"
 
@@ -53,21 +53,29 @@ Describe "New-GcsObject" {
     }
 
     It "should support relative file paths" {
-        # TODO(chrsmith): Fix underlying bugs and use Push-Location and Pop-Location.
-        $orgWorkingDir = [System.Environment]::CurrentDirectory
-        [System.Environment]::CurrentDirectory = [System.IO.Path]::GetTempPath()
+        Push-Location ([System.IO.Path]::GetTempPath())
+        [System.IO.File]::WriteAllText("$($pwd.Path)\local-file.txt", "file-contents")
 
-        $filePath = [System.IO.Path]::Combine(
-            [System.Environment]::CurrentDirectory,
-            "local-file.txt")
-        [System.IO.File]::WriteAllText($filePath, "file-contents")        
-            
-        $newObj = New-GcsObject $bucket "on-gcs/file.txt" -File "local-file.txt"
+        $tempFolderName = [System.IO.Path]::GetFileName(([System.Environment]::CurrentDirectory))
+        $tests = @(
+                "local-file.txt",
+                ".\local-file.txt",
+                "./local-file.txt",
+                ([System.Environment]::CurrentDirectory + "\local-file.txt"),
+                "..\$tempFolderName\local-file.txt")
 
-        $obj = Get-GcsObject $bucket "on-gcs/file.txt"
-        $obj.Name | Should Be "on-gcs/file.txt"
+        $i = 0
+        foreach ($test in $tests) {
+            Write-Host "Testing [$i] [$test] [$($pwd.Path)]"
+            New-GcsObject $bucket "on-gcs/relative-path/scenario-$i" -File "local-file.txt"
 
-        [System.Environment]::CurrentDirectory = $orgWorkingDir
+            $obj = Get-GcsObject $bucket "on-gcs/relative-path/scenario-$i"
+            $obj.Size | Should Be 13  # "file-contents"
+
+            $i = $i + 1
+        }
+
+        Pop-Location
     }
 
     It "should set predefined ACLs if instructed to" {
@@ -123,6 +131,21 @@ Describe "New-GcsObject" {
 
         Read-GcsObject $bucket $objectName | Should BeExactly $objectContents
     }
+
+    It "will accept relative file paths" {
+        $objectName = "test-relative-path"
+        "12345" | New-GcsObject $bucket $objectName
+
+        # Read the object's contents, writing to a file relative to the temp directory.
+        Push-Location ([System.IO.Path]::GetTempPath())
+        Read-GcsObject $bucket $objectName -OutFile "output.txt"
+        Pop-Location
+
+        $fileObject = Get-Item ([System.IO.Path]::GetTempPath() + "\output.txt")
+        $fileObject.Length | Should Be 5
+        Remove-GcsObject $bucket $objectName
+    }
+
     # TODO(chrsmith): Confirm it works for 0-byte files (currently it doesn't).
 }
 
@@ -339,6 +362,30 @@ Describe "Write-GcsObject" {
         Write-GcsObject $bucket ($objectName + "2") -Content $objectContents -Force
         Read-GcsObject $bucket ($objectName + "2") | Should BeExactly $objectContents
     }
+
+    It "should accept relative file paths" {
+        $objectName = "relative-file-test"
+
+        # Create the original GCS object.
+        "contents" | New-GcsObject $bucket $objectName
+
+        # Rewrite its contents, reading from a relative file.
+        Push-Location ([System.IO.Path]::GetTempPath())
+        [System.IO.File]::WriteAllText("file-in-temp-dir.txt", "updated contents")
+        Write-GcsObject $bucket $objectName -File ".\file-in-temp-dir.txt"
+        Remove-Item "file-in-temp-dir.txt"
+
+        # Confirm the contents have changed.
+        Read-GcsObject $bucket $objectName -OutFile "file-in-temp-dir-from-gcs.txt" -Force
+        $fileContents = [System.IO.File]::ReadAllText("file-in-temp-dir-from-gcs.txt")
+        $fileContents | Should BeExactly "updated contents"
+
+        # Cleanup.
+        Remove-Item "file-in-temp-dir-from-gcs.txt"
+        Remove-GcsObject $bucket $objectName
+        Pop-Location
+    }
+
     # TODO(chrsmith): Confirm it works for 0-byte files (currently it doesn't).
     # TODO(chrsmith): Confirm Write-GcsObject doesn't remove object metadata, such
     # as its existing ACLs. (Since we are uploading a new object in-place.)
