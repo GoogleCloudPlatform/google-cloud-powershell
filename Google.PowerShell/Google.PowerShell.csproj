@@ -21,7 +21,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>0</WarningLevel>
+    <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Debug\Google.PowerShell.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -139,6 +139,7 @@
     <Compile Include="Compute\InstanceMetadataConverter.cs" />
     <Compile Include="Dns\GcdCmdlet.cs" />
     <Compile Include="Dns\GcdManagedZone.cs" />
+    <Compile Include="Dns\GcdProject.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SQL\GcSqlCmdlet.cs" />
     <Compile Include="SQL\GcSqlFlagsCmdlet.cs" />
