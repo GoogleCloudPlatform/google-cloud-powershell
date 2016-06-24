@@ -16,7 +16,7 @@ using Google.Apis.Download;
 using Google.Apis.Services;
 using Google.Apis.SQLAdmin.v1beta4.Data;
 
-namespace Google.PowerShell.SQL
+namespace Google.PowerShell.Sql
 {
     /// <summary>
     /// <para type="synopsis">

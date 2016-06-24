@@ -9,16 +9,16 @@ using System.Threading.Tasks;
 using Google.Apis.SQLAdmin.v1beta4.Data;
 using Google.Apis.SQLAdmin.v1beta4;
 using System.Management.Automation;
+using Google.PowerShell.Common;
 
-namespace Google.PowerShell.SQL
+namespace Google.PowerShell.Sql
 {
-
     /// <summary>
     /// <para type="synopsis">
     /// Lists all available service tiers for Google Cloud SQL, for example D1, D2. 
     /// </para>
     /// <para type="description">
-    /// Lists all available service tiers for Google Cloud SQL, for example D1, D2. Pricing information is available online.
+    /// Lists all available service tiers for Google Cloud SQL, for example D1, D2. Pricing information is available at https://cloud.google.com/sql/pricing.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlTiers")]
@@ -29,7 +29,8 @@ namespace Google.PowerShell.SQL
         /// Project ID of the project for which to list tiers.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
         protected override void ProcessRecord()
@@ -37,7 +38,7 @@ namespace Google.PowerShell.SQL
             TiersResource resource = new TiersResource(Service);
             TiersResource.ListRequest request = resource.List(Project);
             TiersListResponse tiers = request.Execute();
-            WriteObject(tiers.Items);
+            WriteObject(tiers.Items, true);
         }
     }
 }
