@@ -56,7 +56,7 @@ Describe "New-GcsObject" {
         Push-Location ([System.IO.Path]::GetTempPath())
         [System.IO.File]::WriteAllText("$($pwd.Path)\local-file.txt", "file-contents")
 
-        $tempFolderName = [System.IO.Path]::GetFileName(([System.Environment]::CurrentDirectory))
+        $tempFolderName = [System.IO.Path]::GetFileName([System.IO.Path]::GetTempPath())
         $tests = @(
                 "local-file.txt",
                 ".\local-file.txt",
@@ -66,7 +66,6 @@ Describe "New-GcsObject" {
 
         $i = 0
         foreach ($test in $tests) {
-            Write-Host "Testing [$i] [$test] [$($pwd.Path)]"
             New-GcsObject $bucket "on-gcs/relative-path/scenario-$i" -File "local-file.txt"
 
             $obj = Get-GcsObject $bucket "on-gcs/relative-path/scenario-$i"
@@ -138,11 +137,12 @@ Describe "New-GcsObject" {
 
         # Read the object's contents, writing to a file relative to the temp directory.
         Push-Location ([System.IO.Path]::GetTempPath())
-        Read-GcsObject $bucket $objectName -OutFile "output.txt"
+        Read-GcsObject $bucket $objectName -OutFile "output.txt" -Force
         Pop-Location
 
         $fileObject = Get-Item ([System.IO.Path]::GetTempPath() + "\output.txt")
         $fileObject.Length | Should Be 5
+        Remove-Item ([System.IO.Path]::GetTempPath() + "\output.txt")
         Remove-GcsObject $bucket $objectName
     }
 
@@ -365,19 +365,21 @@ Describe "Write-GcsObject" {
 
     It "should accept relative file paths" {
         $objectName = "relative-file-test"
+        $tmpPath = [System.IO.Path]::GetTempPath()
 
         # Create the original GCS object.
         "contents" | New-GcsObject $bucket $objectName
 
         # Rewrite its contents, reading from a relative file.
-        Push-Location ([System.IO.Path]::GetTempPath())
-        [System.IO.File]::WriteAllText("file-in-temp-dir.txt", "updated contents")
-        Write-GcsObject $bucket $objectName -File ".\file-in-temp-dir.txt"
-        Remove-Item "file-in-temp-dir.txt"
+        $localFileName = "write-gcs-object-file-in-temp-dir.txt"
+        [System.IO.File]::WriteAllText("$tmpPath\$localFileName", "updated contents")
+        Push-Location $tmpPath
+        Write-GcsObject $bucket $objectName -File ".\$localFileName"
+        Remove-Item $localFileName
 
-        # Confirm the contents have changed.
+        # Confirm the contents have changed, writing to a relative file path.
         Read-GcsObject $bucket $objectName -OutFile "file-in-temp-dir-from-gcs.txt" -Force
-        $fileContents = [System.IO.File]::ReadAllText("file-in-temp-dir-from-gcs.txt")
+        $fileContents = [System.IO.File]::ReadAllText("$tmpPath\file-in-temp-dir-from-gcs.txt")
         $fileContents | Should BeExactly "updated contents"
 
         # Cleanup.
