@@ -198,7 +198,7 @@ namespace Google.PowerShell.CloudStorage
             {
                 // TODO(chrsmith): Look at the file extension and infer content type.
                 objContentType = OctetStreamMimeType;
-                string qualifiedPath = Path.GetFullPath(File);
+                string qualifiedPath = GetFullPath(File);
                 if (!System.IO.File.Exists(qualifiedPath))
                 {
                     throw new FileNotFoundException("File not found.", qualifiedPath);
@@ -478,7 +478,7 @@ namespace Google.PowerShell.CloudStorage
             }
 
             // Write object contents to disk. Fail if the local file exists, unless -Force is specified.
-            string qualifiedPath = Path.GetFullPath(OutFile);
+            string qualifiedPath = GetFullPath(OutFile);
             bool fileExists = File.Exists(qualifiedPath);
             if (fileExists && !Force.IsPresent)
             {
@@ -557,7 +557,7 @@ namespace Google.PowerShell.CloudStorage
             Stream contentStream = null;
             if (!string.IsNullOrEmpty(File))
             {
-                string qualifiedPath = Path.GetFullPath(File);
+                string qualifiedPath = GetFullPath(File);
                 if (!System.IO.File.Exists(qualifiedPath))
                 {
                     throw new FileNotFoundException("File not found.", qualifiedPath);
