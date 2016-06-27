@@ -16,14 +16,14 @@ Describe "Get-GcdChange" {
     }
 
     # Delete all existing zones
-    $preExistingZones = gcloud dns managed-zones list --project $project
+    $preExistingZones = gcloud dns managed-zones list --project=$project
 
     if ($preExistingZones.Count -gt 0) {
         $preExistingZones = $preExistingZones[1..($preExistingZones.length-1)]
 
         ForEach ($zoneDescrip in $preExistingZones) {
             $zoneName = $zoneDescrip.Split(" ")[0]
-            gcloud dns managed-zones delete $zoneName
+            gcloud dns managed-zones delete $zoneName --project=$project
         }
     }
 
@@ -34,7 +34,7 @@ Describe "Get-GcdChange" {
     # Create zone for testing 
     $testZone = "test1"
     $dnsName = "gcloudexample.com."
-    gcloud dns managed-zones create --dns-name=$dnsName --description="testing zone, 1" $testZone
+    gcloud dns managed-zones create --dns-name=$dnsName --description="testing zone, 1" $testZone --project=$project
 
     It "should list exactly 1 change from creation" {
         (Get-GcdChange -Project $project -ManagedZone $testZone).Count -eq 1 | Should Be $true
@@ -52,9 +52,9 @@ Describe "Get-GcdChange" {
     }
     
     # Make a new change for testing by adding an A-type record to the test zone
-    gcloud dns record-sets transaction start --zone=$testZone
-    gcloud dns record-sets transaction add --name=$dnsName --type=A --ttl=300 “7.5.7.8” --zone=$testZone
-    gcloud dns record-sets transaction execute --zone=$testZone
+    gcloud dns record-sets transaction start --zone=$testZone --project=$project
+    gcloud dns record-sets transaction add --name=$dnsName --type=A --ttl=300 “7.5.7.8” --zone=$testZone --project=$project
+    gcloud dns record-sets transaction execute --zone=$testZone --project=$project
 
     It "should list exactly 2 changes" {
         (Get-GcdChange -Project $project -ManagedZone $testZone).Count -eq 2 | Should Be $true
@@ -78,9 +78,9 @@ Describe "Get-GcdChange" {
     }
 
     # Delete the previously added record to empty the managed zone (remove all non-NS/SOA records) and allow zone deletion
-    gcloud dns record-sets transaction start --zone=$testZone
-    gcloud dns record-sets transaction remove --name=$dnsName --type=A --ttl=300 “7.5.7.8” --zone=$testZone
-    gcloud dns record-sets transaction execute --zone=$testZone
+    gcloud dns record-sets transaction start --zone=$testZone --project=$project
+    gcloud dns record-sets transaction remove --name=$dnsName --type=A --ttl=300 “7.5.7.8” --zone=$testZone --project=$project
+    gcloud dns record-sets transaction execute --zone=$testZone --project=$project
 
     It "should list exactly 3 changes" {
         (Get-GcdChange -Project $project -ManagedZone $testZone).Count -eq 3 | Should Be $true
@@ -106,6 +106,6 @@ Describe "Get-GcdChange" {
         $changes[2].Id -eq 0 | Should Be $true
     }
 
-    # Delete now-empty test zone
-    gcloud dns managed-zones delete $testZone
+    # Delete now-empty test zone 
+    gcloud dns managed-zones delete $testZone --project=$project
 }

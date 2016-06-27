@@ -53,6 +53,7 @@
     <None Include="Dns\Dns.GcdChange.Tests.ps1" />
     <None Include="Dns\Dns.GcdManagedZone.Tests.ps1" />
     <None Include="Dns\Dns.GcdProject.Tests.ps1" />
+    <None Include="Dns\Dns.GcdResourceRecordSet.Tests.ps1" />
     <None Include="GcloudCmdlets.ps1" />
     <None Include="README.md" />
     <None Include="SQL\SQL.GcSqlFlags.Tests.ps1" />
