@@ -4,6 +4,7 @@
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using System;
+using System.IO;
 using System.Linq;
 using System.Management.Automation;
 using System.Reflection;
@@ -68,6 +69,29 @@ namespace Google.PowerShell.Common
         }
 
         /// <summary>
+        /// Returns the fully-qualified file path, properly relative file paths (taking the current Powershell
+        /// environemnt into account.)
+        ///
+        /// This method eliminates a class of bug where cmdlets do not support relative file paths. Because
+        /// Path.GetFile only handles file paths relative to the current (process) directory, which is not going to be
+        /// correct if the user has changed the current directory within the PowerShell session.
+        ///
+        /// You should *always* call this instead of Path.GetFullPath inside of cmdlets.
+        /// </summary>
+        protected string GetFullPath(string filePath)
+        {
+            // If the path is already fully-qualified, go with that.
+            if (Path.IsPathRooted(filePath))
+            {
+                return filePath;
+            }
+
+            // For relative files, qualify them based on where the PowerShell session is.
+            string currentDirectory = SessionState.Path.CurrentLocation.Path;
+            return Path.Combine(currentDirectory, filePath);
+        }
+
+        /// <summary>
         /// Sets properties and fields decordated with ConfigPropertyNameAttribute to their defaults, if necessary.
         /// </summary>
         // TODO(jimwp): Add new function called by this to replace capability in childeren.
@@ -119,7 +143,7 @@ namespace Google.PowerShell.Common
         /// <summary>
         /// Provides a one-time, post-processing functionality for the cmdlet.
         /// </summary>
-        // TODO(jimwp): seal this and replace with new function for childern to override.
+        // TODO(jimwp): Seal this and replace with new function for childern to override.
         protected override void EndProcessing()
         {
             // EndProcessing is not called if the cmdlet threw an exception or the user cancelled
