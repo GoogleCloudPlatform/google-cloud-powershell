@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Google.PowerShell.Common;
 using Google.Apis.SQLAdmin.v1beta4;
 
-namespace Google.PowerShell.SQL
+namespace Google.PowerShell.Sql
 {
     /// <summary>
     /// Base class for Google Cloud SQL-based cmdlets. 
