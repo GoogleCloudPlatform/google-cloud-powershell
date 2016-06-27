@@ -107,6 +107,7 @@
     <Compile Include="Common\GCloudCmdletTests.cs" />
     <Compile Include="Common\CloudSdkSettingsTests.cs" />
     <Compile Include="Common\MeasurementServiceProtocolTests.cs" />
+    <Compile Include="Compute\InstanceMetadataConverterTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

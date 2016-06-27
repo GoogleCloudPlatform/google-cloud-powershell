@@ -15,14 +15,14 @@ Describe "Get-GcdManagedZone" {
     }
 
     # Delete all existing zones
-    $preExistingZones = gcloud dns managed-zones list --project $project
+    $preExistingZones = gcloud dns managed-zones list --project=$project
 
     if ($preExistingZones.Count -gt 0) {
         $preExistingZones = $preExistingZones[1..($preExistingZones.length-1)]
 
         ForEach ($zoneDescrip in $preExistingZones) {
             $zoneName = $zoneDescrip.Split(" ")[0]
-            gcloud dns managed-zones delete $zoneName
+            gcloud dns managed-zones delete $zoneName --project=$project
         }
     }
 
@@ -35,7 +35,7 @@ Describe "Get-GcdManagedZone" {
     }
 
     # Create zone for testing 
-    gcloud dns managed-zones create --dns-name="gcloudexample.com." --description="testing zone, 1" "test1"
+    gcloud dns managed-zones create --dns-name="gcloudexample.com." --description="testing zone, 1" "test1" --project=$project
 
     It "should list exactly 1 managed zone in project" {
         (Get-GcdManagedZone -Project $project).Count -eq 1 | Should Be $true
@@ -51,7 +51,7 @@ Describe "Get-GcdManagedZone" {
     }
 
     # Create second zone for testing
-    gcloud dns managed-zones create --dns-name="gcloudexample2.com." --description="testing zone, 2" "test2"
+    gcloud dns managed-zones create --dns-name="gcloudexample2.com." --description="testing zone, 2" "test2" --project=$project
 
     It "should list exactly 2 managed zones in project" {
         (Get-GcdManagedZone -Project $project).Count -eq 2 | Should Be $true
@@ -93,6 +93,6 @@ Describe "Get-GcdManagedZone" {
     }
 
     # Delete test zones
-    gcloud dns managed-zones delete "test1"
-    gcloud dns managed-zones delete "test2"
+    gcloud dns managed-zones delete "test1" --project=$project
+    gcloud dns managed-zones delete "test2" --project=$project
 }
