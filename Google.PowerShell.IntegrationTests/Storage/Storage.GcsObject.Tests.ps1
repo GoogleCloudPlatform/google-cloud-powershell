@@ -10,7 +10,7 @@ Describe "New-GcsObject" {
 
     It "should work" {
         $filename = [System.IO.Path]::GetTempFileName()
-        [System.IO.File]::WriteAllText($filename, "Hello, World")
+        "Hello, World" | Out-File $filename -Encoding utf8
 
         $objectName = "43b75bdd-8869-496e-8c0d-3c12b49dcb18.txt"
 
@@ -18,12 +18,12 @@ Describe "New-GcsObject" {
         Remove-Item $filename
 
         $newObj.Name | Should Be $objectName
-        $newObj.Size | Should Be 12
+        $newObj.Size | Should Be 17
 
         # Double check it is stored in GCS.
         $obj = Get-GcsObject $bucket $objectName
         $obj.Name | Should Be $objectName
-        $obj.Size | Should Be 12
+        $obj.Size | Should Be 17
     }
 
     It "should fail if the file does not exist" {
@@ -35,7 +35,7 @@ Describe "New-GcsObject" {
     # issue: https://github.com/google/google-api-dotnet-client/issues/643
     It "should work for object names with slashes" {
         $filename = [System.IO.Path]::GetTempFileName()
-        [System.IO.File]::WriteAllText($filename, "Huzzah!")
+        "Huzzah!" | Out-File $filename -Encoding ascii -NoNewline
 
         $objectName = "C:\both-kinds/country\western"
         $newObj = New-GcsObject $bucket $objectName -File $filename
@@ -55,14 +55,14 @@ Describe "New-GcsObject" {
     It "should support relative file paths" {
         Push-Location $env:TEMP
         $fileName = "local-file.txt"
-        [System.IO.File]::WriteAllText("$env:TEMP\$fileName", "file-contents")
+        "file-contents" | Out-File "$env:TEMP\$fileName" -Encoding ascii -NoNewline
 
-        $tempFolderName = [System.IO.Path]::GetFileName($env:TEMP)
+        $tempFolderName = Split-Path $env:TEMP -Leaf
         $tests = @(
                 "$fileName",
                 ".\$fileName",
                 "./$fileName",
-                ([System.Environment]::CurrentDirectory + "\$fileName"),
+                (Join-Path $env:TEMP "$fileName"),
                 "..\$tempFolderName\$fileName")
 
         $i = 0
@@ -81,7 +81,7 @@ Describe "New-GcsObject" {
 
     It "should set predefined ACLs if instructed to" {
         $filename = [System.IO.Path]::GetTempFileName()
-        [System.IO.File]::WriteAllText($filename, "predefined ACL test")
+        "predefined ACL test" | Out-File $filename -Encoding ascii -NoNewline
 
         $objectName = "predefined-acl-test"
         $newObj = New-GcsObject $bucket $objectName -File $filename -PredefinedAcl "publicRead"
@@ -101,7 +101,7 @@ Describe "New-GcsObject" {
         $objectName = "existing-object"
 
         $tempFile = [System.IO.Path]::GetTempFileName()
-        [System.IO.File]::WriteAllText($tempFile, "existing-gcs-object")
+        "existing-gcs-object" | Out-File $tempFile -Encoding ascii -NoNewline
 
         # Create
         New-GcsObject $bucket $objectName -File $tempFile
@@ -111,7 +111,7 @@ Describe "New-GcsObject" {
             | Should Throw "Storage object already exists"
 
         # Confirm -Force works
-        [System.IO.File]::WriteAllText($tempFile, "updated-object-contents")
+        "updated-object-contents" | Out-File $tempFile -Encoding ascii -NoNewline
         New-GcsObject $bucket $objectName -File $tempFile -Force
         Remove-Item $tempFile
 
@@ -243,7 +243,7 @@ Describe "Read-GcsObject" {
     BeforeEach {
         # Before each test, upload a new file to the GCS bucket.
         $filename = [System.IO.Path]::GetTempFileName()
-        [System.IO.File]::WriteAllText($filename, $testFileContents)
+        $testFileContents | Out-File $filename -Encoding ascii -NoNewline
         New-GcsObject $bucket $testObjectName -File $filename -Force
         Remove-Item -Force $filename
     }
@@ -323,14 +323,14 @@ Describe "Write-GcsObject" {
 
         # Create the original file.
         $tempFile = [System.IO.Path]::GetTempFileName()
-        [System.IO.File]::WriteAllText($tempFile, $originalContents)
+        $originalContents | Out-File $tempFile -Encoding ascii -NoNewline
         New-GcsObject $bucket $objectName -File $tempFile
         Remove-Item $tempFile
 
         # Rewrite its contents
         $tempFile = [System.IO.Path]::GetTempFileName()
         $newContents = "This is the NEW content."
-        [System.IO.File]::WriteAllText($tempFile, $newContents)
+        $newContents | Out-File $tempFile -Encoding ascii -NoNewline
         Write-GcsObject $bucket $objectName -File $tempFile
         Remove-Item $tempFile
 
@@ -373,7 +373,7 @@ Describe "Write-GcsObject" {
 
         # Rewrite its contents, reading from a relative file.
         $localFileName = "write-gcs-object-file-in-temp-dir.txt"
-        [System.IO.File]::WriteAllText("$env:TEMP\$localFileName", "updated contents")
+        "updated contents" | Out-File "$env:TEMP\$localFileName" -Encoding ascii -NoNewline
         Push-Location $env:TEMP
         Write-GcsObject $bucket $objectName -File ".\$localFileName"
         Remove-Item $localFileName
