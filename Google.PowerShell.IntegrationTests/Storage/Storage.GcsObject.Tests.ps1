@@ -53,20 +53,21 @@ Describe "New-GcsObject" {
     }
 
     It "should support relative file paths" {
-        Push-Location ([System.IO.Path]::GetTempPath())
-        [System.IO.File]::WriteAllText("$($pwd.Path)\local-file.txt", "file-contents")
+        Push-Location $env:TEMP
+        $fileName = "local-file.txt"
+        [System.IO.File]::WriteAllText("$env:TEMP\$fileName", "file-contents")
 
-        $tempFolderName = [System.IO.Path]::GetFileName([System.IO.Path]::GetTempPath())
+        $tempFolderName = [System.IO.Path]::GetFileName($env:TEMP)
         $tests = @(
-                "local-file.txt",
-                ".\local-file.txt",
-                "./local-file.txt",
-                ([System.Environment]::CurrentDirectory + "\local-file.txt"),
-                "..\$tempFolderName\local-file.txt")
+                "$fileName",
+                ".\$fileName",
+                "./$fileName",
+                ([System.Environment]::CurrentDirectory + "\$fileName"),
+                "..\$tempFolderName\$fileName")
 
         $i = 0
         foreach ($test in $tests) {
-            New-GcsObject $bucket "on-gcs/relative-path/scenario-$i" -File "local-file.txt"
+            New-GcsObject $bucket "on-gcs/relative-path/scenario-$i" -File $fileName
 
             $obj = Get-GcsObject $bucket "on-gcs/relative-path/scenario-$i"
             $obj.Size | Should Be 13  # "file-contents"
@@ -74,6 +75,7 @@ Describe "New-GcsObject" {
             $i = $i + 1
         }
 
+        Remove-Item "$env:TEMP\$fileName"
         Pop-Location
     }
 
@@ -117,7 +119,7 @@ Describe "New-GcsObject" {
         $tempFile2 = [System.IO.Path]::GetTempFileName()  # New temp file to download the updated object.
         Read-GcsObject $bucket $objectName $tempFile2 -Force
 
-        $fileContents = [System.IO.File]::ReadAllText($tempFile2)
+        $fileContents = Get-Content $tempFile2
         $fileContents | Should BeExactly "updated-object-contents"
 
         Remove-Item $tempFile2
@@ -136,13 +138,13 @@ Describe "New-GcsObject" {
         "12345" | New-GcsObject $bucket $objectName
 
         # Read the object's contents, writing to a file relative to the temp directory.
-        Push-Location ([System.IO.Path]::GetTempPath())
+        Push-Location $env:TEMP
         Read-GcsObject $bucket $objectName -OutFile "output.txt" -Force
         Pop-Location
 
-        $fileObject = Get-Item ([System.IO.Path]::GetTempPath() + "\output.txt")
+        $fileObject = Get-Item ($env:TEMP + "\output.txt")
         $fileObject.Length | Should Be 5
-        Remove-Item ([System.IO.Path]::GetTempPath() + "\output.txt")
+        $fileObject | Remove-Item
         Remove-GcsObject $bucket $objectName
     }
 
@@ -365,25 +367,25 @@ Describe "Write-GcsObject" {
 
     It "should accept relative file paths" {
         $objectName = "relative-file-test"
-        $tmpPath = [System.IO.Path]::GetTempPath()
 
         # Create the original GCS object.
         "contents" | New-GcsObject $bucket $objectName
 
         # Rewrite its contents, reading from a relative file.
         $localFileName = "write-gcs-object-file-in-temp-dir.txt"
-        [System.IO.File]::WriteAllText("$tmpPath\$localFileName", "updated contents")
-        Push-Location $tmpPath
+        [System.IO.File]::WriteAllText("$env:TEMP\$localFileName", "updated contents")
+        Push-Location $env:TEMP
         Write-GcsObject $bucket $objectName -File ".\$localFileName"
         Remove-Item $localFileName
 
         # Confirm the contents have changed, writing to a relative file path.
-        Read-GcsObject $bucket $objectName -OutFile "file-in-temp-dir-from-gcs.txt" -Force
-        $fileContents = [System.IO.File]::ReadAllText("$tmpPath\file-in-temp-dir-from-gcs.txt")
+        $downloadedFileName = "file-in-temp-dir-from-gcs.txt"
+        Read-GcsObject $bucket $objectName -OutFile $downloadedFileName -Force
+        $fileContents = [System.IO.File]::ReadAllText("$env:TEMP\$downloadedFileName")
         $fileContents | Should BeExactly "updated contents"
 
         # Cleanup.
-        Remove-Item "file-in-temp-dir-from-gcs.txt"
+        Remove-Item $downloadedFileName
         Remove-GcsObject $bucket $objectName
         Pop-Location
     }
