@@ -13,7 +13,7 @@ Describe "Get-GcSqlFlags" {
 
     It "should have the correct tiers" {
         $tiers = Get-GcSqlTiers -Project $project
-        ($tiers."TierValue" -contains "D0") | Should Be true
-        ($tiers."TierValue" -contains "D4") | Should Be true
+        ($tiers.TierValue -contains "D0") | Should Be true
+        ($tiers.TierValue -contains "D4") | Should Be true
     }
 }

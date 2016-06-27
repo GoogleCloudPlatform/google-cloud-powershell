@@ -14,8 +14,8 @@ Describe "Get-GcSqlFlags" {
 
     It "should have the correct flags" {
         $flags = Get-GcSqlFlags
-        ($flags."Name" -contains "log_output") | Should Be true
-        ($flags."Name" -contains "group_concat_max_len") | Should Be true
+        ($flags.Name -contains "log_output") | Should Be true
+        ($flags.Name -contains "group_concat_max_len") | Should Be true
 
     }
 }
