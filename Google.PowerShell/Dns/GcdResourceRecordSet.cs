@@ -38,7 +38,7 @@ namespace Google.PowerShell.Dns
 
         /// <summary>
         /// <para type="description">
-        /// Get the ManagedZone (name or id permitted) to check for Resource Record Sets.
+        /// Get the ManagedZone (name or id permitted) to check for ResourceRecordSets.
         /// </para>
         /// </summary>
         [Parameter(Position = 1, Mandatory = true)]
