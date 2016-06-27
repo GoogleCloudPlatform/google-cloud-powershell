@@ -256,8 +256,7 @@ Describe "Read-GcsObject" {
                  [System.IO.Path]::GetRandomFileName())
         Read-GcsObject $bucket $testObjectName $tempFileName
 
-        $fileContents = [System.IO.File]::ReadAllText($tempFileName)
-        $fileContents | Should BeExactly $testFileContents
+        Get-Content $tempFileName | Should BeExactly $testFileContents
 
         Remove-Item $tempFileName
     }
@@ -277,7 +276,8 @@ Describe "Read-GcsObject" {
         Read-GcsObject $bucket $testObjectName $tempFileName -Force
 
         # Confirm the file has non-zero size.
-        [System.IO.File]::ReadAllText($tempFileName) | Should Be $testFileContents
+        Get-Content $tempFileName | Should Be $testFileContents
+        Remove-Item $tempFileName
     }
 
     It "raise an error if the Storage Object does not exist" {
@@ -305,7 +305,8 @@ Describe "Read-GcsObject" {
         # Read contents from GCS, pipe them to a file.
         Read-GcsObject $bucket $testObjectName `
             | Out-File $tempFileName -Force -NoNewline
-        [System.IO.File]::ReadAllText($tempFileName) | Should Be $testFileContents
+        Get-Content $tempFileName | Should Be $testFileContents
+        Remove-Item $tempFileName
     }
 
     # TODO(chrsmith): Confirm it throws a 403 if you don't have GCS access.
@@ -338,8 +339,7 @@ Describe "Write-GcsObject" {
         $tempFile = [System.IO.Path]::GetTempFileName()
         Read-GcsObject $bucket $objectName $tempFile -Force
 
-        $fileContents = [System.IO.File]::ReadAllText($tempFile)
-        $fileContents | Should BeExactly $newContents
+        Get-Content $tempFile | Should BeExactly $newContents
         Remove-Item $tempFile
     }
 
@@ -381,8 +381,7 @@ Describe "Write-GcsObject" {
         # Confirm the contents have changed, writing to a relative file path.
         $downloadedFileName = "file-in-temp-dir-from-gcs.txt"
         Read-GcsObject $bucket $objectName -OutFile $downloadedFileName -Force
-        $fileContents = [System.IO.File]::ReadAllText("$env:TEMP\$downloadedFileName")
-        $fileContents | Should BeExactly "updated contents"
+        Get-Content "$env:TEMP\$downloadedFileName" | Should BeExactly "updated contents"
 
         # Cleanup.
         Remove-Item $downloadedFileName
