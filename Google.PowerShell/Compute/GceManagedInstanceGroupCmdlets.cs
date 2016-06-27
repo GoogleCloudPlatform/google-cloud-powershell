@@ -828,7 +828,7 @@ namespace Google.PowerShell.Compute
                 InstanceGroupManagersListManagedInstancesResponse response =
                     Service.InstanceGroupManagers.ListManagedInstances(project, zone, name).Execute();
                 instances = response.ManagedInstances;
-            } while (instances.Any(i => i.CurrentAction != "NONE") && !Stopping);
+            } while (instances != null && instances.Any(i => i.CurrentAction != "NONE") && !Stopping);
         }
     }
 }

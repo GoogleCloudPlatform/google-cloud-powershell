@@ -12,7 +12,9 @@ Get-GceInstanceTemplate | Remove-GceInstanceTemplate
 Add-GceInstanceTemplate -Name $templateName -MachineType $machineType -BootDiskImage $image
 $template = Get-GceInstanceTemplate
 
-(gcloud compute target-pools create test-pool 2>&1) -match "Created \[(.*)\]"
+(
+    gcloud compute target-pools create test-pool 2>&1 | Select-String -Pattern "Created \[(.*)\]"
+) -match "Created \[(.*)\]"
 $poolUrl = $Matches[1]
 
 Describe "Get-GceManagedInstanceGroup" {
@@ -152,8 +154,12 @@ Describe "Remove-GceManagedInstanceGroup" {
 }
 
 Describe "Set-GceManagedInstanceGroup" {
-    $groupName1 = "test-set-managed-instance-group-$r"
 
+    $templateName2 = "test-set-managed-instance-group-$r"
+    Add-GceInstanceTemplate -Name $templateName2 -MachineType $machineType -BootDiskImage $image
+    $template2 = Get-GceInstanceTemplate -Name $templateName2
+    
+    $groupName1 = "test-set-managed-instance-group-$r"
     Add-GceManagedInstanceGroup $groupName1 $template 0
 
     It "should set size" {
@@ -169,8 +175,72 @@ Describe "Set-GceManagedInstanceGroup" {
     }
 
     It "should set template" {
-
+        Set-GceManagedInstanceGroup $groupName1 -Template $template2
+        $group = Get-GceManagedInstanceGroup $groupName1
+        $group.InstanceTemplate | Should Be $template2.SelfLink
     }
+
+    Wait-GceManagedInstanceGroup $groupName1
+
+    It "should abandon instances" {
+        $instances = Get-GceInstance -ManagedGroupName $groupName1
+        $instanceToAbandon = $instances[0]
+        $instanceToAbandon | Set-GceManagedInstanceGroup $groupName1 -Abandon
+
+        Wait-GceManagedInstanceGroup $groupName1
+
+        $instanceStatus = Get-GceManagedInstanceGroup $groupName1 -InstanceStatus
+        $instanceStatus.Instance | Should Not Be $instanceToAbandon.SelfLink
+        $group = Get-GceManagedInstanceGroup $groupName1
+        $group.TargetSize | Should Be 2
+        { Get-GceInstance $instanceToAbandon } | Should Not Throw 404
+    }
+
+    It "should delete instances" {
+        $instances = Get-GceInstance -ManagedGroupName $groupName1
+        $instanceToDelete = $instances[0]
+        $instanceToDelete | Set-GceManagedInstanceGroup $groupName1 -Delete
+        $instanceStatus = Get-GceManagedInstanceGroup $groupName1 -InstanceStatus
+
+        ($instanceStatus | Where { $_.Instance -eq $instanceToDelete.SelfLink }).CurrentAction | Should Be DELETING
+        $group = Get-GceManagedInstanceGroup $groupName1
+        $group.TargetSize | Should Be 1
+
+        Wait-GceManagedInstanceGroup $groupName1
+
+        $instanceStatus = Get-GceManagedInstanceGroup $groupName1 -InstanceStatus
+        $instanceStatus.Instance | Should Not Be $instanceToAbandon.SelfLink
+        { Get-GceInstance $instanceToDelete } | Should Throw 404
+    }
+
+    It "should recreate instances" {
+        $instanceToRecreate = Get-GceInstance -ManagedGroupName $groupName1
+        $instanceToRecreate | Set-GceManagedInstanceGroup $groupName1 -Recreate
+        $instanceStatus = Get-GceManagedInstanceGroup $groupName1 -InstanceStatus
+        $instanceStatus.Instance | Should Be $instanceToRecreate.SelfLink
+        $instanceStatus.CurrentAction | Should Be RECREATING
+        $group = Get-GceManagedInstanceGroup $groupName1
+        $group.TargetSize | Should Be 1
+    }
+
+    Remove-GceManagedInstanceGroup $groupName1
+    Remove-GceInstanceTemplate $templateName2
+}
+
+Describe "Wait-GceManagedInstanceGroup" {
+    $groupName1 = "test-wait-managed-instance-group-$r"
+    Add-GceManagedInstanceGroup $groupName1 $template 0
+
+    It "should wait for resize" {
+        Set-GceManagedInstanceGroup $groupName1 -Size 1
+        (Get-GceManagedInstanceGroup $groupName1 -InstanceStatus).CurrentAction | Should Not Be NONE
+
+        Wait-GceManagedInstanceGroup $groupName1
+
+        (Get-GceManagedInstanceGroup $groupName1 -InstanceStatus).CurrentAction | Should Be NONE
+    }
+
+    Remove-GceManagedInstanceGroup $groupName1
 }
 
 gcloud compute target-pools delete test-pool -q 2>$null
