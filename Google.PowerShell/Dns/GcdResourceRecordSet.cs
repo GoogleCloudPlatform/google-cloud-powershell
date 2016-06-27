@@ -42,7 +42,6 @@ namespace Google.PowerShell.Dns
         /// </para>
         /// </summary>
         [Parameter(Position = 1, Mandatory = true)]
-        [ValidateNotNullOrEmpty]
         public string ManagedZone { get; set; }
 
         protected override void ProcessRecord()
