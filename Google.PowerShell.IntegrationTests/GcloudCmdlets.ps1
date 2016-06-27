@@ -41,6 +41,7 @@ function Set-GCloudConfig(){
     gcloud config set core/account $oldActiveConfig.ACCOUNT 2>$null
     gcloud config set core/project $project 2>$null
     gcloud config set compute/zone $zone 2>$null
+    gcloud config set compute/region us-central1 2>$null
     
     return $project, $zone, $oldActiveConfig, $configName
 }

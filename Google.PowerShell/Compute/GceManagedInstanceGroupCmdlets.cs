@@ -19,7 +19,7 @@ namespace Google.PowerShell.Compute
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceManagedInstanceGroup", DefaultParameterSetName = ParameterSetNames.ListProject)]
-    class GetManagedInstanceGroupCmdlet : GceCmdlet
+    public class GetManagedInstanceGroupCmdlet : GceCmdlet
     {
         private class ParameterSetNames
         {
@@ -128,7 +128,7 @@ namespace Google.PowerShell.Compute
             foreach (InstanceGroupManager manager in managers)
             {
                 string project = GetProjectNameFromUri(manager.SelfLink);
-                string zone = manager.Zone;
+                string zone = GetZoneNameFromUri(manager.Zone);
                 string name = manager.Name;
                 InstanceGroupManagersResource.ListManagedInstancesRequest request =
                     Service.InstanceGroupManagers.ListManagedInstances(project, zone, name);
@@ -146,7 +146,7 @@ namespace Google.PowerShell.Compute
         private InstanceGroupManager GetGroupByObject()
         {
             string project = GetProjectNameFromUri(Object.SelfLink);
-            string zone = Object.Zone;
+            string zone = GetZoneNameFromUri(Object.Zone);
             string name = Object.Name;
             return Service.InstanceGroupManagers.Get(project, zone, name).Execute();
         }
@@ -187,8 +187,8 @@ namespace Google.PowerShell.Compute
             do
             {
                 InstanceGroupManagerAggregatedList response = request.Execute();
-                IEnumerable<InstanceGroupManager> allManagers =
-                    response.Items.SelectMany(kvp => kvp.Value.InstanceGroupManagers);
+                IEnumerable<InstanceGroupManager> allManagers = response.Items.SelectMany(
+                    kvp => kvp.Value?.InstanceGroupManagers ?? new InstanceGroupManager[0]);
                 foreach (InstanceGroupManager manager in allManagers)
                 {
                     yield return manager;
@@ -247,12 +247,21 @@ namespace Google.PowerShell.Compute
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByProperies, Mandatory = true, Position = 1)]
+        [PropertyByTypeTransformation(Property = "SelfLink", TypeToTransform = typeof(InstanceTemplate))]
         public string InstanceTemplate { get; set; }
 
         /// <summary>
         /// <para type="description">
+        /// The target number of instances for this instance group to have.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByProperies, Mandatory = true, Position = 2)]
+        public int TargetSize { get; set; }
+
+        /// <summary>
+        /// <para type="description">
         /// The base instance name for this group. Instances will take this name and append a hypen and a
-        /// random four character string.
+        /// random four character string. Defaults to the group name.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByProperies)]
@@ -319,10 +328,11 @@ namespace Google.PowerShell.Compute
                         Name = Name,
                         InstanceTemplate = InstanceTemplate,
                         Zone = Zone,
-                        BaseInstanceName = BaseInstanceName,
+                        BaseInstanceName = BaseInstanceName ?? Name,
                         Description = Description,
                         TargetPools = TargetPool,
-                        NamedPorts = BuildNamedPorts()
+                        NamedPorts = BuildNamedPorts(),
+                        TargetSize = TargetSize
 
                     };
                     break;
@@ -365,7 +375,8 @@ namespace Google.PowerShell.Compute
     /// Removes a Google Compute Engine instance group manager.
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Remove, "GceManagedInstanceGroup", SupportsShouldProcess = true)]
+    [Cmdlet(VerbsCommon.Remove, "GceManagedInstanceGroup", SupportsShouldProcess = true,
+        DefaultParameterSetName = ParameterSetNames.ByName)]
     public class RemoveManagedInstanceGroupCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
@@ -397,7 +408,8 @@ namespace Google.PowerShell.Compute
         /// The name of the managed instance group to delete.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 0)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
         public string Name { get; set; }
 
         /// <summary>
@@ -427,7 +439,7 @@ namespace Google.PowerShell.Compute
         private void DeleteByObject()
         {
             string project = GetProjectNameFromUri(Object.SelfLink);
-            string zone = Object.Zone;
+            string zone = GetZoneNameFromUri(Object.Zone);
             string name = Object.Name;
             if (ShouldProcess($"{project}/{zone}/{name}", "Remove Instance Group Manager"))
             {
@@ -751,12 +763,18 @@ namespace Google.PowerShell.Compute
     [Cmdlet(VerbsLifecycle.Wait, "GceManagedInstanceGroup")]
     public class WaitGceManagedInstanceGroupCmdlet : GceCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByObject = "ByObject";
+        }
+
         /// <summary>
         /// <para type="description">
         /// The project that owns the managed instance group.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
@@ -765,7 +783,7 @@ namespace Google.PowerShell.Compute
         /// The zone the managed instance group is in.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         public string Zone { get; set; }
 
@@ -774,17 +792,41 @@ namespace Google.PowerShell.Compute
         /// The name of the managed instance group to change.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
         public string Name { get; set; }
+
+        [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        public InstanceGroupManager Object { get; set; }
 
         protected override void ProcessRecord()
         {
+            string project;
+            string zone;
+            string name;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.ByName:
+                    project = Project;
+                    zone = Zone;
+                    name = Name;
+                    break;
+                case ParameterSetNames.ByObject:
+                    project = GetProjectNameFromUri(Object.SelfLink);
+                    zone = GetZoneNameFromUri(Object.Zone);
+                    name = Object.Name;
+                    break;
+                default:
+                    throw new PSInvalidOperationException($"{ParameterSetName} is not a valid parameter set");
+            }
+
             IList<ManagedInstance> instances;
             do
             {
                 Thread.Sleep(150);
                 InstanceGroupManagersListManagedInstancesResponse response =
-                    Service.InstanceGroupManagers.ListManagedInstances(Project, Zone, Name).Execute();
+                    Service.InstanceGroupManagers.ListManagedInstances(project, zone, name).Execute();
                 instances = response.ManagedInstances;
             } while (instances.Any(i => i.CurrentAction != "NONE") && !Stopping);
         }

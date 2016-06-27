@@ -7,8 +7,7 @@ $zone2 = "us-central1-a"
 
 $image = "projects/debian-cloud/global/images/debian-8-jessie-v20160511"
 
-Get-GceInstance -Project $project -Zone $zone | Remove-GceInstance -Project $project -Zone $zone
-Get-GceInstance -Project $project -Zone $zone2 | Remove-GceInstance -Project $project -Zone $zone2
+Get-GceInstance -Project $project | Remove-GceInstance -Project $project
 
 Describe "Get-GceInstance" {
 
@@ -61,17 +60,25 @@ Describe "Get-GceInstance" {
         { Get-GceInstance -Project "asdf" } | Should Throw "403"
     }
 
+    It "should get by object" {
+        $instanceObj = New-Object Google.Apis.Compute.v1.Data.Instance
+        $instanceObj.Name = $instance
+        $instanceObj.SelfLink = "projects/$project/zones/$zone/instances/$instance"
+        $result = Get-GceInstance -Object $instanceObj
+        ($result | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.Instance"
+        $result.Name | Should Be $instance
+        $result.Kind | Should Be "compute#instance"
+    }
+
     # Test that the PropertyByTypeTransformationAttribute works the way we think
     Context "Object Transformer" {
         $projectObj = New-Object Google.Apis.Compute.v1.Data.Project
         $projectObj.Name = $project
         $zoneObj = New-Object Google.Apis.Compute.v1.Data.Zone
         $zoneObj.Name = $zone
-        $instanceObj = New-Object Google.Apis.Compute.v1.Data.Instance
-        $instanceObj.Name = $instance
         
         It "should get one" {
-            $result = Get-GceInstance -Project $projectObj -Zone $zoneObj -Name $instanceObj
+            $result = Get-GceInstance -Project $projectObj -Zone $zoneObj -Name $instance
             $result.Name | Should Be $instance
             $result.Kind | Should Be "compute#instance"
         }
@@ -82,8 +89,23 @@ Describe "Get-GceInstance" {
         $output | Should Match "$instance run-startup-scripts"
     }
     
-    $instance, $instance2 | Remove-GceInstance -Project $project -Zone $zone
-    Remove-GceInstance -Project $project -Zone $zone2 -Name $instance3
+    $templateName = "test-template-get-instance-$r"
+    $groupname = "test-group-get-instance-$r"
+    Add-GceInstanceTemplate -Name $templateName -MachineType "f1-micro" -BootDiskImage $image
+    $template = Get-GceInstanceTemplate $templateName
+    Add-GceManagedInstanceGroup $groupName $template 2
+    $group = Get-GceManagedInstanceGroup $groupName
+
+    It "should get from instance group" {
+        Wait-GceManagedInstanceGroup $groupName
+        $instances = Get-GceInstance $group
+        $instances.Count | Should Be 2
+        ($instances | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.Instance"
+    }
+
+    $group | Remove-GceManagedInstanceGroup
+    $template | Remove-GceInstanceTemplate
+    Get-GceInstance -Project $project | Remove-GceInstance
 }
 
 Describe "New-GceInstanceConfig" {

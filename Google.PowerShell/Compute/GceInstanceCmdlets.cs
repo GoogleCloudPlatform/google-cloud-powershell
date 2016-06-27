@@ -33,6 +33,7 @@ namespace Google.PowerShell.ComputeEngine
             public const string OfInstanceGroupManager = "OfInstanceGroupManager";
             public const string OfInstanceGroupManagerObject = "OfInstanceGroupManagerObject";
         }
+
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
@@ -63,8 +64,8 @@ namespace Google.PowerShell.ComputeEngine
         /// The name of the instance.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 0,
-            ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
         public string Name { get; set; }
 
         /// <summary>
@@ -72,8 +73,8 @@ namespace Google.PowerShell.ComputeEngine
         /// The Instance object to get a new copy of.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true, Position = 0,
-            ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
         public Instance Object { get; set; }
 
         /// <summary>
@@ -82,7 +83,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.OfInstanceGroupManager, Mandatory = true)]
-        public string InstanceGroupManagerName { get; set; }
+        public string ManagedGroupName { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -91,7 +92,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.OfInstanceGroupManagerObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
-        public InstanceGroupManager InstanceGroupManager { get; set; }
+        public InstanceGroupManager ManagedGroupObject { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -141,9 +142,9 @@ namespace Google.PowerShell.ComputeEngine
 
         private IEnumerable<Instance> GetManagedGroupInstancesByObject()
         {
-            string groupProject = GetProjectNameFromUri(InstanceGroupManager.SelfLink);
-            string groupZone = InstanceGroupManager.Zone;
-            string groupName = InstanceGroupManager.Name;
+            string groupProject = GetProjectNameFromUri(ManagedGroupObject.SelfLink);
+            string groupZone = GetZoneNameFromUri(ManagedGroupObject.Zone);
+            string groupName = ManagedGroupObject.Name;
             InstanceGroupManagersResource.ListManagedInstancesRequest request =
                 Service.InstanceGroupManagers.ListManagedInstances(groupProject, groupZone, groupName);
             InstanceGroupManagersListManagedInstancesResponse response = request.Execute();
@@ -153,7 +154,7 @@ namespace Google.PowerShell.ComputeEngine
         private IEnumerable<Instance> GetManagedGroupInstances()
         {
             InstanceGroupManagersResource.ListManagedInstancesRequest request =
-                Service.InstanceGroupManagers.ListManagedInstances(Project, Zone, InstanceGroupManagerName);
+                Service.InstanceGroupManagers.ListManagedInstances(Project, Zone, ManagedGroupName);
             InstanceGroupManagersListManagedInstancesResponse response = request.Execute();
             return GetActiveInstances(response);
         }
