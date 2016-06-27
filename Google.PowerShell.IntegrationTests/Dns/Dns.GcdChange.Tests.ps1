@@ -15,16 +15,11 @@ Describe "Get-GcdChange" {
         { Get-GcdManagedZone -Project "asdf" -ManagedZone "zone1"} | Should Throw "403"
     }
 
-    # Delete all existing zones
+    # Delete all existing zones (using Get-GcdManagedZone cmdlet)
     $preExistingZones = Get-GcdManagedZone -Project $project
 
-    if ($preExistingZones.Count -gt 0) {
-        $preExistingZones = $preExistingZones[1..($preExistingZones.length-1)]
-
-        ForEach ($zoneDescrip in $preExistingZones) {
-            $zoneName = $zoneDescrip.Split(" ")[0]
-            gcloud dns managed-zones delete $zoneName --project=$project
-        }
+    ForEach ($zoneObject in $preExistingZones) {
+        gcloud dns managed-zones delete $zoneObject.Name --project=$project
     }
 
     It "should fail to return changes of non-existent managed zones of existing project" {
@@ -51,7 +46,7 @@ Describe "Get-GcdChange" {
 
         $changes.Count | Should Be 3
 
-        # The type, Kind, Status, and names of Additions/Deletions should be the same for all changes
+        # The object type, Kind, Status, and names of Additions/Deletions should be the same for all changes
         ($changes | Get-Member).TypeName | Should Match $changeType
         $changes.Kind | Should Match "dns#change"
         $changes.Status | Should Match "done"
