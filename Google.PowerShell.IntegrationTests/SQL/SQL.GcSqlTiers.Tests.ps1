@@ -7,7 +7,7 @@ Describe "Get-GcSqlFlags" {
 
     It "should have the correct number of tiers" {
         $tiers = Get-GcSqlTiers -Project $project
-        # There are 18 tiers available for our Google Cloud SQL Project.
+        # As of June, 2016 there are 18 tiers available for Google Cloud SQL.
         $tiers.TierValue.Length | Should BeGreaterThan 17
     }
 

@@ -18,7 +18,8 @@ namespace Google.PowerShell.Sql
     /// Lists all available service tiers for Google Cloud SQL, for example D1, D2. 
     /// </para>
     /// <para type="description">
-    /// Lists all available service tiers for Google Cloud SQL, for example D1, D2. Pricing information is available at https://cloud.google.com/sql/pricing.
+    /// Lists all available service tiers for Google Cloud SQL, for example D1, D2. 
+    /// Pricing information is available at https://cloud.google.com/sql/pricing.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlTiers")]
@@ -29,14 +30,13 @@ namespace Google.PowerShell.Sql
         /// Project ID of the project for which to list tiers.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(Position = 0)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
         protected override void ProcessRecord()
         {
-            TiersResource resource = new TiersResource(Service);
-            TiersResource.ListRequest request = resource.List(Project);
+            TiersResource.ListRequest request = Service.Tiers.List(Project);
             TiersListResponse tiers = request.Execute();
             WriteObject(tiers.Items, true);
         }
