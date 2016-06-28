@@ -145,7 +145,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SQL\GcSqlCmdlet.cs" />
     <Compile Include="SQL\GcSqlFlagsCmdlet.cs" />
-    <Compile Include="SQL\GcSqlOperationCmdlets.cs" />
+    <Compile Include="SQL\GcSqlOperationCmdlet.cs" />
     <Compile Include="SQL\GcSqlTiersCmdlet.cs" />
     <Compile Include="Storage\GcsBucket.cs" />
     <Compile Include="Storage\GcsBucketLogging.cs" />
