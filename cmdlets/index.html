@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html class="google" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script>
+        (function(H){H.className=H.className.replace(/\bgoogle\b/,'google-js')})(document.documentElement)
+    </script>
+    <meta content="initial-scale=1, minimum-scale=1, width=device-width" name="viewport">
+    <meta name="description" content="">
+    
+    <title>Google Cloud PowerShell Cmdlet Reference</title>
+    <script src="//www.google.com/js/google.js"></script>
+    <link rel="canonical" href="http://googlecloudplatform.github.io/gcloud-powershell/cmdlets/">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
+    <link rel="stylesheet" href="//www.google.com/css/maia.css">
+</head>
+
+  <body>
+    <header>
+    <div class="maia-header" id="maia-header" role="banner">
+        <div class="maia-aux">
+            <a href="/gcloud-powershell/">
+                <h1>
+                    <img alt="Google" src="//www.google.com/images/branding/googlelogo/1x/googlelogo_color_116x41dp.png">&nbsp;Cloud Platform
+                </h1>
+                <h2>
+                    PowerShell
+                </h2>
+            </a>
+        </div>
+    </div>
+</header>
+
+    
+    <div class="maia-nav" id="maia-nav-x" role="navigation">
+      <div class="maia-aux">
+        <ul>
+          <li>
+            <a href="/gcloud-powershell/">Home</a>
+          </li>
+          <li class="active">
+            <a href="/gcloud-powershell/cmdlets/">Reference</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    
+    <div id="maia-main" role="main">
+      <div class="maia-teleport" id="content">
+      <div>
+  <!-- Left nav -->
+  <div id="maia-nav-y"
+      class="maia-nav" role="navigation" style="width: 150px;">
+    <ul>
+      
+        
+        <li><a href="#Google Compute Engine">Google Compute Engine</a>
+      
+        
+        <li><a href="#Google Cloud Storage">Google Cloud Storage</a>
+      
+    </ul>
+  </div>
+  
+  <!-- Product-specific quickstart guides (hardcoded). -->
+  <div class="maia-article">
+    <!-- Google Cloud Storage -->
+    <h1 id="google-cloud-storage">Google Cloud Storage</h1>
+    <p><a href="/gcloud-powershell/cmdlets/google-cloud-storage.html">All Cloud Storage cmdlets</a></p>
+    <p>Google Cloud Storage is neat.</p>
+    <p>You can do all sorts of stuff with it.</p>
+    <pre>
+# Use these two commands if you get stuck:
+# List all Gcs cmdlets available.
+Get-Command | Select-String -Pattern "Gcs"
+# Get help about a cmdlet.
+Get-Help Get-GcsObject
+
+# List all buckets associated with a project
+$project = "gcloud-powershell-testing"
+Get-GcsBucket -Project $project | Select -ExpandProperty Name
+
+# Get all objects in a bucket.
+$bucket = "chrsmith-debugging"
+# Get all objects in a GCS bucket.
+Find-GcsObject -Bucket $bucket | Select -ExpandProperty Name
+
+# Write a GCS object to disk.
+Read-GcsObject "bucket-name" "object-name" -OutFile "output-file.xxx"
+    </pre>
+
+    <!-- Google Compute Engine -->
+    <h1 id="google-compute-engine">Google Compute Engine</h1>
+    <p><a href="/gcloud-powershell/cmdlets/google-compute-engine.html">All Compute Engine cmdlets</a></p>
+    <p>Google Cloud Storage is neat.</p>
+    <p>You can do all sorts of stuff with it.</p>
+    <pre>
+# Use these two commands if you get stuck:
+# List all Gcs cmdlets available.
+Get-Command | Select-String -Pattern "Gcs"
+# Get help about a cmdlet.
+Get-Help Get-GcsObject
+
+# List all buckets associated with a project
+$project = "gcloud-powershell-testing"
+Get-GcsBucket -Project $project | Select -ExpandProperty Name
+
+# Get all objects in a bucket.
+$bucket = "chrsmith-debugging"
+# Get all objects in a GCS bucket.
+Find-GcsObject -Bucket $bucket | Select -ExpandProperty Name
+
+# Write a GCS object to disk.
+Read-GcsObject "bucket-name" "object-name" -OutFile "output-file.xxx"
+    </pre>
+
+  </div>
+
+<!--
+  <h1>DEBUGGING</h1>
+  <a href="/gcloud-powershell/cmdlets/google-compute-engine.html">Google Compute Engine</a>
+
+  <div id="maia-nav-y"
+      class="maia-nav" role="navigation" style="width: 150px;">
+    <ul>
+      
+        
+        <li><a href="#"></a>
+      
+        
+        <li><a href="#"></a>
+      
+    </ul>
+  </div>
+
+  <div class="maia-article">
+    
+      
+      <div class="maia-cols">
+        <div class="maia-col-5">
+          
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+        </div>
+
+        <div class="maia-col-5">
+          <div class="maia-aside">
+            <h1 id="#"></h1>
+            <p>For more information see: <a href="www.google.com>">www.google.com</a></p>
+          </div>
+        </div>
+      </div>
+    
+      
+      <div class="maia-cols">
+        <div class="maia-col-5">
+          
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+
+            
+
+          
+        </div>
+
+        <div class="maia-col-5">
+          <div class="maia-aside">
+            <h1 id="#"></h1>
+            <p>For more information see: <a href="www.google.com>">www.google.com</a></p>
+          </div>
+        </div>
+      </div>
+    
+  </div>
+  -->
+</div>
+
+      </div>
+    </div>
+    <footer>
+    <div id="maia-signature"></div>
+        <div class="maia-footer" id="maia-footer">
+            <div id="maia-footer-global">
+                <div class="maia-aux">
+                <ul>
+                    <li>
+                        <a href="//www.google.com/">Google</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/about/">About Google</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/policies/privacy/">Privacy</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/policies/terms/">Terms</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+
+    <script src="//www.google.com/js/maia.js">
+    </script>
+</body>
+</html>

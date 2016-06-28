@@ -1,133 +1,37 @@
-<!DOCTYPE html>
-<html class="google" lang="en">
-    <head>
-    <meta charset="utf-8">
-    <script>
-        (function(H){H.className=H.className.replace(/\bgoogle\b/,'google-js')})(document.documentElement)
-    </script>
-    <meta content="initial-scale=1, minimum-scale=1, width=device-width" name="viewport">
-    <meta name="description" content="">
-    
-    <title>Cmdlet Reference</title>
-    <script src="//www.google.com/js/google.js"></script>
-    <link rel="canonical" href="http://googlecloudplatform.github.io/gcloud-powershell/">
-    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
-    <link rel="stylesheet" href="//www.google.com/css/maia.css">
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Google Cloud PowerShell</title>
+  <meta name="description" content="Documentation for Google Cloud Platform PowerShell cmdlets">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
+  <link rel="stylesheet" href="src/vendor-d362a4bbd8.css">
+  <link rel="stylesheet" href="src/app-a103c713b2.css">
 </head>
 
-    <body>
-        <header>
-    <div class="maia-header" id="maia-header" role="banner">
-        <div class="maia-aux">
-            <a href="/gcloud-powershell/">
-                <h1>
-                    <img alt="Google" src="//www.google.com/images/branding/googlelogo/1x/googlelogo_color_116x41dp.png">&nbsp;Cloud Platform
-                </h1>
-                <h2>
-                    PowerShell
-                </h2>
-            </a>
-        </div>
-    </div>
-</header>
+<body>
+  <!--[if lt IE 10]>
+ <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+ <![endif]-->
+  <main ui-view="" autoscroll="true"></main><script src="src/vendor-d6198d67f2.js"></script><script src="src/app-780bf1f09e.js"></script><script>
+      (function() {
+        var $injector = angular.injector(['ng']);
+        var $http = $injector.get('$http');
 
-        <div id="maia-main" role="main">
-            <div class="maia-teleport" id="content">
-            <div class="home">
-    <h1>Cmdlet Reference</h1>
-    <p>This page contains information about the Google Cloud PowerShell cmdlets available.</p>
-    
-    
-        <h2>GcsObject</h2>
-        <ul>
-        
-            <li><a href="cmdlets/find-gcsobject.html">Find-GcsObject</a>
-        
-            <li><a href="cmdlets/get-gcsobject.html">Get-GcsObject</a>
-        
-            <li><a href="cmdlets/new-gcsobject.html">New-GcsObject</a>
-        
-            <li><a href="cmdlets/read-gcsobject.html">Read-GcsObject</a>
-        
-            <li><a href="cmdlets/remove-gcsobject.html">Remove-GcsObject</a>
-        
-            <li><a href="cmdlets/write-gcsobject.html">Write-GcsObject</a>
-        
-        </ul>
-    
-        <h2>GceDisk</h2>
-        <ul>
-        
-            <li><a href="cmdlets/get-gcedisk.html">Get-GceDisk</a>
-        
-            <li><a href="cmdlets/new-gcedisk.html">New-GceDisk</a>
-        
-            <li><a href="cmdlets/remove-gcedisk.html">Remove-GceDisk</a>
-        
-            <li><a href="cmdlets/resize-gcedisk.html">Resize-GceDisk</a>
-        
-        </ul>
-    
-        <h2>GcsBucket</h2>
-        <ul>
-        
-            <li><a href="cmdlets/get-gcsbucket.html">Get-GcsBucket</a>
-        
-            <li><a href="cmdlets/new-gcsbucket.html">New-GcsBucket</a>
-        
-            <li><a href="cmdlets/remove-gcsbucket.html">Remove-GcsBucket</a>
-        
-            <li><a href="cmdlets/test-gcsbucket.html">Test-GcsBucket</a>
-        
-        </ul>
-    
-        <h2>GcsBucketLogging</h2>
-        <ul>
-        
-            <li><a href="cmdlets/remove-gcsbucketlogging.html">Remove-GcsBucketLogging</a>
-        
-            <li><a href="cmdlets/write-gcsbucketlogging.html">Write-GcsBucketLogging</a>
-        
-        </ul>
-    
-        <h2>GcsBucketWebsite</h2>
-        <ul>
-        
-            <li><a href="cmdlets/remove-gcsbucketwebsite.html">Remove-GcsBucketWebsite</a>
-        
-            <li><a href="cmdlets/write-gcsbucketwebsite.html">Write-GcsBucketWebsite</a>
-        
-        </ul>
-    
-</div>
+        $http.get('manifest.json')
+          .then(function(response) {
+            angular
+              .module('gcloud.manifest', [])
+              .constant('manifest', response.data);
 
-            </div>
-        </div>
-        <footer>
-    <div id="maia-signature"></div>
-        <div class="maia-footer" id="maia-footer">
-            <div id="maia-footer-global">
-                <div class="maia-aux">
-                <ul>
-                    <li>
-                        <a href="//www.google.com/">Google</a>
-                    </li>
-                    <li>
-                        <a href="//www.google.com/intl/en/about/">About Google</a>
-                    </li>
-                    <li>
-                        <a href="//www.google.com/intl/en/policies/privacy/">Privacy</a>
-                    </li>
-                    <li>
-                        <a href="//www.google.com/intl/en/policies/terms/">Terms</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</footer>
+            angular.element(document)
+              .ready(function() {
+                angular.bootstrap(document, ['gcloud']);
+              });
+          });
+      }());
+    </script></body>
 
-        <script src="//www.google.com/js/maia.js">
-        </script>
-    </body>
 </html>
