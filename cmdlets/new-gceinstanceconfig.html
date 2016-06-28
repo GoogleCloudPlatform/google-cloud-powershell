@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html class="google" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script>
+        (function(H){H.className=H.className.replace(/\bgoogle\b/,'google-js')})(document.documentElement)
+    </script>
+    <meta content="initial-scale=1, minimum-scale=1, width=device-width" name="viewport">
+    <meta name="description" content="">
+    
+    <title>New-GceInstanceConfig</title>
+    <script src="//www.google.com/js/google.js"></script>
+    <link rel="canonical" href="http://googlecloudplatform.github.io/gcloud-powershell/cmdlets/new-gceinstanceconfig.html">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
+    <link rel="stylesheet" href="//www.google.com/css/maia.css">
+</head>
+
+  <body>
+    <header>
+    <div class="maia-header" id="maia-header" role="banner">
+        <div class="maia-aux">
+            <a href="/gcloud-powershell/">
+                <h1>
+                    <img alt="Google" src="//www.google.com/images/branding/googlelogo/1x/googlelogo_color_116x41dp.png">&nbsp;Cloud Platform
+                </h1>
+                <h2>
+                    PowerShell
+                </h2>
+            </a>
+        </div>
+    </div>
+</header>
+
+    
+    <div class="maia-nav" id="maia-nav-x" role="navigation">
+      <div class="maia-aux">
+        <ul>
+          <li>
+            <a href="/gcloud-powershell/">Home</a>
+          </li>
+          <li class="active">
+            <a href="/gcloud-powershell/cmdlets/">Reference</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    
+    <div id="maia-main" role="main">
+      <div class="maia-teleport" id="content">
+      <style>
+pre {
+    white-space: pre-wrap;
+}
+</style>
+
+<h1>New-GceInstanceConfig</h1>
+<pre>
+NAME
+    New-GceInstanceConfig
+    
+SYNOPSIS
+    Makes a new Google Compute Engine VM instance description.
+    
+SYNTAX
+    New-GceInstanceConfig [-Name] <string> [-CanIpForward <bool>] [-Description <string>] -Disk <List`1> -MachineType <string> [-Metadata <Hashtable>] [-NetworkInterface <List`1>] 
+    [-Scheduling <Scheduling>] [-ServiceAccount <List`1>] [-Tag <List`1>] [<CommonParameters>]
+    
+    New-GceInstanceConfig [-Name] <string> [-CanIpForward <bool>] [-Description <string>] -DiskImage <string> -MachineType <string> [-Metadata <Hashtable>] [-NetworkInterface <List`1>] 
+    [-Scheduling <Scheduling>] [-ServiceAccount <List`1>] [-Tag <List`1>] [<CommonParameters>]
+    
+    New-GceInstanceConfig [-Name] <string> [-CanIpForward <bool>] [-Description <string>] -DiskSource <string> -MachineType <string> [-Metadata <Hashtable>] [-NetworkInterface <List`1>] 
+    [-Scheduling <Scheduling>] [-ServiceAccount <List`1>] [-Tag <List`1>] [<CommonParameters>]
+    
+    
+DESCRIPTION
+    Makes a new Google Compute Engine VM instance description. Use Add-GceInstance to instantiate the instance.
+    
+
+PARAMETERS
+    -Name <string>
+        The name of the instance. The name must be 1-63 characters long and match [a-z]([-a-z0-9]*[a-z0-9])?
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -CanIpForward <bool>
+        Allows this instance to send and receive packets with non-matching destination or source IPs. This is required if you plan to use this instance to forward routes.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Description <string>
+        A description of this resource.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Disk <List`1>
+        Disks associated with this instance.
+        
+        Required?                    true
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -DiskImage <string>
+        The path to the boot disk image. For example: "projects/debian-cloud/global/images/debian-8-jessie-v20160511".
+        
+        Required?                    true
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -DiskSource <string>
+        The path to the boot disk.
+        
+        Required?                    true
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -MachineType <string>
+        
+        Required?                    true
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Metadata <Hashtable>
+        The metadata key/value pairs assigned to this instance. This includes custom metadata and predefined keys.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -NetworkInterface <List`1>
+        An array of configurations for this interface. This specifies how this interface is configured to interact with other network services, such as connecting to the internet.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Scheduling <Scheduling>
+        Scheduling options for this instance.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -ServiceAccount <List`1>
+        A list of service accounts, with their specified scopes, authorized for this instance. Service accounts generate access tokens that can be accessed through the metadata server and 
+        used to authenticate applications on the instance. See Authenticating from Google Compute Engine for more information.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Tag <List`1>
+        A list of tags to apply to this instance. Tags are used to identify valid sources or targets for network firewalls. Each tag within the list must comply with RFC1035.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    <CommonParameters>
+        This cmdlet supports the common parameters: Verbose, Debug,
+        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
+        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
+        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
+    
+INPUTS
+    System.String
+        The name of the instance. The name must be 1-63 characters long and match [a-z]([-a-z0-9]*[a-z0-9])?
+    
+    
+OUTPUTS
+    
+    
+RELATED LINKS
+
+
+
+</pre>
+
+      </div>
+    </div>
+    <footer>
+    <div id="maia-signature"></div>
+        <div class="maia-footer" id="maia-footer">
+            <div id="maia-footer-global">
+                <div class="maia-aux">
+                <ul>
+                    <li>
+                        <a href="//www.google.com/">Google</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/about/">About Google</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/policies/privacy/">Privacy</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/policies/terms/">Terms</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+
+    <script src="//www.google.com/js/maia.js">
+    </script>
+</body>
+</html>

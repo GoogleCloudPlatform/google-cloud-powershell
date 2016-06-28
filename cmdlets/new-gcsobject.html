@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html class="google" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script>
+        (function(H){H.className=H.className.replace(/\bgoogle\b/,'google-js')})(document.documentElement)
+    </script>
+    <meta content="initial-scale=1, minimum-scale=1, width=device-width" name="viewport">
+    <meta name="description" content="">
+    
+    <title>New-GcsObject</title>
+    <script src="//www.google.com/js/google.js"></script>
+    <link rel="canonical" href="http://googlecloudplatform.github.io/gcloud-powershell/cmdlets/new-gcsobject.html">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
+    <link rel="stylesheet" href="//www.google.com/css/maia.css">
+</head>
+
+  <body>
+    <header>
+    <div class="maia-header" id="maia-header" role="banner">
+        <div class="maia-aux">
+            <a href="/gcloud-powershell/">
+                <h1>
+                    <img alt="Google" src="//www.google.com/images/branding/googlelogo/1x/googlelogo_color_116x41dp.png">&nbsp;Cloud Platform
+                </h1>
+                <h2>
+                    PowerShell
+                </h2>
+            </a>
+        </div>
+    </div>
+</header>
+
+    
+    <div class="maia-nav" id="maia-nav-x" role="navigation">
+      <div class="maia-aux">
+        <ul>
+          <li>
+            <a href="/gcloud-powershell/">Home</a>
+          </li>
+          <li class="active">
+            <a href="/gcloud-powershell/cmdlets/">Reference</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    
+    <div id="maia-main" role="main">
+      <div class="maia-teleport" id="content">
+      <style>
+pre {
+    white-space: pre-wrap;
+}
+</style>
+
+<h1>New-GcsObject</h1>
+<pre>
+NAME
+    New-GcsObject
+    
+SYNOPSIS
+    
+SYNTAX
+    New-GcsObject [-Bucket] <string> [-ObjectName] <string> [[-Contents] <string>] [-ContentType <string>] [-PredefinedAcl <string>] [-Force <SwitchParameter>] [<CommonParameters>]
+    
+    New-GcsObject [-Bucket] <string> [-ObjectName] <string> [-File] <string> [-ContentType <string>] [-PredefinedAcl <string>] [-Force <SwitchParameter>] [<CommonParameters>]
+    
+    
+DESCRIPTION
+    
+
+PARAMETERS
+    -Bucket <string>
+        The name of the bucket to upload to.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -ObjectName <string>
+        The name of the created Cloud Storage object.
+        
+        Required?                    true
+        Position?                    1
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Contents <string>
+        Text content to write to the Storage object. Ignored if File is specified.
+        
+        Required?                    false
+        Position?                    2
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -File <string>
+        Local path to the file to upload.
+        
+        Required?                    true
+        Position?                    2
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -ContentType <string>
+        Content type of the Cloud Storage object. e.g. "image/png" or "text/plain".
+        
+        Defaults to "application/octet-stream" if not set.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -PredefinedAcl <string>
+        Provide a predefined ACL to the object. e.g. "publicRead" where the project owner gets OWNER access, and allUsers get READER access.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Force <SwitchParameter>
+        Force the operation to succeed, overwriting existing Storage objects if needed.
+        
+        Required?                    false
+        Position?                    named
+        Default value                False
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    <CommonParameters>
+        This cmdlet supports the common parameters: Verbose, Debug,
+        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
+        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
+        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
+    
+INPUTS
+    System.String
+        Text content to write to the Storage object. Ignored if File is specified.
+    
+    
+OUTPUTS
+    
+    
+RELATED LINKS
+
+
+
+</pre>
+
+      </div>
+    </div>
+    <footer>
+    <div id="maia-signature"></div>
+        <div class="maia-footer" id="maia-footer">
+            <div id="maia-footer-global">
+                <div class="maia-aux">
+                <ul>
+                    <li>
+                        <a href="//www.google.com/">Google</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/about/">About Google</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/policies/privacy/">Privacy</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/policies/terms/">Terms</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+
+    <script src="//www.google.com/js/maia.js">
+    </script>
+</body>
+</html>

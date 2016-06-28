@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html class="google" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script>
+        (function(H){H.className=H.className.replace(/\bgoogle\b/,'google-js')})(document.documentElement)
+    </script>
+    <meta content="initial-scale=1, minimum-scale=1, width=device-width" name="viewport">
+    <meta name="description" content="">
+    
+    <title>Add-GceFirewall</title>
+    <script src="//www.google.com/js/google.js"></script>
+    <link rel="canonical" href="http://googlecloudplatform.github.io/gcloud-powershell/cmdlets/add-gcefirewall.html">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
+    <link rel="stylesheet" href="//www.google.com/css/maia.css">
+</head>
+
+  <body>
+    <header>
+    <div class="maia-header" id="maia-header" role="banner">
+        <div class="maia-aux">
+            <a href="/gcloud-powershell/">
+                <h1>
+                    <img alt="Google" src="//www.google.com/images/branding/googlelogo/1x/googlelogo_color_116x41dp.png">&nbsp;Cloud Platform
+                </h1>
+                <h2>
+                    PowerShell
+                </h2>
+            </a>
+        </div>
+    </div>
+</header>
+
+    
+    <div class="maia-nav" id="maia-nav-x" role="navigation">
+      <div class="maia-aux">
+        <ul>
+          <li>
+            <a href="/gcloud-powershell/">Home</a>
+          </li>
+          <li class="active">
+            <a href="/gcloud-powershell/cmdlets/">Reference</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    
+    <div id="maia-main" role="main">
+      <div class="maia-teleport" id="content">
+      <style>
+pre {
+    white-space: pre-wrap;
+}
+</style>
+
+<h1>Add-GceFirewall</h1>
+<pre>
+NAME
+    Add-GceFirewall
+    
+SYNOPSIS
+    Adds a new firewall rule.
+    
+SYNTAX
+    Add-GceFirewall [-Project <string>] [-Name] <string> -AllowedProtocol <List`1> [-Description <string>] [-Network <string>] [-SourceRange <List`1>] [-SourceTag <List`1>] [-TargetTag 
+    <List`1>] [<CommonParameters>]
+    
+    
+DESCRIPTION
+    Adds a new firewall rule. When given a pipeline of many Firewall.AllowedData, will collect them all and create a single new firewall rule.
+    
+
+PARAMETERS
+    -Project <string>
+        The name of the project to add the firewall rule to.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Name <string>
+        The name of the new firewall rule.
+        
+        Required?                    true
+        Position?                    1
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -AllowedProtocol <List`1>
+        A list of allowed protocols and ports. you can use New-GceFirewallProtocol to create them.
+        
+        Required?                    true
+        Position?                    named
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -Allowed <List`1>
+        A list of allowed protocols and ports. you can use New-GceFirewallProtocol to create them.
+        
+        This is an alias of the AllowedProtocol parameter.
+        
+        Required?                    true
+        Position?                    named
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -Protocol <List`1>
+        A list of allowed protocols and ports. you can use New-GceFirewallProtocol to create them.
+        
+        This is an alias of the AllowedProtocol parameter.
+        
+        Required?                    true
+        Position?                    named
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -Description <string>
+        The human readable description of this firewall rule.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Network <string>
+        Url of the network resource for this firewall rule. If empty will be the default network.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -SourceRange <List`1>
+        The IP address block that this rule applies to, expressed in CIDR format. One or both of SourceRange and SourceTag may be set. If both parameters are set, an inbound connection is 
+        allowed if it matches either SourceRange or SourceTag.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -SourceTag <List`1>
+        The instance tag which this rule applies to. One or both of SourceRange and SourceTag may be set. If both parameters are set, an inbound connection is allowed it matches either 
+        SourceRange or SourceTag. Source tags cannot be used to allow access to an instance's external IP address. Source tags can only be used to control traffic traveling from an instance 
+        inside the same network as the firewall rule.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -TargetTag <List`1>
+        An instance tag indicating sets of instances located in the network that may make network connections as specified in allowed[]. If TargetTag is not specified, the firewall rule 
+        applies to all instances on the specified network.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    <CommonParameters>
+        This cmdlet supports the common parameters: Verbose, Debug,
+        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
+        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
+        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
+    
+INPUTS
+    System.Collections.Generic.List`1[[Google.Apis.Compute.v1.Data.Firewall+AllowedData, Google.Apis.Compute.v1, Version=1.13.1.504, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab]]
+        A list of allowed protocols and ports. you can use New-GceFirewallProtocol to create them.
+    
+    
+OUTPUTS
+    
+    
+RELATED LINKS
+
+
+
+</pre>
+
+      </div>
+    </div>
+    <footer>
+    <div id="maia-signature"></div>
+        <div class="maia-footer" id="maia-footer">
+            <div id="maia-footer-global">
+                <div class="maia-aux">
+                <ul>
+                    <li>
+                        <a href="//www.google.com/">Google</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/about/">About Google</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/policies/privacy/">Privacy</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/policies/terms/">Terms</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+
+    <script src="//www.google.com/js/maia.js">
+    </script>
+</body>
+</html>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html class="google" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script>
+        (function(H){H.className=H.className.replace(/\bgoogle\b/,'google-js')})(document.documentElement)
+    </script>
+    <meta content="initial-scale=1, minimum-scale=1, width=device-width" name="viewport">
+    <meta name="description" content="">
+    
+    <title>New-GceAttachedDiskConfig</title>
+    <script src="//www.google.com/js/google.js"></script>
+    <link rel="canonical" href="http://googlecloudplatform.github.io/gcloud-powershell/cmdlets/new-gceattacheddiskconfig.html">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
+    <link rel="stylesheet" href="//www.google.com/css/maia.css">
+</head>
+
+  <body>
+    <header>
+    <div class="maia-header" id="maia-header" role="banner">
+        <div class="maia-aux">
+            <a href="/gcloud-powershell/">
+                <h1>
+                    <img alt="Google" src="//www.google.com/images/branding/googlelogo/1x/googlelogo_color_116x41dp.png">&nbsp;Cloud Platform
+                </h1>
+                <h2>
+                    PowerShell
+                </h2>
+            </a>
+        </div>
+    </div>
+</header>
+
+    
+    <div class="maia-nav" id="maia-nav-x" role="navigation">
+      <div class="maia-aux">
+        <ul>
+          <li>
+            <a href="/gcloud-powershell/">Home</a>
+          </li>
+          <li class="active">
+            <a href="/gcloud-powershell/cmdlets/">Reference</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    
+    <div id="maia-main" role="main">
+      <div class="maia-teleport" id="content">
+      <style>
+pre {
+    white-space: pre-wrap;
+}
+</style>
+
+<h1>New-GceAttachedDiskConfig</h1>
+<pre>
+NAME
+    New-GceAttachedDiskConfig
+    
+SYNOPSIS
+    Creates a single new AttachedDisk object.
+    
+SYNTAX
+    New-GceAttachedDiskConfig [-AutoDelete <SwitchParameter>] [-Boot <SwitchParameter>] [-Pipeline <object>] [-Name <string>] [-Nvme <SwitchParameter>] [-DeviceName <string>] -SourceImage 
+    <string> [-DiskType <string>] [-ReadOnly <SwitchParameter>] [-Size <long>] [<CommonParameters>]
+    
+    New-GceAttachedDiskConfig [-AutoDelete <SwitchParameter>] [-Boot <SwitchParameter>] [-Pipeline <object>] [-Nvme <SwitchParameter>] [-DeviceName <string>] -Source <string> [-ReadOnly 
+    <SwitchParameter>] [<CommonParameters>]
+    
+    
+DESCRIPTION
+    Creates a single new AttachedDisk object. These objects are used by New-GceInstanceConfig and Add-GceInstanceTemplate.
+    
+
+PARAMETERS
+    -AutoDelete <SwitchParameter>
+        When set, disk will be deleted when the instance is.
+        
+        Required?                    false
+        Position?                    named
+        Default value                False
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Boot <SwitchParameter>
+        When set, describes the boot disk of an instance.
+        
+        Required?                    false
+        Position?                    named
+        Default value                False
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Pipeline <object>
+        Pipeline values to be passed on to the next cmdlet.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -Name <string>
+        The name of the disk to create.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Nvme <SwitchParameter>
+        
+        Required?                    false
+        Position?                    named
+        Default value                False
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -DeviceName <string>
+        The name of the disk on the instance.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -SourceImage <string>
+        The source image of the new disk.
+        
+        Required?                    true
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -DiskType <string>
+        Specifies the type of the disk. Defaults to pd-standard.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Source <string>
+        The URI of the preexisting disk to attach to an instance.
+        
+        Required?                    true
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -ReadOnly <SwitchParameter>
+        Set to limit the instance to read operations.
+        
+        Required?                    false
+        Position?                    named
+        Default value                False
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Size <long>
+        The size of the disk to create, in GB.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    <CommonParameters>
+        This cmdlet supports the common parameters: Verbose, Debug,
+        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
+        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
+        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
+    
+INPUTS
+    System.Object
+        Pipeline values to be passed on to the next cmdlet.
+    
+    
+OUTPUTS
+    
+    ----------  EXAMPLE 1  ----------
+    
+    $disks = New-GceAttachedDisk -Boot -AutoDelete -SourceImage "projects/debian-cloud/global/images/family/debian-8" | New-GceAttachedDis -Source "projectDiskName" -ReadOnly 
+    Add-GceinstanceTemplate -Name "instanceName" -MachineType n1-standard-1 -Disk $disks
+    
+    
+    
+    
+RELATED LINKS
+
+
+
+</pre>
+
+      </div>
+    </div>
+    <footer>
+    <div id="maia-signature"></div>
+        <div class="maia-footer" id="maia-footer">
+            <div id="maia-footer-global">
+                <div class="maia-aux">
+                <ul>
+                    <li>
+                        <a href="//www.google.com/">Google</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/about/">About Google</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/policies/privacy/">Privacy</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/policies/terms/">Terms</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+
+    <script src="//www.google.com/js/maia.js">
+    </script>
+</body>
+</html>
