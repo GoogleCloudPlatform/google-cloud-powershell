@@ -6,6 +6,13 @@ $project = "gcloud-powershell-testing"
 $instance = "test-db-fg"
 
 Describe "Get-GcSqlDatabase" {
+    It "should error if given a non-first-generation instance" {
+        {$databases = Get-GcSqlDatabase "test-db"} | Should Throw 
+    }
+
+    It "should not error if given a second-generation instance" {
+        {$databases = Get-GcSqlDatabase "test-db-fg"} | Should Not Throw 
+    }
 
     It "should list databases for an instance" {
         $databases = Get-GcSqlDatabase $instance

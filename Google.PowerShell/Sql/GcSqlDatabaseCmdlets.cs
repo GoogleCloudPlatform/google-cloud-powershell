@@ -12,10 +12,14 @@ namespace Google.PowerShell.Sql
     /// <para type="synopsis">
     /// Retrieves a resource containing information about a database inside a Cloud SQL instance,
     /// or lists all databases inside a Cloud SQL instance.
+    /// 
+    /// This is only supported by first-generation instances.
     /// </para>
     /// <para type="description">
     /// Retrieves a resource containing information about a database inside a Cloud SQL instance,
     /// or lists all databases inside a Cloud SQL instance. This is decided by if you provide a Database or not.
+    /// 
+    /// This is only supported by first-generation instances.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlDatabase")]
@@ -29,7 +33,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// Project ID of the project that contains an instance.
+        /// Project name of the project that contains an instance.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.GetSingle)]
@@ -39,7 +43,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// Cloud SQL instance ID. This does not include the project ID.
+        /// Cloud SQL instance name. 
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.GetSingle)]
@@ -56,7 +60,11 @@ namespace Google.PowerShell.Sql
 
         protected override void ProcessRecord()
         {
-            if (Database != null)
+            if (Service.Instances.Get(Project, Instance).Execute().BackendType != "FIRST_GEN")
+            {
+                throw new GoogleApiException("Google Cloud SQL Api", "Database cmdlets are only supported by First-Generation instances");
+            }
+            else if (Database != null)
             {
                  DatabasesResource.GetRequest request = Service.Databases.Get(Project, Instance, Database);
                  Database result = request.Execute();
