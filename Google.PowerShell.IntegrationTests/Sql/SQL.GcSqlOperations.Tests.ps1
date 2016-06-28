@@ -1,6 +1,6 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
-
+ 
 $project = "gcloud-powershell-testing"
 
 Describe "Get-GcSqlOperations" {
@@ -29,4 +29,3 @@ Describe "Get-GcSqlOperations" {
         $operation.operationType | Should Be "Create"
     }
 }
-

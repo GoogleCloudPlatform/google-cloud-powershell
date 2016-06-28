@@ -60,7 +60,7 @@ namespace Google.PowerShell.Sql
             {
                  DatabasesResource.GetRequest request = Service.Databases.Get(Project, Instance, Database);
                  Database result = request.Execute();
-                 WriteObject(result, true);
+                 WriteObject(result);
             }
             else
             {

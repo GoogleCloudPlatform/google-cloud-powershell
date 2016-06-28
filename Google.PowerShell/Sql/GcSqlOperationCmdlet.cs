@@ -65,7 +65,7 @@ namespace Google.PowerShell.Sql
             {
                 OperationsResource.GetRequest request = Service.Operations.Get(Project, Name);
                 Operation result = request.Execute();
-                WriteObject(result, true);
+                WriteObject(result);
             }
             else
             {
