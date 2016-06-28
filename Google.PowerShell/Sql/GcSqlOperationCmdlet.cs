@@ -64,13 +64,13 @@ namespace Google.PowerShell.Sql
             if (Name != null)
             {
                 OperationsResource.GetRequest request = Service.Operations.Get(Project, Name);
-                var result = request.Execute();
+                Operation result = request.Execute();
                 WriteObject(result, true);
             }
             else
             {
                 OperationsResource.ListRequest request = Service.Operations.List(Project, Instance);
-                var result = request.Execute();
+                OperationsListResponse result = request.Execute();
                 WriteObject(result.Items, true);
             }
         }

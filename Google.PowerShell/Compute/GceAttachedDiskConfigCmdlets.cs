@@ -71,6 +71,8 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// When set, the disk interface will be NVME rather than SCSI.
+        /// </para>
+        /// </summary>
         [Parameter]
         public SwitchParameter Nvme { get; set; }
 

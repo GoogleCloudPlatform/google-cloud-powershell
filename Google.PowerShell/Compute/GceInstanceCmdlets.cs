@@ -21,15 +21,28 @@ namespace Google.PowerShell.ComputeEngine
     /// Gets information about VM instances.
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Get, "GceInstance")]
+    [Cmdlet(VerbsCommon.Get, "GceInstance", DefaultParameterSetName = ParameterSetNames.OfProject)]
     public class GetGceInstanceCmdlet : GceCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string OfProject = "OfProject";
+            public const string OfZone = "OfZone";
+            public const string ByName = "ByName";
+            public const string ByObject = "ByObject";
+            public const string OfInstanceGroupManager = "OfInstanceGroupManager";
+            public const string OfInstanceGroupManagerObject = "OfInstanceGroupManagerObject";
+        }
+
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.OfProject)]
+        [Parameter(ParameterSetName = ParameterSetNames.OfZone)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
+        [Parameter(ParameterSetName = ParameterSetNames.OfInstanceGroupManager)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
         public string Project { get; set; }
@@ -39,7 +52,10 @@ namespace Google.PowerShell.ComputeEngine
         /// The zone in which the instance resides.
         /// </para>
         /// </summary>
-        [Parameter(Position = 1, Mandatory = false)]
+        [Parameter(ParameterSetName = ParameterSetNames.OfZone, Mandatory = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
+        [Parameter(ParameterSetName = ParameterSetNames.OfInstanceGroupManager)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
         public string Zone { get; set; }
 
@@ -48,20 +64,35 @@ namespace Google.PowerShell.ComputeEngine
         /// The name of the instance.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = false,
-            ValueFromPipeline = true)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Instance))]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
         public string Name { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// A filter to send along with the request. This has the name of the property to filter on, either eq
-        /// or ne, and a constant to test against.
+        /// The Instance object to get a new copy of.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false)]
-        public string Filter { get; set; }
+        [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        public Instance Object { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The name of the instance group manager to get the instances of.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.OfInstanceGroupManager, Mandatory = true)]
+        public string ManagedGroupName { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The InstanceGroupManager object to get the instances of.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.OfInstanceGroupManagerObject, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        public InstanceGroupManager ManagedGroupObject { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -75,18 +106,28 @@ namespace Google.PowerShell.ComputeEngine
         protected override void ProcessRecord()
         {
             IEnumerable<Instance> instances;
-            if (String.IsNullOrEmpty(Zone))
+            switch (ParameterSetName)
             {
-                instances = GetAllProjectInstances();
-
-            }
-            else if (String.IsNullOrEmpty(Name))
-            {
-                instances = GetZoneInstances();
-            }
-            else
-            {
-                instances = new Instance[] { GetExactInstance() };
+                case ParameterSetNames.OfProject:
+                    instances = GetAllProjectInstances();
+                    break;
+                case ParameterSetNames.OfZone:
+                    instances = GetZoneInstances();
+                    break;
+                case ParameterSetNames.ByName:
+                    instances = new[] { GetExactInstance() };
+                    break;
+                case ParameterSetNames.ByObject:
+                    instances = new[] { GetByObject() };
+                    break;
+                case ParameterSetNames.OfInstanceGroupManager:
+                    instances = GetManagedGroupInstances();
+                    break;
+                case ParameterSetNames.OfInstanceGroupManagerObject:
+                    instances = GetManagedGroupInstancesByObject();
+                    break;
+                default:
+                    throw UnknownParameterSetException;
             }
 
             if (SerialPortOutput)
@@ -99,17 +140,57 @@ namespace Google.PowerShell.ComputeEngine
             }
         }
 
+        private IEnumerable<Instance> GetManagedGroupInstancesByObject()
+        {
+            string groupProject = GetProjectNameFromUri(ManagedGroupObject.SelfLink);
+            string groupZone = GetZoneNameFromUri(ManagedGroupObject.Zone);
+            string groupName = ManagedGroupObject.Name;
+            InstanceGroupManagersResource.ListManagedInstancesRequest request =
+                Service.InstanceGroupManagers.ListManagedInstances(groupProject, groupZone, groupName);
+            InstanceGroupManagersListManagedInstancesResponse response = request.Execute();
+            return GetActiveInstances(response);
+        }
+
+        private IEnumerable<Instance> GetManagedGroupInstances()
+        {
+            InstanceGroupManagersResource.ListManagedInstancesRequest request =
+                Service.InstanceGroupManagers.ListManagedInstances(Project, Zone, ManagedGroupName);
+            InstanceGroupManagersListManagedInstancesResponse response = request.Execute();
+            return GetActiveInstances(response);
+        }
+
+        private IEnumerable<Instance> GetActiveInstances(InstanceGroupManagersListManagedInstancesResponse response)
+        {
+            if (response.ManagedInstances != null)
+            {
+                foreach (ManagedInstance managedInstance in response.ManagedInstances)
+                {
+                    if (managedInstance.InstanceStatus != null)
+                    {
+                        string project = GetProjectNameFromUri(managedInstance.Instance);
+                        string zone = GetZoneNameFromUri(managedInstance.Instance);
+                        string name = GetUriPart("instances", managedInstance.Instance);
+                        yield return Service.Instances.Get(project, zone, name).Execute();
+                    }
+                }
+            }
+        }
+
+        private Instance GetByObject()
+        {
+            string project = GetProjectNameFromUri(Object.SelfLink);
+            string zone = GetZoneNameFromUri(Object.SelfLink);
+            InstancesResource.GetRequest getRequest = Service.Instances.Get(project, zone, Object.Name);
+            return getRequest.Execute();
+        }
+
         private IEnumerable<Instance> GetAllProjectInstances()
         {
-            string pageToken = null;
+            InstancesResource.AggregatedListRequest aggListRequest =
+                Service.Instances.AggregatedList(Project);
             do
             {
-                InstancesResource.AggregatedListRequest aggListRequest =
-                    Service.Instances.AggregatedList(Project);
-                aggListRequest.Filter = Filter;
-                aggListRequest.PageToken = pageToken;
                 var aggList = aggListRequest.Execute();
-                pageToken = aggList.NextPageToken;
                 var instances = aggList.Items.Values
                     .Where(l => l.Instances != null)
                     .SelectMany(l => l.Instances);
@@ -117,8 +198,9 @@ namespace Google.PowerShell.ComputeEngine
                 {
                     yield return instance;
                 }
+                aggListRequest.PageToken = aggList.NextPageToken;
             }
-            while (pageToken != null);
+            while (aggListRequest.PageToken != null);
         }
 
         private IEnumerable<Instance> GetZoneInstances()
@@ -127,7 +209,6 @@ namespace Google.PowerShell.ComputeEngine
             do
             {
                 InstancesResource.ListRequest listRequest = Service.Instances.List(Project, Zone);
-                listRequest.Filter = Filter;
                 listRequest.PageToken = pageToken;
                 InstanceList response = listRequest.Execute();
 
@@ -584,7 +665,7 @@ namespace Google.PowerShell.ComputeEngine
                     ProcessTag();
                     break;
                 default:
-                    throw new PSInvalidOperationException($"{ParameterSetName} is not a valid ParameterSet");
+                    throw UnknownParameterSetException;
             }
         }
 
