@@ -1,11 +1,11 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
+$project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 $project = "gcloud-powershell-testing"
 $instance = "test-db-fg"
 
 Describe "Get-GcSqlDatabase" {
-    gcloud config set project $project    
 
     It "should list databases for an instance" {
         $databases = Get-GcSqlDatabase $instance
@@ -35,3 +35,5 @@ Describe "Get-GcSqlDatabase" {
         ($databases.Name -contains "guestbook") | Should Be true
     }
 }
+
+Reset-GCloudConfig $oldActiveConfig $configName
