@@ -46,6 +46,7 @@
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Compute\Compute.GceAttachedDiskConfig.Tests.ps1" />
     <None Include="Compute\Compute.GceDisk.Tests.ps1" />
     <None Include="Compute\Compute.GceFirewall.Tests.ps1" />
     <None Include="Compute\Compute.GceInstance.Tests.ps1" />
@@ -59,6 +60,7 @@
     <None Include="GcloudCmdlets.ps1" />
     <None Include="README.md" />
     <None Include="SQL\SQL.GcSqlFlags.Tests.ps1" />
+    <None Include="SQL\SQL.GcSqlOperations.Tests.ps1" />
     <None Include="SQL\SQL.GcSqlTiers.Tests.ps1" />
     <None Include="Storage\Storage.GcsBucket.Tests.ps1" />
     <None Include="Storage\Storage.GcsBucketLogging.Tests.ps1" />
