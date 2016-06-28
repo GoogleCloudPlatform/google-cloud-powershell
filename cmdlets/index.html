@@ -38,9 +38,17 @@
           <li>
             <a href="/gcloud-powershell/">Home</a>
           </li>
-          <li class="active">
+
+          
+          <li >
             <a href="/gcloud-powershell/cmdlets/">Reference</a>
           </li>
+
+          <!-- cmdlet-specific pages include the parent product. -->
+          
+
+          <!-- product-specific pages. -->
+          
         </ul>
       </div>
     </div>
@@ -54,231 +62,123 @@
     <ul>
       
         
-        <li><a href="#Google Compute Engine">Google Compute Engine</a>
+        <li><a href="#google-cloud-storage">Google Cloud Storage</a>
       
         
-        <li><a href="#Google Cloud Storage">Google Cloud Storage</a>
+        <li><a href="#google-compute-engine">Google Compute Engine</a>
       
     </ul>
   </div>
   
   <!-- Product-specific quickstart guides (hardcoded). -->
   <div class="maia-article">
-    <!-- Google Cloud Storage -->
-    <h1 id="google-cloud-storage">Google Cloud Storage</h1>
-    <p><a href="/gcloud-powershell/cmdlets/google-cloud-storage.html">All Cloud Storage cmdlets</a></p>
-    <p>Google Cloud Storage is neat.</p>
-    <p>You can do all sorts of stuff with it.</p>
-    <pre>
-# Use these two commands if you get stuck:
-# List all Gcs cmdlets available.
-Get-Command | Select-String -Pattern "Gcs"
-# Get help about a cmdlet.
-Get-Help Get-GcsObject
+    <div class="maia-cols">
+      <div class="maia-col-8">
+        <!-- Google Cloud Storage -->
+        <h1 id="google-cloud-storage">Google Cloud Storage</h1>
+        <p>
+          <a href="/gcloud-powershell/cmdlets/google-cloud-storage.html">See all Cloud Storage cmdlets</a>
+        </p>
+        <p>
+          Google Cloud Storage allows world-wide storage and retrieval of any
+          amount of data at any time. You can use Google Cloud Storage for a
+          range of scenarios including serving website content, storing data
+          for archival and disaster recovery, or distributing large data objects
+          to users via direct download.
+        </p>
+        <p>
+          <strong>Buckets</strong>
+        </p>
+        <p>
+          Google Cloud Storage data is grouped into "buckets".
+        </p>
+        <pre>
+# Create a new bucket.
+New-GcsBucket -Project $project -Name "my-new-bucket"
 
 # List all buckets associated with a project
 $project = "gcloud-powershell-testing"
 Get-GcsBucket -Project $project | Select -ExpandProperty Name
-
+        </pre>
+        <p>
+          <strong>Objects</strong>
+        </p>
+        <p>
+          Each bucket contains "objects", which contain arbitrary data.
+        </p>
+        <pre>
 # Get all objects in a bucket.
 $bucket = "chrsmith-debugging"
 # Get all objects in a GCS bucket.
 Find-GcsObject -Bucket $bucket | Select -ExpandProperty Name
 
 # Write a GCS object to disk.
-Read-GcsObject "bucket-name" "object-name" -OutFile "output-file.xxx"
-    </pre>
+Read-GcsObject "bucket-name" "object-name" -OutFile "output-file.png"
+        </pre>
 
-    <!-- Google Compute Engine -->
-    <h1 id="google-compute-engine">Google Compute Engine</h1>
-    <p><a href="/gcloud-powershell/cmdlets/google-compute-engine.html">All Compute Engine cmdlets</a></p>
-    <p>Google Cloud Storage is neat.</p>
-    <p>You can do all sorts of stuff with it.</p>
-    <pre>
-# Use these two commands if you get stuck:
-# List all Gcs cmdlets available.
-Get-Command | Select-String -Pattern "Gcs"
-# Get help about a cmdlet.
-Get-Help Get-GcsObject
+        <!-- Google Compute Engine -->
+        <h1 id="google-compute-engine">Google Compute Engine</h1>
+        <p>
+          <a href="/gcloud-powershell/cmdlets/google-compute-engine.html">All Compute Engine cmdlets</a>
+        </p>
+        <p>
+          Google Compute Engine lets you create and run virtual machines on
+          Google infrastructure. Compute Engine offers scale, performance, and
+          value that allows you to easily launch large compute clusters on
+          Google's infrastructure. There are no upfront investments and you can
+          run thousands of virtual CPUs on a system that has been designed to
+          be fast, and to offer strong consistency of performance.
+        </p>
+        <p>
+          <strong>Instances</strong>
+        </p>
+        <p>
+          Google Compute Engine VMs are referred to as "instances". To create
+          an instance, you must first create an <em>instance configuration</em>.
+          This requires at the minimum a name, a machine type, and a boot disk
+          image or preexisting boot disk.
+        </p>
+        <p>
+          Once you have your configuration object, you can send them to the
+          <code>Add-GceInstance</code> cmdlet to build them of a particular
+          project and zone. If your active gcloud configuration has a
+          project and zone, then those parameters are optional.
+        </p>
+        <pre>
+$config = New-GceInstanceConfig "instance-name" -MachineType "n1-standard-4" `
+    -DiskImage "projects/windows-cloud/global/images/family/windows-2012-r2"
 
-# List all buckets associated with a project
-$project = "gcloud-powershell-testing"
-Get-GcsBucket -Project $project | Select -ExpandProperty Name
+$config | Add-GceInstance -Project $myProjectName -Zone "us-central1-b
+        </pre>
+        <p>
+          <strong>Management</strong>
+        </p>
+        <p>
+          In addition to basic cmdlets to start, stop, or restart an instance,
+          You can set tags, disks, access configs or metadata after creating
+          your VM with the <code>Set-GceInstance</code> cmdlet.
+        </p>
+        <pre>
+Get-GceInstance $instance
+Stop-GceInstance $instance
+Start-GceInstance $instance
+Restart-GceInstance $instance
+  
+[Google.Apis.Compute.v1.Data.AccessConfig] $newConfig = @{}
+$newConfig.Kind = "ONE_TO_ONE_NAT"
+$newConfig.Name = "New NAT"
 
-# Get all objects in a bucket.
-$bucket = "chrsmith-debugging"
-# Get all objects in a GCS bucket.
-Find-GcsObject -Bucket $bucket | Select -ExpandProperty Name
+Set-GceInstance "instance-name" `
+    -NetworkInterface "nic0" 
+    -DeleteAccessConfig "External NAT"
+    -NewAccessConfig $newConfig
 
-# Write a GCS object to disk.
-Read-GcsObject "bucket-name" "object-name" -OutFile "output-file.xxx"
-    </pre>
-
+Set-GceInstance "instance-name" -AddMetadata @{"newKey" = "newValue"}
+Set-GceInstance "instance-name" -RemoveMetadata "newKey"
+Set-GceInstance "instance-name" -RemoveTag "beta" -AddTag "alpha"
+      </pre>
+    </div>
   </div>
-
-<!--
-  <h1>DEBUGGING</h1>
-  <a href="/gcloud-powershell/cmdlets/google-compute-engine.html">Google Compute Engine</a>
-
-  <div id="maia-nav-y"
-      class="maia-nav" role="navigation" style="width: 150px;">
-    <ul>
-      
-        
-        <li><a href="#"></a>
-      
-        
-        <li><a href="#"></a>
-      
-    </ul>
-  </div>
-
-  <div class="maia-article">
-    
-      
-      <div class="maia-cols">
-        <div class="maia-col-5">
-          
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-        </div>
-
-        <div class="maia-col-5">
-          <div class="maia-aside">
-            <h1 id="#"></h1>
-            <p>For more information see: <a href="www.google.com>">www.google.com</a></p>
-          </div>
-        </div>
-      </div>
-    
-      
-      <div class="maia-cols">
-        <div class="maia-col-5">
-          
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-
-            
-
-          
-        </div>
-
-        <div class="maia-col-5">
-          <div class="maia-aside">
-            <h1 id="#"></h1>
-            <p>For more information see: <a href="www.google.com>">www.google.com</a></p>
-          </div>
-        </div>
-      </div>
-    
-  </div>
-  -->
 </div>
 
       </div>

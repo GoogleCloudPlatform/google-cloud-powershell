@@ -29,7 +29,6 @@
     <ul class="featuring-links">
       <li>
         <a href="{{baseUrl}}cmdlets" title="gcloud-powershell docs" class="btn btn-docs">
-          <img src="src/images/icon-lang-node-cta.svg" alt="cmdlet reference" />
           Cmdlet Reference
         </a>
       </li>
@@ -93,7 +92,7 @@ New-GcsObject -Bucket $bucket `
     -ContentType "image/jpeg" -File ".\image001.png"
 
 Find-GcsObject $bucket.Name -Prefix "images/" | 
-    Sort-Object -Property Updated
+    Sort-Object -Property "Updated"
       </div>
 
       <div hljs hlsj-language="powershell" ng-show="selected == 'compute engine'">
@@ -101,7 +100,7 @@ $config = New-GceInstanceConfig $vmName `
     -MachineType "n1-standard-4" `
     -DiskImage "projects/windows-cloud/global/images/family/windows-2012-r2"
 
-$config | Add-GceInstance -Project $project -Zone us-central1-b
+$config | Add-GceInstance -Project $project -Zone "us-central1-b"
 
 $instance = Get-GceInstance $vmName
       </div>
