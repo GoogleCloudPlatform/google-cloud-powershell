@@ -191,5 +191,12 @@ namespace Google.PowerShell.Common
                 _telemetryReporter.ReportFailure(cmdletName, parameterSet, 1);
             }
         }
+
+        /// <summary>
+        /// The exeption to be thrown when the parameter set is invalid. Should only be called if the code is
+        /// not properly handling all parameter sets.
+        /// </summary>
+        protected PSInvalidOperationException UnknownParameterSetException =>
+            new PSInvalidOperationException($"{ParameterSetName} is not a valid parameter set.");
     }
 }
