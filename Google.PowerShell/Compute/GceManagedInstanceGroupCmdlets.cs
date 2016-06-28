@@ -4,6 +4,7 @@ using Google.PowerShell.Common;
 using Google.PowerShell.ComputeEngine;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Management.Automation;
 using System.Threading;
@@ -107,7 +108,7 @@ namespace Google.PowerShell.Compute
                     managers = new[] { GetGroupByObject() };
                     break;
                 default:
-                    throw new PSInvalidOperationException($"{ParameterSetName} is not a valid parameter set");
+                    throw UnknownParameterSetException;
             }
 
             if (InstanceStatus)
@@ -340,7 +341,7 @@ namespace Google.PowerShell.Compute
                     manager = Object;
                     break;
                 default:
-                    throw new PSInvalidOperationException($"{ParameterSetName} is not a valid parameter set");
+                    throw UnknownParameterSetException;
             }
             InstanceGroupManagersResource.InsertRequest request =
                 Service.InstanceGroupManagers.Insert(manager, Project, Zone);
@@ -432,7 +433,7 @@ namespace Google.PowerShell.Compute
                     DeleteByObject();
                     break;
                 default:
-                    throw new PSInvalidOperationException($"{ParameterSetName} is not a valid parameter set");
+                    throw UnknownParameterSetException;
             }
         }
 
@@ -443,7 +444,8 @@ namespace Google.PowerShell.Compute
             string name = Object.Name;
             if (ShouldProcess($"{project}/{zone}/{name}", "Remove Instance Group Manager"))
             {
-                AddOperation(project, zone, Service.InstanceGroupManagers.Delete(project, zone, name).Execute());
+                Operation operation = Service.InstanceGroupManagers.Delete(project, zone, name).Execute();
+                AddOperation(project, zone, operation);
             }
         }
 
@@ -451,7 +453,8 @@ namespace Google.PowerShell.Compute
         {
             if (ShouldProcess($"{Project}/{Zone}/{Name}", "Remove Instance Group Manager"))
             {
-                AddOperation(Project, Zone, Service.InstanceGroupManagers.Delete(Project, Zone, Name).Execute());
+                Operation operation = Service.InstanceGroupManagers.Delete(Project, Zone, Name).Execute();
+                AddOperation(Project, Zone, operation);
             }
         }
     }
@@ -462,8 +465,8 @@ namespace Google.PowerShell.Compute
     /// </para>
     /// <para type="description"> 
     /// Changes the data of a Google Compute Engine instance group manager. As a whole, the group can be
-    /// resized, have its template set, and have its target pools set. Member instances can be abandoned,
-    /// deleted and recreated.
+    /// resized, have its template set, or have its target pools set. Member instances can be abandoned,
+    /// deleted, or recreated.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceManagedInstanceGroup", SupportsShouldProcess = true)]
@@ -618,7 +621,7 @@ namespace Google.PowerShell.Compute
                     SetTargetPools();
                     break;
                 default:
-                    throw new PSInvalidOperationException($"{ParameterSetName} is not a valid parameter set");
+                    throw UnknownParameterSetException;
             }
         }
 
@@ -633,7 +636,8 @@ namespace Google.PowerShell.Compute
             {
                 InstanceGroupManagersResource.SetInstanceTemplateRequest request =
                     Service.InstanceGroupManagers.SetInstanceTemplate(body, Project, Zone, Name);
-                AddOperation(Project, Zone, request.Execute());
+                Operation operation = request.Execute();
+                AddOperation(Project, Zone, operation);
             }
         }
 
@@ -648,7 +652,8 @@ namespace Google.PowerShell.Compute
             {
                 InstanceGroupManagersResource.SetTargetPoolsRequest request =
                     Service.InstanceGroupManagers.SetTargetPools(body, Project, Zone, Name);
-                AddOperation(Project, Zone, request.Execute());
+                Operation operation = request.Execute();
+                AddOperation(Project, Zone, operation);
             }
         }
 
@@ -656,7 +661,9 @@ namespace Google.PowerShell.Compute
         {
             if (ShouldProcess($"{Project}/{Zone}/{Name}", "Resize"))
             {
-                Operation operation = Service.InstanceGroupManagers.Resize(Project, Zone, Name, Size).Execute();
+                InstanceGroupManagersResource.ResizeRequest request =
+                    Service.InstanceGroupManagers.Resize(Project, Zone, Name, Size);
+                Operation operation = request.Execute();
                 AddOperation(Project, Zone, operation);
             }
         }
@@ -667,12 +674,13 @@ namespace Google.PowerShell.Compute
             {
                 Instances = InstanceObject.Select(i => i.SelfLink).ToList()
             };
-            if (ShouldProcess("Recreating instances: \n" + string.Join("\n", body.Instances), null,
+            if (ShouldProcess("Recreating instances: " + JoinInstanceNames(body.Instances), null,
                 $"Managed Instance Group {Project}/{Zone}/{Name}"))
             {
                 InstanceGroupManagersResource.RecreateInstancesRequest request =
                     Service.InstanceGroupManagers.RecreateInstances(body, Project, Zone, Name);
-                AddOperation(Project, Zone, request.Execute());
+                Operation operation = request.Execute();
+                AddOperation(Project, Zone, operation);
             }
         }
 
@@ -682,12 +690,13 @@ namespace Google.PowerShell.Compute
             {
                 Instances = InstanceUri
             };
-            if (ShouldProcess("Recreating instances: \n" + string.Join("\n", body.Instances), null,
+            if (ShouldProcess("Recreating instances: " + JoinInstanceNames(body.Instances), null,
                 $"Managed Instance Group {Project}/{Zone}/{Name}"))
             {
                 InstanceGroupManagersResource.RecreateInstancesRequest request =
                     Service.InstanceGroupManagers.RecreateInstances(body, Project, Zone, Name);
-                AddOperation(Project, Zone, request.Execute());
+                Operation operation = request.Execute();
+                AddOperation(Project, Zone, operation);
             }
         }
 
@@ -697,12 +706,13 @@ namespace Google.PowerShell.Compute
             {
                 Instances = InstanceObject.Select(i => i.SelfLink).ToList()
             };
-            if (ShouldProcess("Deleting instances: \n" + string.Join("\n", body.Instances), null,
+            if (ShouldProcess("Deleting instances: " + JoinInstanceNames(body.Instances), null,
                 $"Managed Instance Group {Project}/{Zone}/{Name}"))
             {
                 InstanceGroupManagersResource.DeleteInstancesRequest request =
                     Service.InstanceGroupManagers.DeleteInstances(body, Project, Zone, Name);
-                AddOperation(Project, Zone, request.Execute());
+                Operation operation = request.Execute();
+                AddOperation(Project, Zone, operation);
             }
         }
 
@@ -712,12 +722,13 @@ namespace Google.PowerShell.Compute
             {
                 Instances = InstanceUri
             };
-            if (ShouldProcess("Deleting instances: \n" + string.Join("\n", body.Instances), null,
+            if (ShouldProcess("Deleting instances: " + JoinInstanceNames(body.Instances), null,
                 $"Managed Instance Group {Project}/{Zone}/{Name}"))
             {
                 InstanceGroupManagersResource.DeleteInstancesRequest request =
                     Service.InstanceGroupManagers.DeleteInstances(body, Project, Zone, Name);
-                AddOperation(Project, Zone, request.Execute());
+                Operation operation = request.Execute();
+                AddOperation(Project, Zone, operation);
             }
         }
 
@@ -727,12 +738,13 @@ namespace Google.PowerShell.Compute
             {
                 Instances = InstanceObject.Select(i => i.SelfLink).ToList()
             };
-            if (ShouldProcess("Abandoning instances: \n" + string.Join("\n", body.Instances), null,
+            if (ShouldProcess("Abandoning instances: " + JoinInstanceNames(body.Instances), null,
                 $"Managed Instance Group {Project}/{Zone}/{Name}"))
             {
                 InstanceGroupManagersResource.AbandonInstancesRequest request =
                     Service.InstanceGroupManagers.AbandonInstances(body, Project, Zone, Name);
-                AddOperation(Project, Zone, request.Execute());
+                Operation operation = request.Execute();
+                AddOperation(Project, Zone, operation);
             }
         }
 
@@ -742,13 +754,19 @@ namespace Google.PowerShell.Compute
             {
                 Instances = InstanceUri
             };
-            if (ShouldProcess("Abandoning instances: \n" + string.Join("\n", body.Instances), null,
+            if (ShouldProcess("Abandoning instances: " + JoinInstanceNames(body.Instances), null,
                 $"Managed Instance Group {Project}/{Zone}/{Name}"))
             {
                 InstanceGroupManagersResource.AbandonInstancesRequest request =
                     Service.InstanceGroupManagers.AbandonInstances(body, Project, Zone, Name);
-                AddOperation(Project, Zone, request.Execute());
+                Operation operation = request.Execute();
+                AddOperation(Project, Zone, operation);
             }
+        }
+
+        private static string JoinInstanceNames(IEnumerable<string> instanceUris)
+        {
+            return string.Join(", ", instanceUris.Select(uri => GetUriPart("instances", uri)));
         }
     }
 
@@ -789,46 +807,63 @@ namespace Google.PowerShell.Compute
 
         /// <summary>
         /// <para type="description">
-        /// The name of the managed instance group to change.
+        /// The name of the managed instance group to wait on.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         public string Name { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The mananged instance group object to wait on.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         public InstanceGroupManager Object { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The maximum number of seconds to wait for each managed instance group. -1, the default, waits until
+        /// all instances have no current action, no matter how long it takes. If the timeout expires, the wait
+        /// will end with a warning.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 1)]
+        public int Timeout { get; set; } = -1;
+
         protected override void ProcessRecord()
         {
-            string project;
-            string zone;
-            string name;
+            InstanceGroupManagersResource.ListManagedInstancesRequest request;
             switch (ParameterSetName)
             {
                 case ParameterSetNames.ByName:
-                    project = Project;
-                    zone = Zone;
-                    name = Name;
+                    request = Service.InstanceGroupManagers.ListManagedInstances(Project, Zone, Name);
                     break;
                 case ParameterSetNames.ByObject:
-                    project = GetProjectNameFromUri(Object.SelfLink);
-                    zone = GetZoneNameFromUri(Object.Zone);
-                    name = Object.Name;
+                    string project = GetProjectNameFromUri(Object.SelfLink);
+                    string zone = GetZoneNameFromUri(Object.Zone);
+                    string name = Object.Name;
+                    request = Service.InstanceGroupManagers.ListManagedInstances(project, zone, name);
                     break;
                 default:
-                    throw new PSInvalidOperationException($"{ParameterSetName} is not a valid parameter set");
+                    throw UnknownParameterSetException;
             }
 
-            IList<ManagedInstance> instances;
-            do
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            IList<ManagedInstance> instances = request.Execute().ManagedInstances;
+            while (instances != null && instances.Any(i => i.CurrentAction != "NONE") && !Stopping)
             {
+                if (Timeout >= 0 && stopwatch.Elapsed.Seconds > Timeout)
+                {
+                    WriteWarning("Wait-GceManagedInstanceGroup timed out for " +
+                                 $"{request.Project}/{request.Zone}/{request.InstanceGroupManager}");
+                    break;
+                }
                 Thread.Sleep(150);
-                InstanceGroupManagersListManagedInstancesResponse response =
-                    Service.InstanceGroupManagers.ListManagedInstances(project, zone, name).Execute();
-                instances = response.ManagedInstances;
-            } while (instances != null && instances.Any(i => i.CurrentAction != "NONE") && !Stopping);
+                instances = request.Execute().ManagedInstances;
+            }
         }
     }
 }

@@ -7,7 +7,6 @@ using Google.PowerShell.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Management.Automation;
 using System.Text.RegularExpressions;
 using System.Threading;
 
@@ -115,9 +114,21 @@ namespace Google.PowerShell.ComputeEngine
             return GetUriPart("projects", uri);
         }
 
-        public static string GetUriPart(string part, string uri)
+        /// <summary>
+        /// Library method to pull a resource name from a Rest uri.
+        /// </summary>
+        /// <param name="resourceType">
+        /// The type of resource to get the name of (e.g. projects, zones, instances)
+        /// </param>
+        /// <param name="uri">
+        /// The uri to pull the resource name from.
+        /// </param>
+        /// <returns>
+        /// The name of the resource i.e. the section of the uri following the resource type.
+        /// </returns>
+        public static string GetUriPart(string resourceType, string uri)
         {
-            Match match = Regex.Match(uri, $"{part}/(?<value>[^/]*)");
+            Match match = Regex.Match(uri, $"{resourceType}/(?<value>[^/]*)");
             return match.Groups["value"].Value;
         }
     }

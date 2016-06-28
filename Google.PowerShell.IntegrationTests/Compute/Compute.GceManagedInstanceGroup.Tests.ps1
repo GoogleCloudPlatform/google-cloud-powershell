@@ -10,7 +10,7 @@ $templateName = "test-managed-instance-groups-$r"
 Get-GceManagedInstanceGroup | Remove-GceManagedInstanceGroup
 Get-GceInstanceTemplate | Remove-GceInstanceTemplate
 Add-GceInstanceTemplate -Name $templateName -MachineType $machineType -BootDiskImage $image
-$template = Get-GceInstanceTemplate
+$template = Get-GceInstanceTemplate $templateName
 
 (
     gcloud compute target-pools create test-pool 2>&1 | Select-String -Pattern "Created \[(.*)\]"
@@ -33,14 +33,14 @@ Describe "Get-GceManagedInstanceGroup" {
         { Get-GceManagedInstanceGroup -Name "not-a-real-group" } | Should Throw 404
     }
 
-    It "should get 3 project groups" {
+    It "should get the groups of the project" {
         $groups = Get-GceManagedInstanceGroup
         $groups.Count | Should Be 3
         ($groups | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.InstanceGroupManager"
         $groups.Name | Should Match "test-get-managed-instance-group-"
     }
 
-    It "should get 2 zone groups" {
+    It "should get the groups of a zone" {
         $groups = Get-GceManagedInstanceGroup -Zone "us-central1-f"
         $groups.Count | Should Be 2
         ($groups | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.InstanceGroupManager"
@@ -73,7 +73,7 @@ Describe "Get-GceManagedInstanceGroup" {
     It "should get instance status" {
         $instances = Get-GceManagedInstanceGroup $groupName1 -InstanceStatus
         ($instances | Get-Member).Typename | Should Be "Google.Apis.Compute.v1.Data.ManagedInstance"
-        $instances.CurrentAction | Should Not Be $null
+        $instances.CurrentAction | Should Not BeNullOrEmpty
         $instances.Instance | Should Match $groupName1
     }
 
@@ -114,7 +114,6 @@ Describe "Add-GceManagedInstanceGroup" {
 }
 
 Describe "Remove-GceManagedInstanceGroup" {
-
     $groupName1 = "test-remove-managed-instance-group-$r"
     
     It "should fail for wrong project" {
@@ -154,7 +153,6 @@ Describe "Remove-GceManagedInstanceGroup" {
 }
 
 Describe "Set-GceManagedInstanceGroup" {
-
     $templateName2 = "test-set-managed-instance-group-$r"
     Add-GceInstanceTemplate -Name $templateName2 -MachineType $machineType -BootDiskImage $image
     $template2 = Get-GceInstanceTemplate -Name $templateName2
@@ -180,6 +178,7 @@ Describe "Set-GceManagedInstanceGroup" {
         $group.InstanceTemplate | Should Be $template2.SelfLink
     }
 
+    # Wait for instances to get to a normal state before running tests that affect the instances.
     Wait-GceManagedInstanceGroup $groupName1
 
     It "should abandon instances" {
@@ -187,6 +186,7 @@ Describe "Set-GceManagedInstanceGroup" {
         $instanceToAbandon = $instances[0]
         $instanceToAbandon | Set-GceManagedInstanceGroup $groupName1 -Abandon
 
+        # Wait for the instance to be abandoned.
         Wait-GceManagedInstanceGroup $groupName1
 
         $instanceStatus = Get-GceManagedInstanceGroup $groupName1 -InstanceStatus
@@ -206,6 +206,7 @@ Describe "Set-GceManagedInstanceGroup" {
         $group = Get-GceManagedInstanceGroup $groupName1
         $group.TargetSize | Should Be 1
 
+        # Wait for the instance to be deleted.
         Wait-GceManagedInstanceGroup $groupName1
 
         $instanceStatus = Get-GceManagedInstanceGroup $groupName1 -InstanceStatus
@@ -231,6 +232,14 @@ Describe "Wait-GceManagedInstanceGroup" {
     $groupName1 = "test-wait-managed-instance-group-$r"
     Add-GceManagedInstanceGroup $groupName1 $template 0
 
+    It "should fail with non-existant groupname" {
+        { Wait-GceManagedInstanceGroup "group-not-exist" } | Should Throw 404
+    }
+
+    It "should work with no instances" {
+        { Wait-GceManagedInstanceGroup $groupName1 } | Should Not Throw
+    }
+
     It "should wait for resize" {
         Set-GceManagedInstanceGroup $groupName1 -Size 1
         (Get-GceManagedInstanceGroup $groupName1 -InstanceStatus).CurrentAction | Should Not Be NONE
@@ -238,6 +247,11 @@ Describe "Wait-GceManagedInstanceGroup" {
         Wait-GceManagedInstanceGroup $groupName1
 
         (Get-GceManagedInstanceGroup $groupName1 -InstanceStatus).CurrentAction | Should Be NONE
+    }
+
+    It "should warn on timeout" {
+        Get-GceInstance -ManagedGroupName $groupName1 | Set-GceManagedInstanceGroup $groupName1 -Delete
+        Wait-GceManagedInstanceGroup $groupName1 0 3>&1 | Should Match "Wait-GceManagedInstanceGroup timed out"
     }
 
     Remove-GceManagedInstanceGroup $groupName1

@@ -64,7 +64,7 @@ Describe "Get-GceInstance" {
         $instanceObj = New-Object Google.Apis.Compute.v1.Data.Instance
         $instanceObj.Name = $instance
         $instanceObj.SelfLink = "projects/$project/zones/$zone/instances/$instance"
-        $result = Get-GceInstance -Object $instanceObj
+        $result = Get-GceInstance $instanceObj
         ($result | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.Instance"
         $result.Name | Should Be $instance
         $result.Kind | Should Be "compute#instance"

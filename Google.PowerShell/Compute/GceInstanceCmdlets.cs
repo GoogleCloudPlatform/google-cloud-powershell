@@ -21,7 +21,7 @@ namespace Google.PowerShell.ComputeEngine
     /// Gets information about VM instances.
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Get, "GceInstance", DefaultParameterSetName = "OfProject")]
+    [Cmdlet(VerbsCommon.Get, "GceInstance", DefaultParameterSetName = ParameterSetNames.OfProject)]
     public class GetGceInstanceCmdlet : GceCmdlet
     {
         private class ParameterSetNames
@@ -127,7 +127,7 @@ namespace Google.PowerShell.ComputeEngine
                     instances = GetManagedGroupInstancesByObject();
                     break;
                 default:
-                    throw new PSInvalidOperationException($"{ParameterSetName} is not a valid ParameterSet");
+                    throw UnknownParameterSetException;
             }
 
             if (SerialPortOutput)
@@ -665,7 +665,7 @@ namespace Google.PowerShell.ComputeEngine
                     ProcessTag();
                     break;
                 default:
-                    throw new PSInvalidOperationException($"{ParameterSetName} is not a valid ParameterSet");
+                    throw UnknownParameterSetException;
             }
         }
 

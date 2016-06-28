@@ -200,7 +200,7 @@ namespace Google.PowerShell.ComputeEngine
                     WriteObject(BuildFromFlags());
                     break;
                 default:
-                    throw new PSInvalidOperationException($"{ParameterSetName} is not a valid parameter set");
+                    throw UnknownParameterSetException;
             }
         }
 

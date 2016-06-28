@@ -1,12 +1,11 @@
 ﻿// Copyright 2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
-using System;
+using Google.Apis.Compute.v1.Data;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
-using Google.Apis.Compute.v1.Data;
 
 namespace Google.PowerShell.ComputeEngine
 {
@@ -239,7 +238,7 @@ namespace Google.PowerShell.ComputeEngine
                     };
 
                 default:
-                    throw new InvalidOperationException($"{ParameterSetName} is not a valid ParameterSet.");
+                    throw UnknownParameterSetException;
             }
         }
     }
