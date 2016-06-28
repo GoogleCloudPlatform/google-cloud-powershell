@@ -54,7 +54,6 @@ namespace Google.PowerShell.Sql
         [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.GetList)]
         public string Database { get; set; }
 
-
         protected override void ProcessRecord()
         {
             if (Database != null)
