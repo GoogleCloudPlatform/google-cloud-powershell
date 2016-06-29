@@ -3,7 +3,8 @@
 # Install the GCP cmdlets module into the current PowerShell session.
 function Install-GcloudCmdlets() {
     $dll = Get-ChildItem $PSScriptRoot\..\Google.PowerShell\bin -Recurse -Include Google.PowerShell.dll |
-        sort -Property CreationTime | select -First 1
+        sort -Descending -Property LastWriteTime |
+        select -First 1
     Import-Module $dll
 }
 
@@ -41,6 +42,7 @@ function Set-GCloudConfig(){
     gcloud config set core/account $oldActiveConfig.ACCOUNT 2>$null
     gcloud config set core/project $project 2>$null
     gcloud config set compute/zone $zone 2>$null
+    gcloud config set compute/region us-central1 2>$null
     
     return $project, $zone, $oldActiveConfig, $configName
 }

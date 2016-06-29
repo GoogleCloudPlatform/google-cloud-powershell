@@ -72,7 +72,7 @@ namespace Google.PowerShell.ComputeEngine
                     WriteObject(GetTemplateByObject());
                     break;
                 default:
-                    throw new PSInvalidOperationException($"{ParameterSetName} is not a valid Parameter Set.");
+                    throw UnknownParameterSetException;
             }
         }
 
@@ -295,9 +295,9 @@ namespace Google.PowerShell.ComputeEngine
                     instanceTemplate = BuildNewTemplate();
                     break;
                 default:
-                    throw new PSInvalidOperationException($"{ParameterSetName} is not a valid parameter set");
+                    throw UnknownParameterSetException;
             }
-            AddOperation(Project, Service.InstanceTemplates.Insert(instanceTemplate, Project).Execute());
+            AddGlobalOperation(Project, Service.InstanceTemplates.Insert(instanceTemplate, Project).Execute());
         }
 
         /// <summary>
@@ -517,13 +517,12 @@ namespace Google.PowerShell.ComputeEngine
                     name = Object.Name;
                     break;
                 default:
-                    throw new PSInvalidOperationException(
-                        $"{ParameterSetName} is not a valid parameter set");
+                    throw UnknownParameterSetException;
             }
 
             if (ShouldProcess($"{project}/{name}", "Remove GceInstanceTemplate"))
             {
-                AddOperation(project, Service.InstanceTemplates.Delete(project, name).Execute());
+                AddGlobalOperation(project, Service.InstanceTemplates.Delete(project, name).Execute());
             }
         }
     }

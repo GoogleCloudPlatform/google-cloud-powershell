@@ -200,7 +200,7 @@ namespace Google.PowerShell.ComputeEngine
                     WriteObject(BuildFromFlags());
                     break;
                 default:
-                    throw new PSInvalidOperationException($"{ParameterSetName} is not a valid parameter set");
+                    throw UnknownParameterSetException;
             }
         }
 
@@ -243,7 +243,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <example>
         /// If BigtableAdmin is a bound parameter, and is bound to the value BigTableAdminEnum.Tables, you can
         /// get the related sope with 
-        /// <code> string scope = NamevalueScopeMap["BigtableAdmin"][BigTableAdminEnum.Tables]</code>
+        /// <code>string scope = NamevalueScopeMap["BigtableAdmin"][BigTableAdminEnum.Tables]</code>
         /// </example>
         private static readonly IDictionary<string, IDictionary<object, string>> NameValueScopeMap =
             new Dictionary<string, IDictionary<object, string>>
