@@ -39,7 +39,8 @@ namespace Google.PowerShell.Sql
         /// Project name of the project for which to get an operation.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0)]
+        [Parameter(ParameterSetName = ParameterSetNames.GetSingle)]
+        [Parameter(ParameterSetName = ParameterSetNames.GetList)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
