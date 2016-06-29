@@ -2,12 +2,8 @@
 // Licensed under the Apache License Version 2.0.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Google.PowerShell.Common
 {
@@ -22,6 +18,7 @@ namespace Google.PowerShell.Common
         {
             public const string Project = "project";
             public const string Zone = "zone";
+            public const string Region = "region";
         }
 
         /// <summary>Environment variable which contains the Application Data settings.</summary>

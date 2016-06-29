@@ -346,7 +346,7 @@ namespace Google.PowerShell.Compute
             InstanceGroupManagersResource.InsertRequest request =
                 Service.InstanceGroupManagers.Insert(manager, Project, Zone);
             Operation response = request.Execute();
-            AddOperation(Project, Zone, response);
+            AddZoneOperation(Project, Zone, response);
         }
 
         private List<NamedPort> BuildNamedPorts()
@@ -445,7 +445,7 @@ namespace Google.PowerShell.Compute
             if (ShouldProcess($"{project}/{zone}/{name}", "Remove Instance Group Manager"))
             {
                 Operation operation = Service.InstanceGroupManagers.Delete(project, zone, name).Execute();
-                AddOperation(project, zone, operation);
+                AddZoneOperation(project, zone, operation);
             }
         }
 
@@ -454,7 +454,7 @@ namespace Google.PowerShell.Compute
             if (ShouldProcess($"{Project}/{Zone}/{Name}", "Remove Instance Group Manager"))
             {
                 Operation operation = Service.InstanceGroupManagers.Delete(Project, Zone, Name).Execute();
-                AddOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation);
             }
         }
     }
@@ -637,7 +637,7 @@ namespace Google.PowerShell.Compute
                 InstanceGroupManagersResource.SetInstanceTemplateRequest request =
                     Service.InstanceGroupManagers.SetInstanceTemplate(body, Project, Zone, Name);
                 Operation operation = request.Execute();
-                AddOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation);
             }
         }
 
@@ -653,7 +653,7 @@ namespace Google.PowerShell.Compute
                 InstanceGroupManagersResource.SetTargetPoolsRequest request =
                     Service.InstanceGroupManagers.SetTargetPools(body, Project, Zone, Name);
                 Operation operation = request.Execute();
-                AddOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation);
             }
         }
 
@@ -664,7 +664,7 @@ namespace Google.PowerShell.Compute
                 InstanceGroupManagersResource.ResizeRequest request =
                     Service.InstanceGroupManagers.Resize(Project, Zone, Name, Size);
                 Operation operation = request.Execute();
-                AddOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation);
             }
         }
 
@@ -680,7 +680,7 @@ namespace Google.PowerShell.Compute
                 InstanceGroupManagersResource.RecreateInstancesRequest request =
                     Service.InstanceGroupManagers.RecreateInstances(body, Project, Zone, Name);
                 Operation operation = request.Execute();
-                AddOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation);
             }
         }
 
@@ -696,7 +696,7 @@ namespace Google.PowerShell.Compute
                 InstanceGroupManagersResource.RecreateInstancesRequest request =
                     Service.InstanceGroupManagers.RecreateInstances(body, Project, Zone, Name);
                 Operation operation = request.Execute();
-                AddOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation);
             }
         }
 
@@ -712,7 +712,7 @@ namespace Google.PowerShell.Compute
                 InstanceGroupManagersResource.DeleteInstancesRequest request =
                     Service.InstanceGroupManagers.DeleteInstances(body, Project, Zone, Name);
                 Operation operation = request.Execute();
-                AddOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation);
             }
         }
 
@@ -728,7 +728,7 @@ namespace Google.PowerShell.Compute
                 InstanceGroupManagersResource.DeleteInstancesRequest request =
                     Service.InstanceGroupManagers.DeleteInstances(body, Project, Zone, Name);
                 Operation operation = request.Execute();
-                AddOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation);
             }
         }
 
@@ -744,7 +744,7 @@ namespace Google.PowerShell.Compute
                 InstanceGroupManagersResource.AbandonInstancesRequest request =
                     Service.InstanceGroupManagers.AbandonInstances(body, Project, Zone, Name);
                 Operation operation = request.Execute();
-                AddOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation);
             }
         }
 
@@ -760,7 +760,7 @@ namespace Google.PowerShell.Compute
                 InstanceGroupManagersResource.AbandonInstancesRequest request =
                     Service.InstanceGroupManagers.AbandonInstances(body, Project, Zone, Name);
                 Operation operation = request.Execute();
-                AddOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation);
             }
         }
 
