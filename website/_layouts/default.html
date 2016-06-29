@@ -12,7 +12,7 @@
           </li>
 
           {% assign isProductPage = '' + page.product + page.productName %}
-          <li {% if isProductPage %}{% else %}class="active"{% endif %}>
+          <li {% unless isProductPage %}class="active"{% endunless %}>
             <a href="{{ site.baseurl }}/cmdlets/">Reference</a>
           </li>
 
