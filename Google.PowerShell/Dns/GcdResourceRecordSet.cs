@@ -66,8 +66,8 @@ namespace Google.PowerShell.Dns
     /// The newly created ResourceRecordSet will be created and returned independently, not within any Project or ManagedZone. 
     /// </para>
     /// <example>
-    ///   <para>Create a new ResourceRecordSet resource with name "rrset1example.com.", Rrdata [“7.5.7.8”], Ttl 300, and type "A".</para>
-    ///   <para><code>New-GcdResourceRecordSet -Name "rrset1example.com." -Rrdata "7.6.7.8" -Ttl 300 -Type "A"</code></para>
+    ///   <para>Create a new ResourceRecordSet resource with name "rrset1example.com.", Rrdata [“7.5.7.8”], type "A," and ttl 300.</para>
+    ///   <para><code>New-GcdResourceRecordSet -Name "rrset1example.com." -Rrdata "7.5.7.8" -Type "A" -Ttl 300</code></para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GcdResourceRecordSet")]
@@ -75,7 +75,7 @@ namespace Google.PowerShell.Dns
     {
         /// <summary>
         /// <para type="description">
-        /// Get the name of the new ResourceRecordSet (e.g., "example.com.").
+        /// Get the name of the new ResourceRecordSet (e.g., "gcloudexample.com.").
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
@@ -86,25 +86,26 @@ namespace Google.PowerShell.Dns
         /// Get the resource record data for the ResourceRecordSet.
         /// </para>
         /// </summary>
+        [Alias("Data")]
         [Parameter(Position = 1, Mandatory = true)]
-        public string[] Rrdatas { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// Get the ttl, which is the number of seconds the ResourceRecordSet can be cached by resolvers.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 2, Mandatory = true)]
-        public int Ttl { get; set; }
+        public string[] Rrdata { get; set; }
 
         /// <summary>
         /// <para type="description">
         /// Get the type of the ResourceRecordSet.
         /// </para>
         /// </summary>
-        [Parameter(Position = 3, Mandatory = true)]
-        [ValidateSet("A","AAAA","CNAME","MX","NAPTR","NS","PTR","SOA","SPF","SRV","TXT")]
+        [Parameter(Position = 2, Mandatory = true)]
+        [ValidateSet("A", "AAAA", "CNAME", "MX", "NAPTR", "NS", "PTR", "SOA", "SPF", "SRV", "TXT")]
         public string Type { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Get the ttl, which is the number of seconds the ResourceRecordSet can be cached by resolvers.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 3, Mandatory = false)]
+        public int Ttl = 3600;
 
         protected override void ProcessRecord()
         {
@@ -114,7 +115,7 @@ namespace Google.PowerShell.Dns
             {
                 Kind = "dns#resourceRecordSet",
                 Name = Name,
-                Rrdatas = (IList<string>) Rrdatas,
+                Rrdatas = Rrdata,
                 Ttl = Ttl,
                 Type = Type
             };

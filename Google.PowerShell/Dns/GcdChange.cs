@@ -100,7 +100,7 @@ namespace Google.PowerShell.Dns
     ///   Add a new Change that adds the ResourceRecordSets $addRrsets and deletes the ResourceRecordSets $delRrsets
     ///   in the ManagedZone "test1" in the Project "testing."
     ///   </para>
-    ///   <para><code>Add-GcdChange -Project "testing" -ManagedZone "test1" -Additions $addRrsets -Deletions $delRrsets</code></para>
+    ///   <para><code>Add-GcdChange -Project "testing" -ManagedZone "test1" -Add $addRrsets -Remove $delRrsets</code></para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GcdChange")]
@@ -108,8 +108,8 @@ namespace Google.PowerShell.Dns
     {
         private class ParameterSetNames
         {
-            public const string ChangeObject = "ChangeObjectSet";
-            public const string AddDel = "AddDelSet";
+            public const string ChangeRequest = "ChangeRequestSet";
+            public const string AddRm = "AddRmSet";
         }
 
         /// <summary>
@@ -126,9 +126,10 @@ namespace Google.PowerShell.Dns
         /// Get the ManagedZone (name or id permitted) to change.
         /// </para>
         /// </summary>
+        [Alias("ManagedZone")]
         [Parameter(Position = 1, Mandatory = true)]
         [ValidateNotNullOrEmpty]
-        public string ManagedZone { get; set; }
+        public string Zone { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -136,26 +137,25 @@ namespace Google.PowerShell.Dns
         /// </para>
         /// </summary>
         [Alias("Change")]
-        [Parameter(ParameterSetName = ParameterSetNames.ChangeObject, Position = 2, Mandatory = true, ValueFromPipeline = true)]
-        public Change ChangeObject { get; set; }
+        [Parameter(ParameterSetName = ParameterSetNames.ChangeRequest, Position = 2, Mandatory = true, ValueFromPipeline = true)]
+        public Change ChangeRequest { get; set; }
 
         /// <summary>
         /// <para type="description">
         /// Get the ResourceRecordSets to add for this Change.
         /// </para>
         /// </summary>
-        [Alias("Add")]
-        [Parameter(ParameterSetName = ParameterSetNames.AddDel, Position = 2, Mandatory = false)]
-        public ResourceRecordSet[] Additions { get; set; }
+        [Parameter(ParameterSetName = ParameterSetNames.AddRm, Mandatory = false)]
+        public ResourceRecordSet[] Add { get; set; }
 
         /// <summary>
         /// <para type="description">
         /// Get the ResourceRecordSets to delete (must exactly match existing ones) in this Change.
         /// </para>
         /// </summary>
-        [Alias("Del")]
-        [Parameter(ParameterSetName = ParameterSetNames.AddDel, Position = 3, Mandatory = false)]
-        public ResourceRecordSet[] Deletions { get; set; }
+        [Alias("Rm")]
+        [Parameter(ParameterSetName = ParameterSetNames.AddRm, Mandatory = false)]
+        public ResourceRecordSet[] Remove { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -165,30 +165,30 @@ namespace Google.PowerShell.Dns
 
             switch (ParameterSetName)
             {
-                case ParameterSetNames.AddDel:
-                    if (Additions.IsNullOrEmpty() && Deletions.IsNullOrEmpty())
+                case ParameterSetNames.AddRm:
+                    if (Add.IsNullOrEmpty() && Remove.IsNullOrEmpty())
                     {
-                        throw new System.ArgumentException("Must specify at least 1 Addition or Deletion, or provide a Change object to execute.");
+                        throw new System.ArgumentException("Must specify at least 1 Add or Remove, or provide a Change request, to execute.");
                     }
                     else
                     {
                         changeContent = new Change
                         {
-                            Additions = (IList<ResourceRecordSet>)Additions,
-                            Deletions = (IList<ResourceRecordSet>)Deletions
+                            Additions = Add,
+                            Deletions = Remove
                         };
                     }
                     break;
 
-                case ParameterSetNames.ChangeObject:
-                    changeContent = ChangeObject;
+                case ParameterSetNames.ChangeRequest:
+                    changeContent = ChangeRequest;
                     break;
 
                 default:
                     throw new InvalidOperationException($"{ParameterSetName} is not a valid ParameterSet.");
             }
 
-            ChangesResource.CreateRequest changeCreateRequest = Service.Changes.Create(changeContent, Project, ManagedZone);
+            ChangesResource.CreateRequest changeCreateRequest = Service.Changes.Create(changeContent, Project, Zone);
             Change change = changeCreateRequest.Execute();
             WriteObject(change);
         }
