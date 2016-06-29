@@ -297,7 +297,7 @@ namespace Google.PowerShell.ComputeEngine
                 default:
                     throw UnknownParameterSetException;
             }
-            AddOperation(Project, Service.InstanceTemplates.Insert(instanceTemplate, Project).Execute());
+            AddGlobalOperation(Project, Service.InstanceTemplates.Insert(instanceTemplate, Project).Execute());
         }
 
         /// <summary>
@@ -522,7 +522,7 @@ namespace Google.PowerShell.ComputeEngine
 
             if (ShouldProcess($"{project}/{name}", "Remove GceInstanceTemplate"))
             {
-                AddOperation(project, Service.InstanceTemplates.Delete(project, name).Execute());
+                AddGlobalOperation(project, Service.InstanceTemplates.Delete(project, name).Execute());
             }
         }
     }

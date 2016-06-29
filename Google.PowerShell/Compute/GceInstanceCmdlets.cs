@@ -327,7 +327,7 @@ namespace Google.PowerShell.ComputeEngine
 
             InstancesResource.InsertRequest request = Service.Instances.Insert(Instance, Project, Zone);
             Operation operation = request.Execute();
-            AddOperation(Project, Zone, operation);
+            AddZoneOperation(Project, Zone, operation);
         }
     }
 
@@ -377,7 +377,7 @@ namespace Google.PowerShell.ComputeEngine
             {
                 var request = Service.Instances.Delete(Project, Zone, Name);
                 var operation = request.Execute();
-                AddOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation);
             }
         }
     }
@@ -426,7 +426,7 @@ namespace Google.PowerShell.ComputeEngine
         {
             InstancesResource.StartRequest request = Service.Instances.Start(Project, Zone, Name);
             Operation operation = request.Execute();
-            AddOperation(Project, Zone, operation);
+            AddZoneOperation(Project, Zone, operation);
         }
     }
 
@@ -474,7 +474,7 @@ namespace Google.PowerShell.ComputeEngine
         {
             InstancesResource.StopRequest request = Service.Instances.Stop(Project, Zone, Name);
             Operation operation = request.Execute();
-            AddOperation(Project, Zone, operation);
+            AddZoneOperation(Project, Zone, operation);
         }
     }
 
@@ -522,7 +522,7 @@ namespace Google.PowerShell.ComputeEngine
         {
             InstancesResource.ResetRequest request = Service.Instances.Reset(Project, Zone, Name);
             Operation operation = request.Execute();
-            AddOperation(Project, Zone, operation);
+            AddZoneOperation(Project, Zone, operation);
         }
     }
 
@@ -679,7 +679,7 @@ namespace Google.PowerShell.ComputeEngine
                 InstancesResource.DeleteAccessConfigRequest request = Service.Instances.DeleteAccessConfig(
                     Project, Zone, Instance, configName, NetworkInterface);
                 Operation operation = request.Execute();
-                AddOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation);
             }
 
             foreach (AccessConfig accessConfig in NewAccessConfig)
@@ -687,7 +687,7 @@ namespace Google.PowerShell.ComputeEngine
                 InstancesResource.AddAccessConfigRequest request = Service.Instances.AddAccessConfig(
                     accessConfig, Project, Zone, Instance, NetworkInterface);
                 Operation response = request.Execute();
-                AddOperation(Project, Zone, response);
+                AddZoneOperation(Project, Zone, response);
             }
         }
 
@@ -701,7 +701,7 @@ namespace Google.PowerShell.ComputeEngine
                 InstancesResource.DetachDiskRequest request = Service.Instances.DetachDisk(
                     Project, Zone, Instance, diskName);
                 Operation operation = request.Execute();
-                AddOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation);
             }
 
             foreach (object diskParam in AddDisk)
@@ -724,7 +724,7 @@ namespace Google.PowerShell.ComputeEngine
                 InstancesResource.AttachDiskRequest request =
                     Service.Instances.AttachDisk(newDisk, Project, Zone, Instance);
                 Operation operation = request.Execute();
-                AddOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation);
             }
         }
 
@@ -748,7 +748,7 @@ namespace Google.PowerShell.ComputeEngine
             }
             InstancesResource.SetMetadataRequest request =
                 Service.Instances.SetMetadata(metadata, Project, Zone, Instance);
-            AddOperation(Project, Zone, request.Execute());
+            AddZoneOperation(Project, Zone, request.Execute());
         }
 
         /// <summary>
@@ -764,7 +764,7 @@ namespace Google.PowerShell.ComputeEngine
             InstancesResource.SetTagsRequest setRequest =
                 Service.Instances.SetTags(tags, Project, Zone, Instance);
             Operation operation = setRequest.Execute();
-            AddOperation(Project, Zone, operation);
+            AddZoneOperation(Project, Zone, operation);
         }
     }
 }
