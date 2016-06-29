@@ -15,6 +15,28 @@ namespace Google.PowerShell.ComputeEngine
     /// Get an object that has information about an address.
     /// </para>
     /// <para type="example">
+    /// List all global and region addresses:
+    /// <code>Get-GceAddress</code>
+    /// </para>
+    /// <para type="example">
+    /// List all global addresses:
+    /// <code>Get-GceAddress -Global</code>
+    /// </para>
+    /// <para type="example">
+    /// List all addresses of a region:
+    /// <code>Get-GceAddress -Region us-east1</code>
+    /// </para>
+    /// <para type="example">
+    /// List all addresses of region us-east1:
+    /// <code>Get-GceAddress -Region us-east1</code>
+    /// </para>
+    /// <para type="example">
+    /// Get a named global addresses.
+    /// <code>Get-GceAddress $addressName -Global</code>
+    /// </para>
+    /// <para type="example">
+    /// Get a named addresses of the region of the current gcloud config.
+    /// <code>Get-GceAddress $addressName</code>
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceAddress", DefaultParameterSetName = ParameterSetNames.OfProject)]
@@ -31,7 +53,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The project that owns the address.
+        /// The project that owns the address. Required if not specified by the gcloud config.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.OfProject)]
@@ -44,7 +66,8 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The region the address is in.
+        /// The region the address is in. Requried when listing addresses of a region.
+        /// Defaults to gcloud config region when getting a non-global named address.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.OfRegion, Mandatory = true)]
@@ -169,6 +192,12 @@ namespace Google.PowerShell.ComputeEngine
     /// Adds a new static external IP address to Google Compute Engine.
     /// </para>
     /// <para type="example">
+    /// Adds an address to the default project and region:
+    /// <code>Add-GceAddress $addressName</code>
+    /// </para>
+    /// <para type="example">
+    /// Adds a global address to the default project:
+    /// <code>Add-GceAddress $addressName -Global</code>
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceAddress")]
@@ -184,7 +213,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The project that will own the address.
+        /// The project that will own the address. Will default to the gcloud config.
         /// </para>
         /// </summary>
         [Parameter]
@@ -193,7 +222,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The region the address will be in.
+        /// The region the address will be in. For non-global addresses, will default to the gcloud config.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByObject)]
@@ -292,6 +321,16 @@ namespace Google.PowerShell.ComputeEngine
     /// Removes a Google Compute Engine static external IP address.
     /// </para>
     /// <para type="example">
+    /// Removes an address of the default project and region:
+    /// <code>Remove-GceAddress $addressName</code>
+    /// </para>
+    /// <para type="example">
+    /// Removes a global address of the default project:
+    /// <code>Remove-GceAddress $addressName -Global</code>
+    /// </para>
+    /// <para type="example">
+    /// Removes all global and region specific addresses of the default project:
+    /// <code>Get-GceAddress | Remove-GceAddress</code>
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceAddress", SupportsShouldProcess = true,
@@ -307,7 +346,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The project that owns the address.
+        /// The project that owns the address. Defaults to the gcloud config project.
         /// </para>
         /// </summary>
         [Parameter]
@@ -316,7 +355,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The region the address is be in.
+        /// The region the address is in. Defaults to the gcloud config region.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Default)]
@@ -325,7 +364,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The name of the address to get.
+        /// The name of the address to delete.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Default, Mandatory = true,
