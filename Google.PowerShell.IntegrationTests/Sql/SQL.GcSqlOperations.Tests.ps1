@@ -2,8 +2,6 @@
 Install-GcloudCmdlets
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
-$project = "gcloud-powershell-testing"
-
 Describe "Get-GcSqlOperations" {
 
     gcloud sql instances create "test-ops" --quiet 2>$null

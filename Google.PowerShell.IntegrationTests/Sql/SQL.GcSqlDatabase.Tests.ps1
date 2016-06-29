@@ -1,8 +1,6 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
-
-$project = "gcloud-powershell-testing"
 $instance = "test-db-fg"
 
 Describe "Get-GcSqlDatabase" {

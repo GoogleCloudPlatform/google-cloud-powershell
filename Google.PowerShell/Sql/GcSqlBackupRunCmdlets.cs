@@ -50,12 +50,12 @@ namespace Google.PowerShell.Sql
         /// The ID of the Backup Run we want to get 
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.GetList)]
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.GetSingle)]
         public long Id { get; set; }
 
         protected override void ProcessRecord()
         {
-            if (Id.Equals(null) | Id.Equals(0)) 
+            if (ParameterSetName = ParameterSetNames.GetList.) 
             {
                 BackupRunsResource.ListRequest request = Service.BackupRuns.List(Project, Instance);
                 BackupRunsListResponse result = request.Execute();

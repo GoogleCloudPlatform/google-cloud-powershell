@@ -2,8 +2,6 @@
 Install-GcloudCmdlets
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
-$project = "gcloud-powershell-testing"
-
 Describe "Get-GcSqlBackupRun" {
     #An instance to test cannot be ceated for these tests because it will not have a backuprun upon creation.
     $instance = "test-db"
@@ -20,7 +18,7 @@ Describe "Get-GcSqlBackupRun" {
         $backups.Length | Should BeGreaterThan 0
     }
 
-	It "should get a reasonable response from a given query" {
+    It "should get a reasonable response from a given query" {
         # A specific Id has to be used because backup Id's are unique to backupRuns. 
         # See the next test for if a name exclusive to test-back is used.
         $backup = Get-GcSqlBackupRun $instance "1466568000828"
@@ -36,6 +34,5 @@ Describe "Get-GcSqlBackupRun" {
         $backup.SelfLink | Should Be $firstBackup.SelfLink
         $backup.Id | Should Be $firstBackup.Id
     }
-
 }
 Reset-GCloudConfig $oldActiveConfig $configName

@@ -2,8 +2,6 @@
 Install-GcloudCmdlets
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
-$project = "gcloud-powershell-testing"
-
 Describe "Get-GcSqlFlags" {
 
     It "should have the correct number of tiers" {
