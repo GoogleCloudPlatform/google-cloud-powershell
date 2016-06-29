@@ -70,13 +70,17 @@ namespace Google.PowerShell.Sql
             }
         }
 
-        private IEnumerable<BackupRun> getAllBackupRuns()
+        private IEnumerable<BackupRun> GetAllBackupRuns()
         {
             BackupRunsResource.ListRequest request = Service.BackupRuns.List(Project, Instance);
             do
             {
-                var aggList = request.Execute();
-                var backupRuns = aggList.Items;
+                BackupRunsListResponse aggList = request.Execute();
+                IList<BackupRun> backupRuns = aggList.Items;
+                if (backupRuns == null)
+                {
+                    yield break;
+                }
                 foreach (BackupRun backupRun in backupRuns)
                 {
                     yield return backupRun;
