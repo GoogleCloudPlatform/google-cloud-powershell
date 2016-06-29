@@ -12,7 +12,7 @@ Describe "Get-GcSqlFlags" {
         $tiers.TierValue.Length | Should BeGreaterThan 17
     }
 
-    It "shouldn't require a Project Parameter if the configuration is correct" {
+    It "shouldn't require a Project parameter if the configuration is correct" {
         $tiers = Get-GcSqlTiers 
         # As of June, 2016 there are 18 tiers available for Google Cloud SQL.
         $tiers.TierValue.Length | Should BeGreaterThan 17
