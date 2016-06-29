@@ -59,7 +59,7 @@ namespace Google.PowerShell.Sql
         {
             if (ParameterSetName == ParameterSetNames.GetList) 
             {
-                IEnumerable<BackupRun> backups = getAllBackupRuns();
+                IEnumerable<BackupRun> backups = GetAllBackupRuns();
                 WriteObject(backups, true);
             }
             else
