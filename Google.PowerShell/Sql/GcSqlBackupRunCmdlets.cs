@@ -55,7 +55,7 @@ namespace Google.PowerShell.Sql
 
         protected override void ProcessRecord()
         {
-            if (ParameterSetName = ParameterSetNames.GetList.) 
+            if (ParameterSetName == ParameterSetNames.GetList) 
             {
                 BackupRunsResource.ListRequest request = Service.BackupRuns.List(Project, Instance);
                 BackupRunsListResponse result = request.Execute();
