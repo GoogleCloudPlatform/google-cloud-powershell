@@ -5,6 +5,8 @@ using Google.Apis.SQLAdmin.v1beta4;
 using Google.Apis.SQLAdmin.v1beta4.Data;
 using System.Management.Automation;
 using Google.PowerShell.Common;
+using System.Collections.Generic;
+using System;
 
 namespace Google.PowerShell.Sql
 {
@@ -57,9 +59,8 @@ namespace Google.PowerShell.Sql
         {
             if (ParameterSetName == ParameterSetNames.GetList) 
             {
-                BackupRunsResource.ListRequest request = Service.BackupRuns.List(Project, Instance);
-                BackupRunsListResponse result = request.Execute();
-                WriteObject(result.Items, true);
+                IEnumerable<BackupRun> backups = getAllBackupRuns();
+                WriteObject(backups, true);
             }
             else
             {
@@ -67,6 +68,22 @@ namespace Google.PowerShell.Sql
                 BackupRun result = request.Execute();
                 WriteObject(result);
             }
+        }
+
+        private IEnumerable<BackupRun> getAllBackupRuns()
+        {
+            BackupRunsResource.ListRequest request = Service.BackupRuns.List(Project, Instance);
+            do
+            {
+                var aggList = request.Execute();
+                var backupRuns = aggList.Items;
+                foreach (BackupRun backupRun in backupRuns)
+                {
+                    yield return backupRun;
+                }
+                request.PageToken = aggList.NextPageToken;
+            }
+            while (request.PageToken != null);
         }
     }
 }
