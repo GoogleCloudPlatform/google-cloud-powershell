@@ -1,6 +1,6 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
-
+ 
 $project = "gcloud-powershell-testing"
 
 Describe "Get-GcSqlOperations" {
@@ -15,7 +15,7 @@ Describe "Get-GcSqlOperations" {
         $operation.operationType | Should Be "Create"
     }
 
-    It "should compound with Get-GcSqlOperations" {
+    It "should compound with the list parameter set" {
         $operations = Get-GcSqlOperation -Project $project -Instance "test-db"
         $firstOperation = $operations | Select-Object -first 1
         $operationName = $firstOperation.name
@@ -29,4 +29,3 @@ Describe "Get-GcSqlOperations" {
         $operation.operationType | Should Be "Create"
     }
 }
-

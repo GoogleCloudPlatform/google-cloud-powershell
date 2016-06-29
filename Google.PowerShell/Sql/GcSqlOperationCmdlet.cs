@@ -36,7 +36,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// Project ID of the project for which to get an operation.
+        /// Project name of the project for which to get an operation.
         /// </para>
         /// </summary>
         [Parameter(Position = 0)]
@@ -53,7 +53,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// Cloud SQL instance ID. this does not include the project ID.
+        /// Cloud SQL instance name.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.GetList)]
@@ -65,7 +65,7 @@ namespace Google.PowerShell.Sql
             {
                 OperationsResource.GetRequest request = Service.Operations.Get(Project, Name);
                 Operation result = request.Execute();
-                WriteObject(result, true);
+                WriteObject(result);
             }
             else
             {

@@ -27,7 +27,7 @@ namespace Google.PowerShell.Sql
     {
         /// <summary>
         /// <para type="description">
-        /// Project ID of the project for which to list tiers.
+        /// Project name of the project for which to list tiers.
         /// </para>
         /// </summary>
         [Parameter(Position = 0)]
