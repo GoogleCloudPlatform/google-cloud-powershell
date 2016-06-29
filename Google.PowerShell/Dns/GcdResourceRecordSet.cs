@@ -54,4 +54,72 @@ namespace Google.PowerShell.Dns
             WriteObject(rrsetList, true);
         }
     }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Create an independent new ResourceRecordSet resource.
+    /// </para>
+    /// <para type="description">
+    /// Creates and returns a new ResourceRecordSet resource.
+    /// </para>
+    /// <para type="description">
+    /// The newly created ResourceRecordSet will be created and returned independently, not within any Project or ManagedZone. 
+    /// </para>
+    /// <example>
+    ///   <para>Create a new ResourceRecordSet resource with name "rrset1example.com.", Rrdata [“7.5.7.8”], Ttl 300, and type "A".</para>
+    ///   <para><code>New-GcdResourceRecordSet -Name "rrset1example.com." -Rrdata "7.6.7.8" -Ttl 300 -Type "A"</code></para>
+    /// </example>
+    /// </summary>
+    [Cmdlet(VerbsCommon.New, "GcdResourceRecordSet")]
+    public class NewGcdResourceRecordSetCmdlet : GcdCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// Get the name of the new ResourceRecordSet (e.g., "example.com.").
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true)]
+        public string Name { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Get the resource record data for the ResourceRecordSet.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 1, Mandatory = true)]
+        public string[] Rrdatas { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Get the ttl, which is the number of seconds the ResourceRecordSet can be cached by resolvers.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 2, Mandatory = true)]
+        public int Ttl { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Get the type of the ResourceRecordSet.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 3, Mandatory = true)]
+        [ValidateSet("A","AAAA","CNAME","MX","NAPTR","NS","PTR","SOA","SPF","SRV","TXT")]
+        public string Type { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            base.ProcessRecord();
+
+            ResourceRecordSet rrset = new ResourceRecordSet
+            {
+                Kind = "dns#resourceRecordSet",
+                Name = Name,
+                Rrdatas = (IList<string>) Rrdatas,
+                Ttl = Ttl,
+                Type = Type
+            };
+
+            WriteObject(rrset);
+        }
+    }
 }

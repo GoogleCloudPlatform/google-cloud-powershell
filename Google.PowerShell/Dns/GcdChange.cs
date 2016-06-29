@@ -4,6 +4,7 @@
 using Google.Apis.Dns.v1;
 using Google.Apis.Dns.v1.Data;
 using Google.PowerShell.Common;
+using Google.PowerShell.Dns.ExtensionMethods;
 using System;
 using System.Collections.Generic;
 using System.Management.Automation;
@@ -76,6 +77,120 @@ namespace Google.PowerShell.Dns
                 IList<Change> changeList = changeListResponse.Changes;
                 WriteObject(changeList, true);
             }
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Add a new Change to a ManagedZone of a Project.
+    /// </para>
+    /// <para type="description">
+    /// Create, execute, and return a new Change within a specified ManagedZone of a Project.
+    /// </para>
+    /// <para type="description">
+    /// If a Project is specified, will instead create the Change in the specified ManagedZone governed by that project. 
+    /// Either a Change object or ResourceRecordSets array(s) for Additions and/or Deletions can be given as input.
+    /// </para>
+    /// <example>
+    ///   <para>Add the Change $change1 to the ManagedZone "test1" in the Project "testing."</para>
+    ///   <para><code>Add-GcdChange -Project "testing" -ManagedZone "test1" -ChangeObject $change1</code></para>
+    /// </example>
+    /// <example>
+    ///   <para> 
+    ///   Add a new Change that adds the ResourceRecordSets $addRrsets and deletes the ResourceRecordSets $delRrsets
+    ///   in the ManagedZone "test1" in the Project "testing."
+    ///   </para>
+    ///   <para><code>Add-GcdChange -Project "testing" -ManagedZone "test1" -Additions $addRrsets -Deletions $delRrsets</code></para>
+    /// </example>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Add, "GcdChange")]
+    public class AddGcdChangeCmdlet : GcdCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string ChangeObject = "ChangeObjectSet";
+            public const string AddDel = "AddDelSet";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// Get the project to change.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Get the ManagedZone (name or id permitted) to change.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 1, Mandatory = true)]
+        [ValidateNotNullOrEmpty]
+        public string ManagedZone { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Get the Change to execute.
+        /// </para>
+        /// </summary>
+        [Alias("Change")]
+        [Parameter(ParameterSetName = ParameterSetNames.ChangeObject, Position = 2, Mandatory = true, ValueFromPipeline = true)]
+        public Change ChangeObject { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Get the ResourceRecordSets to add for this Change.
+        /// </para>
+        /// </summary>
+        [Alias("Add")]
+        [Parameter(ParameterSetName = ParameterSetNames.AddDel, Position = 2, Mandatory = false)]
+        public ResourceRecordSet[] Additions { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Get the ResourceRecordSets to delete (must exactly match existing ones) in this Change.
+        /// </para>
+        /// </summary>
+        [Alias("Del")]
+        [Parameter(ParameterSetName = ParameterSetNames.AddDel, Position = 3, Mandatory = false)]
+        public ResourceRecordSet[] Deletions { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            base.ProcessRecord();
+
+            Change changeContent;
+
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.AddDel:
+                    if (Additions.IsNullOrEmpty() && Deletions.IsNullOrEmpty())
+                    {
+                        throw new System.ArgumentException("Must specify at least 1 Addition or Deletion, or provide a Change object to execute.");
+                    }
+                    else
+                    {
+                        changeContent = new Change
+                        {
+                            Additions = (IList<ResourceRecordSet>)Additions,
+                            Deletions = (IList<ResourceRecordSet>)Deletions
+                        };
+                    }
+                    break;
+
+                case ParameterSetNames.ChangeObject:
+                    changeContent = ChangeObject;
+                    break;
+
+                default:
+                    throw new InvalidOperationException($"{ParameterSetName} is not a valid ParameterSet.");
+            }
+
+            ChangesResource.CreateRequest changeCreateRequest = Service.Changes.Create(changeContent, Project, ManagedZone);
+            Change change = changeCreateRequest.Execute();
+            WriteObject(change);
         }
     }
 }
