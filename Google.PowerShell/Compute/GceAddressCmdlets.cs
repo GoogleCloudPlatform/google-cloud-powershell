@@ -19,22 +19,6 @@ namespace Google.PowerShell.ComputeEngine
     /// <code>Get-GceAddress</code>
     /// </para>
     /// <para type="example">
-    /// List all global addresses:
-    /// <code>Get-GceAddress -Global</code>
-    /// </para>
-    /// <para type="example">
-    /// List all addresses of a region:
-    /// <code>Get-GceAddress -Region us-east1</code>
-    /// </para>
-    /// <para type="example">
-    /// List all addresses of region us-east1:
-    /// <code>Get-GceAddress -Region us-east1</code>
-    /// </para>
-    /// <para type="example">
-    /// Get a named global addresses.
-    /// <code>Get-GceAddress $addressName -Global</code>
-    /// </para>
-    /// <para type="example">
     /// Get a named addresses of the region of the current gcloud config.
     /// <code>Get-GceAddress $addressName</code>
     /// </para>
@@ -154,7 +138,6 @@ namespace Google.PowerShell.ComputeEngine
                 AddressList response = request.Execute();
                 if (response.Items != null)
                 {
-                    ;
                     foreach (Address address in response.Items)
                     {
                         yield return address;
@@ -200,7 +183,7 @@ namespace Google.PowerShell.ComputeEngine
     /// <code>Add-GceAddress $addressName -Global</code>
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Add, "GceAddress")]
+    [Cmdlet(VerbsCommon.Add, "GceAddress", DefaultParameterSetName = ParameterSetNames.ByValues)]
     public class AddGceAddressCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
@@ -227,6 +210,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByObject)]
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Region)]
         public string Region { get; set; }
 
         /// <summary>
@@ -280,7 +264,11 @@ namespace Google.PowerShell.ComputeEngine
                     break;
                 case ParameterSetNames.ByValues:
                 case ParameterSetNames.GlobalByValues:
-                    address = BuildAddress();
+                    address = new Address
+                    {
+                        Name = Name,
+                        Description = Description
+                    };
                     break;
                 default:
                     throw UnknownParameterSetException;
@@ -292,24 +280,9 @@ namespace Google.PowerShell.ComputeEngine
             }
             else
             {
-                Region = Region ?? CloudSdkSettings.GetSettingsValue("region");
-                if (string.IsNullOrEmpty(Region))
-                {
-                    throw new PSInvalidOperationException(
-                        "Parameter Region was not set and does not have a default value.");
-                }
                 Operation operation = Service.Addresses.Insert(address, Project, Region).Execute();
                 AddRegionOperation(Project, Region, operation);
             }
-        }
-
-        private Address BuildAddress()
-        {
-            return new Address
-            {
-                Name = Name,
-                Description = Description
-            };
         }
     }
 
