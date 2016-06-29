@@ -145,6 +145,7 @@
     <Compile Include="Dns\GcdProject.cs" />
     <Compile Include="Dns\GcdResourceRecordSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SQL\GcSqlBackupRunCmdlets.cs" />
     <Compile Include="SQL\GcSqlCmdlet.cs" />
     <Compile Include="SQL\GcSqlDatabaseCmdlets.cs" />
     <Compile Include="SQL\GcSqlFlagsCmdlet.cs" />
