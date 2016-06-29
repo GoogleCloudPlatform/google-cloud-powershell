@@ -1,0 +1,55 @@
+---
+layout: default
+title: Google Cloud PowerShell Cmdlet Reference
+---
+
+<div class="home">
+
+  <!-- Left nav, listing resources such as "GcsObject". -->
+  <div id="maia-nav-y"
+      class="maia-nav" role="navigation" style="width: 150px;">
+    <ul>
+      {% assign cmdlets_by_resource = site.data.cmdlets | group_by:"resource" %}
+      {% for cmdlets in cmdlets_by_resource %}
+        <!-- "productName" is from the source data product's JSON object. -->
+        {% if cmdlets.items[0].product == page.productName %}
+          <li>
+            <a href="#{{ cmdlets.name }}">{{ cmdlets.name }}</a>
+          </li>
+        {% endif %}        
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="maia-article">
+    <div class="maia-cols">
+      
+      <!-- List of cmdlets, grouped by resource. -->
+      <div class="maia-col-4">
+        {% assign cmdlets_by_resource = site.data.cmdlets | group_by:"resource" %}
+        {% for cmdlets in cmdlets_by_resource %}
+
+          {% if cmdlets.items[0].product == page.productName %}
+            <h3 id="{{ cmdlets.name }}">{{ cmdlets.name }}</h3>
+            <ul>
+              {% for cmdlet in cmdlets.items %}
+                <li><a href="{{ site.baseurl }}/cmdlets/{{ cmdlet.cmdletName | downcase }}.html">{{ cmdlet.cmdletName }}</a>
+              {% endfor %}
+            </ul>
+          {% endif %}
+
+        {% endfor %}
+      </div>
+
+      <!-- Product-specifid aside. -->
+      <div class="maia-col-6">
+        <div class="maia-aside">
+          <h1>{{ page.productName }}</h1>
+          <p>{{ page.description }}</p>
+          <p>
+            <a href="{{ page.homepageUrl }}">More information</a>
+          </p>
+        </div>
+      </div>
+    </div>
+</div>

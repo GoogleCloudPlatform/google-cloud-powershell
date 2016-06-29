@@ -7,6 +7,11 @@ The website is published at http://googlecloudplatform.github.io/gcloud-powershe
 The content is served directly from the `gh-pages` branch using the GitHub Pages
 feature.
 
+One major source of confusion is that there are actually *two* websites. First,
+the landing page (index.html) is rendered via an Angular application. The source
+code for that is found at http://github.com/googlecloudplatform/gcloud-common.
+However, the cmdlet reference and its content is generated via Jekyll.
+
 ## Setup
 
 To run the website, you need to install Ruby and Jekyll.
