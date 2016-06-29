@@ -30,7 +30,7 @@ namespace Google.PowerShell.Sql
         /// Project name of the project for which to list tiers.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0)]
+        [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 

@@ -1,5 +1,6 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
+$project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 $project = "gcloud-powershell-testing"
 
@@ -11,9 +12,16 @@ Describe "Get-GcSqlFlags" {
         $tiers.TierValue.Length | Should BeGreaterThan 17
     }
 
+    It "shouldn't require a Project Parameter if the configuration is correct" {
+        $tiers = Get-GcSqlTiers 
+        # As of June, 2016 there are 18 tiers available for Google Cloud SQL.
+        $tiers.TierValue.Length | Should BeGreaterThan 17
+    }
+
     It "should have the correct tiers" {
         $tiers = Get-GcSqlTiers -Project $project
         ($tiers.TierValue -contains "D0") | Should Be true
         ($tiers.TierValue -contains "D4") | Should Be true
     }
 }
+Reset-GCloudConfig $oldActiveConfig $configName
