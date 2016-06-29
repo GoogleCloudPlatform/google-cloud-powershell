@@ -1,6 +1,6 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
-$project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
+$project, $_, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Describe "Get-GcSqlFlags" {
 

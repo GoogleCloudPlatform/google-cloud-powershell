@@ -1,6 +1,6 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
-$project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
+$project, $_, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Describe "Get-GcSqlBackupRun" {
     #An instance to test cannot be ceated for these tests because it will not have a backuprun upon creation.
