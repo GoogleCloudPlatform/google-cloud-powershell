@@ -4,7 +4,7 @@
 using Google.Apis.Dns.v1;
 using Google.Apis.Dns.v1.Data;
 using Google.PowerShell.Common;
-using Google.PowerShell.Dns.ExtensionMethods;
+using Google.PowerShell.Common.ExtensionMethods;
 using System;
 using System.Collections.Generic;
 using System.Management.Automation;
@@ -105,7 +105,7 @@ namespace Google.PowerShell.Dns
     ///   <para><code>Add-GcdChange -DnsProject "testing" -Zone "test1" -Add $addRrsets -Remove $rmRrsets</code></para>
     /// </example>
     /// </summary>
-    [Cmdlet(VerbsCommon.Add, "GcdChange")]
+    [Cmdlet(VerbsCommon.Add, "GcdChange", DefaultParameterSetName = ParameterSetNames.ChangeRequest)]
     public class AddGcdChangeCmdlet : GcdCmdlet
     {
         private class ParameterSetNames
@@ -117,7 +117,7 @@ namespace Google.PowerShell.Dns
         private class LocalErrorMessages
         {
             public const string NeedChangeContent = 
-                "Must specify at least 1 non-empty value for Add or Remove, or provide a Change request, to execute.";
+                "Must specify at least 1 non-null, non-empty value for Add or Remove.";
         }
 
         /// <summary>
@@ -193,7 +193,7 @@ namespace Google.PowerShell.Dns
                     break;
 
                 default:
-                    throw new InvalidOperationException($"{ParameterSetName} is not a valid ParameterSet.");
+                    throw UnknownParameterSetException;
             }
 
             ChangesResource.CreateRequest changeCreateRequest = Service.Changes.Create(changeContent, DnsProject, Zone);

@@ -14,7 +14,7 @@ namespace Google.PowerShell.Dns
     /// Gets the ResourceRecordSet resources within a ManagedZone of a DnsProject.
     /// </para>
     /// <para type="description">
-    /// Lists and returns the ManagedZone's ResourceRecordSets.
+    /// Lists the ManagedZone's ResourceRecordSets.
     /// </para>
     /// <para type="description">
     /// If a DnsProject is specified, will instead return the ResourceRecordSets in the specified ManagedZone governed 

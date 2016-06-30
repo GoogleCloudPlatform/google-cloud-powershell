@@ -7,7 +7,11 @@ $rrsetType = "Google.Apis.Dns.v1.Data.ResourceRecordSet"
 $testZone1 = "test1"
 $dnsName1 = "gcloudexample1.com."
 $rrdata1 = "7.5.7.8"
+$rrdata1_1 = "7.5.6.8"
 $ttl1 = 300
+$ttl_default = 3600
+$dnsName1_1 = "a.gcloudexample1.com."
+$rrdata2 = "2001:0db8:85a3:0:0:8a2e:0370:7334"
 $ttl_default = 3600
 
 Describe "Get-GcdResourceRecordSet" {
@@ -82,27 +86,33 @@ Describe "Get-GcdResourceRecordSet" {
 
 Describe "New-GcdResourceRecordSet" {
     
-    It "should work and create a new ResourceRecordSet with the specified properties and default ttl" {
-        $rrset = New-GcdResourceRecordSet -Name $dnsName1 -Rrdata $rrdata1 -Type "A"
+    It "should fail to create a new ResourceRecordSet with an invalid record type" {
+        { New-GcdResourceRecordSet -Name $dnsName1_1 -Rrdata $rrdata2 -Type "Invalid" } | Should Throw "ValidateSet"
+    }
+
+    It "should work and create a new ResourceRecordSet with the specified properties and default ttl (A type)" {
+        $rrset = New-GcdResourceRecordSet -Name $dnsName1 -Rrdata $rrdata1,$rrdata1_1 -Type "A"
         $rrset.Count | Should Be 1
 
         $rrset.GetType().FullName | Should Match $rrsetType
         $rrset.Kind | Should Match "dns#resourceRecordSet"
         $rrset.Name | Should Match $dnsName1
-        $rrset.Rrdatas | Should Match $rrdata1
+        $rrset.Rrdatas.Count | Should Be 2
+        $rrset.Rrdatas[0] | Should Match $rrdata1
+        $rrset.Rrdatas[1] | Should Match $rrdata1_1
         $rrset.Ttl | Should Match $ttl_default
         $rrset.Type | Should Match "A"
     }
 
-    It "should work and create a new ResourceRecordSet with the specified properties and custom ttl" {
-        $rrset = New-GcdResourceRecordSet -Name $dnsName1 -Rrdata $rrdata1 -Type "A" -Ttl $ttl1
+    It "should work and create a new ResourceRecordSet with the specified properties and custom ttl (AAAA type)" {
+        $rrset = New-GcdResourceRecordSet -Name $dnsName1_1 -Rrdata $rrdata2 -Type "AAAA" -Ttl $ttl1
         $rrset.Count | Should Be 1
 
         $rrset.GetType().FullName | Should Match $rrsetType
         $rrset.Kind | Should Match "dns#resourceRecordSet"
-        $rrset.Name | Should Match $dnsName1
-        $rrset.Rrdatas | Should Match $rrdata1
+        $rrset.Name | Should Match $dnsName1_1
+        $rrset.Rrdatas | Should Match $rrdata2
         $rrset.Ttl | Should Match $ttl1
-        $rrset.Type | Should Match "A"
+        $rrset.Type | Should Match "AAAA"
     }
 }

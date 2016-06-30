@@ -139,7 +139,7 @@
     <Compile Include="Compute\GoogleComputeOperationException.cs" />
     <Compile Include="Compute\GceFirewallProtocolCmdlet.cs" />
     <Compile Include="Compute\InstanceMetadataConverter.cs" />
-    <Compile Include="Dns\ExtensionMethods.cs" />
+    <Compile Include="Common\ExtensionMethods.cs" />
     <Compile Include="Dns\GcdChange.cs" />
     <Compile Include="Dns\GcdCmdlet.cs" />
     <Compile Include="Dns\GcdManagedZone.cs" />

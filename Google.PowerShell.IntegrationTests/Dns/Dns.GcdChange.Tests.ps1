@@ -13,7 +13,7 @@ $dnsName1_3 = "c.gcloudexample1.com."
 $rrdata1 = "7.5.7.8"
 $ttl1 = 300
 
-$Err_NeedChangeContent = "Must specify at least 1 non-empty value for Add or Remove, or provide a Change request, to execute."
+$Err_NeedChangeContent = "Must specify at least 1 non-null, non-empty value for Add or Remove."
 
 Describe "Get-GcdChange" {
 
@@ -62,8 +62,8 @@ Describe "Get-GcdChange" {
         $changes.Additions.Name | Should Match $dnsName1
         $changes.Deletions.Name | Should Match $dnsName1
 
-        $changes.Additions.Type -Contains "A" | Should Match $true
-        $changes.Deletions.Type -Contains "A" | Should Match $true
+        $changes.Additions.Type -contains "A" | Should Match $true
+        $changes.Deletions.Type -contains "A" | Should Match $true
 
         $changes[0].Id | Should Be 2
         $changes[1].Id | Should Be 1
@@ -78,8 +78,8 @@ Describe "Get-GcdChange" {
         $changes.Kind | Should Match "dns#change"
         $changes.Status | Should Match "done"
         $changes.Additions.Name | Should Match $dnsName1
-        $changes.Additions.Type -Contains "A" | Should Match $false
-        $changes.Deletions.Type -Contains "A" | Should Match $false
+        $changes.Additions.Type -contains "A" | Should Match $false
+        $changes.Deletions.Type -contains "A" | Should Match $false
     }
 
     # Delete now-empty test zone 
@@ -122,8 +122,10 @@ Describe "Add-GcdChange" {
         { Add-GcdChange -DnsProject $project -Zone "managedZone-no-exist" -ChangeRequest $copyChange} | Should Throw "404"
     }
 
-    It "should fail to add a Change with no Change request or Add/Remove arguments specified" {
-        { Add-GcdChange -DnsProject $project -Zone $testZone1 } | Should Throw $Err_NeedChangeContent
+    It "should fail to add a Change with only null/empty values for Add/Remove" {
+        { Add-GcdChange -DnsProject $project -Zone $testZone1 -Add $null -Remove $null} | Should Throw $Err_NeedChangeContent
+        { Add-GcdChange -DnsProject $project -Zone $testZone1 -Add $null -Remove @()} | Should Throw $Err_NeedChangeContent
+        { Add-GcdChange -DnsProject $project -Zone $testZone1 -Add @() -Remove @()} | Should Throw $Err_NeedChangeContent
     }
 
     It "should work and add 1 Change from Change Request (another A-type record addition)" {
@@ -163,8 +165,8 @@ Describe "Add-GcdChange" {
         $newChange.GetType().FullName | Should Match $changeType
         $newChange.Additions.Count | Should Be 2
         $newChange.Deletions.Count | Should Be 2
-        (($newChange.Additions.Name -Contains $dnsName1_2) -and ($newChange.Additions.Name -Contains $dnsName1_3)) | Should Match $true
-        (($newChange.Deletions.Name -Contains $dnsName1) -and ($newChange.Deletions.Name -Contains $dnsName1_1)) | Should Match $true
+        (($newChange.Additions.Name -contains $dnsName1_2) -and ($newChange.Additions.Name -contains $dnsName1_3)) | Should Match $true
+        (($newChange.Deletions.Name -contains $dnsName1) -and ($newChange.Deletions.Name -contains $dnsName1_1)) | Should Match $true
         $newChange.Kind | Should Match "dns#change"
     }
 
