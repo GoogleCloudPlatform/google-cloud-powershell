@@ -4,15 +4,24 @@ Install-GcloudCmdlets
 $project = "gcloud-powershell-testing"
 $rrsetType = "Google.Apis.Dns.v1.Data.ResourceRecordSet"
 
+$testZone1 = "test1"
+$dnsName1 = "gcloudexample1.com."
+$rrdata1 = "7.5.7.8"
+$rrdata1_1 = "7.5.6.8"
+$ttl1 = 300
+$ttl_default = 3600
+$dnsName1_1 = "a.gcloudexample1.com."
+$rrdata2 = "2001:0db8:85a3:0:0:8a2e:0370:7334"
+
 Describe "Get-GcdResourceRecordSet" {
 
     It "should fail to return ResourceRecordSets of non-existent project" {
-        { Get-GcdResourceRecordSet -Project "project-no-exist" -ManagedZone "zone-no-exist"} | Should Throw "400"
+        { Get-GcdResourceRecordSet -DnsProject "project-no-exist" -Zone "zone-no-exist"} | Should Throw "400"
     }
 
     It "should give access errors as appropriate" {
         # Don't know who created the "asdf" project.
-        { Get-GcdResourceRecordSet -Project "asdf" -ManagedZone "zone1"} | Should Throw "403"
+        { Get-GcdResourceRecordSet -DnsProject "asdf" -Zone "zone1"} | Should Throw "403"
     }
 
     # Delete all existing zones (using Get-GcdManagedZone cmdlet)
@@ -23,21 +32,19 @@ Describe "Get-GcdResourceRecordSet" {
     }
 
     It "should fail to return ResourceRecordSets of non-existent managed zone of existing project" {
-        { Get-GcdResourceRecordSet -Project $project -ManagedZone "managedZone-no-exist" } | Should Throw "404"
+        { Get-GcdResourceRecordSet -DnsProject $project -Zone "managedZone-no-exist" } | Should Throw "404"
     }
 
     # Create zone for testing 
-    $testZone = "test1"
-    $dnsName = "gcloudexample.com."
-    gcloud dns managed-zones create --dns-name=$dnsName --description="testing zone, 1" $testZone --project=$project
+    gcloud dns managed-zones create --dns-name=$dnsName1 --description="testing zone, 1" $testZone1 --project=$project
 
     # Add a new A-type record to the test zone
-    gcloud dns record-sets transaction start --zone=$testZone --project=$project
-    gcloud dns record-sets transaction add --name=$dnsName --type=A --ttl=300 “7.5.7.8” --zone=$testZone --project=$project
-    gcloud dns record-sets transaction execute --zone=$testZone --project=$project
+    gcloud dns record-sets transaction start --zone=$testZone1 --project=$project
+    gcloud dns record-sets transaction add --name=$dnsName1 --type=A --ttl=300 “7.5.7.8” --zone=$testZone1 --project=$project
+    gcloud dns record-sets transaction execute --zone=$testZone1 --project=$project
 
     It "should work and retrieve 3 ResourceRecordSets (2 from creation, 1 added)" {
-        $rrsets = Get-GcdResourceRecordSet -Project $project -ManagedZone $testZone
+        $rrsets = Get-GcdResourceRecordSet -DnsProject $project -Zone $testZone1
         $rrsets.Count | Should Be 3
 
         # The object type, Kind, and Name should be the same for all ResourceRecordSets
@@ -53,12 +60,12 @@ Describe "Get-GcdResourceRecordSet" {
     }
 
     # Delete the previously added record to empty the managed zone (remove all non-NS/SOA records) and allow zone deletion
-    gcloud dns record-sets transaction start --zone=$testZone --project=$project
-    gcloud dns record-sets transaction remove --name=$dnsName --type=A --ttl=300 “7.5.7.8” --zone=$testZone --project=$project
-    gcloud dns record-sets transaction execute --zone=$testZone --project=$project
+    gcloud dns record-sets transaction start --zone=$testZone1 --project=$project
+    gcloud dns record-sets transaction remove --name=$dnsName1 --type=A --ttl=$ttl1 $rrdata1 --zone=$testZone1 --project=$project
+    gcloud dns record-sets transaction execute --zone=$testZone1 --project=$project
 
     It "should work and retrieve only the original 2 ResourceRecordSets" {
-        $rrsets = Get-GcdResourceRecordSet -Project $project -ManagedZone $testZone
+        $rrsets = Get-GcdResourceRecordSet -DnsProject $project -Zone $testZone1
         $rrsets.Count | Should Be 2
 
         # The object type, Kind, and Name should be the same for all ResourceRecordSets
@@ -66,11 +73,45 @@ Describe "Get-GcdResourceRecordSet" {
         $rrsets.Kind | Should Match "dns#resourceRecordSet"
         $rrsets.Name | Should Match $dnsName
 
+
         $rrsets.Type -contains "SOA" | Should Match $true
         $rrsets.Type -contains "NS" | Should Match $true
         $rrsets.Type -contains "A" | Should Match $false
     }
 
     # Delete now-empty test zone
-    gcloud dns managed-zones delete $testZone --project=$project
+    gcloud dns managed-zones delete $testZone1 --project=$project
+}
+
+Describe "New-GcdResourceRecordSet" {
+    
+    It "should fail to create a new ResourceRecordSet with an invalid record type" {
+        { New-GcdResourceRecordSet -Name $dnsName1_1 -Rrdata $rrdata2 -Type "Invalid" } | Should Throw "ValidateSet"
+    }
+
+    It "should work and create a new ResourceRecordSet with the specified properties and default ttl (A type)" {
+        $rrset = New-GcdResourceRecordSet -Name $dnsName1 -Rrdata $rrdata1,$rrdata1_1 -Type "A"
+        $rrset.Count | Should Be 1
+
+        $rrset.GetType().FullName | Should Match $rrsetType
+        $rrset.Kind | Should Match "dns#resourceRecordSet"
+        $rrset.Name | Should Match $dnsName1
+        $rrset.Rrdatas.Count | Should Be 2
+        $rrset.Rrdatas[0] | Should Match $rrdata1
+        $rrset.Rrdatas[1] | Should Match $rrdata1_1
+        $rrset.Ttl | Should Match $ttl_default
+        $rrset.Type | Should Match "A"
+    }
+
+    It "should work and create a new ResourceRecordSet with the specified properties and custom ttl (AAAA type)" {
+        $rrset = New-GcdResourceRecordSet -Name $dnsName1_1 -Rrdata $rrdata2 -Type "AAAA" -Ttl $ttl1
+        $rrset.Count | Should Be 1
+
+        $rrset.GetType().FullName | Should Match $rrsetType
+        $rrset.Kind | Should Match "dns#resourceRecordSet"
+        $rrset.Name | Should Match $dnsName1_1
+        $rrset.Rrdatas | Should Match $rrdata2
+        $rrset.Ttl | Should Match $ttl1
+        $rrset.Type | Should Match "AAAA"
+    }
 }
