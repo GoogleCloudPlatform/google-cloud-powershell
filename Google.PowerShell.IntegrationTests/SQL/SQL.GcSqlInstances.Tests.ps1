@@ -32,6 +32,13 @@ Describe "Get-GcSqlInstance" {
         $testInstance.Name | Should Be $firstInstance.Name
         $testInstance.SelfLink | Should be $firstInstance.SelfLink
     }
+
+    It "should take in pipeline input" {
+        $firstInstance = Get-GcSqlInstance | Select-Object -first 1
+        $testInstance = Get-GcSqlInstance | Select-Object -first 1 | Get-GcSqlInstance
+        $testInstance.Name | Should Be $firstInstance.Name
+        $testInstance.SelfLink | Should be $firstInstance.SelfLink
+    }
     
     gcloud sql instances delete $instance --quiet 2>$null
 }

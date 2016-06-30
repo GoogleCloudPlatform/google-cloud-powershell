@@ -6,6 +6,7 @@ using Google.Apis.SQLAdmin.v1beta4.Data;
 using System.Management.Automation;
 using Google.PowerShell.Common;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Google.PowerShell.Sql
 {
@@ -44,13 +45,14 @@ namespace Google.PowerShell.Sql
         /// Cloud SQL instance name. 
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.GetList)]
-        public string Instance { get; set; }
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.GetSingle,
+            ValueFromPipeline = true, ValueFromPipelineByPropertyName = true)]
+        public string Name { get; set; }
 
         protected override void ProcessRecord()
         {
-            if (Instance != null) {
-                InstancesResource.GetRequest request = Service.Instances.Get(Project, Instance);
+            if (Name != null) {
+                InstancesResource.GetRequest request = Service.Instances.Get(Project, Name);
                 DatabaseInstance result = request.Execute();
                 WriteObject(result);
             }
