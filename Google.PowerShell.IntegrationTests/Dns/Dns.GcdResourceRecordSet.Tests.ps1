@@ -8,16 +8,17 @@ $testZone1 = "test1"
 $dnsName1 = "gcloudexample1.com."
 $rrdata1 = "7.5.7.8"
 $ttl1 = 300
+$ttl_default = 3600
 
 Describe "Get-GcdResourceRecordSet" {
 
     It "should fail to return ResourceRecordSets of non-existent project" {
-        { Get-GcdResourceRecordSet -Project "project-no-exist" -ManagedZone "zone-no-exist"} | Should Throw "400"
+        { Get-GcdResourceRecordSet -DnsProject "project-no-exist" -Zone "zone-no-exist"} | Should Throw "400"
     }
 
     It "should give access errors as appropriate" {
         # Don't know who created the "asdf" project.
-        { Get-GcdResourceRecordSet -Project "asdf" -ManagedZone "zone1"} | Should Throw "403"
+        { Get-GcdResourceRecordSet -DnsProject "asdf" -Zone "zone1"} | Should Throw "403"
     }
 
     # Delete all existing zones (using Get-GcdManagedZone cmdlet)
@@ -28,7 +29,7 @@ Describe "Get-GcdResourceRecordSet" {
     }
 
     It "should fail to return ResourceRecordSets of non-existent managed zone of existing project" {
-        { Get-GcdResourceRecordSet -Project $project -ManagedZone "managedZone-no-exist" } | Should Throw "404"
+        { Get-GcdResourceRecordSet -DnsProject $project -Zone "managedZone-no-exist" } | Should Throw "404"
     }
 
     # Create zone for testing 
@@ -40,7 +41,7 @@ Describe "Get-GcdResourceRecordSet" {
     gcloud dns record-sets transaction execute --zone=$testZone1 --project=$project
 
     It "should work and retrieve 3 ResourceRecordSets (2 from creation, 1 added)" {
-        $rrsets = Get-GcdResourceRecordSet -Project $project -ManagedZone $testZone1
+        $rrsets = Get-GcdResourceRecordSet -DnsProject $project -Zone $testZone1
         $rrsets.Count | Should Be 3
 
         # The object type, Kind, and Name should be the same for all ResourceRecordSets
@@ -61,7 +62,7 @@ Describe "Get-GcdResourceRecordSet" {
     gcloud dns record-sets transaction execute --zone=$testZone1 --project=$project
 
     It "should work and retrieve only the original 2 ResourceRecordSets" {
-        $rrsets = Get-GcdResourceRecordSet -Project $project -ManagedZone $testZone1
+        $rrsets = Get-GcdResourceRecordSet -DnsProject $project -Zone $testZone1
         $rrsets.Count | Should Be 2
 
         # The object type, Kind, and Name should be the same for all ResourceRecordSets
@@ -81,7 +82,19 @@ Describe "Get-GcdResourceRecordSet" {
 
 Describe "New-GcdResourceRecordSet" {
     
-    It "should work and create a new ResourceRecordSet with the specified properties" {
+    It "should work and create a new ResourceRecordSet with the specified properties and default ttl" {
+        $rrset = New-GcdResourceRecordSet -Name $dnsName1 -Rrdata $rrdata1 -Type "A"
+        $rrset.Count | Should Be 1
+
+        $rrset.GetType().FullName | Should Match $rrsetType
+        $rrset.Kind | Should Match "dns#resourceRecordSet"
+        $rrset.Name | Should Match $dnsName1
+        $rrset.Rrdatas | Should Match $rrdata1
+        $rrset.Ttl | Should Match $ttl_default
+        $rrset.Type | Should Match "A"
+    }
+
+    It "should work and create a new ResourceRecordSet with the specified properties and custom ttl" {
         $rrset = New-GcdResourceRecordSet -Name $dnsName1 -Rrdata $rrdata1 -Type "A" -Ttl $ttl1
         $rrset.Count | Should Be 1
 
