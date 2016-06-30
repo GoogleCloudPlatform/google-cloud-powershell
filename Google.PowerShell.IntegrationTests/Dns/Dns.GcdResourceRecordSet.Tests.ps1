@@ -12,7 +12,6 @@ $ttl1 = 300
 $ttl_default = 3600
 $dnsName1_1 = "a.gcloudexample1.com."
 $rrdata2 = "2001:0db8:85a3:0:0:8a2e:0370:7334"
-$ttl_default = 3600
 
 Describe "Get-GcdResourceRecordSet" {
 
