@@ -63,11 +63,11 @@ Describe "Get-GcdChange" {
 
 Describe "Add-GcdChange" {
     BeforeAll {
-        Remove-Item $transactionFile -Force
+        Remove-FileIfExists($transactionFile)
         Remove-AllManagedZone($project)
     }
     AfterAll {
-        Remove-Item $transactionFile -Force
+       Remove-FileIfExists($transactionFile)
         Remove-AllManagedZone($project)
     }
 

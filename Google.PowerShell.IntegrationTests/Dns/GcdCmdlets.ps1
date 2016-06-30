@@ -60,3 +60,10 @@ function Remove-AllManagedZone($projectName) {
         gcloud dns managed-zones delete $zoneName --project=$project
     }
 }
+
+function Remove-FileIfExists($fileName)
+{
+    if (Test-Path $fileName) {
+        Remove-Item $fileName
+    }
+}
