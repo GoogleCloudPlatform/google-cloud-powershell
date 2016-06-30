@@ -9,20 +9,20 @@ Describe "Get-GcdManagedZone" {
     }
 
     It "should fail to return ManagedZones of non-existent project" {
-        { Get-GcdManagedZone -Project $nonExistProject } | Should Throw "400"
+        { Get-GcdManagedZone -DnsProject $nonExistProject } | Should Throw "400"
     }
 
     It "should give access errors as appropriate" {
         # Don't know who created the "asdf" project.
-        { Get-GcdManagedZone -Project $accessErrProject } | Should Throw "403"
+        { Get-GcdManagedZone -DnsProject $accessErrProject } | Should Throw "403"
     }
 
     It "should fail to return non-existent ManagedZones of existing project" {
-        { Get-GcdManagedZone -Project $project -ManagedZone $nonExistManagedZone } | Should Throw "404"
+        { Get-GcdManagedZone -DnsProject $project -ManagedZone $nonExistManagedZone } | Should Throw "404"
     }
 
     It "should list exactly 0 ManagedZones in project" {
-        (Get-GcdManagedZone -Project $project).Count | Should Be 0
+        (Get-GcdManagedZone -DnsProject $project).Count | Should Be 0
     }
 
     # Create 2 test zones
@@ -30,7 +30,7 @@ Describe "Get-GcdManagedZone" {
     gcloud dns managed-zones create --dns-name=$dnsName2 --description=$testDescrip2 $testZone2 --project=$project
 
     It "should work and list the 2 ManagedZones just created" {
-        $zones = Get-GcdManagedZone -Project $project
+        $zones = Get-GcdManagedZone -DnsProject $project
         $zones.Count | Should Be 2
 
         ($zones | Get-Member).TypeName | Should Match $managedZoneType
@@ -42,7 +42,7 @@ Describe "Get-GcdManagedZone" {
     }
 
     It "should work and retrieve ManagedZone testZone2" {
-        $zones = Get-GcdManagedZone -Project $project -ManagedZone $testZone2
+        $zones = Get-GcdManagedZone -DnsProject $project -ManagedZone $testZone2
         $zones.GetType().FullName | Should Match $managedZoneType
         $zones.Description | Should Match $testDescrip2
         $zones.DnsName | Should Match $dnsName2

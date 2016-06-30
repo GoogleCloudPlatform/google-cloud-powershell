@@ -6,16 +6,16 @@ Describe "Get-GcdProject" {
     }
 
     It "should fail to return representation of non-existent project" {
-        { Get-GcdProject -Project $nonExistProject } | Should Throw "400"
+        { Get-GcdProject -DnsProject $nonExistProject } | Should Throw "400"
     }
 
     It "should give access errors as appropriate" {
         # Don't know who created the "asdf" project.
-        { Get-GcdProject -Project $accessErrProject } | Should Throw "403"
+        { Get-GcdProject -DnsProject $accessErrProject } | Should Throw "403"
     }
 
     It "should work and retrieve valid project information" {
-        $projectInfo = Get-GcdProject -Project $project
+        $projectInfo = Get-GcdProject -DnsProject $project
 
         $projectInfo.GetType().FullName | Should Match $projectType
         $projectInfo.Id | Should Match $project

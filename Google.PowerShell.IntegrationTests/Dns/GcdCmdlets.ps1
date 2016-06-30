@@ -49,7 +49,7 @@ $Err_ProjectZonesNotDeleted = "All ManagedZones in the specified project have no
 # Force remove all existing ManagedZones, including non-empty ones
 # TODO(edatta): Simplify once Remove-GcdManagedZone cmdlet is done.
 function Remove-AllManagedZone($projectName) {
-    $preExistingZones = Get-GcdManagedZone -Project $project
+    $preExistingZones = Get-GcdManagedZone -DnsProject $project
 
     ForEach ($zoneObject in $preExistingZones) {
         $zoneName = $zoneObject.Name
