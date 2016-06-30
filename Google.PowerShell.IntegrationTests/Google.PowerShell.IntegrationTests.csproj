@@ -63,6 +63,7 @@
     <None Include="SQL\SQL.GcSqlBackupRuns.Tests.ps1" />
     <None Include="SQL\SQL.GcSqlDatabase.Tests.ps1" />
     <None Include="SQL\SQL.GcSqlFlags.Tests.ps1" />
+    <None Include="SQL\SQL.GcSqlInstances.Tests.ps1" />
     <None Include="SQL\SQL.GcSqlOperations.Tests.ps1" />
     <None Include="SQL\SQL.GcSqlTiers.Tests.ps1" />
     <None Include="Storage\Storage.GcsBucket.Tests.ps1" />
