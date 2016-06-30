@@ -1,8 +1,7 @@
 ﻿using Google.Apis.Compute.v1;
 using Google.Apis.Compute.v1.Data;
 using Google.PowerShell.Common;
-using NodaTime;
-using NodaTime.Text;
+using System;
 using System.Collections.Generic;
 using System.Management.Automation;
 
@@ -91,22 +90,56 @@ namespace Google.PowerShell.ComputeEngine
         }
     }
 
+    /// <summary>
+    /// <para type="synopsis">
+    /// Creates a google compute engine image.
+    /// </para>
+    /// <para type="description">
+    /// Creates a google compute engine image from the given disk.
+    /// </para>
+    /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceImage")]
     public class AddGceImageCmdlet : GceConcurrentCmdlet
     {
+        /// <summary>
+        /// <para type="description">
+        /// The project that will own the image. This defaults to the gcloud config project.
+        /// </para>
+        /// </summary>
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The Disk object that describes the disk to build the image from. You can get this from Get-GceDisk.
+        /// </para>
+        /// </summary>
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true)]
         public Disk SourceDisk { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The name of the image to create. This defaults to the name of the disk the image is being created
+        /// from.
+        /// </para>
+        /// </summary>
         [Parameter]
         public string Name { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The family this image is part of.
+        /// </para>
+        /// </summary>
         [Parameter]
         public string Family { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// Human readable description of the image.
+        /// </para>
+        /// </summary>
         [Parameter]
         public string Description { get; set; }
 
@@ -115,18 +148,34 @@ namespace Google.PowerShell.ComputeEngine
             Image body = new Image
             {
                 SourceDisk = SourceDisk.SelfLink,
-                Licenses = SourceDisk.Licenses,
                 DiskSizeGb = SourceDisk.SizeGb,
                 Name = Name ?? SourceDisk.Name,
                 Description = Description ?? SourceDisk.Description,
                 Family = Family
             };
             Operation operation = Service.Images.Insert(body, Project).Execute();
-            AddGlobalOperation(Project, operation);
+            AddGlobalOperation(Project, operation, WriteImageCallback(Project, body.Name));
+        }
+
+        private Action WriteImageCallback(string project, string name)
+        {
+            return () =>
+            {
+                WriteObject(Service.Images.Get(project, name).Execute());
+            };
         }
     }
 
-    [Cmdlet(VerbsCommon.Remove, "GceImage")]
+    /// <summary>
+    /// <para type="synopsis">
+    /// Removes a google compute engine disk image.
+    /// </para>
+    /// <para type="description">
+    /// Removes a google compute engine disk image.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Remove, "GceImage", SupportsShouldProcess = true,
+        DefaultParameterSetName = ParameterSetNames.ByName)]
     public class RemoveGceImageCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
@@ -135,15 +184,29 @@ namespace Google.PowerShell.ComputeEngine
             public const string ByObject = "ByObject";
         }
 
+        /// <summary>
+        /// <para type="description">
+        /// The project that owns the image. Defaults to the gcloud config project.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
-
+        /// <summary>
+        /// <para type="description">
+        /// The name of the image to delete.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         public string Name { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The Image object that describes the image to delete.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         public Image Object { get; set; }
@@ -152,19 +215,38 @@ namespace Google.PowerShell.ComputeEngine
         {
             if (ParameterSetName == ParameterSetNames.ByName)
             {
-                Operation operation = Service.Images.Delete(Project, Name).Execute();
-                AddGlobalOperation(Project, operation);
+                if (ShouldProcess($"{Project}/{Name}", "Delete Image"))
+                {
+                    Operation operation = Service.Images.Delete(Project, Name).Execute();
+                    AddGlobalOperation(Project, operation);
+                }
             }
             else if (ParameterSetName == ParameterSetNames.ByObject)
             {
                 string project = GetProjectNameFromUri(Object.SelfLink);
                 string imageName = Object.Name;
-                Operation operation = Service.Images.Delete(project, imageName).Execute();
-                AddGlobalOperation(project, operation);
+
+                if (ShouldProcess($"{project}/{imageName}", "Delete Image"))
+                {
+                    Operation operation = Service.Images.Delete(project, imageName).Execute();
+                    AddGlobalOperation(project, operation);
+                }
+            }
+            else
+            {
+                throw UnknownParameterSetException;
             }
         }
     }
 
+    /// <summary>
+    /// <para type="synopsis">
+    /// Marks an image or schedules an image to be marked as DEPRECATED, OBSOLETE, or DELETED.
+    /// </para>
+    /// <para type="description">
+    /// Marks an image or schedules an image to be marked as DEPRECATED, OBSOLETE, or DELETED.
+    /// </para>
+    /// </summary>
     [Cmdlet(VerbsLifecycle.Disable, "GceImage")]
     public class SetGceImageCmdlet : GceConcurrentCmdlet
     {
@@ -174,51 +256,103 @@ namespace Google.PowerShell.ComputeEngine
             public const string ByObject = "ByObject";
         }
 
-        public enum StateEnum
+        /// <summary>
+        /// Enum of available disabled states for instances.
+        /// </summary>
+        public enum ImageDisableState
         {
+            /// <summary>
+            /// Operations using a DEPRECATED image will return with a warning.
+            /// </summary>
             DEPRECATED,
+
+            /// <summary>
+            /// Operations using an OBSOLETE image will result in an error.
+            /// </summary>
             OBSOLETE,
+
+            /// <summary>
+            /// Operations using a DELETED image will result in an error. Deleted images are only marked
+            /// deleted, and still require a request to remove them.
+            /// </summary>
             DELETED
         }
 
+        /// <summary>
+        /// <para type="description">
+        /// The project that owns the image to disable. Defaults to the gcloud config project.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The name of the image to disable.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         public string Name { get; set; }
-        
+
+        /// <summary>
+        /// <para type="description">
+        /// The Image object that describes the image to disable.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         public Image Object { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The Image object that is the suggested replacement for the image being disabled.
+        /// </para>
+        /// </summary>
         [Parameter]
         public Image Replacement { get; set; }
 
-        [Parameter]
-        public StateEnum? State { get; set; }
-
+        /// <summary>
+        /// <para type="description">
+        /// The url of the image that is the suggested replacement for the image being disabled.
+        /// </para>
+        /// </summary>
         [Parameter]
         public string ReplacementUrl { get; set; }
 
-        [Parameter]
-        public LocalDateTime? ObsoleteOn { get; set; }
+        /// <summary>
+        /// <para type="description">
+        /// The new state of the image.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 1)]
+        public ImageDisableState State { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The date to mark the image as deprecated.
+        /// </para>
+        /// </summary>
         [Parameter]
-        public Duration? ObsoleteIn { get; set; }
+        public DateTimeOffset? DeprecateOn { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The date to mark the image as obsolete.
+        /// </para>
+        /// </summary>
         [Parameter]
-        public LocalDateTime? DeprecateOn { get; set; }
+        public DateTimeOffset? ObsoleteOn { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The date to mark the image as deleted. The image will only be marked, and not actually destroyed
+        /// until a request is made to remove it.
+        /// </para>
+        /// </summary>
         [Parameter]
-        public Duration? DeprecateIn { get; set; }
-
-        [Parameter]
-        public LocalDateTime? DeleteOn { get; set; }
-
-        [Parameter]
-        public Duration? DeleteIn { get; set; }
+        public DateTimeOffset? DeleteOn { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -242,30 +376,26 @@ namespace Google.PowerShell.ComputeEngine
             DeprecationStatus body = new DeprecationStatus
             {
                 Replacement = GetReplacementUrl(),
-                State = State?.ToString(),
-                Deprecated = GetDateString(DeprecateOn, DeprecateIn, "Deprecate"),
-                Obsolete = GetDateString(ObsoleteOn, ObsoleteIn, "Obsolete"),
-                Deleted = GetDateString(DeleteOn, DeleteIn, "Delete")
+                State = State.ToString()
             };
 
             Operation operation = Service.Images.Deprecate(body, project, name).Execute();
-            AddGlobalOperation(project, operation);
+            AddGlobalOperation(project, operation, WriteImageCallback(project, name));
         }
 
-        private static string GetDateString(LocalDateTime? onDateTime, Duration? inDuration, string type)
+        private string GetReplacementUrl()
         {
-            if (onDateTime != null && inDuration != null)
+            if (ReplacementUrl != null && Replacement != null)
             {
-                throw new PSInvalidOperationException($"May not specify both {type}On and {type}In");
+                throw new PSInvalidOperationException("May not specify both Replacement and ReplacementUri.");
             }
-            else if (onDateTime != null)
+            else if (Replacement != null)
             {
-                return InstantPattern.GeneralPattern.Format(onDateTime.Value.InUtc().ToInstant());
+                return Replacement.SelfLink;
             }
-            else if (inDuration != null)
+            else if (ReplacementUrl != null)
             {
-                Instant deleteOn = SystemClock.Instance.Now + inDuration.Value;
-                return InstantPattern.GeneralPattern.Format(deleteOn);
+                return ReplacementUrl;
             }
             else
             {
@@ -273,24 +403,12 @@ namespace Google.PowerShell.ComputeEngine
             }
         }
 
-        private string GetReplacementUrl()
+        private Action WriteImageCallback(string project, string name)
         {
-            if (ReplacementUrl == null && Replacement == null)
+            return () =>
             {
-                throw new PSInvalidOperationException("Must specify either Replacement or ReplacementUri.");
-            }
-            else if (ReplacementUrl != null && Replacement != null)
-            {
-                throw new PSInvalidOperationException("May not specify both Replacement and ReplacementUri");
-            }
-            else if (Replacement != null)
-            {
-                return Replacement.SelfLink;
-            }
-            else
-            {
-                return ReplacementUrl;
-            }
+                WriteObject(Service.Images.Get(project, name).Execute());
+            };
         }
     }
 }
