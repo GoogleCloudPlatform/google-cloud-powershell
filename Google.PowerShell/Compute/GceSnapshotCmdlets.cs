@@ -13,7 +13,7 @@ namespace Google.PowerShell.Compute
     /// Creates a new disk snapshot.
     /// </para>
     /// <para type="description">
-    /// Creates a new disk snapshot.
+    /// Creates a new disk snapshot to back up the data of the disk.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceSnapshot")]
@@ -104,13 +104,10 @@ namespace Google.PowerShell.Compute
                 Name = Name ?? $"{diskName}-{DateTime.UtcNow.ToString("yyyyMMddHHmmss\\z")}"
             };
             Operation operation = Service.Disks.CreateSnapshot(body, project, zone, diskName).Execute();
-            AddZoneOperation(project, zone, operation, WriteSnapshotCallback(project, body.Name));
-        }
-
-        private Action WriteSnapshotCallback(string project, string name)
-        {
-            return () =>
-                WriteObject(Service.Snapshots.Get(project, name).Execute());
+            AddZoneOperation(project, zone, operation, () =>
+            {
+                WriteObject(Service.Snapshots.Get(project, body.Name).Execute());
+            });
         }
     }
 
