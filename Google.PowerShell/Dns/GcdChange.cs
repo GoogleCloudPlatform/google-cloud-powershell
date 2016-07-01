@@ -4,7 +4,6 @@
 using Google.Apis.Dns.v1;
 using Google.Apis.Dns.v1.Data;
 using Google.PowerShell.Common;
-using Google.PowerShell.Common.ExtensionMethods;
 using System;
 using System.Collections.Generic;
 using System.Management.Automation;
@@ -174,7 +173,7 @@ namespace Google.PowerShell.Dns
             switch (ParameterSetName)
             {
                 case ParameterSetNames.AddRm:
-                    if (Add.IsNullOrEmpty() && Remove.IsNullOrEmpty())
+                    if ((Add == null || Add.Length == 0) && (Remove == null || Remove.Length == 0))
                     {
                         throw new System.ArgumentException(LocalErrorMessages.NeedChangeContent);
                     }

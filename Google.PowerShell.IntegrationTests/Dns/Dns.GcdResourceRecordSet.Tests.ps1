@@ -45,7 +45,7 @@ Describe "Get-GcdResourceRecordSet" {
     }
 
     It "should work and retrieve only the NS and AAAA type records" {
-        $rrsets = Get-GcdResourceRecordSet -DnsProject $project -Zone $testZone1 -Types "NS","AAAA"
+        $rrsets = Get-GcdResourceRecordSet -DnsProject $project -Zone $testZone1 -Filter "NS","AAAA"
         $rrsets.Count | Should Be 2
 
         ($rrsets | Get-Member).TypeName | Should Match $rrsetType

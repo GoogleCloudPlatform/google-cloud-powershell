@@ -4,9 +4,7 @@
 using Google.Apis.Dns.v1;
 using Google.Apis.Dns.v1.Data;
 using Google.PowerShell.Common;
-using Google.PowerShell.Common.ExtensionMethods;
 using System.Collections.Generic;
-using System.Linq;
 using System.Management.Automation;
 
 namespace Google.PowerShell.Dns
@@ -20,7 +18,7 @@ namespace Google.PowerShell.Dns
     /// </para>
     /// <para type="description">
     /// If a DnsProject is specified, will instead return the ResourceRecordSets in the specified ManagedZone governed 
-    /// by that project. The optional filter Types can be provided to restrict the ResourceRecordSets returned.
+    /// by that project. The optional Filter can be provided to restrict the ResourceRecordSet types returned.
     /// </para>
     /// <example>
     ///   <para>Get the ResourceRecordSet resources in the ManagedZone "test1" in the DnsProject "testing."</para>
@@ -30,7 +28,7 @@ namespace Google.PowerShell.Dns
     ///   <para>
     ///   Get the ResourceRecordSets of type "NS" or "AAAA" in the ManagedZone "test1" in the DnsProject "testing."
     ///   </para>
-    ///   <para><code>Get-GcdResourceRecordSet -DnsProject "testing" -Zone "test1" -Types "NS","AAAA"</code></para>
+    ///   <para><code>Get-GcdResourceRecordSet -DnsProject "testing" -Zone "test1" -Filter "NS","AAAA"</code></para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcdResourceRecordSet")]
@@ -56,12 +54,11 @@ namespace Google.PowerShell.Dns
 
         /// <summary>
         /// <para type="description">
-        /// Get the type(s) of ResourceRecordSets to return.
+        /// Filter the type(s) of ResourceRecordSets to return (e.g., -Filter "CNAME","NS")
         /// </para>
         /// </summary>
-        [Alias("Type")]
         [Parameter(Position = 2, Mandatory = false)]
-        public string[] Types { get; set; }
+        public string[] Filter { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -71,18 +68,25 @@ namespace Google.PowerShell.Dns
             ResourceRecordSetsListResponse rrsetListResponse = rrsetListRequest.Execute();
             IList<ResourceRecordSet> rrsetList = rrsetListResponse.Rrsets;
 
-            if (!Types.IsNullOrEmpty())
+            if (!(Filter == null || Filter.Length == 0))
             {
-                foreach (ResourceRecordSet rrset in rrsetList.ToList())
+                HashSet<string> TypeFilterHash = new HashSet<string>(Filter);
+                HashSet<ResourceRecordSet> rrsetHash = new HashSet<ResourceRecordSet>(rrsetList);
+
+                foreach (ResourceRecordSet rrset in rrsetList)
                 {
-                    if (!Types.Contains(rrset.Type))
+                    if (!TypeFilterHash.Contains(rrset.Type))
                     {
-                        rrsetList.Remove(rrset);
+                        rrsetHash.Remove(rrset);
                     }
                 }
-            }
 
-            WriteObject(rrsetList, true);
+                WriteObject(rrsetHash, true);
+            }
+            else
+            {
+                WriteObject(rrsetList, true);
+            }
         }
     }
 
