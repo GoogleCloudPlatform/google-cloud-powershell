@@ -4,7 +4,9 @@
 using Google.Apis.Dns.v1;
 using Google.Apis.Dns.v1.Data;
 using Google.PowerShell.Common;
+using Google.PowerShell.Common.ExtensionMethods;
 using System.Collections.Generic;
+using System.Linq;
 using System.Management.Automation;
 
 namespace Google.PowerShell.Dns
@@ -18,11 +20,17 @@ namespace Google.PowerShell.Dns
     /// </para>
     /// <para type="description">
     /// If a DnsProject is specified, will instead return the ResourceRecordSets in the specified ManagedZone governed 
-    /// by that project. 
+    /// by that project. The optional filter Types can be provided to restrict the ResourceRecordSets returned.
     /// </para>
     /// <example>
     ///   <para>Get the ResourceRecordSet resources in the ManagedZone "test1" in the DnsProject "testing."</para>
     ///   <para><code>Get-GcdResourceRecordSet -DnsProject "testing" -Zone "test1"</code></para>
+    /// </example>
+    /// <example>
+    ///   <para>
+    ///   Get the ResourceRecordSets of type "NS" or "AAAA" in the ManagedZone "test1" in the DnsProject "testing."
+    ///   </para>
+    ///   <para><code>Get-GcdResourceRecordSet -DnsProject "testing" -Zone "test1" -Types "NS","AAAA"</code></para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcdResourceRecordSet")]
@@ -46,6 +54,15 @@ namespace Google.PowerShell.Dns
         [Parameter(Position = 1, Mandatory = true)]
         public string Zone { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// Get the type(s) of ResourceRecordSets to return.
+        /// </para>
+        /// </summary>
+        [Alias("Type")]
+        [Parameter(Position = 2, Mandatory = false)]
+        public string[] Types { get; set; }
+
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
@@ -53,6 +70,18 @@ namespace Google.PowerShell.Dns
             ResourceRecordSetsResource.ListRequest rrsetListRequest = Service.ResourceRecordSets.List(DnsProject, Zone);
             ResourceRecordSetsListResponse rrsetListResponse = rrsetListRequest.Execute();
             IList<ResourceRecordSet> rrsetList = rrsetListResponse.Rrsets;
+
+            if (!Types.IsNullOrEmpty())
+            {
+                foreach (ResourceRecordSet rrset in rrsetList.ToList())
+                {
+                    if (!Types.Contains(rrset.Type))
+                    {
+                        rrsetList.Remove(rrset);
+                    }
+                }
+            }
+
             WriteObject(rrsetList, true);
         }
     }

@@ -32,12 +32,13 @@ $dnsName2 = "gcloudexample2.com."
 
 $rrdata1 = "7.5.7.8"
 $rrdata1_1 = "7.5.6.8"
-$rrdata2 = "2001:0db8:85a3:0:0:8a2e:0370:7334"
+$rrdata2 = "2001:db8:85a3::8a2e:370:7334"
 
 $ttl1 = 300
 $ttlDefault = 3600
 
 $testRrset1 = New-GcdResourceRecordSet -Name $dnsName1 -Rrdata $rrdata1 -Type "A" -Ttl $ttl1
+$testRrset2 = New-GcdResourceRecordSet -Name $dnsName1_1 -Rrdata $rrdata2 -Type "AAAA" -Ttl $ttl1
 
 $transactionFile = "transaction.yaml"
 

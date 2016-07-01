@@ -24,12 +24,12 @@ Describe "Get-GcdResourceRecordSet" {
     # Create zone for testing 
     gcloud dns managed-zones create --dns-name=$dnsName1 --description="testing zone, 1" $testZone1 --project=$project
 
-    # Add a new A-type record to the test zone
-    Add-GcdChange -DnsProject $project -Zone $testZone1 -Add $testRrset1
+    # Add a new A-type record and a new AAAA type record to the test zone
+    Add-GcdChange -DnsProject $project -Zone $testZone1 -Add $testRrset1,$testRrset2
 
-    It "should work and retrieve 3 ResourceRecordSets (2 from creation, 1 added)" {
+    It "should work and retrieve 4 ResourceRecordSets (2 from creation, 2 added)" {
         $rrsets = Get-GcdResourceRecordSet -DnsProject $project -Zone $testZone1
-        $rrsets.Count | Should Be 3
+        $rrsets.Count | Should Be 4
 
         # The object type, Kind, and Name should be the same for all ResourceRecordSets
         ($rrsets | Get-Member).TypeName | Should Match $rrsetType
@@ -39,25 +39,22 @@ Describe "Get-GcdResourceRecordSet" {
         $rrsets.Type -contains "SOA" | Should Match $true
         $rrsets.Type -contains "NS" | Should Match $true
         $rrsets.Type -contains "A" | Should Match $true
+        $rrsets.Type -contains "AAAA" | Should Match $true
 
-        $rrsets.Rrdatas -contains $rrdata1 | Should Match $true
+        (($rrsets.Rrdatas -contains $rrdata1) -and ($rrsets.Rrdatas -contains $rrdata2)) | Should Match $true
     }
 
-    # Delete the previously added record to empty the ManagedZone (remove all non-NS/SOA records)
-    Add-GcdChange -DnsProject $project -Zone $testZone1 -Remove $testRrset1
-
-    It "should work and retrieve only the original 2 ResourceRecordSets" {
-        $rrsets = Get-GcdResourceRecordSet -DnsProject $project -Zone $testZone1
+    It "should work and retrieve only the NS and AAAA type records" {
+        $rrsets = Get-GcdResourceRecordSet -DnsProject $project -Zone $testZone1 -Types "NS","AAAA"
         $rrsets.Count | Should Be 2
 
-        # The object type, Kind, and Name should be the same for all ResourceRecordSets
         ($rrsets | Get-Member).TypeName | Should Match $rrsetType
         $rrsets.Kind | Should Match $rrsetKind
         $rrsets.Name | Should Match $dnsName
 
-
-        $rrsets.Type -contains "SOA" | Should Match $true
         $rrsets.Type -contains "NS" | Should Match $true
+        $rrsets.Type -contains "AAAA" | Should Match $true
+        $rrsets.Type -contains "SOA" | Should Match $false
         $rrsets.Type -contains "A" | Should Match $false
     }
 }
