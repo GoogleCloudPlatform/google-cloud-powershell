@@ -101,7 +101,7 @@ namespace Google.PowerShell.Compute
             Snapshot body = new Snapshot
             {
                 Description = Description,
-                Name = Name ?? $"{diskName}-{DateTime.UtcNow.ToString("u")}"
+                Name = Name ?? $"{diskName}-{DateTime.UtcNow.ToString("yyyyMMddHHmmss\\z")}"
             };
             Operation operation = Service.Disks.CreateSnapshot(body, project, zone, diskName).Execute();
             AddZoneOperation(project, zone, operation, WriteSnapshotCallback(project, body.Name));

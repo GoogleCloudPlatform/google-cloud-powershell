@@ -6,9 +6,9 @@ $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 $r = Get-Random
 
 $diskName = "test-image-disk-$r"
-$disk = New-GceDisk -DiskName $diskName -SizeGb 1
-
 Describe "Add-GceSnapshot" {
+    $disk = New-GceDisk -DiskName $diskName -SizeGb 1
+
     $snapshotName = "test-add-snapshot-$r"
 
     It "should fail on wrong project" {
@@ -23,14 +23,7 @@ Describe "Add-GceSnapshot" {
         $snapshot = Add-GceSnapshot $diskName -Name $snapshotName -Description "for testing $r"
         ($snapshot | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Snapshot
         $snapshot.Name | Should Be $snapshotName
-        $snapshot.Descripton | Should Be "for testing $r"
-        { Get-GceSnapshot $snapshot.Name } | Should Not Throw
-    }
-
-    It "should work with disk name on pipeline" {
-        $snapshot = $diskName | Add-GceSnapshot 
-        ($snapshot | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Snapshot
-        $snapshot.Name | Should Match "$diskName-"
+        $snapshot.Description | Should Be "for testing $r"
         { Get-GceSnapshot $snapshot.Name } | Should Not Throw
     }
 
@@ -45,11 +38,14 @@ Describe "Add-GceSnapshot" {
         $snapshot | Should Not BeNullOrEmpty
         { Get-GceSnapshot $snapshot.Name } | Should Not Throw
     }
-
+    
+    Remove-GceDisk $disk
     Get-GceSnapshot | Remove-GceSnapshot
 }
 
 Describe "Get-GceSnapshot" {
+    $disk = New-GceDisk -DiskName $diskName -SizeGb 1
+
     $snapshotName = "test-get-snapshot-$r"
     $snapshotName2 = "test-get-snapshot2-$r"
 
@@ -80,13 +76,15 @@ Describe "Get-GceSnapshot" {
     It "should get snapshot by name" {
         $snapshot = Get-GceSnapshot $snapshotName
         $snapshot.Count | Should Be 1
-        $shanpshot.Name | Should Be $snapshotName
+        $snapshot.Name | Should Be $snapshotName
     }
-
+    
+    Remove-GceDisk $disk
     Get-GceSnapshot | Remove-GceSnapshot
 }
 
 Describe "Remove-GceSnapshot" {
+    $disk = New-GceDisk -DiskName $diskName -SizeGb 1
     $snapshotName = "test-get-snapshot-$r"
 
     It "should fail on wrong project" {
@@ -108,11 +106,6 @@ Describe "Remove-GceSnapshot" {
             { Get-GceSnapshot $snapshotName } | Should Throw 404
         }
 
-        It "should work by name with pipeline" {
-            $snapshotName | Remove-GceSnapshot 
-            { Get-GceSnapshot $snapshotName } | Should Throw 404
-        }
-
         It "should work by object" {
             $snapshot = Get-GceSnapshot $snapshotName
             Remove-GceSnapshot $snapshot
@@ -124,6 +117,8 @@ Describe "Remove-GceSnapshot" {
             { Get-GceSnapshot $snapshotName } | Should Throw 404
         }
     }
+
+    Remove-GceDisk $disk
 }
 
 Reset-GCloudConfig $oldActiveConfig $configName
