@@ -175,11 +175,20 @@ namespace Google.PowerShell.ComputeEngine
             public string Local { get; }
             public Operation Operation { get; }
 
+            /// <summary>
+            /// The action executed when the operation is complete.
+            /// </summary>
+            public Action Callback { get; }
+
             public LocalOperation(string project, string local, Operation operation)
+                : this(project, local, operation, () => { }) { }
+
+            public LocalOperation(string project, string local, Operation operation, Action callback)
             {
                 Project = project;
                 Local = local;
                 Operation = operation;
+                Callback = callback;
             }
         }
 
@@ -191,10 +200,19 @@ namespace Google.PowerShell.ComputeEngine
             public string Project { get; }
             public Operation Operation { get; }
 
+            /// <summary>
+            /// The action executed when the operation is complete.
+            /// </summary>
+            public Action Callback { get; }
+
             public GlobalOperation(string project, Operation operation)
+                : this(project, operation, () => { }) { }
+
+            public GlobalOperation(string project, Operation operation, Action callback)
             {
                 Project = project;
                 Operation = operation;
+                Callback = callback;
             }
         }
 
@@ -217,6 +235,18 @@ namespace Google.PowerShell.ComputeEngine
         }
 
         /// <summary>
+        /// Used by child classes to add zone operations to wait on.
+        /// </summary>
+        /// <param name="project">The name of the Google Cloud project.</param>
+        /// <param name="zone">The name of the zone.</param>
+        /// <param name="operation">The Operation object to wait on.</param>
+        /// <param name="callback">The action to call when the operation is complete.</param>
+        protected void AddZoneOperation(string project, string zone, Operation operation, Action callback)
+        {
+            _zoneOperations.Add(new LocalOperation(project, zone, operation, callback));
+        }
+
+        /// <summary>
         /// Used by child classes to add region operations to wait on.
         /// </summary>
         /// <param name="project">The name of the Google Cloud project.</param>
@@ -225,6 +255,18 @@ namespace Google.PowerShell.ComputeEngine
         protected void AddRegionOperation(string project, string region, Operation operation)
         {
             _regionOperations.Add(new LocalOperation(project, region, operation));
+        }
+
+        /// <summary>
+        /// Used by child classes to add region operations to wait on.
+        /// </summary>
+        /// <param name="project">The name of the Google Cloud project.</param>
+        /// <param name="region">The name of the region.</param>
+        /// <param name="operation">The Operation object to wait on.</param>
+        /// <param name="callback">The action to call when the operation is complete.</param>
+        protected void AddRegionOperation(string project, string region, Operation operation, Action callback)
+        {
+            _regionOperations.Add(new LocalOperation(project, region, operation, callback));
         }
 
         /// <summary>
@@ -238,6 +280,17 @@ namespace Google.PowerShell.ComputeEngine
         }
 
         /// <summary>
+        /// Used by child classes to add global operations to wait on.
+        /// </summary>
+        /// <param name="project">The name of the Google Cloud project</param>
+        /// <param name="operation">The Operation object to wait on.</param>
+        /// <param name="callback">The action to call when the operation is complete.</param>
+        protected void AddGlobalOperation(string project, Operation operation, Action callback)
+        {
+            _globalOperations.Add(new GlobalOperation(project, operation, callback));
+        }
+
+        /// <summary>
         /// Waits on all the operations started by this cmdlet.
         /// </summary>
         protected override void EndProcessing()
@@ -248,6 +301,7 @@ namespace Google.PowerShell.ComputeEngine
                 try
                 {
                     WaitForZoneOperation(operation.Project, operation.Local, operation.Operation);
+                    operation.Callback();
                 }
                 catch (Exception e)
                 {
@@ -260,6 +314,7 @@ namespace Google.PowerShell.ComputeEngine
                 try
                 {
                     WaitForRegionOperation(operation.Project, operation.Local, operation.Operation);
+                    operation.Callback();
                 }
                 catch (Exception e)
                 {
@@ -272,6 +327,7 @@ namespace Google.PowerShell.ComputeEngine
                 try
                 {
                     WaitForGlobalOperation(operation.Project, operation.Operation);
+                    operation.Callback();
                 }
                 catch (Exception e)
                 {
