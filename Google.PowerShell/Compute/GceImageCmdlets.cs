@@ -28,7 +28,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The name of the image to get.
+        /// The name of the image to get. e.g. "windows-server-2012-r2-dc-v20160623".
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
@@ -37,7 +37,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The name of the image family to get the latest image of.
+        /// The name of the image family to get the latest image of. e.g. "windows-2012-r2".
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByFamily, Mandatory = true)]
