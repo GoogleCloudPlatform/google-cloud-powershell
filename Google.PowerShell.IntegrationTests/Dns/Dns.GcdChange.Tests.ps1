@@ -82,7 +82,7 @@ Describe "Add-GcdChange" {
 
     # Copy Change request for later use
     $copyChange = (Get-GcdChange -DnsProject $project -Zone $testZone2)[0]
-    $copyChange.Additions.Remove(($copyChange.Additions | Where-Object {$_.Type -ne "CNAME"}))
+    $copyChange.Additions.Remove(($copyChange.Additions | Where {$_.Type -ne "CNAME"}))
     $copyChange.Deletions = $null
 
     It "should fail to add a Change to a non-existent project" {
@@ -143,10 +143,10 @@ Describe "Add-GcdChange" {
         $newChange.Deletions.Count | Should Be 2
         $newChange.Kind | Should Match $changeKind
 
-        Compare-Object ($newChange.Deletions | Where-Object {$_.Type -eq "CNAME"}) $rmRrset1 -Property Kind,Name,Rrdatas,Ttl,Type | Should Match $null
-        Compare-Object ($newChange.Deletions | Where-Object {$_.Type -eq "TXT"}) $rmRrset2 -Property Kind,Name,Rrdatas,Ttl,Type | Should Match $null
-        Compare-Object ($newChange.Additions | Where-Object {$_.Type -eq "TXT"}) $addRrset1 -Property Kind,Name,Rrdatas,Ttl,Type | Should Match $null
-        Compare-Object ($newChange.Additions | Where-Object {$_.Type -eq "AAAA"}) $addRrset2 -Property Kind,Name,Rrdatas,Ttl,Type | Should Match $null
+        Compare-Object ($newChange.Deletions | Where {$_.Type -eq "CNAME"}) $rmRrset1 -Property Kind,Name,Rrdatas,Ttl,Type | Should Match $null
+        Compare-Object ($newChange.Deletions | Where {$_.Type -eq "TXT"}) $rmRrset2 -Property Kind,Name,Rrdatas,Ttl,Type | Should Match $null
+        Compare-Object ($newChange.Additions | Where {$_.Type -eq "TXT"}) $addRrset1 -Property Kind,Name,Rrdatas,Ttl,Type | Should Match $null
+        Compare-Object ($newChange.Additions | Where {$_.Type -eq "AAAA"}) $addRrset2 -Property Kind,Name,Rrdatas,Ttl,Type | Should Match $null
     }
 
     # Delete the previously added records to empty the ManagedZones
