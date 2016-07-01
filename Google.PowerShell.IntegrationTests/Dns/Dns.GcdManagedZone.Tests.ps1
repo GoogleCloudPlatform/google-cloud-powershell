@@ -50,3 +50,4 @@ Describe "Get-GcdManagedZone" {
         $zones.Name | Should Match $testZone2
     }
 }
+

@@ -1,9 +1,6 @@
 ﻿. $PSScriptRoot\..\Dns\GcdCmdlets.ps1
 
 Describe "Get-GcdProject" {
-    BeforeAll {
-        Remove-AllManagedZone($project)
-    }
 
     It "should fail to return representation of non-existent project" {
         { Get-GcdProject -DnsProject $nonExistProject } | Should Throw "400"
