@@ -24,9 +24,9 @@ Describe "Get-GcdChange" {
     # Create zone for testing 
     gcloud dns managed-zones create --dns-name=$dnsName1 --description="testing zone, 1" $testZone1 --project=$project
     
-    # Make 2 new changes for testing by adding and immediately deleting an A-type record to the test zone
-    Add-GcdChange -DnsProject $project -Zone $testZone1 -Add $testRrset1
-    Add-GcdChange -DnsProject $project -Zone $testZone1 -Remove $testRrset1
+    # Make 2 new changes for testing by adding and immediately deleting an CNAME-type record to the test zone
+    Add-GcdChange -DnsProject $project -Zone $testZone1 -Add $testRrsetA
+    Add-GcdChange -DnsProject $project -Zone $testZone1 -Remove $testRrsetA
 
     It "should work and retrieve 3 changes (including A-type record addition & deletion)" {
         $changes = Get-GcdChange -DnsProject $project -Zone $testZone1
@@ -75,14 +75,14 @@ Describe "Add-GcdChange" {
     gcloud dns managed-zones create --dns-name=$dnsName1 --description=$testDescrip1 $testZone1 --project=$project
     gcloud dns managed-zones create --dns-name=$dnsName1 --description=$testDescrip2 $testZone2 --project=$project
     
-    # Make a new change for testing by adding an A-type record to test zone 2
+    # Make a new change for testing by adding a CNAME-type record to test zone 2 (testRrsetCNAME equivalent)
     gcloud dns record-sets transaction start --zone=$testZone2 --project=$project
-    gcloud dns record-sets transaction add --name=$dnsName1 --type=A --ttl=$ttl1 $rrdata1 --zone=$testZone2 --project=$project
+    gcloud dns record-sets transaction add --name=$dnsName1_2 --type=CNAME --ttl=$ttl1 $rrdataCNAME1_2 --zone=$testZone2 --project=$project
     gcloud dns record-sets transaction execute --zone=$testZone2 --project=$project
 
     # Copy Change request for later use
     $copyChange = (Get-GcdChange -DnsProject $project -Zone $testZone2)[0]
-    $copyChange.Additions.Remove(($copyChange.Additions | Where-Object {$_.Type -ne "A"}))
+    $copyChange.Additions.Remove(($copyChange.Additions | Where-Object {$_.Type -ne "CNAME"}))
     $copyChange.Deletions = $null
 
     It "should fail to add a Change to a non-existent project" {
@@ -104,7 +104,7 @@ Describe "Add-GcdChange" {
         { Add-GcdChange -DnsProject $project -Zone $testZone1 -Add @() -Remove @() } | Should Throw $Err_NeedChangeContent
     }
 
-    It "should work and add 1 Change from Change Request (another A-type record addition)" {
+    It "should work and add 1 Change from Change Request (CNAME-type record addition)" {
         $initChanges = Get-GcdChange -DnsProject $project -Zone $testZone1
         $newChange = Add-GcdChange -DnsProject $project -Zone $testZone1 -ChangeRequest $copyChange
         $allChanges = Get-GcdChange -DnsProject $project -Zone $testZone1
@@ -118,18 +118,18 @@ Describe "Add-GcdChange" {
         $newChange.Kind | Should Match $changeKind
     }
 
-    # Make a new change for testing by adding an A-type record to test zone 1
+    # Make a new change for testing by adding a TXT-type record to test zone 1
     gcloud dns record-sets transaction start --zone=$testZone1 --project=$project
-    gcloud dns record-sets transaction add --name=$dnsName1_1 --type=A --ttl=$ttl1 $rrdata1 --zone=$testZone1 --project=$project
+    gcloud dns record-sets transaction add --name=$dnsName1 --type=TXT --ttl=$ttl1 $rrdataTXT1 --zone=$testZone1 --project=$project
     gcloud dns record-sets transaction execute --zone=$testZone1 --project=$project
 
     # Create ResourceRecordSets that can be added and removed
-    $rmRrset1 = New-GcdResourceRecordSet -Name $dnsName1 -Rrdata $rrdata1 -Type "A" -Ttl $ttl1
-    $rmRrset2 = New-GcdResourceRecordSet -Name $dnsName1_1 -Rrdata $rrdata1 -Type "A" -Ttl $ttl1
-    $addRrset1 = New-GcdResourceRecordSet -Name $dnsName1_2 -Rrdata $rrdata1 -Type "A" -Ttl $ttl1
-    $addRrset2 = New-GcdResourceRecordSet -Name $dnsName1_3 -Rrdata $rrdata1 -Type "A" -Ttl $ttl1
+    $rmRrset1 = $testRrsetCNAME
+    $rmRrset2 = $testRrsetTXT1
+    $addRrset1 = $testRrsetTXT2
+    $addRrset2 = $testRrsetAAAA
 
-    It "should work and add 1 Change with Add/Remove arguments (2 A-type record additions, 2 A-type record deletions)" {
+    It "should work and add 1 Change with Add/Remove arguments: 2 record additions (TXT, AAAA), 2 record deletions (CNAME, TXT)" {
         $initChanges = Get-GcdChange -DnsProject $project -Zone $testZone1
         
         $newChange = Add-GcdChange -DnsProject $project -Zone $testZone1 -Add $addRrset1,$addRrset2 -Remove $rmRrset1,$rmRrset2
@@ -141,8 +141,10 @@ Describe "Add-GcdChange" {
         $newChange.GetType().FullName | Should Match $changeType
         $newChange.Additions.Count | Should Be 2
         $newChange.Deletions.Count | Should Be 2
-        (($newChange.Additions.Name -contains $dnsName1_2) -and ($newChange.Additions.Name -contains $dnsName1_3)) | Should Match $true
-        (($newChange.Deletions.Name -contains $dnsName1) -and ($newChange.Deletions.Name -contains $dnsName1_1)) | Should Match $true
+        (($newChange.Additions.Name -contains $dnsName1) -and ($newChange.Additions.Name -contains $dnsName1_1)) | Should Match $true
+        (($newChange.Additions.Type -contains "TXT") -and ($newChange.Additions.Type -contains "AAAA")) | Should Match $true
+        (($newChange.Deletions.Name -contains $dnsName1_2) -and ($newChange.Deletions.Name -contains $dnsName1)) | Should Match $true
+        (($newChange.Deletions.Type -contains "CNAME") -and ($newChange.Deletions.Type -contains "TXT")) | Should Match $true
         $newChange.Kind | Should Match $changeKind
     }
 
