@@ -8,9 +8,9 @@ Get-GceImage | Remove-GceImage
 $r = Get-Random
 
 $diskName = "test-image-disk-$r"
-$disk = New-GceDisk -DiskName $diskName -SizeGb 1
 
 Describe "Add-GceImage" {
+    $disk = New-GceDisk -DiskName $diskName -SizeGb 1
     $imageName = "test-add-image-$r"
 
     It "should fail for wrong project" {
@@ -18,15 +18,16 @@ Describe "Add-GceImage" {
     }
 
     It "should fail for bad disk" {
+        $baseUrl = "https://www.googleapis.com/compute/v1/"
+        $diskPath = "projects/gcloud-powershell-testing/zones/us-central1-a/disks/not-a-disk"
         $badDisk = @{
-            "SelfLink" ="https://www.googleapis.com/compute/v1/projects/gcloud-powershell-testing/zones/us-central1-a/disks/not-a-disk";
+            "SelfLink" ="$baseUrl$diskPath";
             "Name" = $diskName
         }
         { Add-GceImage $badDisk -Name $imageName } | Should Throw 404
     }
 
     Context "add successes" {
-        
         AfterEach {
             Get-GceImage | Remove-GceImage
         }
@@ -35,6 +36,7 @@ Describe "Add-GceImage" {
             $image = Add-GceImage $disk -Name $imageName -Description "for testing" -Family "test-family"
             $image.Name | Should Be $imageName
             $image.Description | Should Be "for testing"
+            # Make sure the image source disk url is the same as the disk's url pointing to itself.
             $image.SourceDisk | Should Be $disk.SelfLink
             $image.Family | Should Be "test-family"
         }
@@ -45,9 +47,12 @@ Describe "Add-GceImage" {
             $image.SourceDisk | Should Be $disk.SelfLink
         }
     }
+
+    Remove-GceDisk $diskName
 }
 
 Describe "Get-GceImage" {
+    $disk = New-GceDisk -DiskName $diskName -SizeGb 1
     $imageName1 = "test-get-image1-$r"
     $imageName2 = "test-get-image2-$r"
     $familyName = "test-family-$r"
@@ -60,7 +65,7 @@ Describe "Get-GceImage" {
         { Get-GceImage $imageName1 } | Should Throw 404
     }
 
-    It "should get none" {
+    It "should work when no images exist" {
         $images = Get-GceImage
         $images | Should BeNullOrEmpty
     }
@@ -68,7 +73,7 @@ Describe "Get-GceImage" {
     $disk | Add-GceImage -Name $imageName1
     $disk | Add-GceImage -Name $imageName2 -Family $familyName
 
-    It "should get both" {
+    It "should get all project images" {
         $images = Get-GceImage
         ($images | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Image
         $images.Count | Should Be 2
@@ -92,25 +97,19 @@ Describe "Get-GceImage" {
     }
 
     It "should get by family" {
-        $image = Get-GceImage $familyName -Family
+        $image = Get-GceImage -Family $familyName
         ($image | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Image
         $image.Count | Should Be 1
         $image.Name | Should Be $imageName2
         $image.SourceDisk | Should Match $diskName
     }
 
-    It "should get by name with pipeline" {
-        $image = $familyName | Get-GceImage -Family
-        ($image | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Image
-        $image.Count | Should Be 1
-        $image.Name | Should Be $imageName2
-        $image.SourceDisk | Should Match $diskName
-    }
-
+    Remove-GceDisk $diskName
     Get-GceImage | Remove-GceImage
 }
 
 Describe "Disable-GceImage" {
+    $disk = New-GceDisk -DiskName $diskName -SizeGb 1
     $imageName1 = "test-add-image1-$r"
     $imageName2 = "test-add-image2-$r"
 
@@ -145,10 +144,12 @@ Describe "Disable-GceImage" {
         $deprecation.Replacement | Should Be $image2.SelfLink
     }
 
+    Remove-GceDisk $diskName
     Get-GceImage | Remove-GceImage
 }
 
 Describe "Remove-GceImage" {
+    $disk = New-GceDisk -DiskName $diskName -SizeGb 1
     $imageName = "test-remove-image-$r"
 
     It "should fail for wrong project" {
@@ -185,8 +186,8 @@ Describe "Remove-GceImage" {
             { Get-GceImage $imageName } | Should Throw 404
         }
     }
-}
 
-Remove-GceDisk $diskName
+    Remove-GceDisk $diskName
+}
 
 Reset-GCloudConfig $oldActiveConfig $configName
