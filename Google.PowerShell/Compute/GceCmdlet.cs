@@ -176,6 +176,11 @@ namespace Google.PowerShell.ComputeEngine
             public Operation Operation { get; }
             public Action Callback { get; }
 
+            /// <summary>
+            /// The action executed when the operation is complete.
+            /// </summary>
+            public Action Callback { get; }
+
             public LocalOperation(string project, string local, Operation operation)
                 : this(project, local, operation, () => { }) { }
 
@@ -196,6 +201,9 @@ namespace Google.PowerShell.ComputeEngine
             public string Project { get; }
             public Operation Operation { get; }
 
+            /// <summary>
+            /// The action executed when the operation is complete.
+            /// </summary>
             public Action Callback { get; }
 
             public GlobalOperation(string project, Operation operation)

@@ -70,10 +70,29 @@ namespace Google.PowerShell.Sql
             }
             else
             {
-                OperationsResource.ListRequest request = Service.Operations.List(Project, Instance);
-                OperationsListResponse result = request.Execute();
-                WriteObject(result.Items, true);
+                IEnumerable<Operation> results = GetAllOperations();
+                WriteObject(results, true);
             }
+        }
+
+        private IEnumerable<Operation> GetAllOperations()
+        {
+            OperationsResource.ListRequest request = Service.Operations.List(Project, Instance);
+            do
+            {
+                OperationsListResponse aggList = request.Execute();
+                IList<Operation> operations = aggList.Items;
+                if (operations == null)
+                {
+                    yield break;
+                }
+                foreach (Operation operation in operations)
+                {
+                    yield return operation;
+                }
+                request.PageToken = aggList.NextPageToken;
+            }
+            while (request.PageToken != null);
         }
     }
 }

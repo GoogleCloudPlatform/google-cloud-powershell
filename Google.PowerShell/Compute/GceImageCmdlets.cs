@@ -9,10 +9,11 @@ namespace Google.PowerShell.ComputeEngine
 {
     /// <summary>
     /// <para type="synopsis">
-    /// Gets information about Google Compute Engine images.
+    /// Gets information about Google Compute Engine disk images.
     /// </para>
     /// <para type="description">
-    /// Gets information about Google Compute Engine images.
+    /// Gets information about Google Compute Engine disk images. These images can be used to as the inital
+    /// state of a disk, whether created manually, as part of a new instance, or from an instance tempalte.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceImage", DefaultParameterSetName = ParameterSetNames.OfProject)]
@@ -27,22 +28,20 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The name of either the image to get, or the image family to get the latest of.
+        /// The name of the image to get. e.g. "windows-server-2012-r2-dc-v20160623".
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
-            Position = 0, ValueFromPipeline = true)]
-        [Parameter(ParameterSetName = ParameterSetNames.ByFamily, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         public string Name { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// When set, gets the latest image of a family.
+        /// The name of the image family to get the latest image of. e.g. "windows-2012-r2".
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByFamily, Mandatory = true)]
-        public SwitchParameter Family { get; set; }
+        public string Family { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -65,7 +64,7 @@ namespace Google.PowerShell.ComputeEngine
                     WriteObject(Service.Images.Get(Project, Name).Execute());
                     break;
                 case ParameterSetNames.ByFamily:
-                    WriteObject(Service.Images.GetFromFamily(Project, Name).Execute());
+                    WriteObject(Service.Images.GetFromFamily(Project, Family).Execute());
                     break;
                 default:
                     throw UnknownParameterSetException;
@@ -153,16 +152,16 @@ namespace Google.PowerShell.ComputeEngine
                 Description = Description ?? SourceDisk.Description,
                 Family = Family
             };
-            Operation operation = Service.Images.Insert(body, Project).Execute();
-            AddGlobalOperation(Project, operation, WriteImageCallback(Project, body.Name));
-        }
 
-        private Action WriteImageCallback(string project, string name)
-        {
-            return () =>
+            Operation operation = Service.Images.Insert(body, Project).Execute();
+
+            string project = Project;
+            string name = body.Name;
+
+            AddGlobalOperation(Project, operation, () =>
             {
                 WriteObject(Service.Images.Get(project, name).Execute());
-            };
+            });
         }
     }
 
@@ -380,7 +379,10 @@ namespace Google.PowerShell.ComputeEngine
             };
 
             Operation operation = Service.Images.Deprecate(body, project, name).Execute();
-            AddGlobalOperation(project, operation, WriteImageCallback(project, name));
+            AddGlobalOperation(project, operation, () =>
+            {
+                WriteObject(Service.Images.Get(project, name).Execute());
+            });
         }
 
         private string GetReplacementUrl()
@@ -401,14 +403,6 @@ namespace Google.PowerShell.ComputeEngine
             {
                 return null;
             }
-        }
-
-        private Action WriteImageCallback(string project, string name)
-        {
-            return () =>
-            {
-                WriteObject(Service.Images.Get(project, name).Execute());
-            };
         }
     }
 }
