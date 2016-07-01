@@ -91,27 +91,11 @@ Describe "New-GcdResourceRecordSet" {
         $rrset.Type | Should Match "AAAA"
     }
 
-    It "should work and create a new ResourceRecordSet with the specified properties and custom ttl (CNAME type record)" {
-        $rrset = New-GcdResourceRecordSet -Name $dnsName1_2 -Rrdata $rrdataCNAME1_2 -Type "CNAME" -Ttl $ttl1
-        $rrset.Count | Should Be 1
+    It "should work and create ResourceRecordSets of other types (CNAME and TXT)" {
+        $rrsetCNAME = New-GcdResourceRecordSet -Name $dnsName1_2 -Rrdata $rrdataCNAME1_2 -Type "CNAME" -Ttl $ttl1
+        $rrsetTXT = New-GcdResourceRecordSet -Name $dnsName1 -Rrdata $rrdataTXT1 -Type "TXT" -Ttl $ttl1
 
-        $rrset.GetType().FullName | Should Match $rrsetType
-        $rrset.Kind | Should Match $rrsetKind
-        $rrset.Name | Should Match $dnsName1_2
-        $rrset.Rrdatas | Should Match $rrdataCNAME1_2
-        $rrset.Ttl | Should Match $ttl1
-        $rrset.Type | Should Match "CNAME"
-    }
-
-    It "should work and create a new ResourceRecordSet with the specified properties and custom ttl (TXT type record)" {
-        $rrset = New-GcdResourceRecordSet -Name $dnsName1 -Rrdata $rrdataTXT1 -Type "TXT" -Ttl $ttl1
-        $rrset.Count | Should Be 1
-
-        $rrset.GetType().FullName | Should Match $rrsetType
-        $rrset.Kind | Should Match $rrsetKind
-        $rrset.Name | Should Match $dnsName1
-        $rrset.Rrdatas | Should Match $rrdataTXT1
-        $rrset.Ttl | Should Match $ttl1
-        $rrset.Type | Should Match "TXT"
+        $rrsetCNAME.Type | Should Match "CNAME"
+        $rrsetTXT.Type | Should Match "TXT"
     }
 }

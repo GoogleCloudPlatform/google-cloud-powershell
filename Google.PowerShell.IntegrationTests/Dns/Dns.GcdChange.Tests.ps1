@@ -109,7 +109,7 @@ Describe "Add-GcdChange" {
         $newChange = Add-GcdChange -DnsProject $project -Zone $testZone1 -ChangeRequest $copyChange
         $allChanges = Get-GcdChange -DnsProject $project -Zone $testZone1
 
-        Compare-Object $newChange ($allChanges[$allChanges.Length - 1]) | Should Match $null
+        Compare-Object $newChange $allChanges[0] -Property Additions,Deletions,Id,Kind,StartTime | Should Match $null
         $allChanges.Length | Should Be ($initChanges.Length + 1)
 
         $newChange.GetType().FullName | Should Match $changeType
@@ -129,23 +129,24 @@ Describe "Add-GcdChange" {
     $addRrset1 = $testRrsetTXT2
     $addRrset2 = $testRrsetAAAA
 
-    It "should work and add 1 Change with Add/Remove arguments: 2 record additions (TXT, AAAA), 2 record deletions (CNAME, TXT)" {
+    It "should support Add/Remove arguments in same call" {
         $initChanges = Get-GcdChange -DnsProject $project -Zone $testZone1
         
         $newChange = Add-GcdChange -DnsProject $project -Zone $testZone1 -Add $addRrset1,$addRrset2 -Remove $rmRrset1,$rmRrset2
         $allChanges = Get-GcdChange -DnsProject $project -Zone $testZone1
 
-        Compare-Object $newChange ($allChanges[$allChanges.Length - 1]) | Should Match $null
+        Compare-Object $newChange $allChanges[0] -Property Additions,Deletions,Id,Kind,StartTime | Should Match $null
         $allChanges.Length | Should Be ($initChanges.Length + 1)
 
         $newChange.GetType().FullName | Should Match $changeType
         $newChange.Additions.Count | Should Be 2
         $newChange.Deletions.Count | Should Be 2
-        (($newChange.Additions.Name -contains $dnsName1) -and ($newChange.Additions.Name -contains $dnsName1_1)) | Should Match $true
-        (($newChange.Additions.Type -contains "TXT") -and ($newChange.Additions.Type -contains "AAAA")) | Should Match $true
-        (($newChange.Deletions.Name -contains $dnsName1_2) -and ($newChange.Deletions.Name -contains $dnsName1)) | Should Match $true
-        (($newChange.Deletions.Type -contains "CNAME") -and ($newChange.Deletions.Type -contains "TXT")) | Should Match $true
         $newChange.Kind | Should Match $changeKind
+
+        Compare-Object ($newChange.Deletions | Where-Object {$_.Type -eq "CNAME"}) $rmRrset1 -Property Kind,Name,Rrdatas,Ttl,Type | Should Match $null
+        Compare-Object ($newChange.Deletions | Where-Object {$_.Type -eq "TXT"}) $rmRrset2 -Property Kind,Name,Rrdatas,Ttl,Type | Should Match $null
+        Compare-Object ($newChange.Additions | Where-Object {$_.Type -eq "TXT"}) $addRrset1 -Property Kind,Name,Rrdatas,Ttl,Type | Should Match $null
+        Compare-Object ($newChange.Additions | Where-Object {$_.Type -eq "AAAA"}) $addRrset2 -Property Kind,Name,Rrdatas,Ttl,Type | Should Match $null
     }
 
     # Delete the previously added records to empty the ManagedZones
