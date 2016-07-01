@@ -9,10 +9,10 @@ namespace Google.PowerShell.ComputeEngine
 {
     /// <summary>
     /// <para type="synopsis">
-    /// Gets information about google compute engine images.
+    /// Gets information about Google Compute Engine images.
     /// </para>
     /// <para type="description">
-    /// Gets information about google compute engine images.
+    /// Gets information about Google Compute Engine images.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceImage", DefaultParameterSetName = ParameterSetNames.OfProject)]
@@ -92,10 +92,10 @@ namespace Google.PowerShell.ComputeEngine
 
     /// <summary>
     /// <para type="synopsis">
-    /// Creates a google compute engine image.
+    /// Creates a Google Compute Engine image.
     /// </para>
     /// <para type="description">
-    /// Creates a google compute engine image from the given disk.
+    /// Creates a Google Compute Engine image from the given disk.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceImage")]
@@ -168,10 +168,10 @@ namespace Google.PowerShell.ComputeEngine
 
     /// <summary>
     /// <para type="synopsis">
-    /// Removes a google compute engine disk image.
+    /// Removes a Google Compute Engine disk image.
     /// </para>
     /// <para type="description">
-    /// Removes a google compute engine disk image.
+    /// Removes a Google Compute Engine disk image.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceImage", SupportsShouldProcess = true,

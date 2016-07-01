@@ -116,10 +116,10 @@ namespace Google.PowerShell.Compute
 
     /// <summary>
     /// <para type="synopsis">
-    /// Gets information about a google compute engine disk snapshots.
+    /// Gets information about a Google Compute Engine disk snapshots.
     /// </para>
     /// <para type="description">
-    /// Gets information about a google compute engine disk snapshots.
+    /// Gets information about a Google Compute Engine disk snapshots.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceSnapshot", DefaultParameterSetName = ParameterSetNames.OfProject)]
@@ -184,10 +184,10 @@ namespace Google.PowerShell.Compute
 
     /// <summary>
     /// <para type="synopsis">
-    /// Deletes google compute engine disk snapshots.
+    /// Deletes Google Compute Engine disk snapshots.
     /// </para>
     /// <para type="description">
-    /// Deletes google compute engine disk snapshots.
+    /// Deletes Google Compute Engine disk snapshots.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceSnapshot", SupportsShouldProcess = true)]
