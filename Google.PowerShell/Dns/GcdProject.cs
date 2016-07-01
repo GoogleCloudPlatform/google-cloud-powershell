@@ -10,17 +10,17 @@ namespace Google.PowerShell.Dns
 {
     /// <summary>
     /// <para type="synopsis">
-    /// Fetch the representation of an existing project.
+    /// Fetch the representation of an existing DnsProject.
     /// </para>
     /// <para type="description">
-    /// Returns the Project resource object.
+    /// Returns the DnsProject resource object.
     /// </para>
     /// <para type="description">
-    /// If a project is specified, will instead return the representation of that project. 
+    /// If a DnsProject is specified, will instead return the representation of that project. 
     /// </para>
     /// <example>
-    ///   <para>Get the representation of the project "testing"</para>
-    ///   <para><code>Get-GcdProject -Project "testing" </code></para>
+    ///   <para>Get the representation of the DnsProject "testing"</para>
+    ///   <para><code>Get-GcdProject -DnsProject "testing" </code></para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcdProject")]
@@ -28,18 +28,18 @@ namespace Google.PowerShell.Dns
     {
         /// <summary>
         /// <para type="description">
-        /// Get the project to return the representation of.
+        /// Get the DnsProject to return the representation of.
         /// </para>
         /// </summary>
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; set; }
+        public string DnsProject { get; set; }
 
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
 
-            ProjectsResource.GetRequest projectGetRequest = Service.Projects.Get(Project);
+            ProjectsResource.GetRequest projectGetRequest = Service.Projects.Get(DnsProject);
             Project projectResponse = projectGetRequest.Execute();
             WriteObject(projectResponse);
         }

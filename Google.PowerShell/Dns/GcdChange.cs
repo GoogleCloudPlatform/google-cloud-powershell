@@ -68,8 +68,8 @@ namespace Google.PowerShell.Dns
             if (!String.IsNullOrEmpty(ChangeId))
             {
                 ChangesResource.GetRequest changeGetRequest = Service.Changes.Get(DnsProject, Zone, ChangeId);
-                Change change = changeGetRequest.Execute();
-                WriteObject(change);
+                Change changeResponse = changeGetRequest.Execute();
+                WriteObject(changeResponse);
             }
             else
             {
@@ -197,8 +197,8 @@ namespace Google.PowerShell.Dns
             }
 
             ChangesResource.CreateRequest changeCreateRequest = Service.Changes.Create(changeContent, DnsProject, Zone);
-            Change change = changeCreateRequest.Execute();
-            WriteObject(change);
+            Change changeResponse = changeCreateRequest.Execute();
+            WriteObject(changeResponse);
         }
     }
 }

@@ -1,54 +1,32 @@
-﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
-Install-GcloudCmdlets
-
-$project = "gcloud-powershell-testing"
-$changeType = "Google.Apis.Dns.v1.Data.Change"
-
-$testZone1 = "test1"
-$testZone2 = "test2"
-$dnsName1 = "gcloudexample1.com."
-$dnsName1_1 = "a.gcloudexample1.com."
-$dnsName1_2 = "b.gcloudexample1.com."
-$dnsName1_3 = "c.gcloudexample1.com."
-$rrdata1 = "7.5.7.8"
-$ttl1 = 300
-
-$Err_NeedChangeContent = "Must specify at least 1 non-null, non-empty value for Add or Remove."
+﻿. $PSScriptRoot\..\Dns\GcdCmdlets.ps1
 
 Describe "Get-GcdChange" {
+    BeforeAll {
+        Remove-AllManagedZone($project)
+    }
+    AfterAll {
+        Remove-AllManagedZone($project)
+    }
 
     It "should fail to return changes of non-existent project" {
-        { Get-GcdChange -DnsProject "project-no-exist" -Zone "zone-no-exist"} | Should Throw "400"
+        { Get-GcdChange -DnsProject $nonExistProject -Zone $testZone1 } | Should Throw "400"
     }
 
     It "should give access errors as appropriate" {
         # Don't know who created the "asdf" project.
-        { Get-GcdChange -DnsProject "asdf" -Zone "zone1"} | Should Throw "403"
+        { Get-GcdChange -DnsProject $accessErrProject -Zone $testZone1 } | Should Throw "403"
     }
 
-    # Delete all existing zones (using Get-GcdManagedZone cmdlet)
-    $preExistingZones = Get-GcdManagedZone -Project $project
-
-    ForEach ($zoneObject in $preExistingZones) {
-        gcloud dns managed-zones delete $zoneObject.Name --project=$project
-    }
-
-    It "should fail to return changes of non-existent managed zones of existing project" {
-        { Get-GcdChange -DnsProject $project -Zone "managedZone-no-exist" } | Should Throw "404"
+    It "should fail to return changes of non-existent ManagedZones of existing project" {
+        { Get-GcdChange -DnsProject $project -Zone $nonExistManagedZone } | Should Throw "404"
     }
 
     # Create zone for testing 
     gcloud dns managed-zones create --dns-name=$dnsName1 --description="testing zone, 1" $testZone1 --project=$project
     
-    # Make a new change for testing by adding an A-type record to the test zone
-    gcloud dns record-sets transaction start --zone=$testZone1 --project=$project
-    gcloud dns record-sets transaction add --name=$dnsName1 --type=A --ttl=$ttl1 $rrdata1 --zone=$testZone1 --project=$project
-    gcloud dns record-sets transaction execute --zone=$testZone1 --project=$project
-
-    # Delete the previously added record to empty the managed zone (remove all non-NS/SOA records) and allow zone deletion
-    gcloud dns record-sets transaction start --zone=$testZone1 --project=$project
-    gcloud dns record-sets transaction remove --name=$dnsName1 --type=A --ttl=$ttl1 $rrdata1 --zone=$testZone1 --project=$project
-    gcloud dns record-sets transaction execute --zone=$testZone1 --project=$project
+    # Make 2 new changes for testing by adding and immediately deleting an A-type record to the test zone
+    Add-GcdChange -DnsProject $project -Zone $testZone1 -Add $testRrset1
+    Add-GcdChange -DnsProject $project -Zone $testZone1 -Remove $testRrset1
 
     It "should work and retrieve 3 changes (including A-type record addition & deletion)" {
         $changes = Get-GcdChange -DnsProject $project -Zone $testZone1
@@ -75,29 +53,27 @@ Describe "Get-GcdChange" {
         $changes.Count | Should Be 1
         $changes.GetType().FullName | Should Match $changeType
         $changes.Id | Should Be 0
-        $changes.Kind | Should Match "dns#change"
+        $changes.Kind | Should Match $changeKind
         $changes.Status | Should Match "done"
         $changes.Additions.Name | Should Match $dnsName1
         $changes.Additions.Type -contains "A" | Should Match $false
         $changes.Deletions.Type -contains "A" | Should Match $false
     }
-
-    # Delete now-empty test zone 
-    gcloud dns managed-zones delete $testZone1 --project=$project
 }
 
 Describe "Add-GcdChange" {
-
-    # Delete all existing zones (using Get-GcdManagedZone cmdlet)
-    $preExistingZones = Get-GcdManagedZone -Project $project
-
-    ForEach ($zoneObject in $preExistingZones) {
-        gcloud dns managed-zones delete $zoneObject.Name --project=$project
+    BeforeAll {
+        Remove-FileIfExists($transactionFile)
+        Remove-AllManagedZone($project)
+    }
+    AfterAll {
+       Remove-FileIfExists($transactionFile)
+        Remove-AllManagedZone($project)
     }
 
     # Create 2 zones for testing
-    gcloud dns managed-zones create --dns-name=$dnsName1 --description="testing zone, 1" $testZone1 --project=$project
-    gcloud dns managed-zones create --dns-name=$dnsName1 --description="testing zone, 1" $testZone2 --project=$project
+    gcloud dns managed-zones create --dns-name=$dnsName1 --description=$testDescrip1 $testZone1 --project=$project
+    gcloud dns managed-zones create --dns-name=$dnsName1 --description=$testDescrip2 $testZone2 --project=$project
     
     # Make a new change for testing by adding an A-type record to test zone 2
     gcloud dns record-sets transaction start --zone=$testZone2 --project=$project
@@ -110,22 +86,22 @@ Describe "Add-GcdChange" {
     $copyChange.Deletions = $null
 
     It "should fail to add a Change to a non-existent project" {
-        { Add-GcdChange -DnsProject "project-no-exist" -Zone "zone-no-exist" -ChangeRequest $copyChange} | Should Throw "400"
+        { Add-GcdChange -DnsProject $nonExistProject -Zone $testZone1 -ChangeRequest $copyChange } | Should Throw "400"
     }
 
     It "should give access errors as appropriate" {
         # Don't know who created the "asdf" project.
-        { Add-GcdChange -DnsProject "asdf" -Zone "zone1" -ChangeRequest $copyChange} | Should Throw "403"
+        { Add-GcdChange -DnsProject $accessErrProject -Zone $testZone1 -ChangeRequest $copyChange } | Should Throw "403"
     }
 
     It "should fail to add a Change to a non-existent ManagedZone of an existing project" {
-        { Add-GcdChange -DnsProject $project -Zone "managedZone-no-exist" -ChangeRequest $copyChange} | Should Throw "404"
+        { Add-GcdChange -DnsProject $project -Zone $nonExistManagedZone -ChangeRequest $copyChange } | Should Throw "404"
     }
 
     It "should fail to add a Change with only null/empty values for Add/Remove" {
-        { Add-GcdChange -DnsProject $project -Zone $testZone1 -Add $null -Remove $null} | Should Throw $Err_NeedChangeContent
-        { Add-GcdChange -DnsProject $project -Zone $testZone1 -Add $null -Remove @()} | Should Throw $Err_NeedChangeContent
-        { Add-GcdChange -DnsProject $project -Zone $testZone1 -Add @() -Remove @()} | Should Throw $Err_NeedChangeContent
+        { Add-GcdChange -DnsProject $project -Zone $testZone1 -Add $null -Remove $null } | Should Throw $Err_NeedChangeContent
+        { Add-GcdChange -DnsProject $project -Zone $testZone1 -Add $null -Remove @() } | Should Throw $Err_NeedChangeContent
+        { Add-GcdChange -DnsProject $project -Zone $testZone1 -Add @() -Remove @() } | Should Throw $Err_NeedChangeContent
     }
 
     It "should work and add 1 Change from Change Request (another A-type record addition)" {
@@ -139,7 +115,7 @@ Describe "Add-GcdChange" {
         $newChange.GetType().FullName | Should Match $changeType
         $newChange.Additions | Should Match $copyChange.Additions
         $newChange.Deletions | Should Match $copyChange.Deletions
-        $newChange.Kind | Should Match "dns#change"
+        $newChange.Kind | Should Match $changeKind
     }
 
     # Make a new change for testing by adding an A-type record to test zone 1
@@ -147,7 +123,7 @@ Describe "Add-GcdChange" {
     gcloud dns record-sets transaction add --name=$dnsName1_1 --type=A --ttl=$ttl1 $rrdata1 --zone=$testZone1 --project=$project
     gcloud dns record-sets transaction execute --zone=$testZone1 --project=$project
 
-    # Create ResourceRecordSets that can be added and removed.
+    # Create ResourceRecordSets that can be added and removed
     $rmRrset1 = New-GcdResourceRecordSet -Name $dnsName1 -Rrdata $rrdata1 -Type "A" -Ttl $ttl1
     $rmRrset2 = New-GcdResourceRecordSet -Name $dnsName1_1 -Rrdata $rrdata1 -Type "A" -Ttl $ttl1
     $addRrset1 = New-GcdResourceRecordSet -Name $dnsName1_2 -Rrdata $rrdata1 -Type "A" -Ttl $ttl1
@@ -167,19 +143,14 @@ Describe "Add-GcdChange" {
         $newChange.Deletions.Count | Should Be 2
         (($newChange.Additions.Name -contains $dnsName1_2) -and ($newChange.Additions.Name -contains $dnsName1_3)) | Should Match $true
         (($newChange.Deletions.Name -contains $dnsName1) -and ($newChange.Deletions.Name -contains $dnsName1_1)) | Should Match $true
-        $newChange.Kind | Should Match "dns#change"
+        $newChange.Kind | Should Match $changeKind
     }
 
-    # Delete the previously added records to empty the managed zones and allow zone deletion
+    # Delete the previously added records to empty the ManagedZones
     Add-GcdChange -DnsProject $project -Zone $testZone1 -Remove $addRrset1,$addRrset2
     Add-GcdChange -DnsProject $project -Zone $testZone2 -Remove $copyChange.Additions
 
     It "should fail to add Change that tries to remove a non-existent ResourceRecord" {
         { Add-GcdChange -DnsProject $project -Zone $testZone1 -Remove $rmRrset1 } | Should Throw "404"
     }
-
-    # Delete now-empty test zones 
-    gcloud dns managed-zones delete $testZone1 --project=$project
-    gcloud dns managed-zones delete $testZone2 --project=$project
 }
-
