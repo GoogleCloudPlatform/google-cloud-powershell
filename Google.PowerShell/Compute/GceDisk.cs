@@ -133,9 +133,16 @@ namespace Google.PowerShell.ComputeEngine
     /// Creates a new Google Compute Engine disk object.
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.New, "GceDisk")]
-    public class NewGceDiskCmdlet : GceCmdlet
+    [Cmdlet(VerbsCommon.New, "GceDisk", DefaultParameterSetName = ParameterSetNames.EmptyDisk)]
+    public class NewGceDiskCmdlet : GceConcurrentCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string EmptyDisk = "EmptyDisk";
+            public const string FromImage = "FromImage";
+            public const string FromSnapshot = "FromSnapshot";
+        }
+
         /// <summary>
         /// <para type="description">
         /// The project to associate the new Compute Engine disk.
@@ -159,7 +166,7 @@ namespace Google.PowerShell.ComputeEngine
         /// Name of the disk.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true)]
+        [Parameter(Mandatory = true, Position = 0)]
         public string DiskName { get; set; }
 
         /// <summary>
@@ -187,20 +194,29 @@ namespace Google.PowerShell.ComputeEngine
         public string DiskType { get; set; }
 
         /// <summary>
-        /// <paratype="description">
+        /// <para type="description">
         /// Source image to apply to the disk.
-        /// </paratype>
-        /// <paratype="description">
-        /// Or you can provide an image from a publicly-available project. For example, to use a
-        /// Windows Serve image use "projects/windows-cloud/global/images/family/windows-2012-r2".
-        /// For more information type `gcloud compute images list`.
-        /// </paratype>
+        /// </para>
+        /// <para type="description">
+        /// Use Get-GceImage to get the image to apply. For instance, to get the latest windows instance, use
+        /// <code>Get-GceImage -Family "windows-2012-r2" -Project "windows-cloud"</code>.
+        /// </para>
         /// </summary>
-        [Parameter]
-        public string SourceImage { get; set; }
+        [Parameter(ParameterSetName = ParameterSetNames.FromImage, Mandatory = true,
+            Position = 1, ValueFromPipeline = true)]
+        public Image Image { get; set; }
 
-        // TODO(chrsmith): Provide a way to create new disks from an existing disk snapshot.
-        // A prereq for this is having PowerShell support for snapshots, etc.
+        /// <summary>
+        /// <para type="description">
+        /// Source snapshot to apply to the disk.
+        /// </para>
+        /// <para type="description">
+        /// Use Get-GceSnapshot to get a previously made backup snapshot to apply to this disk.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.FromSnapshot, Mandatory = true,
+            Position = 1, ValueFromPipeline = true)]
+        public Snapshot Snapshot { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -214,26 +230,28 @@ namespace Google.PowerShell.ComputeEngine
                 diskTypeResource = $"zones/{Zone}/diskTypes/{DiskType}";
             }
 
-            Disk newDisk = new Disk();
-            newDisk.Name = DiskName;
-            newDisk.Description = Description;
-            // Optional fields. OK if null.
-            newDisk.SizeGb = SizeGb;
-            newDisk.Type = diskTypeResource;
+            Disk newDisk = new Disk
+            {
+                Name = DiskName,
+                Type = diskTypeResource,
+                SourceSnapshot = Snapshot?.SelfLink,
+                SourceImage = Image?.SelfLink,
+                // Optional fields. OK if null.
+                Description = Description,
+                SizeGb = SizeGb
+            };
 
             DisksResource.InsertRequest insertReq = Service.Disks.Insert(newDisk, Project, Zone);
-            insertReq.SourceImage = SourceImage;
-            // TODO(chrsmith): Support creating disks based on existing snapshots. See
-            // comment above for more info.
 
             Operation op = insertReq.Execute();
-            WaitForZoneOperation(Project, Zone, op);
+            AddZoneOperation(Project, Zone, op, () =>
+            {
+                // Return the newly created disk.
+                DisksResource.GetRequest getReq = Service.Disks.Get(Project, Zone, DiskName);
+                Disk disk = getReq.Execute();
+                WriteObject(disk);
+            });
 
-            // Return the newly created disk.
-            DisksResource.GetRequest getReq = Service.Disks.Get(Project, Zone, DiskName);
-            Disk disk = getReq.Execute();
-
-            WriteObject(disk);
         }
     }
 
@@ -343,6 +361,11 @@ namespace Google.PowerShell.ComputeEngine
             ValidatePattern("[a-z]([-a-z0-9]*[a-z0-9])?")]
         public string DiskName { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The Disk object that describes the disk to remove
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         public Disk Object { get; set; }
@@ -372,11 +395,6 @@ namespace Google.PowerShell.ComputeEngine
             {
                 return;
             }
-
-            // First try to get the disk, this way the cmdlet fails with a 404 if the
-            // disk does not exist. (Otherwise the delete operation would succeed when
-            // trying to delete a non-existant disk.)
-            Service.Disks.Get(project, zone, name);
 
             DisksResource.DeleteRequest deleteReq = Service.Disks.Delete(project, zone, name);
 

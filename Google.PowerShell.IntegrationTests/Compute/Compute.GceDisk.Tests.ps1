@@ -57,36 +57,71 @@ Describe "Get-GceDisk" {
 }
 
 Describe "New-GceDisk" {
-    It "should work" {
-        $r = Get-Random
+    $r = Get-Random
+    $diskName = "test-disk-$r"
+    $image = Get-GceImage -Family "windows-2012-r2" "windows-cloud"
+
+    It "should work for empty disk" {
         $disk = New-GceDisk `
             -Project $project `
-            -DiskName "test-disk-$r" `
+            -DiskName $diskName `
             -Description "$r" `
             -SizeGb 215 `
             -DiskType "pd-ssd" `
-            -SourceImage "projects/windows-cloud/global/images/family/windows-2012-r2" `
             -Zone "us-central1-c"
 
         # Confirmed the return object sets all the expected fields.
-        $disk.Name | Should MatchExactly "test-disk-$r"
+        $disk.Name | Should MatchExactly $diskName
         $disk.Description | Should MatchExactly 
         $disk.SizeGb | Should BeExactly 215
         $disk.Type | Should Match "pd-ssd"
         $disk.Zone | Should Match "us-central1-c"
 
         # Confirm the values were actually set, too.
-        $disk = Get-GceDisk -Project $project -DiskName "test-disk-$r"
+        $getdisk = Get-GceDisk -Project $project -DiskName $diskName
+        (Compare-Object $disk $getdisk) | Should BeNullOrEmpty
 
-        $disk.Name | Should MatchExactly "test-disk-$r"
-        $disk.Description | Should MatchExactly 
-        $disk.SizeGb | Should BeExactly 215
-        $disk.Type | Should Match "pd-ssd"
-        $disk.Zone | Should Match "us-central1-c"
+        Remove-GceDisk $disk
+    }
 
-        # TODO(chrsmith): $disk.Zone is a URI, which will fail when the request is
-        # made. This is a wart on the API, since it should accept the URI form of zones.
-        Remove-GceDisk -Project $project -Zone "us-central1-c" -DiskName $disk.Name
+    It "should work for image" {
+        $disk = New-GceDisk $diskName $image
+        $disk.Name | Should MatchExactly $diskName
+        $disk.SourceImage | Should Match "windows-cloud"
+
+        Remove-GceDisk $disk
+    }
+
+    It "should work for image with pipeline" {
+        $disk = $image | New-GceDisk $diskName
+        $disk.Name | Should MatchExactly $diskName
+        $disk.SourceImage | Should Match "windows-cloud"
+
+        Remove-GceDisk $disk
+    }
+
+    Context "with snapshot" {
+        $snapshotSource = New-GceDisk "snapshot-source-$r" -SizeGb 1
+        $snapshot = $snapshotSource | Add-GceSnapshot -Name "test-snapshot-disk-source-$r"
+
+        It "should work for snapshot" {
+            $disk = New-GceDisk $diskName $snapshot
+            $disk.Name | Should MatchExactly $diskName
+            $disk.SourceSnapshot | Should Match $snapshot.Name
+
+            Remove-GceDisk $disk
+        }
+
+        It "should work for snapshot on pipeline" {
+            $disk = $snapshot | New-GceDisk $diskName
+            $disk.Name | Should MatchExactly $diskName
+            $disk.SourceSnapshot | Should Match $snapshot.Name
+
+            Remove-GceDisk $disk
+        }
+
+        Remove-GceDisk $snapshotSource
+        Remove-GceSnapshot $snapshot
     }
 
     It "should fail with invalid disk names" {
