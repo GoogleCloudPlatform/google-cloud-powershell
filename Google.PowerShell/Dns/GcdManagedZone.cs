@@ -148,14 +148,8 @@ namespace Google.PowerShell.Dns
                 zoneContent.DnsName = DnsName;
             }
 
-            if (String.IsNullOrEmpty(Description))
-            {
-                zoneContent.Description = "";
-            }
-            else
-            {
-                zoneContent.Description = Description;
-            }
+            zoneContent.Description = Description ?? "";
+      
 
             ManagedZonesResource.CreateRequest zoneCreateRequest = Service.ManagedZones.Create(zoneContent, DnsProject);
             ManagedZone newZone = zoneCreateRequest.Execute();

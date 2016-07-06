@@ -68,19 +68,6 @@ Describe "Add-GcdManagedZone" {
         { Add-GcdManagedZone -DnsProject $accessErrProject -Name $testZone1 -DnsName $dnsName1 } | Should Throw "403"
     }
 
-    It "should fail to create a new ManagedZone with an invalid name" {
-        { Add-GcdManagedZone -DnsProject $project -Name "1invalid-zone" -DnsName $dnsName1 } | Should Throw "400"
-    }
-
-    It "should fail to create a new ManagedZone with an invalid DNS name" {
-        { Add-GcdManagedZone -DnsProject $project -Name $testZone1 -DnsName "invalid-dns" } | Should Throw "400"
-    }
-
-    It "should fail to create a new ManagedZone with an invalid (too long) description" {
-        $longString = "*" * 1025
-        { Add-GcdManagedZone -DnsProject $project -Name $testZone1 -DnsName $dnsName1 -Description $longString } | Should Throw "400"
-    }
-
     It "should create and return 1 zone" {
         $newZone = Add-GcdManagedZone -DnsProject $project -Name $testZone1 -DnsName $dnsName1
         $newZone.GetType().FullName | Should Match $managedZoneType
@@ -94,10 +81,10 @@ Describe "Add-GcdManagedZone" {
         { Add-GcdManagedZone -DnsProject $project -Name $testZone1 -DnsName $dnsName1 } | Should Throw "409"
     }
 
-    # Create second zone for testing with dns name that lacks ending period (should be auto-added by cmdlet)
-    Add-GcdManagedZone -DnsProject $project -Name $testZone2 -DnsName $dnsName2 -Description $testDescrip2
-
     It "should work and have Get-GcdManagedZone retrieve the correct details of both created zones" {
+        # Create second zone for testing with dns name that lacks ending period (should be auto-added by cmdlet)
+        Add-GcdManagedZone -DnsProject $project -Name $testZone2 -DnsName $dnsName2 -Description $testDescrip2
+
         (Get-GcdManagedZone -DnsProject $project).Count | Should Be 2
 
         $zone1 = Get-GcdManagedZone -DnsProject $project -ManagedZone $testZone1
