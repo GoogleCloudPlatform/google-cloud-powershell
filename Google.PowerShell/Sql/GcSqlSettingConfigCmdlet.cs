@@ -228,15 +228,9 @@ namespace Google.PowerShell.Sql
                     Hour = MaintenanceWindowHour,
                 },
                 StorageAutoResize = StorageAutoResize,
+                DataDiskType = DiskType.ToString(),
+                DatabaseReplicationEnabled = DatabaseReplicationEnabled
             };
-            if (DiskType != null)
-            {
-                settings.DataDiskType = DiskType.ToString();
-            }
-            else 
-            {
-                settings.DatabaseReplicationEnabled = DatabaseReplicationEnabled;
-            }
             WriteObject(settings);
         }
     }
