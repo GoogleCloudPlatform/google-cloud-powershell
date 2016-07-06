@@ -21,6 +21,6 @@ Describe "Get-GcdQuota" {
         $quotaInfo.RrsetAdditionsPerChange -ge 50 | Should Be $true
         $quotaInfo.RrsetDeletionsPerChange -ge 50 | Should Be $true
         $quotaInfo.RrsetsPerManagedZone -ge 9000 | Should Be $true
-       $quotaInfo.TotalRrdataSizePerChange -ge 9000 | Should Be $true
+        $quotaInfo.TotalRrdataSizePerChange -ge 9000 | Should Be $true
     }
 }
