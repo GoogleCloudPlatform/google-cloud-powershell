@@ -11,7 +11,7 @@ Describe "Get-GcdQuota" {
         { Get-GcdQuota -DnsProject $accessErrProject } | Should Throw "403"
     }
 
-    It "should work and retrieve valid project information" {
+    It "should work and retrieve valid DNS quota information" {
         $quotaInfo = Get-GcdQuota -DnsProject $project
 
         $quotaInfo.GetType().FullName | Should Match $quotaType
