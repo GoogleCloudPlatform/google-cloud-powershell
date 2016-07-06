@@ -27,6 +27,7 @@ namespace Google.PowerShell.Sql
         {
             public const string GetSingle = "Single";
             public const string GetList = "List";
+            public const string GetListInstance = "List from Instance";
         }
 
         /// <summary>
@@ -36,6 +37,7 @@ namespace Google.PowerShell.Sql
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.GetSingle)]
         [Parameter(ParameterSetName = ParameterSetNames.GetList)]
+        [Parameter(ParameterSetName = ParameterSetNames.GetListInstance)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
@@ -56,19 +58,38 @@ namespace Google.PowerShell.Sql
         [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.GetSingle)]
         public string Sha1Fingerprint { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// An instance resource that you want to get the SSL certificates from.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.GetListInstance)]
+        public DatabaseInstance InstanceObject { get; set; }
+
         protected override void ProcessRecord()
         {
-            if (Sha1Fingerprint != null)
+            if (InstanceObject != null)
             {
-                SslCertsResource.GetRequest request = Service.SslCerts.Get(Project, Instance, Sha1Fingerprint);
-                SslCert result = request.Execute();
-                WriteObject(result);
-            }
-            else
-            {
+                string Project = InstanceObject.Project;
+                string Instance = InstanceObject.Name;
                 SslCertsResource.ListRequest request = Service.SslCerts.List(Project, Instance);
                 SslCertsListResponse result = request.Execute();
                 WriteObject(result.Items, true);
+            }
+            else
+            {
+                if (Sha1Fingerprint != null)
+                {
+                    SslCertsResource.GetRequest request = Service.SslCerts.Get(Project, Instance, Sha1Fingerprint);
+                    SslCert result = request.Execute();
+                    WriteObject(result);
+                }
+                else
+                {
+                    SslCertsResource.ListRequest request = Service.SslCerts.List(Project, Instance);
+                    SslCertsListResponse result = request.Execute();
+                    WriteObject(result.Items, true);
+                }
             }
         }
     }

@@ -3,6 +3,7 @@ Install-GcloudCmdlets
 $project, $_, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Describe "Get-GcSqlSslCert" {
+    # TODO: Add in reading from a file so that the singular get can be tested.
     # A note for this series of tests: 
     # Due to the fact the list functionality does not tell SSL certificate sha1fingerprints, all tests for 
     # if singular get is working have to use a premade SSL certificate. 
@@ -32,6 +33,12 @@ Describe "Get-GcSqlSslCert" {
         $cert = Get-GcSqlSslCert "test-db" "6c80d45f3bb0e22528fb5c9a0e3a83baee4331ab"
         $cert.commonName | Should Be "test-ssl"
         $cert.certSerialNumber | Should be "171810368"
+    }
+
+    It "should be able to take in an instance and get the information" {
+        $testInstance = Get-GcSqlInstance $instance
+        $certs = Get-GcSqlSslCert -InstanceObject $testInstance
+        $certs.Count | Should Be 1
     }
 
     Remove-Item "test$r.txt"
