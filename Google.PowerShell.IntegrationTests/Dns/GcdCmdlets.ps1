@@ -54,22 +54,11 @@ $Err_ProjectZonesNotDeleted = "All ManagedZones in the specified project have no
 # Define functions that will be used in testing
 
 # Force remove all existing ManagedZones, including non-empty ones
-# TODO(edatta): Simplify once Remove-GcdManagedZone cmdlet is done.
 function Remove-AllManagedZone($projectName) {
-    $preExistingZones = Get-GcdManagedZone -DnsProject $project
-
-    ForEach ($zoneObject in $preExistingZones) {
-        $zoneName = $zoneObject.Name
-
-        New-Item empty-file -Force
-        gcloud dns record-sets import --zone=$zoneName --delete-all-existing empty-file
-        Remove-Item empty-file -Force
-        gcloud dns managed-zones delete $zoneName --project=$project
-    }
+    Get-GcdManagedZone -DnsProject $project | Remove-GcdManagedZone -Force
 }
 
-function Remove-FileIfExists($fileName)
-{
+function Remove-FileIfExists($fileName) {
     if (Test-Path $fileName) {
         Remove-Item $fileName
     }

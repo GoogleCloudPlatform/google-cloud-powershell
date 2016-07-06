@@ -35,8 +35,7 @@ Describe "Get-GcdChange" {
 
         # The object type, Kind, Status, and names of Additions/Deletions should be the same for all changes
         ($changes | Get-Member).TypeName | Should Match $changeType
-        $changes.Kind | Should Match "dns#change"
-        $changes.Status | Should Match "done"
+        $changes.Kind | Should Match $changeKind
         $changes.Additions.Name | Should Match $dnsName1
         $changes.Deletions.Name | Should Match $dnsName1
 
@@ -54,7 +53,6 @@ Describe "Get-GcdChange" {
         $changes.GetType().FullName | Should Match $changeType
         $changes.Id | Should Be 0
         $changes.Kind | Should Match $changeKind
-        $changes.Status | Should Match "done"
         $changes.Additions.Name | Should Match $dnsName1
         $changes.Additions.Type -contains "A" | Should Match $false
         $changes.Deletions.Type -contains "A" | Should Match $false
