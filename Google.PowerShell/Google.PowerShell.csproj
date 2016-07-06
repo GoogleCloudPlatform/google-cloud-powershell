@@ -152,7 +152,10 @@
     <Compile Include="SQL\GcSqlDatabaseCmdlets.cs" />
     <Compile Include="SQL\GcSqlFlagsCmdlet.cs" />
     <Compile Include="SQL\GcSqlInstanceCmdlets.cs" />
+    <Compile Include="SQL\GcSqlInstanceConfigCmdlets.cs" />
+    <Compile Include="SQL\GcSqlInstanceReplicaConfig.cs" />
     <Compile Include="SQL\GcSqlOperationCmdlet.cs" />
+    <Compile Include="SQL\GcSqlSettingConfigCmdlet.cs" />
     <Compile Include="SQL\GcSqlSslCmdlets.cs" />
     <Compile Include="SQL\GcSqlTiersCmdlet.cs" />
     <Compile Include="Storage\GcsBucket.cs" />
