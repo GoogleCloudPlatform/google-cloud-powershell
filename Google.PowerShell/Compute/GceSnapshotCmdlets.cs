@@ -13,7 +13,7 @@ namespace Google.PowerShell.Compute
     /// Creates a new disk snapshot.
     /// </para>
     /// <para type="description">
-    /// Creates a new disk snapshot to back up the data of the disk.
+    /// Creates a new disk snapshot to backup the data of the disk.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceSnapshot")]
@@ -27,7 +27,7 @@ namespace Google.PowerShell.Compute
 
         /// <summary>
         /// <para type="description">
-        /// The disk object to create the snapshot from
+        /// The disk object to create the snapshot from.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParamterSetNames.FromDisk, Mandatory = true,

@@ -327,14 +327,13 @@ namespace Google.PowerShell.ComputeEngine
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceDisk", SupportsShouldProcess = true,
         DefaultParameterSetName = ParameterSetNames.ByName)]
-    public class RemoveGceDiskCmdlet : GceCmdlet
+    public class RemoveGceDiskCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
         {
             public const string ByName = "ByName";
             public const string ByObject = "ByObject";
         }
-
         /// <summary>
         /// <para type="description">
         /// The project to associate the new Compute Engine disk.
@@ -358,8 +357,8 @@ namespace Google.PowerShell.ComputeEngine
         /// Name of the disk.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByName, Position = 2, Mandatory = true)]
-        [ValidatePattern("[a-z]([-a-z0-9]*[a-z0-9])?")]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Position = 2, Mandatory = true),
+            ValidatePattern("[a-z]([-a-z0-9]*[a-z0-9])?")]
         public string DiskName { get; set; }
 
         /// <summary>
@@ -400,7 +399,7 @@ namespace Google.PowerShell.ComputeEngine
             DisksResource.DeleteRequest deleteReq = Service.Disks.Delete(project, zone, name);
 
             Operation op = deleteReq.Execute();
-            WaitForZoneOperation(project, zone, op);
+            AddZoneOperation(project, zone, op);
         }
     }
 }
