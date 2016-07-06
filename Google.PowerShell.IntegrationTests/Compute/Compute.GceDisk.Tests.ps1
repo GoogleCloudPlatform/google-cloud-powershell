@@ -116,7 +116,7 @@ Describe "Resize-GceDisk" {
 
     It "should fail if the disk size is smaller" {
         { Resize-GceDisk -Project $project -Zone $zone $diskName -NewSizeGb 10 } |
-             Should Throw "cannot be less than existing size '1337'. [400]"
+             Should Throw "existing size '1337'. [400]"
     }
 
     Remove-ProjectDisks($project)
@@ -131,6 +131,23 @@ Describe "Remove-GceDisk" {
 
         $disk = Get-GceDisk -Project $project -Zone $zone $diskName
         Remove-GceDisk -Project $project -Zone $zone $diskName
+        
+        { Get-GceDisk -Project $project -Zone $zone $diskName } | Should Throw "404"
+    }
+
+    It "should work with object" {
+        $diskName = "remove-disk-test"
+        $disk = New-GceDisk -Project $project -Zone $zone -DiskName $diskName
+
+        Remove-GceDisk $disk
+        
+        { Get-GceDisk -Project $project -Zone $zone $diskName } | Should Throw "404"
+    }
+    
+    It "should work with object by pipeline" {
+        $diskName = "remove-disk-test"
+        New-GceDisk -Project $project -Zone $zone -DiskName $diskName |
+            Remove-GceDisk
         
         { Get-GceDisk -Project $project -Zone $zone $diskName } | Should Throw "404"
     }

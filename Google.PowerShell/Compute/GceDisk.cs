@@ -307,15 +307,21 @@ namespace Google.PowerShell.ComputeEngine
     /// Deletes a Compute Engine disk.
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Remove, "GceDisk", SupportsShouldProcess = true)]
-    public class RemoveGceDiskCmdlet : GceCmdlet
+    [Cmdlet(VerbsCommon.Remove, "GceDisk", SupportsShouldProcess = true,
+        DefaultParameterSetName = ParameterSetNames.ByName)]
+    public class RemoveGceDiskCmdlet : GceConcurrentCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByObject = "ByObject";
+        }
         /// <summary>
         /// <para type="description">
         /// The project to associate the new Compute Engine disk.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
@@ -324,7 +330,7 @@ namespace Google.PowerShell.ComputeEngine
         /// Specific zone to create the disk in, e.g. "us-central1-a".
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         public string Zone { get; set; }
 
@@ -333,12 +339,36 @@ namespace Google.PowerShell.ComputeEngine
         /// Name of the disk.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = true), ValidatePattern("[a-z]([-a-z0-9]*[a-z0-9])?")]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Position = 2, Mandatory = true),
+            ValidatePattern("[a-z]([-a-z0-9]*[a-z0-9])?")]
         public string DiskName { get; set; }
+
+        [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        public Disk Object { get; set; }
 
         protected override void ProcessRecord()
         {
-            if (!ShouldProcess($"{Project}/{Zone}/{DiskName}", "Delete Disk"))
+            string name;
+            string zone;
+            string project;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.ByName:
+                    name = DiskName;
+                    zone = Zone;
+                    project = Project;
+                    break;
+                case ParameterSetNames.ByObject:
+                    name = Object.Name;
+                    zone = GetZoneNameFromUri(Object.SelfLink);
+                    project = GetProjectNameFromUri(Object.SelfLink);
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+
+            if (!ShouldProcess($"{project}/{zone}/{name}", "Delete Disk"))
             {
                 return;
             }
@@ -346,12 +376,12 @@ namespace Google.PowerShell.ComputeEngine
             // First try to get the disk, this way the cmdlet fails with a 404 if the
             // disk does not exist. (Otherwise the delete operation would succeed when
             // trying to delete a non-existant disk.)
-            Service.Disks.Get(Project, Zone, DiskName);
+            Service.Disks.Get(project, zone, name);
 
-            DisksResource.DeleteRequest deleteReq = Service.Disks.Delete(Project, Zone, DiskName);
+            DisksResource.DeleteRequest deleteReq = Service.Disks.Delete(project, zone, name);
 
             Operation op = deleteReq.Execute();
-            WaitForZoneOperation(Project, Zone, op);
+            AddZoneOperation(project, zone, op);
         }
     }
 }
