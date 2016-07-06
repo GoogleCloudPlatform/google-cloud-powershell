@@ -136,6 +136,8 @@
     <Compile Include="Compute\GceInstanceConfigCmdlets.cs" />
     <Compile Include="Compute\GceManagedInstanceGroupCmdlets.cs" />
     <Compile Include="Compute\GceInstanceTemplateCmdlets.cs" />
+    <Compile Include="Compute\GceNetworkCmdlets.cs" />
+    <Compile Include="Compute\GceRouteCmdlets.cs" />
     <Compile Include="Compute\GceServiceAccountConfigCmdlets.cs" />
     <Compile Include="Compute\GoogleComputeOperationException.cs" />
     <Compile Include="Compute\GceFirewallProtocolCmdlet.cs" />
