@@ -1,16 +1,11 @@
 ﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Google.Apis.SQLAdmin.v1beta4;
 using Google.Apis.SQLAdmin.v1beta4.Data;
 using System.Management.Automation;
 using Google.PowerShell.Common;
-using Google.PowerShell.Sql;
 
 namespace Google.PowerShell.Sql
 {

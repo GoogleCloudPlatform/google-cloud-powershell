@@ -53,6 +53,7 @@ namespace Google.PowerShell.Sql
         /// <summary>
         /// <para type="description">
         /// Name of the database to be retrieved in the instance.
+        /// Database flags can be used/modified upon updating or creating an instance.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.GetList)]
