@@ -10,25 +10,25 @@ namespace Google.PowerShell.Dns
 {
     /// <summary>
     /// <para type="synopsis">
-    /// Fetch the representation of an existing DnsProject.
+    /// Fetch the DNS quota of an existing DnsProject.
     /// </para>
     /// <para type="description">
-    /// Returns the DnsProject resource object.
+    /// Returns the DNS quota from the DnsProject resource object.
     /// </para>
     /// <para type="description">
-    /// If a DnsProject is specified, will instead return the representation of that project. 
+    /// If a DnsProject is specified, will instead return the DNS quota for that project. 
     /// </para>
     /// <example>
-    ///   <para>Get the representation of the DnsProject "testing"</para>
-    ///   <para><code>Get-GcdProject -DnsProject "testing" </code></para>
+    ///   <para>Get the DNS quota of the DnsProject "testing"</para>
+    ///   <para><code>Get-GcdQuota -DnsProject "testing" </code></para>
     /// </example>
     /// </summary>
-    [Cmdlet(VerbsCommon.Get, "GcdProject")]
-    public class GetGcdProjectCmdlet : GcdCmdlet
+    [Cmdlet(VerbsCommon.Get, "GcdQuota")]
+    public class GetGcdQuotaCmdlet : GcdCmdlet
     {
         /// <summary>
         /// <para type="description">
-        /// Get the DnsProject to return the representation of.
+        /// Get the DnsProject to return the DNS quota of.
         /// </para>
         /// </summary>
         [Parameter]
@@ -41,7 +41,7 @@ namespace Google.PowerShell.Dns
 
             ProjectsResource.GetRequest projectGetRequest = Service.Projects.Get(DnsProject);
             Project projectResponse = projectGetRequest.Execute();
-            WriteObject(projectResponse);
+            WriteObject(projectResponse.Quota);
         }
     }
 }

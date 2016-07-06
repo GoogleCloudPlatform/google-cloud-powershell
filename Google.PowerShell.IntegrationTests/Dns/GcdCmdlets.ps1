@@ -10,12 +10,12 @@ $accessErrProject = "asdf"
 
 $changeType = "Google.Apis.Dns.v1.Data.Change"
 $managedZoneType = "Google.Apis.Dns.v1.Data.ManagedZone"
-$projectType = "Google.Apis.Dns.v1.Data.Project"
+$quotaType = "Google.Apis.Dns.v1.Data.Quota"
 $rrsetType = "Google.Apis.Dns.v1.Data.ResourceRecordSet"
 
 $changeKind = "dns#change"
 $managedZoneKind = "dns#managedZone"
-$projectKind = "dns#project"
+$quotaKind = "dns#quota"
 $rrsetKind = "dns#resourceRecordSet"
 
 $testZone1 = "test1"

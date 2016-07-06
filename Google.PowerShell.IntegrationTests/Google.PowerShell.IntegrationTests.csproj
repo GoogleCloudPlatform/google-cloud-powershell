@@ -57,7 +57,7 @@
     <None Include="Compute\Compute.GceServiceAccount.Tests.ps1" />
     <None Include="Dns\Dns.GcdChange.Tests.ps1" />
     <None Include="Dns\Dns.GcdManagedZone.Tests.ps1" />
-    <None Include="Dns\Dns.GcdProject.Tests.ps1" />
+    <None Include="Dns\Dns.GcdQuota.Tests.ps1" />
     <None Include="Dns\Dns.GcdResourceRecordSet.Tests.ps1" />
     <None Include="Dns\GcdCmdlets.ps1" />
     <None Include="GcloudCmdlets.ps1" />
