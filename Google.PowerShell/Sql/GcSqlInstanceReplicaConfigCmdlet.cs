@@ -26,7 +26,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public bool FailoverTarget { get; set; }
+        public SwitchParameter FailoverTarget { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -60,7 +60,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public int MySqlRetryInterval = 60;
+        public int MySqlRetryInterval { get; set; } = 60;
 
         /// <summary>
         /// <para type="description">
@@ -112,25 +112,30 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public bool MySqlVerifyCertificate { get; set; }
+        public SwitchParameter MySqlVerifyCertificate { get; set; }
 
         protected override void ProcessRecord()
         {
-            ReplicaConfiguration config = new ReplicaConfiguration();
-            config.MysqlReplicaConfiguration = new MySqlReplicaConfiguration();
-            config.FailoverTarget = FailoverTarget;
-            config.Kind = "sql::replicaConfiguration";
-            config.MysqlReplicaConfiguration.CaCertificate = MySqlCaCert;
-            config.MysqlReplicaConfiguration.ClientCertificate = MySqlClientCert;
-            config.MysqlReplicaConfiguration.ClientKey = MySqlClientKey;
-            config.MysqlReplicaConfiguration.ConnectRetryInterval = MySqlRetryInterval;
-            config.MysqlReplicaConfiguration.DumpFilePath = MySqlDumpPath;
-            config.MysqlReplicaConfiguration.Kind = "sql::mysqlReplicaConfiguration";
-            config.MysqlReplicaConfiguration.MasterHeartbeatPeriod = MySqlHeartbeatPeriod;
-            config.MysqlReplicaConfiguration.Password = MySqlPassword;
-            config.MysqlReplicaConfiguration.SslCipher = MySqlSslCipher;
-            config.MysqlReplicaConfiguration.Username = MySqlUser;
-            config.MysqlReplicaConfiguration.VerifyServerCertificate = MySqlVerifyCertificate;
+            ReplicaConfiguration config = new ReplicaConfiguration
+            {
+
+
+                FailoverTarget = FailoverTarget,
+                Kind = "sql::replicaConfiguration",
+                MysqlReplicaConfiguration = new MySqlReplicaConfiguration
+                {
+                    CaCertificate = MySqlCaCert,
+                    ClientCertificate = MySqlClientCert,
+                    ClientKey = MySqlClientKey,
+                    ConnectRetryInterval = MySqlRetryInterval,
+                    DumpFilePath = MySqlDumpPath,
+                    MasterHeartbeatPeriod = MySqlHeartbeatPeriod,
+                    Password = MySqlPassword,
+                    SslCipher = MySqlSslCipher,
+                    Username = MySqlUser,
+                    VerifyServerCertificate = MySqlVerifyCertificate
+                }
+            };
             WriteObject(config);
         }
     }

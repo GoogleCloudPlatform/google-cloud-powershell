@@ -9,45 +9,6 @@ namespace Google.PowerShell.Sql
 {
     /// <summary>
     /// <para type="synopsis">
-    /// Wraps the replica configuration and setting configuration together for New-GcSqlInstanceConfig
-    /// </para>
-    /// <para type="description"> 
-    /// Object that is passed into New-GcSqlInstanceConfig in order to create or update instances.
-    /// Contains the settings config made with New-GcSqlSettingConfig
-    /// and the replica configuration made with New-GcSqlInstanceReplicaConfig
-    /// </para>
-    /// </summary>
-    public class OverallSettings
-    {
-        /// <summary>
-        /// <para type="description">
-        /// The Settings created by New-GcSqlSettingConfig
-        /// </para>
-        /// </summary>
-        public Settings SettingConfig { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The ReplicaConfiguration created by New-GcSqlInstanceReplicaConfig
-        /// and passed into New-GcSqlSettingConfig.
-        /// </para>
-        /// </summary>
-        public ReplicaConfiguration ReplicaConfig { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// Wraps the two configurations together.
-        /// </para>
-        /// </summary>
-        public OverallSettings(Settings newSettingConfig, ReplicaConfiguration newReplicaConfig)
-        {
-            SettingConfig = newSettingConfig;
-            ReplicaConfig = newReplicaConfig;
-        }
-    }
-
-    /// <summary>
-    /// <para type="synopsis">
     /// Makes a new Google Cloud SQL Instance Settings configuration for a second generation instance.
     /// </para>
     /// <para type="description"> 
@@ -73,6 +34,13 @@ namespace Google.PowerShell.Sql
         [Parameter(Position = 0, Mandatory = true)]
         public string TierConfig { get; set; }
 
+
+        public enum ActivationPolicy
+        {
+            ALWAYS,
+            NONE
+        }
+
         /// <summary>
         /// <para type="description">
         /// The activation policy specifies when the instance is activated;
@@ -81,7 +49,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public string ActivationPolicy = "ALWAYS";
+        public ActivationPolicy Policy { get; set; } = ActivationPolicy.ALWAYS;
 
         /// <summary>
         /// <para type="description">
@@ -109,7 +77,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public string BackupConfigStartTime = "22:00";
+        public string BackupConfigStartTime { get; set; } = "22:00";
 
 
         /// <summary>
@@ -129,7 +97,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public List<DatabaseFlags> DatabaseFlagList { get; set; }
+        public DatabaseFlags[] DatabaseFlag{ get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -140,7 +108,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public List<AclEntry> IpConfigAuthorizedNetworks { get; set; }
+        public AclEntry[] IpConfigAuthorizedNetwork { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -149,7 +117,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public bool IpConfigIpv4Enabled = false;
+        public SwitchParameter IpConfigIpv4Enabled { get; set; } = false;
 
         /// <summary>
         /// <para type="description">
@@ -158,7 +126,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public bool IpConfigRequireSsl = false;
+        public SwitchParameter IpConfigRequireSsl { get; set; } = false;
 
         /// <summary>
         /// <para type="description">
@@ -196,8 +164,6 @@ namespace Google.PowerShell.Sql
         [Parameter]
         public int MaintenanceWindowHour { get; set; }
 
-
-
         /// <summary>
         /// <para type="description">
         /// Configuration to increase storage size automatically.
@@ -206,8 +172,12 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public bool StorageAutoResize = false;
+        public SwitchParameter StorageAutoResize { get; set; } = false;
 
+        public enum DataDiskType {
+            PD_SSD,
+            PD_HDD
+        }
         /// <summary>
         /// <para type="description">
         /// The type of data disk: PD_SSD (default) or PD_HDD.
@@ -215,7 +185,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public string DataDiskType = "PD_SSD";
+        public DataDiskType DiskType { get; set; } = DataDiskType.PD_SSD;
 
         /// <summary>
         /// <para type="description">
@@ -224,51 +194,50 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public bool DatabaseReplicationEnabled { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The ReplicaConfiguration created by New-GcSqlInstanceReplicaConfig
-        /// </para>
-        /// </summary>
-        [Parameter(ValueFromPipeline = true)]
-        public ReplicaConfiguration ReplicaConfig { get; set; }
+        public SwitchParameter DatabaseReplicationEnabled { get; set; }
 
         protected override void ProcessRecord()
         {
-            Settings settings = new Settings();
-            settings.Tier = TierConfig;
-            settings.PricingPlan = "PER_USE";
-            settings.ActivationPolicy = ActivationPolicy;
-            settings.BackupConfiguration = new BackupConfiguration();
-            settings.BackupConfiguration.BinaryLogEnabled = BinaryLogEnabled;
-            settings.BackupConfiguration.Enabled = BackupConfigEnabled;
-            settings.BackupConfiguration.StartTime = BackupConfigStartTime;
-            settings.DataDiskSizeGb = DataDiskSizeGb;
-            settings.DatabaseFlags = DatabaseFlagList;
-            settings.IpConfiguration = new IpConfiguration();
-            settings.IpConfiguration.AuthorizedNetworks = IpConfigAuthorizedNetworks;
-            settings.IpConfiguration.Ipv4Enabled = IpConfigIpv4Enabled;
-            settings.IpConfiguration.RequireSsl = IpConfigRequireSsl;
-            settings.LocationPreference = new LocationPreference();
-            settings.LocationPreference.FollowGaeApplication = LocationPreferenceFollowGae;
-            settings.LocationPreference.Zone = LocationPreferenceZone;
-            settings.MaintenanceWindow = new MaintenanceWindow();
-            settings.MaintenanceWindow.Day = MaintenanceWindowDay;
-            settings.MaintenanceWindow.Hour = MaintenanceWindowHour;
-            settings.StorageAutoResize = StorageAutoResize;
-
-            if (DataDiskType != null)
+            Settings settings = new Settings
             {
-                settings.DataDiskType = DataDiskType;
+                Tier = TierConfig,
+                PricingPlan = "PER_USE",
+                ActivationPolicy = Policy.ToString(),
+                BackupConfiguration = new BackupConfiguration
+                {
+                    BinaryLogEnabled = BinaryLogEnabled,
+                    Enabled = BackupConfigEnabled,
+                    StartTime = BackupConfigStartTime
+                },
+                DataDiskSizeGb = DataDiskSizeGb,
+                DatabaseFlags = DatabaseFlag,
+                IpConfiguration = new IpConfiguration
+                {
+                    AuthorizedNetworks = IpConfigAuthorizedNetwork,
+                    Ipv4Enabled = IpConfigIpv4Enabled,
+                    RequireSsl = IpConfigRequireSsl
+                },
+                LocationPreference = new LocationPreference
+                {
+                    FollowGaeApplication = LocationPreferenceFollowGae,
+                    Zone = LocationPreferenceZone,
+                },
+                MaintenanceWindow = new MaintenanceWindow
+                {
+                    Day = MaintenanceWindowDay,
+                    Hour = MaintenanceWindowHour,
+                },
+                StorageAutoResize = StorageAutoResize,
+            };
+            if (DiskType != null)
+            {
+                settings.DataDiskType = DiskType.ToString();
             }
             else 
             {
                 settings.DatabaseReplicationEnabled = DatabaseReplicationEnabled;
             }
-            OverallSettings FullConfig = new OverallSettings(settings, ReplicaConfig);
-
-            WriteObject(FullConfig);
+            WriteObject(settings);
         }
     }
 }
