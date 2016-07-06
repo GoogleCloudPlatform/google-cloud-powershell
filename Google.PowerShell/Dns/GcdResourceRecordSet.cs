@@ -18,11 +18,17 @@ namespace Google.PowerShell.Dns
     /// </para>
     /// <para type="description">
     /// If a DnsProject is specified, will instead return the ResourceRecordSets in the specified ManagedZone governed 
-    /// by that project. 
+    /// by that project. The optional Filter can be provided to restrict the ResourceRecordSet types returned.
     /// </para>
     /// <example>
     ///   <para>Get the ResourceRecordSet resources in the ManagedZone "test1" in the DnsProject "testing."</para>
     ///   <para><code>Get-GcdResourceRecordSet -DnsProject "testing" -Zone "test1"</code></para>
+    /// </example>
+    /// <example>
+    ///   <para>
+    ///   Get the ResourceRecordSets of type "NS" or "AAAA" in the ManagedZone "test1" in the DnsProject "testing."
+    ///   </para>
+    ///   <para><code>Get-GcdResourceRecordSet -DnsProject "testing" -Zone "test1" -Filter "NS","AAAA"</code></para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcdResourceRecordSet")]
@@ -46,6 +52,14 @@ namespace Google.PowerShell.Dns
         [Parameter(Position = 1, Mandatory = true)]
         public string Zone { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// Filter the type(s) of ResourceRecordSets to return (e.g., -Filter "CNAME","NS")
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 2, Mandatory = false)]
+        public string[] Filter { get; set; }
+
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
@@ -53,7 +67,26 @@ namespace Google.PowerShell.Dns
             ResourceRecordSetsResource.ListRequest rrsetListRequest = Service.ResourceRecordSets.List(DnsProject, Zone);
             ResourceRecordSetsListResponse rrsetListResponse = rrsetListRequest.Execute();
             IList<ResourceRecordSet> rrsetList = rrsetListResponse.Rrsets;
-            WriteObject(rrsetList, true);
+
+            if (!(Filter == null || Filter.Length == 0))
+            {
+                HashSet<string> TypeFilterHash = new HashSet<string>(Filter);
+                HashSet<ResourceRecordSet> rrsetHash = new HashSet<ResourceRecordSet>(rrsetList);
+
+                foreach (ResourceRecordSet rrset in rrsetList)
+                {
+                    if (!TypeFilterHash.Contains(rrset.Type))
+                    {
+                        rrsetHash.Remove(rrset);
+                    }
+                }
+
+                WriteObject(rrsetHash, true);
+            }
+            else
+            {
+                WriteObject(rrsetList, true);
+            }
         }
     }
 

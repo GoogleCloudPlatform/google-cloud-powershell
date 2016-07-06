@@ -30,14 +30,21 @@ $dnsName1_2 = "b.gcloudexample1.com."
 $dnsName1_3 = "c.gcloudexample1.com."
 $dnsName2 = "gcloudexample2.com."
 
-$rrdata1 = "7.5.7.8"
-$rrdata1_1 = "7.5.6.8"
-$rrdata2 = "2001:0db8:85a3:0:0:8a2e:0370:7334"
+$rrdataA1 = "7.5.7.8"
+$rrdataA2 = "7.5.6.8"
+$rrdataAAAA = "2001:db8:85a3::8a2e:370:7334"
+$rrdataCNAME1_2 = "hostname.b.gcloudexample1.com."
+$rrdataTXT1 = "test-verification=2ZzjfideIJFLFje83"
+$rrdataTXT2 = "test-verification2=JFLFje832ZzjfideI"
 
 $ttl1 = 300
 $ttlDefault = 3600
 
-$testRrset1 = New-GcdResourceRecordSet -Name $dnsName1 -Rrdata $rrdata1 -Type "A" -Ttl $ttl1
+$testRrsetA = New-GcdResourceRecordSet -Name $dnsName1 -Rrdata $rrdataA1 -Type "A" -Ttl $ttl1
+$testRrsetAAAA = New-GcdResourceRecordSet -Name $dnsName1_1 -Rrdata $rrdataAAAA -Type "AAAA" -Ttl $ttl1
+$testRrsetCNAME = New-GcdResourceRecordSet -Name $dnsName1_2 -Rrdata $rrdataCNAME1_2 -Type "CNAME" -Ttl $ttl1
+$testRrsetTXT1 = New-GcdResourceRecordSet -Name $dnsName1 -Rrdata $rrdataTXT1 -Type "TXT" -Ttl $ttl1
+$testRrsetTXT2 = New-GcdResourceRecordSet -Name $dnsName1 -Rrdata $rrdataTXT2 -Type "TXT" -Ttl $ttl1
 
 $transactionFile = "transaction.yaml"
 
