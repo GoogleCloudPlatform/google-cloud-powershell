@@ -31,7 +31,7 @@ namespace Google.PowerShell.Compute
         /// The name of the network to get.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(Position = 0, ValueFromPipeline = true)]
         public string Name { get; set; }
 
         protected override void ProcessRecord()
@@ -42,7 +42,7 @@ namespace Google.PowerShell.Compute
             }
             else
             {
-                WriteObject(Service.Networks.Get(Project, Name));
+                WriteObject(Service.Networks.Get(Project, Name).Execute());
             }
 
         }

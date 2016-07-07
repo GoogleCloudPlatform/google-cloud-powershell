@@ -40,7 +40,7 @@ namespace Google.PowerShell.Compute
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.FromObject, Mandatory = true,
-            ValueFromPipeline = true)]
+            Position = 0, ValueFromPipeline = true)]
         public Route Object { get; set; }
 
         /// <summary>
@@ -48,7 +48,7 @@ namespace Google.PowerShell.Compute
         /// The name of the route to add.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.FromValues, Mandatory = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.FromValues, Mandatory = true, Position = 0)]
         public string Name { get; set; }
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace Google.PowerShell.Compute
         /// The destination range of outgoing packets that this route applies to.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.FromValues, Mandatory = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.FromValues, Mandatory = true, Position = 1)]
         public string DestinationIpRange { get; set; }
 
         /// <summary>
@@ -64,7 +64,7 @@ namespace Google.PowerShell.Compute
         /// The network this route applies to. Can be either a url, or a network object from Get-GceNetwork.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.FromValues, Mandatory = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.FromValues, Mandatory = true, Position = 2)]
         [PropertyByTypeTransformation(Property = "SelfLink", TypeToTransform = typeof(Network))]
         public string Network { get; set; }
 
@@ -94,16 +94,6 @@ namespace Google.PowerShell.Compute
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.FromValues)]
         public string[] Tag { get; set; }
-
-        /// <summary>
-        /// <para type = "description">
-        /// The local network that should handle matching packets. Can be either a url or a network object from
-        /// Get-GceNetwork.
-        /// </para>
-        /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.FromValues)]
-        [PropertyByTypeTransformation(Property = "SelfLink", TypeToTransform = typeof(Network))]
-        public string NextHopNetwork { get; set; }
 
         /// <summary>
         /// <para type = "description">
@@ -137,7 +127,7 @@ namespace Google.PowerShell.Compute
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.FromValues)]
-        public string NextHopGateway { get; set; }
+        public SwitchParameter NextHopInternetGateway { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -156,11 +146,10 @@ namespace Google.PowerShell.Compute
                         DestRange = DestinationIpRange,
                         Network = Network,
                         Priority = Priority,
-                        Tags = Tag.ToList(),
-                        NextHopNetwork = NextHopNetwork,
+                        Tags = Tag?.ToList(),
                         NextHopInstance = NextHopInstance,
                         NextHopIp = NextHopIp,
-                        NextHopGateway = NextHopGateway,
+                        NextHopGateway = GetNextHopGateway(),
                         NextHopVpnTunnel = NextHopVpnTunnel
                     };
                     break;
@@ -176,6 +165,11 @@ namespace Google.PowerShell.Compute
             {
                 WriteObject(Service.Routes.Get(project, name).Execute());
             });
+        }
+
+        private string GetNextHopGateway()
+        {
+            return NextHopInternetGateway ? "global/gateways/default-internet-gateway" : null;
         }
     }
 
@@ -195,13 +189,16 @@ namespace Google.PowerShell.Compute
         /// The project of the route to get. Defaults to the gcloud config project.
         /// </para>
         /// </summary>
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
         /// <summary>
         /// <para type = "description">
-        /// 
+        /// The name of the specific route to get.
         /// </para>
         /// </summary>
+        [Parameter(Position = 0, ValueFromPipeline = true)]
         public string Name { get; set; }
 
         protected override void ProcessRecord()
@@ -237,8 +234,10 @@ namespace Google.PowerShell.Compute
 
     /// <summary>
     /// <para type="synopsis">
+    /// Deletes a networking route.
     /// </para>
     /// <para type="description">
+    /// Deletes a networking route.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceRoute", SupportsShouldProcess = true,
@@ -251,9 +250,33 @@ namespace Google.PowerShell.Compute
             public const string ByObject = "ByObject";
         }
 
+        /// <summary>
+        /// <para type = "description">
+        /// The project of the route to delete. Defaults to the gcloud config project.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
+
+        /// <summary>
+        /// <para type = "description">
+        /// The name of the route to delete.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
+            Position = 0)]
         public string Name { get; set; }
+
+        /// <summary>
+        /// <para type = "description">
+        /// The route object that describes the route to delete.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
         public Route Object { get; set; }
+
         protected override void ProcessRecord()
         {
             string project;
