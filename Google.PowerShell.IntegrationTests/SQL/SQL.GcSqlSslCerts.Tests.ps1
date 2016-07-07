@@ -2,20 +2,13 @@
 Install-GcloudCmdlets
 $project, $_, $oldActiveConfig, $configName = Set-GCloudConfig
 
+$r = Get-Random
+# A random number is used to avoid collisions with the speed of creating
+# and deleting instances.
+$instance = "test-inst$r"
+
 Describe "Get-GcSqlSslCert" {
-    # TODO: Add in reading from a file so that the singular get can be tested.
-    # A note for this series of tests: 
-    # Due to the fact the list functionality does not tell SSL certificate sha1fingerprints, all tests for 
-    # if singular get is working have to use a premade SSL certificate. 
-    # This can change once the Add-GcSqlSslCert cmdlet is done,
-    # as we can then get a test-specific SSLCertificate and its sha1fingerprint.
-
-    $r = Get-Random
-    # A random number is used to avoid collisions with the speed of creating
-    # and deleting instances.
-    $instance = "test-inst$r"
     gcloud sql instances create $instance --quiet 2>$null
-
     It "should get a reasonable list response when no sslcerts exist" {
         $certs = Get-GcSqlSslCert $instance
         $certs.Count | Should Be 0
@@ -29,10 +22,12 @@ Describe "Get-GcSqlSslCert" {
     }
 
     It "should get the correct response for a specific sslcert" {
+        $certs = Get-GcSqlSslCert $instance
+        $certToFind = $certs | Select-Object -first 1
         #This test will change in the future, see the note.
-        $cert = Get-GcSqlSslCert "test-db" "6c80d45f3bb0e22528fb5c9a0e3a83baee4331ab"
-        $cert.commonName | Should Be "test-ssl"
-        $cert.certSerialNumber | Should be "171810368"
+        $cert = Get-GcSqlSslCert $instance $certToFind.Sha1Fingerprint
+        $cert.commonName | Should Be $certToFind.CommonName
+        $cert.certSerialNumber | Should be $certToFind.CertSerialNumber
     }
 
     It "should be able to take in an instance and get the information" {
@@ -42,6 +37,46 @@ Describe "Get-GcSqlSslCert" {
     }
 
     Remove-Item "test$r.txt"
-    gcloud sql instances delete $instance --quiet 2>$null
 }
+
+Describe "Add-GcSqlSslCert" {
+    It "should create an SSL cert for a given instance." {
+       $cert = Add-GcSqlSslCert $instance  "test-ssl-2"
+       $cert.Kind | Should Be "sql#sslCertsInsert"
+       $cert.ServerCaCert.Instance | Should Be $instance
+    }
+
+    It "should compound with Get-GcSqlSslCert" {
+       $instanceCerts = Get-GcSqlSslCert $instance
+       $priorCount = $instanceCerts.Count
+       $cert = Add-GcSqlSslCert $instance  "test-ssl-3"
+       $instanceCerts = Get-GcSqlSslCert $instance
+       ($instanceCerts.CommonName -contains "test-ssl-3") | Should Be true
+       $instanceCerts.Count | Should Be ($priorCount + 1)
+    }
+}
+
+Describe "Remove-GcSqlSslCert" {
+    It "should work" {
+        $sslName = "remove-test-1"
+        $cert = Add-GcSqlSslCert $instance $sslName
+        $fingerprint = $cert.clientCert.certInfo.sha1Fingerprint
+        Remove-GcSqlSslCert $instance $fingerprint
+        { Get-GcSqlSslCert $instance $fingerprint } | Should Throw "404"
+    }
+
+    It "should work with a pipelined Certificate" {
+        $sslName = "remove-test-2"
+        $cert = Add-GcSqlSslCert $instance $sslName
+        $cert.clientCert.certInfo | Remove-GcSqlSslCert
+        $fingerprint = $cert.clientCert.certInfo.sha1Fingerprint
+        { Get-GcSqlSslCert $instance $fingerprint } | Should Throw "404"
+    }
+
+    It "shouldn't delete anything that doesn't exist" {
+        { Remove-GcSqlSslCert $instance "f02" } | Should Throw "The SSL certificate does not exist. [404]"
+    }
+}
+
+gcloud sql instances delete $instance --quiet 2>$null
 Reset-GCloudConfig $oldActiveConfig $configName

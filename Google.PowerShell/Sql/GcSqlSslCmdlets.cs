@@ -93,4 +93,143 @@ namespace Google.PowerShell.Sql
             }
         }
     }
+
+
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Creates an SSL certificate and returns it along with the private key and server certificate authority. 
+    /// The new certificate is not usable until the instance is restarted.
+    /// </para>
+    /// <para type="description">
+    /// Creates an SSL certificate inside the given instance and returns it along with the private key and server certificate authority.
+    /// The new certificate is not usable until the instance is restarted.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Add, "GcSqlSslCert")]
+    public class AddGcSqlSslCmdlet : GcSqlCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// Project name of the project that contains an instance.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Cloud SQL instance name.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0)]
+        public string Instance { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Distinct name for the certificate being added to the instance.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 1)]
+        public string CommonName { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            SslCertsInsertRequest RequestBody = new SslCertsInsertRequest {
+                CommonName = CommonName
+            };
+            SslCertsResource.InsertRequest request = Service.SslCerts.Insert(RequestBody, Project, Instance);
+            SslCertsInsertResponse result = request.Execute();
+            WriteObject(result);
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Deletes the SSL certificate. 
+    /// The change will not take effect until the instance is restarted.
+    /// </para>
+    /// <para type="description">
+    /// Deletes the SSL certificate for the instance. 
+    /// The change will not take effect until the instance is restarted.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Remove, "GcSqlSslCert", SupportsShouldProcess = true,
+        DefaultParameterSetName = ParameterSetNames.ByName)]
+    public class RemoveGcSqlSslCmdlet : GcSqlCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByObject = "ByObject";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// Project name of the project that contains an instance.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Cloud SQL instance name.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByName)]
+        public string Instance { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Sha1 FingerPrint for the SSL Certificate you want to delete.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.ByName)]
+        public string Sha1Fingerprint { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The SSL Certificate that describes the SSL Certificate to remove.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        public SslCert Cert { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            string finger;
+            string instance;
+            string project;
+            string name;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.ByName:
+                    finger = Sha1Fingerprint;
+                    instance = Instance;
+                    project = Project;
+                    name = Service.SslCerts.Get(Project, Instance, Sha1Fingerprint).Execute().CommonName;
+                    break;
+                case ParameterSetNames.ByObject:
+                    finger = Cert.Sha1Fingerprint;
+                    instance = Cert.Instance;
+                    project = GetProjectNameFromUri(Cert.SelfLink);
+                    name = Cert.CommonName;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+            
+            if (!ShouldProcess($"{Project}/{Instance}/{name}", "Delete SSL Certificate"))
+            {
+                return;
+            }
+            SslCertsResource.DeleteRequest request = Service.SslCerts.Delete(project, instance, finger);
+            Operation result = request.Execute();
+            WriteObject(result);
+        }
+    }
 }
