@@ -42,8 +42,8 @@ Describe "Get-GcSqlSslCert" {
 Describe "Add-GcSqlSslCert" {
     It "should create an SSL cert for a given instance." {
        $cert = Add-GcSqlSslCert $instance  "test-ssl-2"
-       $cert.Kind | Should Be "sql#sslCertsInsert"
-       $cert.ServerCaCert.Instance | Should Be $instance
+       $cert.CertInfo.Kind | Should Be "sql#sslCert"
+       $cert.CertInfo.Instance | Should Be $instance
     }
 
     It "should compound with Get-GcSqlSslCert" {
@@ -54,13 +54,19 @@ Describe "Add-GcSqlSslCert" {
        ($instanceCerts.CommonName -contains "test-ssl-3") | Should Be true
        $instanceCerts.Count | Should Be ($priorCount + 1)
     }
+
+    It "should be able to take in an instance object" {
+        $cert = Get-GcSqlInstance $instance | Add-GcSqlSslCert -CommonName "test-ssl-4"
+        $instanceCerts = Get-GcSqlSslCert $instance
+       ($instanceCerts.CommonName -contains "test-ssl-4") | Should Be true
+    }
 }
 
 Describe "Remove-GcSqlSslCert" {
     It "should work" {
         $sslName = "remove-test-1"
         $cert = Add-GcSqlSslCert $instance $sslName
-        $fingerprint = $cert.clientCert.certInfo.sha1Fingerprint
+        $fingerprint = $cert.CertInfo.sha1Fingerprint
         Remove-GcSqlSslCert $instance $fingerprint
         { Get-GcSqlSslCert $instance $fingerprint } | Should Throw "404"
     }
@@ -68,8 +74,8 @@ Describe "Remove-GcSqlSslCert" {
     It "should work with a pipelined Certificate" {
         $sslName = "remove-test-2"
         $cert = Add-GcSqlSslCert $instance $sslName
-        $cert.clientCert.certInfo | Remove-GcSqlSslCert
-        $fingerprint = $cert.clientCert.certInfo.sha1Fingerprint
+        $cert.CertInfo | Remove-GcSqlSslCert
+        $fingerprint = $cert.CertInfo.sha1Fingerprint
         { Get-GcSqlSslCert $instance $fingerprint } | Should Throw "404"
     }
 

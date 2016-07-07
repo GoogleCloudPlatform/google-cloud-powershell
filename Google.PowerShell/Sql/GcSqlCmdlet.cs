@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using Google.PowerShell.Common;
 using Google.Apis.SQLAdmin.v1beta4;
 using System.Text.RegularExpressions;
+using Google.Apis.SQLAdmin.v1beta4.Data;
+using System.Threading;
 
 namespace Google.PowerShell.Sql
 {
@@ -26,35 +28,23 @@ namespace Google.PowerShell.Sql
         }
 
         /// <summary>
-        /// Library method to pull the name of a project from a uri.
+        /// Library method to wait for an SQL operation to finish.
         /// </summary>
-        /// <param name="uri">
-        /// The uri that includes the project.
+        /// <param name="op">
+        /// The SQL operation we want to wait for.
         /// </param>
         /// <returns>
-        /// The name of the project.
+        /// The finished operation resource.
         /// </returns>
-        public static string GetProjectNameFromUri(string uri)
+        public Operation WaitForSqlOperation(Operation op) 
         {
-            return GetUriPart("projects", uri);
-        }
-
-        /// <summary>
-        /// Library method to pull a resource name from a Rest uri.
-        /// </summary>
-        /// <param name="resourceType">
-        /// The type of resource to get the name of (e.g. projects, zones, instances)
-        /// </param>
-        /// <param name="uri">
-        /// The uri to pull the resource name from.
-        /// </param>
-        /// <returns>
-        /// The name of the resource i.e. the section of the uri following the resource type.
-        /// </returns>
-        public static string GetUriPart(string resourceType, string uri)
-        {
-            Match match = Regex.Match(uri, $"{resourceType}/(?<value>[^/]*)");
-            return match.Groups["value"].Value;
+            while (op.Status != "DONE")
+            {
+                Thread.Sleep(150);
+                OperationsResource.GetRequest request = Service.Operations.Get(op.TargetProject, op.Name);
+                op = request.Execute();
+            }
+            return op;
         }
     }
 }
