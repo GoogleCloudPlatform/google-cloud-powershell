@@ -12,6 +12,7 @@ namespace Google.PowerShell.Compute
     /// Get data about the networks a project has.
     /// </para>
     /// <para type="description">
+    /// Get data about the networks a project has. This includes its name, id, and subnetworks.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceNetwork")]

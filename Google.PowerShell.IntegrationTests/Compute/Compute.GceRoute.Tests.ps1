@@ -4,11 +4,11 @@ Install-GcloudCmdlets
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 $r = Get-Random
 
-Describe "Add-GceRoute" {
-    $routeName = "test-route-$r"
-    $allIps = "0.0.0.0/0"
-    $network = Get-GceNetwork default
+$routeName = "test-route-$r"
+$allIps = "0.0.0.0/0"
+$network = Get-GceNetwork default
 
+Describe "Add-GceRoute" {
     It "should fail for wrong project" {
         { Add-GceRoute $routeName $allIps $network -Project "asdf" } | Should Throw 403
     }
@@ -19,90 +19,98 @@ Describe "Add-GceRoute" {
         }
 
         It "should work" {
-            $addRoute = Add-GceRoute $routeName $allIps $network -Priority 9001 -Description "for testing $r"`
+            $addedRoute = Add-GceRoute $routeName $allIps $network -Priority 9001 -Description "for testing $r"`
                 -Tag "alpha", "beta" -NextHopInternetGateway
-            $addRoute.Name | Should Be $routeName
-            $addRoute.DestRange | Should Be $allIps
-            $addRoute.Network | Should Be $network.SelfLink
-            $addRoute.Priority | Should Be 9001
-            $addRoute.Description | Should Be "for testing $r"
-            $addRoute.Tags.Count | Should Be 2
-            $addRoute.Tags-contains "alpha" | Should Be $true
-            $addRoute.Tags -contains "beta" | Should Be $true
-            $addRoute.NextHopGateway | Should Match "global/gateways/default-internet-gateway"
+            $addedRoute.Name | Should Be $routeName
+            $addedRoute.DestRange | Should Be $allIps
+            $addedRoute.Network | Should Be $network.SelfLink
+            $addedRoute.Priority | Should Be 9001
+            $addedRoute.Description | Should Be "for testing $r"
+            $addedRoute.Tags.Count | Should Be 2
+            $addedRoute.Tags -contains "alpha" | Should Be $true
+            $addedRoute.Tags -contains "beta" | Should Be $true
+            $addedRoute.NextHopGateway | Should Match "global/gateways/default-internet-gateway"
+
+            # Make sure the object we get from Add-GceRoute is the same as we get from Get-GceRoute.
             $getRoute = Get-GceRoute $routeName
-            Compare-Object $getRoute $addRoute | Should BeNullOrEmpty
+            Compare-Object $getRoute $addedRoute | Should BeNullOrEmpty
         }
 
         It "should work with object" {
-            # Get the existing default internet gateway route
+            # Get the existing default internet gateway route.
             $rootRoute = Get-GceRoute | Where { $_.NextHopGateway -ne $null } | Select -First 1
+
+            # Change its properties so we can create a new route.
             $rootRoute.Name = $routeName
             $rootRoute.DestRange = $allIps
             $rootRoute.Priority = 9001
             $rootRoute.Id = $null
             $rootRoute.Description ="for testing $r"
 
-            $addRoute = Add-GceRoute $rootRoute
+            # Create a new route.
+            $addedRoute = Add-GceRoute $rootRoute
 
-            $addRoute.Name | Should Be $routeName
-            $addRoute.DestRange | Should Be $allIps
-            $addRoute.Network | Should Be $network.SelfLink
-            $addRoute.Priority | Should Be 9001
-            $addRoute.Description | Should Be "for testing $r"
+            $addedRoute.Name | Should Be $routeName
+            $addedRoute.DestRange | Should Be $allIps
+            $addedRoute.Network | Should Be $network.SelfLink
+            $addedRoute.Priority | Should Be 9001
+            $addedRoute.Description | Should Be "for testing $r"
+
+            # Make sure the object we get from Add-GceRoute is the same as we get from Get-GceRoute.
             $getRoute = Get-GceRoute $routeName
-            Compare-Object $getRoute $addRoute | Should BeNullOrEmpty
+            Compare-Object $getRoute $addedRoute | Should BeNullOrEmpty
         }
 
         It "should work with object on pipeline" {
             # Get the existing default internet gateway route
             $rootRoute = Get-GceRoute | Where { $_.NextHopGateway -ne $null } | Select -First 1
+
+            # Change its properties so we can create a new route.
             $rootRoute.Name = $routeName
             $rootRoute.DestRange = $allIps
             $rootRoute.Priority = 9001
             $rootRoute.Network = $network.SelfLink
             $rootRoute.Id = $null
             $rootRoute.Description ="for testing $r"
-            
-            $addRoute = $rootRoute | Add-GceRoute
 
-            $addRoute.Name | Should Be $routeName
-            $addRoute.DestRange | Should Be $allIps
-            $addRoute.Network | Should Be $network.SelfLink
-            $addRoute.Priority | Should Be 9001
-            $addRoute.Description | Should Be "for testing $r"
+            # Create a new route.
+            $addedRoute = $rootRoute | Add-GceRoute
+
+            $addedRoute.Name | Should Be $routeName
+            $addedRoute.DestRange | Should Be $allIps
+            $addedRoute.Network | Should Be $network.SelfLink
+            $addedRoute.Priority | Should Be 9001
+            $addedRoute.Description | Should Be "for testing $r"
+
+            # Make sure the object we get from Add-GceRoute is the same as we get from Get-GceRoute.
             $getRoute = Get-GceRoute $routeName
-            Compare-Object $getRoute $addRoute | Should BeNullOrEmpty
+            Compare-Object $getRoute $addedRoute | Should BeNullOrEmpty
         }
         
-        $image = "projects/debian-cloud/global/images/debian-8-jessie-v20160511"
+        $image = (Get-GceImage debian-cloud -Family debian-8).SelfLink
         $instanceName = "test-route-instance-$r"
         New-GceInstanceConfig $instanceName -DiskImage $image -MachineType "f1-micro" -CanIpForward $true |
             Add-GceInstance -Project $project -Zone $zone
         $instance = Get-GceInstance $instanceName
 
         It "should route to an instance" {
-            $addRoute = Add-GceRoute $routeName $allIps $network -Priority 9001 -NextHopInstance $instance
-            $addRoute.NextHopInstance | Should Be $instance.SelfLink
+            $addedRoute = Add-GceRoute $routeName $allIps $network -Priority 9001 -NextHopInstance $instance
+            $addedRoute.NextHopInstance | Should Be $instance.SelfLink
         }
 
-        It "should route to an ip" {
+        It "should route to an IP" {
             $ip = $instance.NetworkInterfaces.NetworkIp
-            $addRoute = Add-GceRoute $routeName $allIps $network -Priority 9001 -NextHopIp $ip
-            $addRoute.NextHopIP | Should Be $ip
+            $addedRoute = Add-GceRoute $routeName $allIps $network -Priority 9001 -NextHopIp $ip
+            $addedRoute.NextHopIP | Should Be $ip
         }
 
         Remove-GceInstance $instance
 
-        # TODO: Add a vpn tunnel and test for it.
+        # TODO(jimwp): Add a VPN tunnel and test for it.
     }
 }
 
 Describe "Get-GceRoute" {
-    $routeName = "test-route-$r"
-    $allIps = "0.0.0.0/0"
-    $network = Get-GceNetwork default
-
     It "should fail for wrong project" {
         { Get-GceRoute $routeName -Project "asdf" } | Should Throw 403
     }
@@ -115,7 +123,9 @@ Describe "Get-GceRoute" {
 
     It "should list for project" {
         $routes = Get-GceRoute
-        $routes.Count | Should Be 6 # the 1 we created, plus the default internet gateway route plus 4 subnetwork routes.
+
+        # the one we created, plus the default internet gateway route plus four subnetwork routes.
+        $routes.Count | Should Be 6
         ($routes | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Route
     }
 
@@ -141,10 +151,6 @@ Describe "Get-GceRoute" {
 }
 
 Describe "Remove-GceRoute" {
-    $routeName = "test-route-$r"
-    $allIps = "0.0.0.0/0"
-    $network = Get-GceNetwork default
-
     It "should fail for wrong project" {
         { Remove-GceRoute $routeName -Project "asdf" } | Should Throw 403
     }
@@ -161,18 +167,21 @@ Describe "Remove-GceRoute" {
         It "should work with name" {
             Remove-GceRoute $routeName
             { Get-GceRoute $routeName } | Should Throw 404
+            (Get-GceRoute).Count | Should Be 5
         }
 
         It "should work with object" {
             $route = Get-GceRoute $routeName
             Remove-GceRoute $route
             { Get-GceRoute $routeName } | Should Throw 404
+            (Get-GceRoute).Count | Should Be 5
         }
 
         It "should work with object on pipeline" {
             $route = Get-GceRoute $routeName
             $route | Remove-GceRoute 
             { Get-GceRoute $routeName } | Should Throw 404
+            (Get-GceRoute).Count | Should Be 5
         }
     }
 }

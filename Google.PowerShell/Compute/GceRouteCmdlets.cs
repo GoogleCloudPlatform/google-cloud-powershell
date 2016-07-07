@@ -61,7 +61,7 @@ namespace Google.PowerShell.Compute
 
         /// <summary>
         /// <para type = "description">
-        /// The network this route applies to. Can be either a url, or a network object from Get-GceNetwork.
+        /// The network this route applies to. Can be either a URL, or a network object from Get-GceNetwork.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.FromValues, Mandatory = true, Position = 2)]
@@ -89,7 +89,7 @@ namespace Google.PowerShell.Compute
 
         /// <summary>
         /// <para type = "description">
-        /// Instance tag(s) this route applies to.
+        /// Instance tag(s) this route applies to. May only contain lowercase letters, dashes and numbers.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.FromValues)]
@@ -97,7 +97,7 @@ namespace Google.PowerShell.Compute
 
         /// <summary>
         /// <para type = "description">
-        /// The instance that should handle matching packets. Can be either a url, or an instance from
+        /// The instance that should handle matching packets. Can be either a URL, or an instance from
         /// Get-GceInstance.
         /// </para>
         /// </summary>
@@ -115,7 +115,7 @@ namespace Google.PowerShell.Compute
 
         /// <summary>
         /// <para type = "description">
-        /// The url of a VpnTunnel that should handle matching packets.
+        /// The URL of a VPN Tunnel that should handle matching packets.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.FromValues)]
@@ -123,7 +123,7 @@ namespace Google.PowerShell.Compute
 
         /// <summary>
         /// <para type = "description">
-        /// The url to a gateway that should handle matching packets.
+        /// The URL to a gateway that should handle matching packets.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.FromValues)]
@@ -160,10 +160,9 @@ namespace Google.PowerShell.Compute
             RoutesResource.InsertRequest request = Service.Routes.Insert(route, project);
             Operation operation = request.Execute();
 
-            string name = route.Name;
             AddGlobalOperation(project, operation, () =>
             {
-                WriteObject(Service.Routes.Get(project, name).Execute());
+                WriteObject(Service.Routes.Get(project, route.Name).Execute());
             });
         }
 
@@ -294,6 +293,7 @@ namespace Google.PowerShell.Compute
                 default:
                     throw UnknownParameterSetException;
             }
+
             if (ShouldProcess($"{project}/{name}", "Remove GceRoute"))
             {
                 Operation operation = Service.Routes.Delete(project, name).Execute();

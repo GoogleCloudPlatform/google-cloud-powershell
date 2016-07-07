@@ -4,6 +4,9 @@ Install-GcloudCmdlets
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Describe "Get-GceNetwork" {
+    $r = Get-Random
+    $newNetwork = "test-network-$r"
+    gcloud compute networks create $newNetwork 2>$null
 
     It "should fail for wrong project" {
         { Get-GceNetwork -Project "asdf" } | Should Throw 403
@@ -15,7 +18,7 @@ Describe "Get-GceNetwork" {
 
     It "should list by project" {
         $networks = Get-GceNetwork
-        $networks.Count | Should Be 1
+        $networks.Count | Should Be 2
         ($networks | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.Network"
     }
 
@@ -24,6 +27,8 @@ Describe "Get-GceNetwork" {
         $network.Count | Should Be 1
         ($network | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.Network"
     }
+
+    gcloud compute networks delete $newNetwork -q 2>$null
 }
 
 Reset-GCloudConfig $oldActiveConfig $configName
