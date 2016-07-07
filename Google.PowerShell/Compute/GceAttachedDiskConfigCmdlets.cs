@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0.
 
 using Google.Apis.Compute.v1.Data;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
@@ -149,7 +148,7 @@ namespace Google.PowerShell.ComputeEngine
                 DeviceName = DeviceName,
                 Interface__ = Nvme ? "NVME" : "SCSI",
                 Mode = ReadOnly ? "READ_ONLY" : "READ_WRITE",
-                Source = Source,
+                Source = Source
             };
 
             if (ParameterSetName == ParameterSetNames.New)
