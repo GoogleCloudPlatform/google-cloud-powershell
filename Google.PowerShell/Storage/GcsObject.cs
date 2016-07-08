@@ -365,7 +365,7 @@ namespace Google.PowerShell.CloudStorage
     /// Deletes a Cloud Storage object.
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Remove, "GcsObject")]
+    [Cmdlet(VerbsCommon.Remove, "GcsObject", SupportsShouldProcess = true)]
     public class RemoveGcsObjectCmdlet : GcsCmdlet
     {
         /// <summary>
@@ -381,13 +381,19 @@ namespace Google.PowerShell.CloudStorage
         /// Name of the object to delete.
         /// </para>
         /// </summary>
-        [Parameter(Position = 1, Mandatory = true)]
+        [Parameter(Position = 1, Mandatory = true, ValueFromPipeline = true)]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Object))]
         public string ObjectName { get; set; }
 
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
             var service = GetStorageService();
+
+            if (!ShouldProcess($"{ObjectName}", "Delete Object"))
+            {
+                return;
+            }
 
             ObjectsResource.DeleteRequest delReq = service.Objects.Delete(Bucket, ObjectName);
             string result = delReq.Execute();
