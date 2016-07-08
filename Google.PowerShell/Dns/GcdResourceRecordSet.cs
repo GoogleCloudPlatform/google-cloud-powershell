@@ -17,67 +17,21 @@ namespace Google.PowerShell.Dns
     /// Lists the ManagedZone's ResourceRecordSets.
     /// </para>
     /// <para type="description">
-    /// If a DnsProject is specified, the cmdlet will instead return the ResourceRecordSets in the specified 
-    /// ManagedZone governed by that project. The optional -Filter can be provided to restrict the ResourceRecordSet 
-    /// types returned.
+    /// If a DnsProject is specified, will instead return the ResourceRecordSets in the specified ManagedZone governed 
+    /// by that project. The optional Filter can be provided to restrict the ResourceRecordSet types returned.
     /// </para>
     /// <example>
     ///   <para>Get the ResourceRecordSet resources in the ManagedZone "test1" in the DnsProject "testing."</para>
-    ///   <para><code>PS C:\> Get-GcdResourceRecordSet -DnsProject "testing" -Zone "test1"</code></para>
-    ///   <br></br>
-    ///   <para>Kind    : dns#resourceRecordSet</para>
-    ///   <para>Name    : gcloudexample1.com.</para>
-    ///   <para>
-    ///   Rrdatas : {ns-cloud-e1.googledomains.com., ns-cloud-e2.googledomains.com., 
-    ///   ns-cloud-e3.googledomains.com., ns-cloud-e4.googledomains.com.}
-    ///   </para>
-    ///   <para>Ttl     : 21600</para>
-    ///   <para>Type    : NS</para>
-    ///   <para>ETag    :</para>
-    ///   <br></br>
-    ///   <para>Kind    : dns#resourceRecordSet</para>
-    ///   <para>Name    : gcloudexample1.com.</para>
-    ///   <para>
-    ///   Rrdatas : {ns-cloud-e1.googledomains.com.cloud-dns-hostmaster.google.com. 1 21600 3600 259200 300}
-    ///   </para>
-    ///   <para>Ttl     : 21600</para>
-    ///   <para>Type    : SOA</para>
-    ///   <para>ETag    :</para>
+    ///   <para><code>Get-GcdResourceRecordSet -DnsProject "testing" -Zone "test1"</code></para>
     /// </example>
     /// <example>
     ///   <para>
-    ///   Get the ResourceRecordSets of type "NS" or "AAAA" in the ManagedZone "testZone2" in the DnsProject "testing."
+    ///   Get the ResourceRecordSets of type "NS" or "AAAA" in the ManagedZone "test1" in the DnsProject "testing."
     ///   </para>
-    ///   <para>
-    ///     <code>PS C:\> Get-GcdResourceRecordSet -DnsProject "testing" -Zone "testZone2" -Filter "NS","AAAA"</code>
-    ///   </para>
-    ///   <br></br>
-    ///   <para>Kind    : dns#resourceRecordSet</para>
-    ///   <para>Name    : gcloudexample1.com.</para>
-    ///   <para>
-    ///   Rrdatas : {ns-cloud-e1.googledomains.com., ns-cloud-e2.googledomains.com., 
-    ///   ns-cloud-e3.googledomains.com., ns-cloud-e4.googledomains.com.}
-    ///   </para>
-    ///   <para>Ttl     : 21600</para>
-    ///   <para>Type    : NS</para>
-    ///   <para>ETag    :</para> 
-    ///   <br></br>
-    ///   <para>Kind    : dns#resourceRecordSet</para>
-    ///   <para>Name    : gcloudexample1.com.</para>
-    ///   <para>Rrdatas : {2001:db8:85a3::8a2e:370:7334}</para>
-    ///   <para>Ttl     : 300</para>
-    ///   <para>Type    : AAAA</para>
-    ///   <para>ETag    :</para>
+    ///   <para><code>Get-GcdResourceRecordSet -DnsProject "testing" -Zone "test1" -Filter "NS","AAAA"</code></para>
     /// </example>
-    /// <para type="link" uri="(https://cloud.google.com/dns/api/v1/resourceRecordSets)">
-    /// [ResourceRecordSet Resource Representation]
-    /// </para>
-    /// <para type="link" uri="(https://cloud.google.com/dns/api/v1/resourceRecordSets/list)">
-    /// [ResourceRecordSet: List Request (HTTP)]
-    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcdResourceRecordSet")]
-    [OutputType(typeof(ResourceRecordSet))]
     public class GetGcdResourceRecordSetCmdlet : GcdCmdlet
     {
         /// <summary>
@@ -110,8 +64,7 @@ namespace Google.PowerShell.Dns
         {
             base.ProcessRecord();
 
-            ResourceRecordSetsResource.ListRequest rrsetListRequest = 
-                Service.ResourceRecordSets.List(DnsProject, Zone);
+            ResourceRecordSetsResource.ListRequest rrsetListRequest = Service.ResourceRecordSets.List(DnsProject, Zone);
             ResourceRecordSetsListResponse rrsetListResponse = rrsetListRequest.Execute();
             IList<ResourceRecordSet> rrsetList = rrsetListResponse.Rrsets;
 
@@ -150,26 +103,15 @@ namespace Google.PowerShell.Dns
     /// </para>
     /// <example>
     ///   <para>
-    ///   Create a new ResourceRecordSet resource with name "gcloudexample.com.", Rrdata ["7.5.7.8"], type "A," and 
+    ///   Create a new ResourceRecordSet resource with name "gcloudexample.com.", Rrdata ["7.5.7.8"], type "A," and  
     ///   ttl 300.
     ///   </para>
     ///   <para>
-    ///   <code>PS C:\> New-GcdResourceRecordSet -Name "gcloudexample.com." -Rrdata "7.5.7.8" -Type "A" -Ttl 300</code>
+    ///   <code>New-GcdResourceRecordSet -Name "gcloudexample.com." -Rrdata "7.5.7.8" -Type "A" -Ttl 300</code>
     ///   </para>
-    ///   <br></br>
-    ///   <para>Kind    : dns#resourceRecordSet</para>
-    ///   <para>Name    : gcloudexample1.com.</para>
-    ///   <para>Rrdatas : {7.5.7.8}</para>
-    ///   <para>Ttl     : 300</para>
-    ///   <para>Type    : A</para>
-    ///   <para>ETag    :</para>
     /// </example>
-    /// <para type="link" uri="(https://cloud.google.com/dns/api/v1/resourceRecordSets)">
-    /// [ResourceRecordSet Resource Representation]
-    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GcdResourceRecordSet")]
-    [OutputType(typeof(ResourceRecordSet))]
     public class NewGcdResourceRecordSetCmdlet : GcdCmdlet
     {
         /// <summary>
@@ -192,9 +134,6 @@ namespace Google.PowerShell.Dns
         /// <summary>
         /// <para type="description">
         /// Get the type of the ResourceRecordSet.
-        /// </para>
-        /// <para type="description">
-        /// The supported types are "A," "AAAA," "CNAME," "MX," "NAPTR," "NS," "PTR," "SOA," "SPF," "SRV," and "TXT."
         /// </para>
         /// </summary>
         [Parameter(Position = 2, Mandatory = true)]
