@@ -167,7 +167,8 @@ namespace Google.PowerShell.Sql
                 default:
                     throw UnknownParameterSetException;
             }
-            SslCertsInsertRequest RequestBody = new SslCertsInsertRequest {
+            SslCertsInsertRequest RequestBody = new SslCertsInsertRequest
+            {
                 CommonName = CommonName
             };
             SslCertsResource.InsertRequest request = Service.SslCerts.Insert(RequestBody, project, instance);
@@ -253,15 +254,14 @@ namespace Google.PowerShell.Sql
                 default:
                     throw UnknownParameterSetException;
             }
-            
+
             if (!ShouldProcess($"{project}/{instance}/{name}", "Delete SSL Certificate"))
             {
                 return;
             }
             SslCertsResource.DeleteRequest request = Service.SslCerts.Delete(project, instance, finger);
             Operation result = request.Execute();
-            result = WaitForSqlOperation(result);
-            WriteObject(result);
+            WaitForSqlOperation(result);
         }
     }
 }
