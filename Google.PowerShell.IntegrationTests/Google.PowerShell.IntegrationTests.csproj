@@ -54,6 +54,8 @@
     <None Include="Compute\Compute.GceInstance.Tests.ps1" />
     <None Include="Compute\Compute.GceInstanceTemplate.Tests.ps1" />
     <None Include="Compute\Compute.GceManagedInstanceGroup.Tests.ps1" />
+    <None Include="Compute\Compute.GceNetwork.Tests.ps1" />
+    <None Include="Compute\Compute.GceRoute.Tests.ps1" />
     <None Include="Compute\Compute.GceServiceAccount.Tests.ps1" />
     <None Include="Compute\Compute.GceSnapshot.Tests.ps1" />
     <None Include="Dns\Dns.GcdChange.Tests.ps1" />
@@ -64,6 +66,7 @@
     <None Include="GcloudCmdlets.ps1" />
     <None Include="README.md" />
     <None Include="SQL\SQL.GcSqlBackupRuns.Tests.ps1" />
+    <None Include="SQL\SQL.GcSqlConfiguration.Tests.ps1" />
     <None Include="SQL\SQL.GcSqlDatabase.Tests.ps1" />
     <None Include="SQL\SQL.GcSqlFlags.Tests.ps1" />
     <None Include="SQL\SQL.GcSqlInstances.Tests.ps1" />
