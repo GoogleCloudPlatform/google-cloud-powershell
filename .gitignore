@@ -226,5 +226,3 @@ FakesAssemblies/
 **/*.Server/GeneratedArtifacts
 **/*.Server/ModelManifest.xml
 _Pvt_Extensions
-
-/Tools/CheckCmdletRef.ps1
