@@ -216,6 +216,7 @@ namespace Google.PowerShell.ComputeEngine
                 disks.Add(new AttachedDisk
                 {
                     Boot = true,
+                    AutoDelete = false,
                     Source = BootDisk.SelfLink
                 });
             }

@@ -97,6 +97,11 @@ namespace Google.PowerShell.Common
         // TODO(jimwp): Add new function called by this to replace capability in childeren.
         protected sealed override void BeginProcessing()
         {
+            UpdateConfigPropertyNameAttribute();
+        }
+
+        protected void UpdateConfigPropertyNameAttribute()
+        {
             foreach (PropertyInfo property in GetType().GetProperties())
             {
                 ConfigPropertyNameAttribute configPropertyName =

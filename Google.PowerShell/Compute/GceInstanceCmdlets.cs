@@ -105,6 +105,9 @@ namespace Google.PowerShell.ComputeEngine
 
         protected override void ProcessRecord()
         {
+            // Parameter sets can change when using the pipeline. Make sure all the needed parameters are
+            // initialized.
+            UpdateConfigPropertyNameAttribute();
             IEnumerable<Instance> instances;
             switch (ParameterSetName)
             {
@@ -405,7 +408,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        [PropertyByTypeTransformation(Property = nameof(DataType.network.SelfLink),
+        [PropertyByTypeTransformation(Property = nameof(Apis.Compute.v1.Data.Network.SelfLink),
             TypeToTransform = typeof(Network))]
         public override string Network { get; set; }
 
@@ -463,7 +466,7 @@ namespace Google.PowerShell.ComputeEngine
         /// Get-GceAddress.
         /// </para>
         /// </summary>
-        [PropertyByTypeTransformation(Property = nameof(DataType.address.AddressValue),
+        [PropertyByTypeTransformation(Property = nameof(Apis.Compute.v1.Data.Address.AddressValue),
             TypeToTransform = typeof(Address))]
         protected override string Address { get; set; }
 

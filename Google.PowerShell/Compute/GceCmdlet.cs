@@ -17,18 +17,6 @@ namespace Google.PowerShell.ComputeEngine
     /// </summary>
     public abstract class GceCmdlet : GCloudCmdlet
     {
-        /// <summary>
-        /// Container classes listing datatypes to be used in nameof() in PropertyTypeTransformationAttributes.
-        /// </summary>
-        /// <example>
-        /// [PropertyTypeTransformation(Property = nameof(DataType.network.SelfLink), TypeToTransform = typeof(Network))]
-        /// </example>
-        protected static class DataType
-        {
-            public static Network network;
-            public static Address address;
-        }
-
         // The Servcie for the Google Compute API
         public ComputeService Service { get; }
 
