@@ -8,6 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Google.PowerShell.Common;
 using Google.Apis.SQLAdmin.v1beta4;
+using System.Text.RegularExpressions;
+using Google.Apis.SQLAdmin.v1beta4.Data;
+using System.Threading;
 
 namespace Google.PowerShell.Sql
 {
@@ -22,6 +25,26 @@ namespace Google.PowerShell.Sql
         public GcSqlCmdlet()
         {
             Service = new SQLAdminService(GetBaseClientServiceInitializer());
+        }
+
+        /// <summary>
+        /// Library method to wait for an SQL operation to finish.
+        /// </summary>
+        /// <param name="op">
+        /// The SQL operation we want to wait for.
+        /// </param>
+        /// <returns>
+        /// The finished operation resource.
+        /// </returns>
+        public Operation WaitForSqlOperation(Operation op) 
+        {
+            while (op.Status != "DONE")
+            {
+                Thread.Sleep(150);
+                OperationsResource.GetRequest request = Service.Operations.Get(op.TargetProject, op.Name);
+                op = request.Execute();
+            }
+            return op;
         }
     }
 }
