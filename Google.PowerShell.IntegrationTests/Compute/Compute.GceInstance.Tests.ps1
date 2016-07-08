@@ -4,8 +4,7 @@ Install-GcloudCmdlets
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 $zone2 = "us-central1-a"
-$image = Get-GceImage -Project "debian-cloud" | Select -First 1
-
+$image = Get-GceImage "debian-cloud" -Family "debian-8"
 Get-GceInstance -Project $project | Remove-GceInstance
 
 Describe "Get-GceInstance" {
@@ -15,8 +14,7 @@ Describe "Get-GceInstance" {
     $instance2 = "gcps-instance-exist2-$r"
     $instance3 = "gcps-instance-exist3-$r"
     
-    Add-GceInstance $instance -BootDiskImage $image -MachineType "f1-micro"
-    Add-GceInstance $instance2 -BootDiskImage $image -MachineType "f1-micro"
+    $instance, $instance2 | Add-GceInstance -BootDiskImage $image -MachineType "f1-micro"
     Add-GceInstance $instance3 -BootDiskImage $image -MachineType "f1-micro" -Zone $zone2
 
 
@@ -80,7 +78,7 @@ Describe "Get-GceInstance" {
 
     It "should return serial port output" {
         $output = Get-GceInstance -Project $project -Zone $zone -Name $instance -SerialPortOutput
-        $output | Should Match "$instance run-startup-scripts"
+        $output | Should Match "$instance\s*kernel"
     }
     
     $templateName = "test-template-get-instance-$r"
@@ -107,22 +105,24 @@ Describe "New-GceInstanceConfig" {
     $r = Get-Random
     $instance = "gcps-instance-1-$r"
     $instance2 = "gcps-instance-2-$r"
+    $defaultNetwork = Get-GceNetwork "default"
+    $attachedDisk = New-GceAttachedDiskConfig $image -Boot
 
     It "should work" {
         $instanceConfig = New-GceInstanceConfig -Name $instance `
             -MachineType "f1-micro" `
-            -Disk @{"boot"=$true; "initializeParams" = @{"sourceImage" = $image}} `
-            -NetworkInterface @{"network"="global/networks/fake"} `
+            -Disk $attachedDisk `
+            -Network $default `
             -Tag "alpha", "beta"
         $instanceConfig.MachineType | Should Be "f1-micro"
         $instanceConfig.Disks.Boot | Should Be $true
         $instanceConfig.Tags.Items | Should Be @("alpha", "beta")
-        $instanceConfig.NetworkInterfaces.Network | Should Be "global/networks/fake"
+        $instanceConfig.NetworkInterfaces.Network | Should Match "global/networks/default"
     }
 
     It "should handle defaults" {
         $instanceConfig = New-GceInstanceConfig -Name $instance -MachineType "f1-micro" `
-            -Disk @{"boot"=$true; "initializeParams" = @{"sourceImage" = $image}}
+            -Disk $attachedDisk
         $instanceConfig.NetworkInterfaces.Network | Should Be "global/networks/default"
         $instanceConfig.NetworkInterfaces.AccessConfigs.Type | Should Be "ONE_TO_ONE_NAT"
     }
@@ -132,17 +132,21 @@ Describe "New-GceInstanceConfig" {
              -DiskImage $image
         $instanceConfig.Disks.Boot | Should Be $true
         $instanceConfig.Disks.AutoDelete | Should Be $true
-        $instanceConfig.Disks.InitializeParams.SourceImage | Should Be $image
+        $instanceConfig.Disks.InitializeParams.SourceImage | Should Be $image.SelfLink
     }
+
+    $persistantDisk = New-GceDisk "test-new-instanceconfig-$r" $image
 
     It "should attach disk" {
         $instanceConfig = New-GceInstanceConfig -Name $instance  -MachineType "f1-micro" `
-            -DiskSource "someDisk"
+            -BootDisk $persistantDisk
         $instanceConfig.Disks.Boot | Should Be $true
         $instanceConfig.Disks.AutoDelete | Should Be $false
-        $instanceConfig.Disks.Source | Should Be "someDisk"
+        $instanceConfig.Disks.Source | Should Be $persistantDisk.SelfLink
         $instanceConfig.Disks.InitializeParams | Should BeNullOrEmpty
     }
+
+    Remove-GceDisk $persistantDisk
 
     It "should use pipeline" {
         $instanceConfigs = $instance, $instance2 |

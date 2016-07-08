@@ -53,6 +53,7 @@
     <None Include="Compute\Compute.GceImage.Tests.ps1" />
     <None Include="Compute\Compute.GceInstance.Tests.ps1" />
     <None Include="Compute\Compute.GceInstanceTemplate.Tests.ps1" />
+    <None Include="Compute\Compute.GceMachineType.Tests.ps1" />
     <None Include="Compute\Compute.GceManagedInstanceGroup.Tests.ps1" />
     <None Include="Compute\Compute.GceNetwork.Tests.ps1" />
     <None Include="Compute\Compute.GceRoute.Tests.ps1" />

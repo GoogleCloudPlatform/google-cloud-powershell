@@ -131,7 +131,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceInstanceTemplate", DefaultParameterSetName = ParameterSetNames.ByValues)]
-    public class AddGceInstanceTemplateCmdlet : GceInstanceDescriptionCmdletBase
+    public class AddGceInstanceTemplateCmdlet : GceTemplateDescriptionCmdlet
     {
         private struct ParameterSetNames
         {
@@ -202,12 +202,12 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// Name of existing disk to attach. All instances of this template will be able to
+        /// An existing disk to attach. All instances of this template will be able to
         /// read this disk. Will attach in read only mode.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public override string[] ExtraDiskName { get; set; }
+        public override Disk[] ExtraDisk { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -284,24 +284,6 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
         public override string[] Tag { get; set; }
-
-        /// <summary>
-        /// Not used.
-        /// </summary>
-        protected override Disk BootDisk
-        {
-            get { return null; }
-            set { }
-        }
-
-        /// <summary>
-        /// Not used.
-        /// </summary>
-        protected override string Address
-        {
-            get { return null; }
-            set { }
-        }
 
         protected override void ProcessRecord()
         {

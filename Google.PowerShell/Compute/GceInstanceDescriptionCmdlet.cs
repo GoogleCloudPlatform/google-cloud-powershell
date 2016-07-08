@@ -5,10 +5,7 @@ using System.Management.Automation;
 
 namespace Google.PowerShell.ComputeEngine
 {
-    /// <summary>
-    /// Base cmdlet class indicating what parameters are needed to describe an instance.
-    /// </summary>
-    public abstract class GceInstanceDescriptionCmdletBase : GceConcurrentCmdlet
+    public abstract class GceTemplateDescriptionCmdlet : GceConcurrentCmdlet
     {
         /// <summary>
         /// The name of the instance or instance template.
@@ -33,19 +30,14 @@ namespace Google.PowerShell.ComputeEngine
         public abstract string Description { get; set; }
 
         /// <summary>
-        /// The persistant disk to use as a boot disk. Use Get-GceDisk to get one of these.
-        /// </summary>
-        protected abstract Disk BootDisk { get; set; }
-
-        /// <summary>
         /// The the image used to create the boot disk. Use Get-GceImage to get one of these.
         /// </summary>
         public abstract Image BootDiskImage { get; set; }
 
         /// <summary>
-        /// Name of existing disk to attach. It will be attached in read-only mode.
+        /// An existing disk to attach. It will be attached in read-only mode.
         /// </summary>
-        public abstract string[] ExtraDiskName { get; set; }
+        public abstract Disk[] ExtraDisk { get; set; }
 
         /// <summary>
         /// An AttachedDisk object specifying a disk to attach. Do not specify `-BootDiskImage` or
@@ -95,14 +87,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         public abstract string[] Tag { get; set; }
 
-        /// <summary>
-        /// <para type="description">
-        /// The static ip address this instance will have.
-        /// </para>
-        /// </summary>
-        protected abstract string Address { get; set; }
-
-        protected NetworkInterface BuildNetworkInterfaces()
+        protected virtual NetworkInterface BuildNetworkInterfaces()
         {
             var accessConfigs = new List<AccessConfig>();
             if (!NoExternalIp)
@@ -128,29 +113,19 @@ namespace Google.PowerShell.ComputeEngine
             return new NetworkInterface
             {
                 Network = networkUri,
-                AccessConfigs = accessConfigs,
-                NetworkIP = Address
+                AccessConfigs = accessConfigs
             };
         }
 
         /// <summary>
-        /// Creates a list of AttachedDisk objects form Disk, BootDiskImage, and ExtraDiskName.
+        /// Creates a list of AttachedDisk objects form Disk, BootDiskImage, and ExtraDis.
         /// </summary>
-        protected IList<AttachedDisk> BuildAttachedDisks()
+        protected virtual IList<AttachedDisk> BuildAttachedDisks()
         {
             var disks = new List<AttachedDisk>();
             if (Disk != null)
             {
                 disks.AddRange(Disk);
-            }
-
-            if (BootDisk != null)
-            {
-                disks.Add(new AttachedDisk
-                {
-                    Boot = true,
-                    Source = BootDisk.SelfLink
-                });
             }
 
             if (BootDiskImage != null)
@@ -164,44 +139,19 @@ namespace Google.PowerShell.ComputeEngine
                 });
             }
 
-            if (ExtraDiskName != null)
+            if (ExtraDisk != null)
             {
-                foreach (var diskName in ExtraDiskName)
+                foreach (Disk disk in ExtraDisk)
                 {
                     disks.Add(new AttachedDisk
                     {
-                        Source = diskName,
+                        Source = disk.SelfLink,
                         Mode = "READ_ONLY"
                     });
                 }
             }
 
             return disks;
-        }
-
-        protected Instance BuildInstance()
-        {
-            return new Instance
-            {
-                Name = Name,
-                CanIpForward = CanIpForward,
-                Description = Description,
-                Disks = BuildAttachedDisks(),
-                MachineType = MachineType,
-                Metadata = InstanceMetadataPSConverter.BuildMetadata(Metadata),
-                NetworkInterfaces = new List<NetworkInterface> { BuildNetworkInterfaces() },
-                Scheduling = new Scheduling
-                {
-                    AutomaticRestart = AutomaticRestart && !Preemptible,
-                    Preemptible = Preemptible,
-                    OnHostMaintenance = TerminateOnMaintenance ? "TERMINATE" : "MIGRATE"
-                },
-                ServiceAccounts = ServiceAccount,
-                Tags = new Tags
-                {
-                    Items = Tag
-                }
-            };
         }
 
         /// <summary>
@@ -235,6 +185,71 @@ namespace Google.PowerShell.ComputeEngine
                     {
                         Items = Tag
                     }
+                }
+            };
+        }
+    }
+
+    /// <summary>
+    /// Base cmdlet class indicating what parameters are needed to describe an instance.
+    /// </summary>
+    public abstract class GceInstanceDescriptionCmdlet : GceTemplateDescriptionCmdlet
+    {
+        /// <summary>
+        /// The persistant disk to use as a boot disk. Use Get-GceDisk to get one of these.
+        /// </summary>
+        public abstract Disk BootDisk { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The static ip address this instance will have.
+        /// </para>
+        /// </summary>
+        protected abstract string Address { get; set; }
+
+        protected override IList<AttachedDisk> BuildAttachedDisks()
+        {
+            IList<AttachedDisk> disks = base.BuildAttachedDisks();
+
+            if (BootDisk != null)
+            {
+                disks.Add(new AttachedDisk
+                {
+                    Boot = true,
+                    Source = BootDisk.SelfLink
+                });
+            }
+            return disks;
+        }
+
+        protected override NetworkInterface BuildNetworkInterfaces()
+        {
+            NetworkInterface networkInterface = base.BuildNetworkInterfaces();
+            networkInterface.NetworkIP = Address;
+            return networkInterface;
+        }
+
+        protected Instance BuildInstance()
+        {
+            return new Instance
+            {
+                Name = Name,
+                CanIpForward = CanIpForward,
+                Description = Description,
+                Disks = BuildAttachedDisks(),
+                MachineType = MachineType,
+                Metadata = InstanceMetadataPSConverter.BuildMetadata(Metadata),
+                NetworkInterfaces = new List<NetworkInterface> { BuildNetworkInterfaces() },
+                Scheduling = new Scheduling
+                {
+                    AutomaticRestart = AutomaticRestart && !Preemptible,
+                    Preemptible = Preemptible,
+                    OnHostMaintenance = TerminateOnMaintenance ? "TERMINATE" : "MIGRATE"
+                },
+                ServiceAccounts = ServiceAccount,
+                Tags = new Tags
+                {
+                    Items = Tag
                 }
             };
         }

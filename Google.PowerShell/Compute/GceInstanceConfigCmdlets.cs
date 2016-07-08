@@ -18,7 +18,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GceInstanceConfig")]
-    public class NewGceInstanceConfigCmdlet : GceInstanceDescriptionCmdletBase
+    public class NewGceInstanceConfigCmdlet : GceInstanceDescriptionCmdlet
     {
 
         /// <summary>
@@ -32,10 +32,13 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The name of the machine type for this template.
+        /// The machine type of this instance. Can be a name, a URL or a MachineType object from
+        /// Get-GceMachineType.
         /// </para>
         /// </summary>
         [Parameter(Position = 1, Mandatory = true)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(MachineType),
+            Property = nameof(Apis.Compute.v1.Data.MachineType.SelfLink))]
         public override string MachineType { get; set; }
 
         /// <summary>
@@ -50,30 +53,38 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// Human readable description of this instance template.
+        /// Human readable description of this instance.
         /// </para>
         /// </summary>
         [Parameter]
         public override string Description { get; set; }
 
-        protected override Disk BootDisk { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The persistant disk to use as a boot disk. Use Get-GceDisk to get one of these.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        public override Disk BootDisk { get; set; }
+
         /// <summary>
         /// <para type="description">
         /// The the image used to create the boot disk. Use Get-GceImage to get one of these.
         /// </para>
         /// </summary>
         [Parameter]
+        [Alias("DiskImage")]
         public override Image BootDiskImage { get; set; }
 
 
         /// <summary>
         /// <para type="description">
-        /// Name of existing disk to attach. All instances of this template will be able to
-        /// read this disk.
+        /// An existing disk to attach in read only mode.
         /// </para>
         /// </summary>
         [Parameter]
-        public override string[] ExtraDiskName { get; set; }
+        public override Disk[] ExtraDisk { get; set; }
 
         /// <summary>
         /// <para type="description">

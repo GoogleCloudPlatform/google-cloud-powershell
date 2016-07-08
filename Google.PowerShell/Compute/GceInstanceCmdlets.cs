@@ -280,7 +280,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceInstance")]
-    public class AddGceInstanceCmdlet : GceInstanceDescriptionCmdletBase
+    public class AddGceInstanceCmdlet : GceInstanceDescriptionCmdlet
     {
         private class ParameterSetNames
         {
@@ -328,10 +328,13 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The name of the machine type of this instance.
+        /// The machine type of this instance. Can be a name, a URL or a MachineType object from
+        /// Get-GceMachineType.
         /// </para>
         /// </summary>
         [Parameter(Position = 1, Mandatory = true, ParameterSetName = ParameterSetNames.ByValues)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(MachineType),
+            Property = nameof(Apis.Compute.v1.Data.MachineType.SelfLink))]
         public override string MachineType { get; set; }
 
         /// <summary>
@@ -357,7 +360,8 @@ namespace Google.PowerShell.ComputeEngine
         /// The persistant disk to use as a boot disk. Use Get-GceDisk to get one of these.
         /// </para>
         /// </summary>
-        protected override Disk BootDisk { get; set; }
+        [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        public override Disk BootDisk { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -365,16 +369,17 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [Alias("DiskImage")]
         public override Image BootDiskImage { get; set; }
 
 
         /// <summary>
         /// <para type="description">
-        /// Name of existing disk to attach. It will attach in read-only mode.
+        /// An existing disk to attach. It will attach in read-only mode.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public override string[] ExtraDiskName { get; set; }
+        public override Disk[] ExtraDisk { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -477,12 +482,30 @@ namespace Google.PowerShell.ComputeEngine
                     throw UnknownParameterSetException;
             }
 
+            instance.MachineType = GetMachineTypeUrl(instance.MachineType);
             InstancesResource.InsertRequest request = Service.Instances.Insert(instance, Project, Zone);
             Operation operation = request.Execute();
             AddZoneOperation(Project, Zone, operation, () =>
             {
                 WriteObject(Service.Instances.Get(Project, Zone, instance.Name).Execute());
             });
+        }
+
+        private string GetMachineTypeUrl(string machineType)
+        {
+            if (machineType.Split('/', '\\').Length < 2)
+            {
+                if (machineType.Contains("custom"))
+                {
+                    machineType = $"zones/{Zone}/machineTypes/{machineType}";
+                }
+                else
+                {
+                    machineType =
+                        $"projects/{Project}/zones/{Zone}/machineTypes/{machineType}";
+                }
+            }
+            return machineType;
         }
     }
 
