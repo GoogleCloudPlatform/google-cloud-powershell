@@ -26,7 +26,7 @@ namespace Google.PowerShell.Sql
     {
         /// <summary>
         /// <para type="description">
-        /// The tier of service for this instance, for example D1, D2.
+        /// The tier of service for this instance, for example "db-n1-standard-1".
         /// Pricing information is available at https://cloud.google.com/sql/pricing.
         /// Get-GcSqlTiers will also tell you what tiers are available for your project.
         /// </para>
@@ -59,7 +59,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
-        public bool BinaryLogEnabled = true;
+        public bool BinaryLogEnabled { get; set; } = true;
 
         /// <summary>
         /// <para type="description">
@@ -68,7 +68,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public bool BackupConfigEnabled = true;
+        public bool BackupConfigEnabled { get; set; } = true;
 
         /// <summary>
         /// <para type="description">
@@ -88,7 +88,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public long DataDiskSizeGb = 10;
+        public long DataDiskSizeGb { get; set; } = 10;
 
         /// <summary>
         /// <para type="description">
@@ -187,15 +187,6 @@ namespace Google.PowerShell.Sql
         [Parameter]
         public DataDiskType DiskType { get; set; } = DataDiskType.PD_SSD;
 
-        /// <summary>
-        /// <para type="description">
-        /// Configuration specific to read replica instances. 
-        /// Indicates whether replication is enabled or not.
-        /// </para>
-        /// </summary>
-        [Parameter]
-        public SwitchParameter DatabaseReplicationEnabled { get; set; }
-
         protected override void ProcessRecord()
         {
             Settings settings = new Settings
@@ -207,6 +198,7 @@ namespace Google.PowerShell.Sql
                 {
                     BinaryLogEnabled = BinaryLogEnabled,
                     Enabled = BackupConfigEnabled,
+                    Kind = "sql#backupConfiguration",
                     StartTime = BackupConfigStartTime
                 },
                 DataDiskSizeGb = DataDiskSizeGb,
@@ -217,6 +209,7 @@ namespace Google.PowerShell.Sql
                     Ipv4Enabled = IpConfigIpv4Enabled,
                     RequireSsl = IpConfigRequireSsl
                 },
+                Kind = "sql#settings",
                 LocationPreference = new LocationPreference
                 {
                     FollowGaeApplication = LocationPreferenceFollowGae,
@@ -229,7 +222,7 @@ namespace Google.PowerShell.Sql
                 },
                 StorageAutoResize = StorageAutoResize,
                 DataDiskType = DiskType.ToString(),
-                DatabaseReplicationEnabled = DatabaseReplicationEnabled
+                ReplicationType = "SYNCHRONOUS"
             };
             WriteObject(settings);
         }

@@ -53,6 +53,20 @@ namespace Google.PowerShell.Sql
         [Parameter(Mandatory = true, ValueFromPipeline = true)]
         public Settings SettingConfig { get; set; }
 
+        public enum DatabaseVersion
+        {
+            MYSQL_5_6,
+            MYSQL_5_7
+        }
+        /// <summary>
+        /// <para type="description">
+        /// The type of data disk: PD_SSD (default) or PD_HDD.
+        /// Applies only to Second Generation instances.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        public DatabaseVersion DatabaseVer { get; set; } = DatabaseVersion.MYSQL_5_6;
+
         /// <summary>
         /// <para type="description">
         /// The name of the instance which will act as master in the replication setup.
@@ -77,10 +91,12 @@ namespace Google.PowerShell.Sql
         ///  Defaults to 
         ///  us-central1 depending on the instance type.
         ///  The region can not be changed after instance creation.
+        ///  
+        /// Defaults to us-central1
         /// </para>
         /// </summary>
         [Parameter]
-        public string Region { get; set; }
+        public string Region { get; set; } = "us-central";
 
         protected override void ProcessRecord()
         {
@@ -90,7 +106,13 @@ namespace Google.PowerShell.Sql
                 Settings = SettingConfig,
                 MasterInstanceName = MasterInstanceName,
                 Name = Name,
-                Region = Region
+                Region = Region,
+                BackendType = "SECOND_GEN",
+                Project = Project,
+                DatabaseVersion = DatabaseVer.ToString(),
+                InstanceType = "CLOUD_SQL_INSTANCE",
+                Kind = "sql#instance",
+                State = "RUNNABLE"
             };
             WriteObject(instance);
         }

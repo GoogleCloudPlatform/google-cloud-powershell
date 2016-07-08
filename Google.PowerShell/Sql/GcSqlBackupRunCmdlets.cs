@@ -90,4 +90,89 @@ namespace Google.PowerShell.Sql
             while (request.PageToken != null);
         }
     }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Deletes a specified backup from a Cloud SQL instance.
+    /// </para>
+    /// <para type="description">
+    /// Deletes a specified backup from a Cloud SQL instance.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Remove, "GcSqlBackupRun", SupportsShouldProcess = true,
+        DefaultParameterSetName = ParameterSetNames.ByName)]
+    public class RemoveGcSqlBackupRunCmdlet : GcSqlCmdlet
+    {
+
+        private class ParameterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByObject = "ByObject";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// Project name of the project that contains an instance.
+        /// Defaults to the cloud sdk config for properties if not specified.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Cloud SQL instance name. 
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByName)]
+        public string Instance { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The ID of the Backup Run we want to delete
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.ByName)]
+        public long Id { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The BackupRun that describes the backup we want to delete.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        public BackupRun Backup { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            long? id;
+            string instance;
+            string project;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.ByName:
+                    id = Id;
+                    instance = Instance;
+                    project = Project;
+                    break;
+                case ParameterSetNames.ByObject:
+                    id = Backup.Id;
+                    instance = Backup.Instance;
+                    project = GetProjectNameFromUri(Backup.SelfLink);
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+
+            if (!ShouldProcess($"{project}/{instance}/{id}", "Delete Backup Run"))
+            {
+                return;
+            }
+            BackupRunsResource.DeleteRequest request = Service.BackupRuns.Delete(project, instance, (long)id);
+            Operation result = request.Execute();
+            WaitForSqlOperation(result);
+        }
+    }
 }
