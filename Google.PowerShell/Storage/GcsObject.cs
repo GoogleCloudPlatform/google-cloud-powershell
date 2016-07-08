@@ -93,9 +93,15 @@ namespace Google.PowerShell.CloudStorage
     ///   <para><code>    -File "C:\logs\log-000.txt"</code></para></code></para>
     /// </example>
     /// </summary>
-    [Cmdlet(VerbsCommon.New, "GcsObject")]
+    [Cmdlet(VerbsCommon.New, "GcsObject", DefaultParameterSetName = ParameterSetNames.ContentsFromString)]
     public class NewGcsObjectCmdlet : GcsObjectCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string ContentsFromString = "ContentsFromString";
+            public const string ContentsFromFile = "ContentsFromFile";
+        }
+
         /// <summary>
         /// <para type="description">
         /// The name of the bucket to upload to.
@@ -117,7 +123,8 @@ namespace Google.PowerShell.CloudStorage
         /// Text content to write to the Storage object. Ignored if File is specified.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = false, ValueFromPipeline = true, ParameterSetName = "ContentsFromString")]
+        [Parameter(Position = 2, Mandatory = true, ValueFromPipeline = true,
+            ParameterSetName = ParameterSetNames.ContentsFromString)]
         public string Contents { get; set; }
 
         /// <summary>
@@ -125,7 +132,7 @@ namespace Google.PowerShell.CloudStorage
         /// Local path to the file to upload.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = true, ParameterSetName = "ContentsFromFile")]
+        [Parameter(Position = 2, Mandatory = true, ParameterSetName = ParameterSetNames.ContentsFromFile)]
         public string File { get; set; }
 
         /// <summary>
@@ -365,15 +372,22 @@ namespace Google.PowerShell.CloudStorage
     /// Deletes a Cloud Storage object.
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Remove, "GcsObject", SupportsShouldProcess = true)]
+    [Cmdlet(VerbsCommon.Remove, "GcsObject",
+        DefaultParameterSetName = ParameterSetNames.FromName, SupportsShouldProcess = true)]
     public class RemoveGcsObjectCmdlet : GcsCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string FromName = "FromObjectName";
+            public const string FromObject = "FromObjectObject";
+        }
+
         /// <summary>
         /// <para type="description">
         /// Name of the bucket containing the object.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
+        [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.FromName)]
         public string Bucket { get; set; }
 
         /// <summary>
@@ -381,16 +395,37 @@ namespace Google.PowerShell.CloudStorage
         /// Name of the object to delete.
         /// </para>
         /// </summary>
-        [Parameter(Position = 1, Mandatory = true, ValueFromPipeline = true)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Object))]
+        [Parameter(Position = 1, Mandatory = true, ParameterSetName = ParameterSetNames.FromName)]
         public string ObjectName { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the object to delete.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true,
+            ParameterSetName = ParameterSetNames.FromObject)]
+        public Object Object { get; set; }
 
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
             var service = GetStorageService();
 
-            if (!ShouldProcess($"{ObjectName}", "Delete Object"))
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.FromName:
+                    // We just use Bucket and ObjectName.
+                    break;
+                case ParameterSetNames.FromObject:
+                    Bucket = Object.Bucket;
+                    ObjectName = Object.Name;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+
+            if (!ShouldProcess($"[{Bucket}] {ObjectName}", "Delete Object"))
             {
                 return;
             }
