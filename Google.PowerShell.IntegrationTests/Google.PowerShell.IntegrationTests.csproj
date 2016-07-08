@@ -54,6 +54,8 @@
     <None Include="Compute\Compute.GceInstance.Tests.ps1" />
     <None Include="Compute\Compute.GceInstanceTemplate.Tests.ps1" />
     <None Include="Compute\Compute.GceManagedInstanceGroup.Tests.ps1" />
+    <None Include="Compute\Compute.GceNetwork.Tests.ps1" />
+    <None Include="Compute\Compute.GceRoute.Tests.ps1" />
     <None Include="Compute\Compute.GceServiceAccount.Tests.ps1" />
     <None Include="Compute\Compute.GceSnapshot.Tests.ps1" />
     <None Include="Dns\Dns.GcdChange.Tests.ps1" />
