@@ -205,7 +205,7 @@ namespace Google.PowerShell.Dns
         {
             base.ProcessRecord();
 
-            if (!Force && !ShouldProcess($"{DnsProject}/{Zone}", "Delete ManagedZone"))
+            if (!ShouldProcess($"{DnsProject}/{Zone}", "Delete ManagedZone"))
             {
                 return;
             }
