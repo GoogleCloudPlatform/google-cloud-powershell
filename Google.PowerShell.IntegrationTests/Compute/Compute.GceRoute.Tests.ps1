@@ -6,11 +6,11 @@ $r = Get-Random
 
 $routeName = "test-route-$r"
 $allIps = "0.0.0.0/0"
-$network = Get-GceNetwork default
+$defaultNetwork = Get-GceNetwork default
 
 Describe "Add-GceRoute" {
     It "should fail for wrong project" {
-        { Add-GceRoute $routeName $allIps $network -Project "asdf" } | Should Throw 403
+        { Add-GceRoute $routeName $allIps $defaultNetwork -Project "asdf" } | Should Throw 403
     }
 
     Context "add success" {
@@ -19,11 +19,11 @@ Describe "Add-GceRoute" {
         }
 
         It "should work" {
-            $addedRoute = Add-GceRoute $routeName $allIps $network -Priority 9001 -Description "for testing $r"`
+            $addedRoute = Add-GceRoute $routeName $allIps $defaultNetwork -Priority 9001 -Description "for testing $r"`
                 -Tag "alpha", "beta" -NextHopInternetGateway
             $addedRoute.Name | Should Be $routeName
             $addedRoute.DestRange | Should Be $allIps
-            $addedRoute.Network | Should Be $network.SelfLink
+            $addedRoute.Network | Should Be $defaultNetwork.SelfLink
             $addedRoute.Priority | Should Be 9001
             $addedRoute.Description | Should Be "for testing $r"
             $addedRoute.Tags.Count | Should Be 2
@@ -52,7 +52,7 @@ Describe "Add-GceRoute" {
 
             $addedRoute.Name | Should Be $routeName
             $addedRoute.DestRange | Should Be $allIps
-            $addedRoute.Network | Should Be $network.SelfLink
+            $addedRoute.Network | Should Be $defaultNetwork.SelfLink
             $addedRoute.Priority | Should Be 9001
             $addedRoute.Description | Should Be "for testing $r"
 
@@ -69,7 +69,7 @@ Describe "Add-GceRoute" {
             $rootRoute.Name = $routeName
             $rootRoute.DestRange = $allIps
             $rootRoute.Priority = 9001
-            $rootRoute.Network = $network.SelfLink
+            $rootRoute.Network = $defaultNetwork.SelfLink
             $rootRoute.Id = $null
             $rootRoute.Description ="for testing $r"
 
@@ -78,7 +78,7 @@ Describe "Add-GceRoute" {
 
             $addedRoute.Name | Should Be $routeName
             $addedRoute.DestRange | Should Be $allIps
-            $addedRoute.Network | Should Be $network.SelfLink
+            $addedRoute.Network | Should Be $defaultNetwork.SelfLink
             $addedRoute.Priority | Should Be 9001
             $addedRoute.Description | Should Be "for testing $r"
 
@@ -94,13 +94,13 @@ Describe "Add-GceRoute" {
         $instance = Get-GceInstance $instanceName
 
         It "should route to an instance" {
-            $addedRoute = Add-GceRoute $routeName $allIps $network -Priority 9001 -NextHopInstance $instance
+            $addedRoute = Add-GceRoute $routeName $allIps $defaultNetwork -Priority 9001 -NextHopInstance $instance
             $addedRoute.NextHopInstance | Should Be $instance.SelfLink
         }
 
         It "should route to an IP" {
             $ip = $instance.NetworkInterfaces.NetworkIp
-            $addedRoute = Add-GceRoute $routeName $allIps $network -Priority 9001 -NextHopIp $ip
+            $addedRoute = Add-GceRoute $routeName $allIps $defaultNetwork -Priority 9001 -NextHopIp $ip
             $addedRoute.NextHopIP | Should Be $ip
         }
 
@@ -119,7 +119,7 @@ Describe "Get-GceRoute" {
         { Get-GceRoute $routeName } | Should Throw 404
     }
 
-    Add-GceRoute $routeName $allIps $network -Priority 9001 -NextHopInternetGateway
+    Add-GceRoute $routeName $allIps $defaultNetwork -Priority 9001 -NextHopInternetGateway
 
     It "should list for project" {
         $routes = Get-GceRoute
@@ -161,7 +161,7 @@ Describe "Remove-GceRoute" {
 
     Context "remove sucess" {
         BeforeEach {
-            Add-GceRoute $routeName $allIps $network -Priority 9001 -NextHopInternetGateway
+            Add-GceRoute $routeName $allIps $defaultNetwork -Priority 9001 -NextHopInternetGateway
         }
 
         It "should work with name" {
