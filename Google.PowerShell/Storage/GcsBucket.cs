@@ -169,10 +169,8 @@ namespace Google.PowerShell.CloudStorage
         }
 
         /// <summary>
-        /// Asks the user about deleting bucke objects, and starts asynchornis tasks to do so.
+        /// Asks the user about deleting bucket objects, and starts async tasks to do so.
         /// </summary>
-        /// <param name="service"></param>
-        /// <returns></returns>
         private List<Task<string>> AskDeleteObjects(StorageService service)
         {
             List<Task<string>> deleteTasks = new List<Task<string>>();
@@ -191,14 +189,13 @@ namespace Google.PowerShell.CloudStorage
                 foreach (var bucketObject in bucketObjects.Items)
                 {
                     string query = $"Delete bucket object {bucketObject.Name}?";
-
                     if (Force || ShouldContinue(query, caption, ref yesAll, ref noAll))
                     {
                         deleteTasks.Add(service.Objects.Delete(Name, bucketObject.Name).ExecuteAsync());
                     }
                 }
                 request.PageToken = bucketObjects.NextPageToken;
-            } while (request.PageToken != null && !noAll);
+            } while (request.PageToken != null && !noAll && !Stopping);
 
             return deleteTasks;
         }
@@ -206,9 +203,6 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// Waits on the list of delete tasks to compelet, updating progress as it does so.
         /// </summary>
-        /// <param name="deleteTasks">
-        /// The list of delete tasks to wait on.
-        /// </param>
         private void WaitDeleteTasks(List<Task<string>> deleteTasks)
         {
             int totalTasks = deleteTasks.Count;

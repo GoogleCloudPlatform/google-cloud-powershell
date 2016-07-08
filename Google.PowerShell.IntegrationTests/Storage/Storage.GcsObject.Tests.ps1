@@ -31,6 +31,12 @@ Describe "New-GcsObject" {
             | Should Throw "File not found"
     }
 
+    It "accepts pipeline input as object contents" {
+        "test string" | New-GcsObject $bucket "pipeline-test"
+        Read-GcsObject $bucket "pipeline-test" | Should Be "test string"
+        Remove-GcsObject $bucket "pipeline-test"
+    }
+
     # Confirm the object can have slashes. Regression test for .NET Client Libs
     # issue: https://github.com/google/google-api-dotnet-client/issues/643
     It "should work for object names with slashes" {
@@ -133,21 +139,6 @@ Describe "New-GcsObject" {
         Read-GcsObject $bucket $objectName | Should BeExactly $objectContents
     }
 
-    It "will accept relative file paths" {
-        $objectName = "test-relative-path"
-        "12345" | New-GcsObject $bucket $objectName
-
-        # Read the object's contents, writing to a file relative to the temp directory.
-        Push-Location $env:TEMP
-        Read-GcsObject $bucket $objectName -OutFile "output.txt" -Force
-        Pop-Location
-
-        $fileObject = Get-Item ($env:TEMP + "\output.txt")
-        $fileObject.Length | Should Be 5
-        $fileObject | Remove-Item
-        Remove-GcsObject $bucket $objectName
-    }
-
     # TODO(chrsmith): Confirm it works for 0-byte files (currently it doesn't).
 }
 
@@ -219,12 +210,22 @@ Describe "Remove-GcsObject" {
 
     $bucket = "gcps-get-object-testing"
     Create-TestBucket $project $bucket
-    Add-TestFile $bucket "testfile1.txt"
-    Add-TestFile $bucket "testfile2.txt"
 
     It "should work" {
-        $obj = Remove-GcsObject $bucket "testfile1.txt"
-        { Get-GcsObject $bucket "testfile1.txt" } | Should Throw "404"
+        Add-TestFile $bucket "testfile.txt"
+        $obj = Remove-GcsObject $bucket "testfile.txt"
+        { Get-GcsObject $bucket "testfile.txt" } | Should Throw "404"
+    }
+
+    It "should accept objects from the pipeline" {
+        @("alpha", "beta", "gamma") | ForEach { New-GcsObject $bucket $_ $_ }
+        $objs = Find-GcsObject $bucket
+        $objs.Length | Should Be 3
+
+        $objs | Remove-GcsObject
+
+        $objs = Find-GcsObject $bucket
+        $objs.Length | Should Be 0
     }
 
     It "should fail for non existing objects" {
