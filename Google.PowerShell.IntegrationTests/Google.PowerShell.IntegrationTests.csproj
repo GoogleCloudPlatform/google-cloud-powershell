@@ -74,7 +74,6 @@
     <None Include="Storage\Storage.GcsBucketLogging.Tests.ps1" />
     <None Include="Storage\Storage.GcsBucketWebsite.Tests.ps1" />
     <None Include="Storage\Storage.GcsObject.Tests.ps1" />
-    <None Include="Compute\Compute.GceAttachedDiskConfig.Tests.ps1" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

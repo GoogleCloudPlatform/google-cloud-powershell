@@ -4,11 +4,9 @@
 using Google.Apis.Compute.v1;
 using Google.Apis.Compute.v1.Data;
 using Google.PowerShell.Common;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Management.Automation;
-using System.Text.RegularExpressions;
 
 namespace Google.PowerShell.ComputeEngine
 {
@@ -133,7 +131,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceInstanceTemplate", DefaultParameterSetName = ParameterSetNames.ByValues)]
-    public class AddGceInstanceTemplateCmdlet : GceConcurrentCmdlet
+    public class AddGceInstanceTemplateCmdlet : GceInstanceDescriptionCmdletBase
     {
         private struct ParameterSetNames
         {
@@ -165,7 +163,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.ByValues)]
-        public string Name { get; set; }
+        public override string Name { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -173,7 +171,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(Position = 1, Mandatory = true, ParameterSetName = ParameterSetNames.ByValues)]
-        public string MachineType { get; set; }
+        public override string MachineType { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -183,7 +181,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public SwitchParameter CanIpForward { get; set; }
+        public override SwitchParameter CanIpForward { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -191,33 +189,34 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public string Description { get; set; }
+        public override string Description { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// The path to the image to be used to create the boot disk.
+        /// The the image used to create the boot disk. Use Get-GceImage to get one of these.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public string BootDiskImage { get; set; }
+        public override Image BootDiskImage { get; set; }
+
 
         /// <summary>
         /// <para type="description">
-        /// Name of existing disk to attach in read-only mode. All instances of this template will be able to
-        /// read this disk.
+        /// Name of existing disk to attach. All instances of this template will be able to
+        /// read this disk. Will attach in read only mode.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public string[] ExtraDiskName { get; set; }
+        public override string[] ExtraDiskName { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// An AttachedDisk object specifying a disk to attach. Do not specify `-BootDiskImage` if this is a
-        /// boot disk. You can build one using New-GceAttachedDiskConfig.
+        /// An AttachedDisk object specifying a disk to attach. Do not specify `-BootDiskImage` or
+        /// `-BootDiskSnapshot` if this is a boot disk. You can build one using New-GceAttachedDiskConfig.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public AttachedDisk[] Disk { get; set; }
+        public override AttachedDisk[] Disk { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -225,15 +224,18 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public IDictionary Metadata { get; set; }
+        public override IDictionary Metadata { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// The name of the network to use. If not specified, is default.
+        /// The name of the network to use. If not specified, it is global/networks/default. This can be a
+        /// string, or Network object you get from Get-GceNetwork.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public string Network { get; set; }
+        [PropertyByTypeTransformation(Property = nameof(DataType.network.SelfLink),
+            TypeToTransform = typeof(Network))]
+        public override string Network { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -241,15 +243,15 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public SwitchParameter NoExternalIp { get; set; }
+        public override SwitchParameter NoExternalIp { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// If set, the instances will be preemptible. If set, AutomaticRestart will be false.
+        /// If set, the instances will be preemptible, and AutomaticRestart will be false.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public SwitchParameter Preemptible { get; set; }
+        public override SwitchParameter Preemptible { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -257,7 +259,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public bool AutomaticRestart { get; set; } = true;
+        public override bool AutomaticRestart { get; set; } = true;
 
         /// <summary>
         /// <para type="description">
@@ -265,15 +267,15 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public SwitchParameter TerminateOnMaintenance { get; set; }
+        public override SwitchParameter TerminateOnMaintenance { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// The ServiceAccount used to specify access tokens.
+        /// The ServiceAccount used to specify access tokens. Use New-GceServiceAccountConfig to build one.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public ServiceAccount[] ServiceAccount { get; set; }
+        public override ServiceAccount[] ServiceAccount { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -281,7 +283,25 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public string[] Tag { get; set; }
+        public override string[] Tag { get; set; }
+
+        /// <summary>
+        /// Not used.
+        /// </summary>
+        protected override Disk BootDisk
+        {
+            get { return null; }
+            set { }
+        }
+
+        /// <summary>
+        /// Not used.
+        /// </summary>
+        protected override string Address
+        {
+            get { return null; }
+            set { }
+        }
 
         protected override void ProcessRecord()
         {
@@ -292,168 +312,12 @@ namespace Google.PowerShell.ComputeEngine
                     instanceTemplate = Object;
                     break;
                 case ParameterSetNames.ByValues:
-                    instanceTemplate = BuildNewTemplate();
+                    instanceTemplate = BuildInstanceTemplate();
                     break;
                 default:
                     throw UnknownParameterSetException;
             }
             AddGlobalOperation(Project, Service.InstanceTemplates.Insert(instanceTemplate, Project).Execute());
-        }
-
-        /// <summary>
-        /// Builds an InstanceTemplate from parameter values.
-        /// </summary>
-        /// <returns>
-        /// The new instance template to create.
-        /// </returns>
-        private InstanceTemplate BuildNewTemplate()
-        {
-            return new InstanceTemplate
-            {
-                Name = Name,
-                Properties = new InstanceProperties
-                {
-                    CanIpForward = CanIpForward,
-                    Description = Description,
-                    Disks = BuildAttachedDisks(),
-                    MachineType = MachineType,
-                    Metadata = BuildMetadata(),
-                    NetworkInterfaces = new List<NetworkInterface> { BuildNetworkInterfaces() },
-                    Scheduling = new Scheduling
-                    {
-                        AutomaticRestart = AutomaticRestart && !Preemptible,
-                        Preemptible = Preemptible,
-                        OnHostMaintenance = TerminateOnMaintenance ? "TERMINATE" : "MIGRATE"
-                    },
-                    ServiceAccounts = ServiceAccount,
-                    Tags = new Tags
-                    {
-                        Items = Tag
-                    }
-                }
-            };
-        }
-
-        private NetworkInterface BuildNetworkInterfaces()
-        {
-            var accessConfigs = new List<AccessConfig>();
-            if (!NoExternalIp)
-            {
-                accessConfigs.Add(new AccessConfig
-                {
-                    Name = "External NAT",
-                    Type = "ONE_TO_ONE_NAT"
-                });
-            }
-
-            string networkUri = Network;
-            if (string.IsNullOrEmpty(networkUri))
-            {
-                networkUri = "default";
-            }
-
-            if (!networkUri.Contains("global/networks"))
-            {
-                networkUri = $"projects/{Project}/global/networks/{networkUri}";
-            }
-
-            return new NetworkInterface
-            {
-                Network = networkUri,
-                AccessConfigs = accessConfigs
-            };
-        }
-
-        private Metadata BuildMetadata()
-        {
-            if (Metadata != null)
-            {
-                return InstanceMetadataPSConverter.BuildMetadata(Metadata);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Creates a list of AttachedDisk objects form Disk, BootDiskImage, and ExtraDiskName.
-        /// </summary>
-        private IList<AttachedDisk> BuildAttachedDisks()
-        {
-            var disks = new List<AttachedDisk>();
-            if (Disk != null)
-            {
-                disks.AddRange(Disk);
-            }
-
-            if (BootDiskImage != null)
-            {
-                string imageSource;
-                try
-                {
-                    imageSource = FindImageOrThrow();
-                }
-                catch (Exception e)
-                {
-                    WriteError(new ErrorRecord(e, null, ErrorCategory.ObjectNotFound, BootDiskImage));
-                    imageSource = BootDiskImage;
-                }
-
-                disks.Add(new AttachedDisk
-                {
-                    Boot = true,
-                    AutoDelete = true,
-                    InitializeParams = new AttachedDiskInitializeParams { SourceImage = imageSource }
-                });
-            }
-
-            if (ExtraDiskName != null)
-            {
-                foreach (var diskName in ExtraDiskName)
-                {
-                    disks.Add(new AttachedDisk
-                    {
-                        Source = diskName,
-                        Mode = "READ_ONLY"
-                    });
-                }
-            }
-
-            return disks;
-        }
-
-
-        /// <summary>
-        /// Because a wrong image name error is a 503 with no message, try to make sure the image exists, and
-        /// if it doen't give the user a helpful warning.
-        /// </summary>
-        private string FindImageOrThrow()
-        {
-            var familyMatch = Regex.Match(
-                BootDiskImage, "projects/(?<project>[^/]*)/global/images/family/(?<family>.*)");
-            if (familyMatch.Success)
-            {
-                var imageFamily = familyMatch.Groups["family"].Value;
-                var imageProject = familyMatch.Groups["project"].Value;
-                return Service.Images.GetFromFamily(imageProject, imageFamily).Execute().SelfLink;
-            }
-            var imageMatch = Regex.Match(
-                BootDiskImage, "projects/(?<project>[^/]*)/global/images/(?<image>.*)");
-            if (imageMatch.Success)
-            {
-                var imageName = imageMatch.Groups["image"].Value;
-                var imageProject = imageMatch.Groups["project"].Value;
-                return Service.Images.Get(imageProject, imageName).Execute().SelfLink;
-            }
-            var customMatch = Regex.Match(BootDiskImage, "global/images/(?<name>)");
-            if (customMatch.Success)
-            {
-                var imageName = customMatch.Groups["name"].Value;
-                return Service.Images.Get(Project, imageName).Execute().SelfLink;
-            }
-            WriteWarning($"{BootDiskImage} does not seem to be a link to an image");
-            return BootDiskImage;
         }
     }
 

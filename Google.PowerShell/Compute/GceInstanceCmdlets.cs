@@ -280,16 +280,17 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceInstance")]
-    public class AddGceInstanceCmdlet : GceConcurrentCmdlet
+    public class AddGceInstanceCmdlet : GceInstanceDescriptionCmdletBase
     {
         private class ParameterSetNames
         {
             public const string ByValues = "ByValues";
+            public const string ByObject = "ByObject";
         }
 
         /// <summary>
         /// <para type="description">
-        /// The project that will own the instances.
+        /// The project that will own the instance.
         /// </para>
         /// </summary>
         [Parameter]
@@ -309,57 +310,71 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
+        /// The definition of the instance to create.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        public Instance InstanceConfig { get; set; }
+
+        /// <summary>
+        /// <para type="description">
         /// The name of the instance to add.
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true,
             ParameterSetName = ParameterSetNames.ByValues)]
-        public string Name { get; set; }
+        public override string Name { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// The name of the machine type for this template.
+        /// The name of the machine type of this instance.
         /// </para>
         /// </summary>
         [Parameter(Position = 1, Mandatory = true, ParameterSetName = ParameterSetNames.ByValues)]
-        public string MachineType { get; set; }
+        public override string MachineType { get; set; }
 
         /// <summary>
         /// <para type="description">
         /// Enables instances to send and receive packets for IP addresses other than their own. Switch on if
-        /// these instances will be used as an IP gateway or it will be set as the next-hop in a Route
+        /// this instance will be used as an IP gateway or it will be set as the next-hop in a Route
         /// resource.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public SwitchParameter CanIpForward { get; set; }
+        public override SwitchParameter CanIpForward { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// Human readable description of this instance template.
+        /// Human readable description of this instance.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public string Description { get; set; }
+        public override string Description { get; set; }
 
-        public Disk BootDisk { get; set; }
+        /// <summary>
+        /// <para type="description">
+        /// The persistant disk to use as a boot disk. Use Get-GceDisk to get one of these.
+        /// </para>
+        /// </summary>
+        protected override Disk BootDisk { get; set; }
+
         /// <summary>
         /// <para type="description">
         /// The the image used to create the boot disk. Use Get-GceImage to get one of these.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public Image BootDiskImage { get; set; }
+        public override Image BootDiskImage { get; set; }
 
 
         /// <summary>
         /// <para type="description">
-        /// Name of existing disk to attach. All instances of this template will be able to
-        /// read this disk.
+        /// Name of existing disk to attach. It will attach in read-only mode.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public string[] ExtraDiskName { get; set; }
+        public override string[] ExtraDiskName { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -368,7 +383,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public AttachedDisk[] Disk { get; set; }
+        public override AttachedDisk[] Disk { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -376,7 +391,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public IDictionary Metadata { get; set; }
+        public override IDictionary Metadata { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -387,47 +402,47 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
         [PropertyByTypeTransformation(Property = nameof(DataType.network.SelfLink),
             TypeToTransform = typeof(Network))]
-        public string Network { get; set; }
+        public override string Network { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// If set, the instances will not have an external ip address.
+        /// If set, the instance will not have an external ip address.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public SwitchParameter NoExternalIp { get; set; }
+        public override SwitchParameter NoExternalIp { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// If set, the instances will be preemptible. If set, AutomaticRestart will be false.
+        /// If set, the instance will be preemptible. If set, AutomaticRestart will be false.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public SwitchParameter Preemptible { get; set; }
+        public override SwitchParameter Preemptible { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// If set, the instances will not restart when shut down by Google Compute Engine.
+        /// If set, the instance will not restart when shut down by Google Compute Engine.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public bool AutomaticRestart { get; set; } = true;
+        public override bool AutomaticRestart { get; set; } = true;
 
         /// <summary>
         /// <para type="description">
-        /// If set, the instances will terminate rather than migrate when the host undergoes maintenance.
+        /// If set, the instance will terminate rather than migrate when the host undergoes maintenance.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public SwitchParameter TerminateOnMaintenance { get; set; }
+        public override SwitchParameter TerminateOnMaintenance { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// The ServiceAccount used to specify access tokens.
+        /// The ServiceAccount used to specify access tokens. Use New-GceServiceAccountConfig to build one.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public ServiceAccount[] ServiceAccount { get; set; }
+        public override ServiceAccount[] ServiceAccount { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -435,7 +450,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public string[] Tag { get; set; }
+        public override string[] Tag { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -445,7 +460,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [PropertyByTypeTransformation(Property = nameof(DataType.address.AddressValue),
             TypeToTransform = typeof(Address))]
-        public string Address { get; set; }
+        protected override string Address { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -455,127 +470,19 @@ namespace Google.PowerShell.ComputeEngine
                 case ParameterSetNames.ByValues:
                     instance = BuildInstance();
                     break;
+                case ParameterSetNames.ByObject:
+                    instance = InstanceConfig;
+                    break;
                 default:
                     throw UnknownParameterSetException;
             }
 
             InstancesResource.InsertRequest request = Service.Instances.Insert(instance, Project, Zone);
             Operation operation = request.Execute();
-            AddZoneOperation(Project, Zone, operation);
-        }
-
-        private Instance BuildInstance()
-        {
-            return new Instance
+            AddZoneOperation(Project, Zone, operation, () =>
             {
-                Name = Name,
-                CanIpForward = CanIpForward,
-                Description = Description,
-                Disks = BuildAttachedDisks(),
-                MachineType = MachineType,
-                Metadata = BuildMetadata(),
-                NetworkInterfaces = new List<NetworkInterface> { BuildNetworkInterfaces() },
-                Scheduling = new Scheduling
-                {
-                    AutomaticRestart = AutomaticRestart && !Preemptible,
-                    Preemptible = Preemptible,
-                    OnHostMaintenance = TerminateOnMaintenance ? "TERMINATE" : "MIGRATE"
-                },
-                ServiceAccounts = ServiceAccount,
-                Tags = new Tags
-                {
-                    Items = Tag
-                }
-            };
-        }
-
-        private NetworkInterface BuildNetworkInterfaces()
-        {
-            var accessConfigs = new List<AccessConfig>();
-            if (!NoExternalIp)
-            {
-                accessConfigs.Add(new AccessConfig
-                {
-                    Name = "External NAT",
-                    Type = "ONE_TO_ONE_NAT"
-                });
-            }
-
-            string networkUri = Network;
-            if (string.IsNullOrEmpty(networkUri))
-            {
-                networkUri = "default";
-            }
-
-            if (!networkUri.Contains("global/networks"))
-            {
-                networkUri = $"projects/{Project}/global/networks/{networkUri}";
-            }
-
-            return new NetworkInterface
-            {
-                Network = networkUri,
-                AccessConfigs = accessConfigs,
-                NetworkIP = Address
-            };
-        }
-
-        private Metadata BuildMetadata()
-        {
-            if (Metadata != null)
-            {
-                return InstanceMetadataPSConverter.BuildMetadata(Metadata);
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Creates a list of AttachedDisk objects form Disk, BootDiskImage, and ExtraDiskName.
-        /// </summary>
-        private IList<AttachedDisk> BuildAttachedDisks()
-        {
-            var disks = new List<AttachedDisk>();
-            if (Disk != null)
-            {
-                disks.AddRange(Disk);
-            }
-
-            if (BootDisk != null)
-            {
-                disks.Add(new AttachedDisk
-                {
-                    Boot = true,
-                    Source = BootDisk.SelfLink
-                });
-            }
-
-            if (BootDiskImage != null)
-            {
-
-                disks.Add(new AttachedDisk
-                {
-                    Boot = true,
-                    AutoDelete = true,
-                    InitializeParams = new AttachedDiskInitializeParams { SourceImage = BootDiskImage.SelfLink }
-                });
-            }
-
-            if (ExtraDiskName != null)
-            {
-                foreach (var diskName in ExtraDiskName)
-                {
-                    disks.Add(new AttachedDisk
-                    {
-                        Source = diskName,
-                        Mode = "READ_ONLY"
-                    });
-                }
-            }
-
-            return disks;
+                WriteObject(Service.Instances.Get(Project, Zone, instance.Name).Execute());
+            });
         }
     }
 
@@ -590,14 +497,18 @@ namespace Google.PowerShell.ComputeEngine
     [Cmdlet(VerbsCommon.Remove, "GceInstance", SupportsShouldProcess = true)]
     public class RemoveGceInstanceCmdlet : GceConcurrentCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string ByName = nameof(ByName);
+            public const string ByObject = nameof(ByObject);
+        }
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
         public string Project { get; set; }
 
         /// <summary>
@@ -605,9 +516,8 @@ namespace Google.PowerShell.ComputeEngine
         /// The zone in which the instance resides.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
         public string Zone { get; set; }
 
         /// <summary>
@@ -615,17 +525,45 @@ namespace Google.PowerShell.ComputeEngine
         /// The name of the instance to delete.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = true, ValueFromPipeline = true)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Instance))]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
         public string Name { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The instance object to delete.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        public Instance Object { get; set; }
 
         protected override void ProcessRecord()
         {
-            if (ShouldProcess($"{Project}/{Zone}/{Name}", "Remove VM instance"))
+            string project;
+            string zone;
+            string name;
+            switch (ParameterSetName)
             {
-                var request = Service.Instances.Delete(Project, Zone, Name);
-                var operation = request.Execute();
-                AddZoneOperation(Project, Zone, operation);
+                case ParameterSetNames.ByName:
+                    project = Project;
+                    zone = Zone;
+                    name = Name;
+                    break;
+                case ParameterSetNames.ByObject:
+                    project = GetProjectNameFromUri(Object.SelfLink);
+                    zone = GetZoneNameFromUri(Object.Zone);
+                    name = Object.Name;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+
+            if (ShouldProcess($"{project}/{zone}/{name}", "Remove VM instance"))
+            {
+                InstancesResource.DeleteRequest request = Service.Instances.Delete(project, zone, name);
+                Operation operation = request.Execute();
+                AddZoneOperation(project, zone, operation);
             }
         }
     }

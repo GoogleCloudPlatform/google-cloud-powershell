@@ -244,11 +244,13 @@ namespace Google.PowerShell.Compute
 
         /// <summary>
         /// <para type="description">
-        /// The name of the instance template to use when creating instances.
+        /// The instance template to use when creating instances. Can be a string URL to a template, or an
+        /// InstanceTemplate object from Get-GceInstanceTemplate.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByProperies, Mandatory = true, Position = 1)]
-        [PropertyByTypeTransformation(Property = "SelfLink", TypeToTransform = typeof(InstanceTemplate))]
+        [PropertyByTypeTransformation(Property = nameof(Apis.Compute.v1.Data.InstanceTemplate.SelfLink),
+            TypeToTransform = typeof(InstanceTemplate))]
         public string InstanceTemplate { get; set; }
 
         /// <summary>

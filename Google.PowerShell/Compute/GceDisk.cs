@@ -357,8 +357,7 @@ namespace Google.PowerShell.ComputeEngine
         /// Name of the disk.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByName, Position = 2, Mandatory = true),
-            ValidatePattern("[a-z]([-a-z0-9]*[a-z0-9])?")]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Position = 0, Mandatory = true)]
         public string DiskName { get; set; }
 
         /// <summary>
