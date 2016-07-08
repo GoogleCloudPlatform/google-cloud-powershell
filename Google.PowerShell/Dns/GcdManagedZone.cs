@@ -235,14 +235,14 @@ namespace Google.PowerShell.Dns
     /// </para>
     /// <example>
     ///   <para>Delete the (non-empty) ManagedZone "test1" from the DnsProject "testing."</para>
-    ///   <para><code>PS C:\> Remove-GcdManagedZone -DnsProject "testing" -Zone "test1" -Force </code></para>
+    ///   <para><code>PS C:\> Remove-GcdManagedZone -DnsProject "testing" -Zone "test1" -Force</code></para>
     ///   <br></br>
     ///   <para>(If successful, the command returns nothing.)</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/dns/zones/)">[Managing Zones]</para>
     /// <para type="link" uri="(https://cloud.google.com/dns/troubleshooting)">[Troubleshooting]</para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Remove, "GcdManagedZone")]
+    [Cmdlet(VerbsCommon.Remove, "GcdManagedZone", SupportsShouldProcess = true)]
     public class RemoveGcdManagedZoneCmdlet : GcdCmdlet
     {
         /// <summary>
@@ -275,33 +275,41 @@ namespace Google.PowerShell.Dns
         {
             base.ProcessRecord();
 
-            if (Force)
+            if (!Force && !ShouldProcess($"{DnsProject}/{Zone}", "Delete ManagedZone"))
             {
-                ResourceRecordSetsResource.ListRequest rrsetListRequest = 
+                return;
+            }
+
+            ResourceRecordSetsResource.ListRequest rrsetListRequest =
                     Service.ResourceRecordSets.List(DnsProject, Zone);
-                ResourceRecordSetsListResponse rrsetListResponse = rrsetListRequest.Execute();
-                IList<ResourceRecordSet> rrsetList = rrsetListResponse.Rrsets;
+            ResourceRecordSetsListResponse rrsetListResponse = rrsetListRequest.Execute();
+            IList<ResourceRecordSet> rrsetList = rrsetListResponse.Rrsets;
 
-                IList<ResourceRecordSet> nonDefaultRrsets = new List<ResourceRecordSet>();
-                foreach (ResourceRecordSet rrset in rrsetList)
+            IList<ResourceRecordSet> nonDefaultRrsets = new List<ResourceRecordSet>();
+            foreach (ResourceRecordSet rrset in rrsetList)
+            {
+                if (!rrset.Type.Equals("NS") && !rrset.Type.Equals("SOA"))
                 {
-                    if (!rrset.Type.Equals("NS") && !rrset.Type.Equals("SOA"))
-                    {
-                        nonDefaultRrsets.Add(rrset);
-                    }
+                    nonDefaultRrsets.Add(rrset);
+                }
+            }
+
+            if (nonDefaultRrsets.Count > 0)
+            {
+                if (!Force &&
+                    !ShouldContinue($"{DnsProject}/{Zone}", "Delete Non-Empty ManagedZone (with non-NS/SOA records)"))
+                {
+                    return;
                 }
 
-                if (nonDefaultRrsets.Count > 0)
+                Change changeContent = new Change
                 {
-                    Change changeContent = new Change
-                    {
-                        Deletions = nonDefaultRrsets
-                    };
+                    Deletions = nonDefaultRrsets
+                };
 
-                    ChangesResource.CreateRequest changeCreateRequest = 
-                        Service.Changes.Create(changeContent, DnsProject, Zone);
-                    changeCreateRequest.Execute();
-                }
+                ChangesResource.CreateRequest changeCreateRequest =
+                    Service.Changes.Create(changeContent, DnsProject, Zone);
+                changeCreateRequest.Execute();
             }
 
             ManagedZonesResource.DeleteRequest zoneDeleteRequest = Service.ManagedZones.Delete(DnsProject, Zone);
