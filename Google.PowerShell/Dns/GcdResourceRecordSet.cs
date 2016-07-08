@@ -69,12 +69,8 @@ namespace Google.PowerShell.Dns
     ///   <para>Type    : AAAA</para>
     ///   <para>ETag    :</para>
     /// </example>
-    /// <para type="link" uri="(https://cloud.google.com/dns/api/v1/resourceRecordSets)">
-    /// [ResourceRecordSet Resource Representation]
-    /// </para>
-    /// <para type="link" uri="(https://cloud.google.com/dns/api/v1/resourceRecordSets/list)">
-    /// [ResourceRecordSet: List Request (HTTP)]
-    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/dns/records/)">[Managing Records]</para>
+    /// <para type="link" uri="(https://cloud.google.com/dns/troubleshooting)">[Troubleshooting]</para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcdResourceRecordSet")]
     [OutputType(typeof(ResourceRecordSet))]
@@ -164,9 +160,8 @@ namespace Google.PowerShell.Dns
     ///   <para>Type    : A</para>
     ///   <para>ETag    :</para>
     /// </example>
-    /// <para type="link" uri="(https://cloud.google.com/dns/api/v1/resourceRecordSets)">
-    /// [ResourceRecordSet Resource Representation]
-    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/dns/records/)">[Managing Records]</para>
+    /// <para type="link" uri="(https://cloud.google.com/dns/troubleshooting)">[Troubleshooting]</para>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GcdResourceRecordSet")]
     [OutputType(typeof(ResourceRecordSet))]
@@ -194,7 +189,7 @@ namespace Google.PowerShell.Dns
         /// Get the type of the ResourceRecordSet.
         /// </para>
         /// <para type="description">
-        /// The supported types are "A," "AAAA," "CNAME," "MX," "NAPTR," "NS," "PTR," "SOA," "SPF," "SRV," and "TXT."
+        /// The supported types are A, AAAA, CNAME, MX, NAPTR, NS, PTR, SOA, SPF, SRV, and TXT.
         /// </para>
         /// </summary>
         [Parameter(Position = 2, Mandatory = true)]
