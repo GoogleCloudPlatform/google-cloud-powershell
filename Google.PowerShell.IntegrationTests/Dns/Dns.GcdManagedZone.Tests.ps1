@@ -150,10 +150,6 @@ Describe "Remove-GcdManagedZone" {
     Add-GcdManagedZone -DnsProject $project -Name $testZone2 -DnsName $dnsName2
     Add-GcdChange -DnsProject $project -Zone $testZone1 -Add $testRrsetA,$testRrsetCNAME
 
-    It "should fail to delete a non-empty ManagedZone when -Force is not specified" {
-        { Remove-GcdManagedZone -DnsProject $project -ManagedZone $testZone1 } | Should Throw "400"
-    }
-
     It "should delete a non-empty zone when -Force is specified" {
         Remove-GcdManagedZone -DnsProject $project -ManagedZone $testZone1 -Force | Should Be $null
 
