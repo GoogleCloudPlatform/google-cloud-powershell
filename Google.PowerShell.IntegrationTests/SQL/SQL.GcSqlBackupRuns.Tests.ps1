@@ -35,4 +35,13 @@ Describe "Get-GcSqlBackupRun" {
         $backup.Id | Should Be $firstBackup.Id
     }
 }
+
+Describe "Remove-GcSqlBackupRun" {
+    # This is currently extremely hard to test for, as backup runs are made once a day and cannot be 
+    # forced to be made after making an instance.
+
+    # First test would verify it works well (This was done within powershell).
+
+    # Second test verifies a backuprun can be passed in through pipeline to delete it. Also done within powershell.
+}
 Reset-GCloudConfig $oldActiveConfig $configName
