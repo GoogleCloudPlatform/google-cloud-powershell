@@ -103,7 +103,6 @@ namespace Google.PowerShell.Sql
         DefaultParameterSetName = ParameterSetNames.ByName)]
     public class RemoveGcSqlBackupRunCmdlet : GcSqlCmdlet
     {
-
         private class ParameterSetNames
         {
             public const string ByName = "ByName";
@@ -147,7 +146,7 @@ namespace Google.PowerShell.Sql
 
         protected override void ProcessRecord()
         {
-            long? id;
+            long id;
             string instance;
             string project;
             switch (ParameterSetName)
@@ -158,7 +157,7 @@ namespace Google.PowerShell.Sql
                     project = Project;
                     break;
                 case ParameterSetNames.ByObject:
-                    id = Backup.Id;
+                    id = (long)Backup.Id;
                     instance = Backup.Instance;
                     project = GetProjectNameFromUri(Backup.SelfLink);
                     break;
@@ -170,7 +169,7 @@ namespace Google.PowerShell.Sql
             {
                 return;
             }
-            BackupRunsResource.DeleteRequest request = Service.BackupRuns.Delete(project, instance, (long)id);
+            BackupRunsResource.DeleteRequest request = Service.BackupRuns.Delete(project, instance, id);
             Operation result = request.Execute();
             WaitForSqlOperation(result);
         }

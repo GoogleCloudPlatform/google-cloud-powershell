@@ -53,19 +53,18 @@ namespace Google.PowerShell.Sql
         [Parameter(Mandatory = true, ValueFromPipeline = true)]
         public Settings SettingConfig { get; set; }
 
-        public enum DatabaseVersion
-        {
-            MYSQL_5_6,
-            MYSQL_5_7
-        }
+
         /// <summary>
         /// <para type="description">
-        /// The type of data disk: PD_SSD (default) or PD_HDD.
-        /// Applies only to Second Generation instances.
+        /// The database engine type and version.
+        /// The databaseVersion can not be changed after instance creation.
+        /// Can be MYSQL_5_5, MYSQL_5_6 or MYSQL_5_7.
+        /// Defaults to MYSQL_5_6.
+        /// MYSQL_5_7 is applicable only to Second Generation instances.
         /// </para>
         /// </summary>
         [Parameter]
-        public DatabaseVersion DatabaseVer { get; set; } = DatabaseVersion.MYSQL_5_6;
+        public string DatabaseVer { get; set; } = "MYSQL_5_6";
 
         /// <summary>
         /// <para type="description">
@@ -109,7 +108,7 @@ namespace Google.PowerShell.Sql
                 Region = Region,
                 BackendType = "SECOND_GEN",
                 Project = Project,
-                DatabaseVersion = DatabaseVer.ToString(),
+                DatabaseVersion = DatabaseVer,
                 InstanceType = "CLOUD_SQL_INSTANCE",
                 Kind = "sql#instance",
                 State = "RUNNABLE"
