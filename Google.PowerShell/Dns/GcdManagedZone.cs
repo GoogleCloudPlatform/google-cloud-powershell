@@ -68,15 +68,8 @@ namespace Google.PowerShell.Dns
     ///   </para>
     ///   <para>ETag          	 :</para>
     /// </example>
-    /// <para type="link" uri="(https://cloud.google.com/dns/api/v1/managedZones)">
-    /// [ManagedZone Resource Representation]
-    /// </para>
-    /// <para type="link" uri="(https://cloud.google.com/dns/api/v1/managedZones/get)">
-    /// [ManagedZone: Get Request (HTTP)]
-    /// </para>
-    /// <para type="link" uri="(https://cloud.google.com/dns/api/v1/managedZones/list)">
-    /// [ManagedZone: List Request (HTTP)]
-    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/dns/zones/)">[Managing Zones]</para>
+    /// <para type="link" uri="(https://cloud.google.com/dns/troubleshooting)">[Troubleshooting]</para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcdManagedZone")]
     [OutputType(typeof(ManagedZone))]
@@ -155,12 +148,8 @@ namespace Google.PowerShell.Dns
     ///   </para>
     ///   <para>ETag          	 :</para>
     /// </example>
-    /// <para type="link" uri="(https://cloud.google.com/dns/api/v1/managedZones)">
-    /// [ManagedZone Resource Representation]
-    /// </para>
-    /// <para type="link" uri="(https://cloud.google.com/dns/api/v1/managedZones/create)">
-    /// [ManagedZone: Create Request (HTTP)]
-    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/dns/zones/)">[Managing Zones]</para>
+    /// <para type="link" uri="(https://cloud.google.com/dns/troubleshooting)">[Troubleshooting]</para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GcdManagedZone")]
     [OutputType(typeof(ManagedZone))]
@@ -250,12 +239,8 @@ namespace Google.PowerShell.Dns
     ///   <br></br>
     ///   <para>(If successful, the command returns nothing.)</para>
     /// </example>
-    /// <para type="link" uri="(https://cloud.google.com/dns/api/v1/managedZones)">
-    /// [ManagedZone Resource Representation]
-    /// </para>
-    /// <para type="link" uri="(https://cloud.google.com/dns/api/v1/managedZones/delete)">
-    /// [ManagedZone: Delete Request (HTTP)]
-    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/dns/zones/)">[Managing Zones]</para>
+    /// <para type="link" uri="(https://cloud.google.com/dns/troubleshooting)">[Troubleshooting]</para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GcdManagedZone", SupportsShouldProcess = true)]
     public class RemoveGcdManagedZoneCmdlet : GcdCmdlet

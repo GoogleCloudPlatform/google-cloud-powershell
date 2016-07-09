@@ -31,10 +31,8 @@ namespace Google.PowerShell.Dns
     ///   <para>TotalRrdataSizePerChange : 10000</para>
     ///   <para>ETag                     :</para>
     /// </example>
-    /// <para type="link" uri="(https://cloud.google.com/dns/api/v1/projects)">
-    /// [Project Resource Representation (with Quota as Nested Object)]
-    /// </para>
-    /// <para type="link" uri="(https://cloud.google.com/dns/api/v1/projects/get)">[Project: Get Request (HTTP)]</para>
+    /// <para type="link" uri="(https://cloud.google.com/dns/quota)">[Quotas]</para>
+    /// <para type="link" uri="(https://cloud.google.com/dns/troubleshooting)">[Troubleshooting]</para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcdQuota")]
     [OutputType(typeof(Quota))]

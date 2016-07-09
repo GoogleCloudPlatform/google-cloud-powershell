@@ -54,9 +54,8 @@ namespace Google.PowerShell.Dns
     ///   <para>Status    : done</para>
     ///   <para>ETag      :</para>
     /// </example>
-    /// <para type="link" uri="(https://cloud.google.com/dns/api/v1/changes)">[Change Resource Representation]</para>
-    /// <para type="link" uri="(https://cloud.google.com/dns/api/v1/changes/get)">[Change: Get Request (HTTP)]</para>
-    /// <para type="link" uri="(https://cloud.google.com/dns/api/v1/changes/list)">[Change: List Request (HTTP)]</para>
+    /// <para type="link" uri="(https://cloud.google.com/dns/monitoring)">[Monitoring Changes]</para>
+    /// <para type="link" uri="(https://cloud.google.com/dns/troubleshooting)">[Troubleshooting]</para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcdChange")]
     [OutputType(typeof(Change))]
@@ -149,10 +148,8 @@ namespace Google.PowerShell.Dns
     ///   <para>Status    : done</para> 
     ///   <para>ETag      :</para>
     /// </example>
-    /// <para type="link" uri="(https://cloud.google.com/dns/api/v1/changes)">[Change Resource Representation]</para>
-    /// <para type="link" uri="(https://cloud.google.com/dns/api/v1/changes/create)">
-    /// [Change: Create Request (HTTP)]
-    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/dns/monitoring)">[Monitoring Changes]</para>
+    /// <para type="link" uri="(https://cloud.google.com/dns/troubleshooting)">[Troubleshooting]</para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GcdChange", DefaultParameterSetName = ParameterSetNames.ChangeRequest)]
     [OutputType(typeof(Change))]
