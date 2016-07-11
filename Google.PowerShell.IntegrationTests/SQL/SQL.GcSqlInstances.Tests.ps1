@@ -89,6 +89,19 @@ Describe "Remove-GcSqlInstance" {
         ($instances.Name -contains $instance) | Should Be false
     }
 
+    It "should be able to take a pipelined Instance" {
+        $r = Get-Random
+        # A random number is used to avoid collisions with the speed of creating
+        # and deleting instances.
+        $instance = "test-inst$r"
+        gcloud sql instances create $instance --quiet 2>$null
+        $instances = Get-GcSqlInstance
+        ($instances.Name -contains $instance) | Should Be true
+        Get-GcSqlInstance $instance | Remove-GcSqlInstance
+        $instances = Get-GcSqlInstance
+        ($instances.Name -contains $instance) | Should Be false
+    }
+
     It "shouldn't delete anything that doesn't exist" {
         { Remove-GcSqlInstance "should-fail" } | Should Throw "The client is not authorized to make this request. [403]"
     }
