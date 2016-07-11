@@ -56,7 +56,7 @@ namespace Google.PowerShell.Sql
                 DatabaseInstance result = request.Execute();
                 WriteObject(result);
             }
-            else 
+            else
             {
                 IEnumerable<DatabaseInstance> results = GetAllSqlInstances();
                 WriteObject(results, true);
@@ -81,6 +81,123 @@ namespace Google.PowerShell.Sql
                 request.PageToken = aggList.NextPageToken;
             }
             while (request.PageToken != null);
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Creates a new Cloud SQL instance.
+    /// </para>
+    /// <para type="description">
+    /// Creates the Cloud SQL instance resource in the specified project.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Add, "GcSqlInstance")]
+    public class AddGcSqlInstanceCmdlet : GcSqlCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// Name of the project.
+        /// Defaults to the cloud sdk config for properties if not specified.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The instance resource. 
+        /// Can be created with New-GcSqlInstanceConfig.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true)]
+        public DatabaseInstance InstanceConfig { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            InstancesResource.InsertRequest request = Service.Instances.Insert(InstanceConfig, Project);
+            Operation result = request.Execute();
+            WaitForSqlOperation(result);
+            /// We get the instance that was just added
+            /// so that the returned DatabaseInstance is as accurate as possible.
+            InstancesResource.GetRequest instanceRequest = Service.Instances.Get(Project, InstanceConfig.Name);
+            WriteObject(instanceRequest.Execute());
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Deletes a Cloud SQL instance.
+    /// </para>
+    /// <para type="description">
+    /// Deletes the specified Cloud SQL instance.
+    /// 
+    /// Warning: This deletes all data inside of it as well.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Remove, "GcSqlInstance", SupportsShouldProcess = true,
+        DefaultParameterSetName = ParameterSetNames.ByName)]
+    public class RemoveGcSqlInstanceCmdlet : GcSqlCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByInstance = "ByInstance";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the project.
+        /// Defaults to the cloud sdk config for properties if not specified.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the instance to be deleted.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
+            ParameterSetName = ParameterSetNames.ByName)]
+        public string Instance { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The DatabaseInstance that describes the instance we want to remove.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        public DatabaseInstance InstanceObject { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            string project;
+            string instance;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.ByName:
+                    instance = Instance;
+                    project = Project;
+                    break;
+                case ParameterSetNames.ByInstance:
+                    instance = InstanceObject.Name;
+                    project = InstanceObject.Project;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+            if (!ShouldProcess($"{project}/{instance}", "Delete Instance"))
+            {
+                return;
+            }
+            InstancesResource.DeleteRequest request = Service.Instances.Delete(project, instance);
+            Operation result = request.Execute();
+            WaitForSqlOperation(result);
         }
     }
 }

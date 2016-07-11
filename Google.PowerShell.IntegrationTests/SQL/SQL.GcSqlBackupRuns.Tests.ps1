@@ -4,7 +4,7 @@ $project, $_, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Describe "Get-GcSqlBackupRun" {
     #An instance to test cannot be ceated for these tests because it will not have a backuprun upon creation.
-    $instance = "test-db"
+    $instance = "test-db-fg"
 
     It "should get a reasonable response" {
         $backups = Get-GcSqlBackupRun -Project $project -Instance $instance
@@ -21,10 +21,10 @@ Describe "Get-GcSqlBackupRun" {
     It "should get a reasonable response from a given query" {
         # A specific Id has to be used because backup Id's are unique to backupRuns. 
         # See the next test for if a name exclusive to test-back is used.
-        $backup = Get-GcSqlBackupRun $instance "1466568000828"
-        $backup.Status | Should Be "DELETED"
+        $backup = Get-GcSqlBackupRun $instance "1467183600370"
+        $backup.Status | Should Be "SKIPPED"
         $backup.Instance | Should Be $instance
-        $backup.Id | Should Be "1466568000828"
+        $backup.Id | Should Be "1467183600370"
     }
 
     It "should compound with the list parameter set" {

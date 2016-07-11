@@ -95,7 +95,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public string Region { get; set; } = "us-central";
+        public string Region { get; set; } = "us-central1";
 
         protected override void ProcessRecord()
         {
