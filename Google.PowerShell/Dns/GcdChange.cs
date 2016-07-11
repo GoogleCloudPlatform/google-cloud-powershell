@@ -24,19 +24,46 @@ namespace Google.PowerShell.Dns
     /// </para>
     /// <example>
     ///   <para>Get the Change resources in the ManagedZone "test1" in the DnsProject "testing."</para>
-    ///   <para><code>Get-GcdChange -DnsProject "testing" -Zone "test1"</code></para>
+    ///   <para><code>PS C:\> Get-GcdChange -DnsProject "testing" -Zone "test1"</code></para>
+    ///   <br></br>
+    ///   <para>Additions :</para>
+    ///   <para>Deletions : {gcloudexample1.com.}</para>
+    ///   <para>Id        : 1</para>
+    ///   <para>Kind      : dns#change</para>
+    ///   <para>StartTime : 2016-06-29T16:30:50.670Z</para> 
+    ///   <para>Status    : done</para> 
+    ///   <para>ETag      :</para>
+    ///   <br></br>
+    ///   <para>Additions : {gcloudexample1.com., gcloudexample1.com.}</para>
+    ///   <para>Deletions :</para>
+    ///   <para>Id        : 0</para>
+    ///   <para>Kind      : dns#change</para>
+    ///   <para>StartTime : 2016-06-29T16:27:50.670Z</para>
+    ///   <para>Status    : done</para>
+    ///   <para>ETag      :</para>
     /// </example>
     /// <example>
     ///   <para>Get the Change resource with id "0" in the ManagedZone "test1" in the DnsProject "testing."</para>
-    ///   <para><code>Get-GcdChange -DnsProject "testing" -Zone "test1" -ChangeId "0"</code></para>
+    ///   <para><code>PS C:\> Get-GcdChange -DnsProject "testing" -Zone "test1" -ChangeId "0"</code></para>
+    ///   <br></br>
+    ///   <para>Additions : {gcloudexample1.com., gcloudexample1.com.}</para>
+    ///   <para>Deletions : </para>
+    ///   <para>Id        : 0</para>
+    ///   <para>Kind      : dns#change</para>
+    ///   <para>StartTime : 2016-06-29T16:27:50.670Z</para>
+    ///   <para>Status    : done</para>
+    ///   <para>ETag      :</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/dns/monitoring)">[Monitoring Changes]</para>
+    /// <para type="link" uri="(https://cloud.google.com/dns/troubleshooting)">[Troubleshooting]</para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcdChange")]
+    [OutputType(typeof(Change))]
     public class GetGcdChangeCmdlet : GcdCmdlet
     {
         /// <summary>
         /// <para type="description">
-        /// Get the project to check.
+        /// Get the DnsProject to check.
         /// </para>
         /// </summary>
         [Parameter]
@@ -94,17 +121,38 @@ namespace Google.PowerShell.Dns
     /// </para>
     /// <example>
     ///   <para>Add the Change request $change1 to the ManagedZone "test1" in the DnsProject "testing."</para>
-    ///   <para><code>Add-GcdChange -DnsProject "testing" -Zone "test1" -ChangeRequest $change1</code></para>
+    ///   <para><code>PS C:\> Add-GcdChange -DnsProject "testing" -Zone "test1" -ChangeRequest $change1</code></para>
+    ///   <br></br>
+    ///   <para>Additions :</para>
+    ///   <para>Deletions : {gcloudexample1.com.}</para>
+    ///   <para>Id        : 1</para>
+    ///   <para>Kind      : dns#change</para>
+    ///   <para>StartTime : 2016-06-29T16:30:50.670Z</para> 
+    ///   <para>Status    : done</para> 
+    ///   <para>ETag      :</para>
     /// </example>
     /// <example>
     ///   <para> 
     ///   Add a new Change that adds the ResourceRecordSets $addRrsets and removes the ResourceRecordSets $rmRrsets
     ///   from the ManagedZone "test1" in the DnsProject "testing."
     ///   </para>
-    ///   <para><code>Add-GcdChange -DnsProject "testing" -Zone "test1" -Add $addRrsets -Remove $rmRrsets</code></para>
+    ///   <para>
+    ///     <code>PS C:\> Add-GcdChange -DnsProject "testing" -Zone "test1" -Add $addRrsets -Remove $rmRrsets</code>
+    ///   </para>
+    ///   <br></br>
+    ///   <para>Additions : {gcloudexample1.com.}</para>
+    ///   <para>Deletions : {a.gcloudexample1.com.}</para>
+    ///   <para>Id        : 1</para>
+    ///   <para>Kind      : dns#change</para>
+    ///   <para>StartTime : 2016-06-29T16:30:50.670Z</para> 
+    ///   <para>Status    : done</para> 
+    ///   <para>ETag      :</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/dns/monitoring)">[Monitoring Changes]</para>
+    /// <para type="link" uri="(https://cloud.google.com/dns/troubleshooting)">[Troubleshooting]</para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GcdChange", DefaultParameterSetName = ParameterSetNames.ChangeRequest)]
+    [OutputType(typeof(Change))]
     public class AddGcdChangeCmdlet : GcdCmdlet
     {
         private class ParameterSetNames
@@ -195,7 +243,8 @@ namespace Google.PowerShell.Dns
                     throw UnknownParameterSetException;
             }
 
-            ChangesResource.CreateRequest changeCreateRequest = Service.Changes.Create(changeContent, DnsProject, Zone);
+            ChangesResource.CreateRequest changeCreateRequest = 
+                Service.Changes.Create(changeContent, DnsProject, Zone);
             Change changeResponse = changeCreateRequest.Execute();
             WriteObject(changeResponse);
         }

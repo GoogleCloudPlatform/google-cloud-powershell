@@ -4,6 +4,7 @@ using Google.Apis.SQLAdmin.v1beta4.Data;
 
 namespace Google.PowerShell.Sql
 {
+    ///TODO: Figure out if this actually works in context of Add-GcSqlInstance
     /// <summary>
     /// <para type="synopsis">
     /// Creates a configuration for a replicaConfiguration. 
@@ -118,10 +119,8 @@ namespace Google.PowerShell.Sql
         {
             ReplicaConfiguration config = new ReplicaConfiguration
             {
-
-
                 FailoverTarget = FailoverTarget,
-                Kind = "sql::replicaConfiguration",
+                Kind = "sql#replicaConfiguration",
                 MysqlReplicaConfiguration = new MySqlReplicaConfiguration
                 {
                     CaCertificate = MySqlCaCert,
