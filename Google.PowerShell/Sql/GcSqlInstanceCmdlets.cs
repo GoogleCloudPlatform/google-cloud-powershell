@@ -167,7 +167,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// The SSL Certificate that describes the SSL Certificate to remove.
+        /// The DatabaseInstance that describes the instance we want to remove.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true,
