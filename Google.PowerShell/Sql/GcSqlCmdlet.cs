@@ -40,7 +40,7 @@ namespace Google.PowerShell.Sql
         {
             while (op.Status != "DONE")
             {
-                Thread.Sleep(150);
+                Thread.Sleep(200);
                 OperationsResource.GetRequest request = Service.Operations.Get(op.TargetProject, op.Name);
                 op = request.Execute();
             }

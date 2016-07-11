@@ -6,7 +6,6 @@ $r = Get-Random
 # A random number is used to avoid collisions with the speed of creating
 # and deleting instances.
 $instance = "test-inst$r"
-
 Describe "Get-GcSqlSslCert" {
     gcloud sql instances create $instance --quiet 2>$null
     It "should get a reasonable list response when no sslcerts exist" {

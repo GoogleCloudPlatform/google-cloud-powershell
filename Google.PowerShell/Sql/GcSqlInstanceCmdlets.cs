@@ -56,7 +56,7 @@ namespace Google.PowerShell.Sql
                 DatabaseInstance result = request.Execute();
                 WriteObject(result);
             }
-            else 
+            else
             {
                 IEnumerable<DatabaseInstance> results = GetAllSqlInstances();
                 WriteObject(results, true);
@@ -81,6 +81,87 @@ namespace Google.PowerShell.Sql
                 request.PageToken = aggList.NextPageToken;
             }
             while (request.PageToken != null);
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Creates a new Cloud SQL instance.
+    /// </para>
+    /// <para type="description">
+    /// Creates the pipelined Cloud SQL instance resource in the specified project.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Add, "GcSqlInstance")]
+    public class AddGcSqlInstanceCmdlet : GcSqlCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// Project name of the project that contains instance(s).
+        /// Defaults to the cloud sdk config for properties if not specified.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Resource containing information about the new request. 
+        /// Can be created with New-GcSqlInstanceConfig.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true)]
+        public DatabaseInstance InstanceConfig { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            InstancesResource.InsertRequest request = Service.Instances.Insert(InstanceConfig, Project);
+            Operation result = request.Execute();
+            WaitForSqlOperation(result);
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Deletes a Cloud SQL instance.
+    /// </para>
+    /// <para type="description">
+    /// Deletes the specified Cloud SQL instance.
+    /// 
+    /// Warning: This deletes all data inside of it as well.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Remove, "GcSqlInstance", SupportsShouldProcess = true)]
+    public class RemoveGcSqlInstanceCmdlet : GcSqlCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// Project name of the project that contains the instance to be deleted.
+        /// Defaults to the cloud sdk config for properties if not specified.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the instance to be deleted.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true)]
+        public string Instance { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            if (!ShouldProcess($"{Project}/{Instance}", "Delete Instance"))
+            {
+                return;
+            }
+            InstancesResource.DeleteRequest request = Service.Instances.Delete(Project, Instance);
+            Operation result = request.Execute();
+            WaitForSqlOperation(result);
         }
     }
 }
