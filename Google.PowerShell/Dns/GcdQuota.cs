@@ -20,10 +20,22 @@ namespace Google.PowerShell.Dns
     /// </para>
     /// <example>
     ///   <para>Get the DNS quota of the DnsProject "testing"</para>
-    ///   <para><code>Get-GcdQuota -DnsProject "testing" </code></para>
+    ///   <para><code>PS C:\> Get-GcdQuota -DnsProject "testing" </code></para>
+    ///   <br></br>
+    ///   <para>Kind                     : dns#quota</para>
+    ///   <para>ManagedZones             : 100</para>
+    ///   <para>ResourceRecordsPerRrset  : 100</para>
+    ///   <para>RrsetAdditionsPerChange  : 100</para>
+    ///   <para>RrsetDeletionsPerChange  : 100</para>
+    ///   <para>RrsetsPerManagedZone     : 10000</para>
+    ///   <para>TotalRrdataSizePerChange : 10000</para>
+    ///   <para>ETag                     :</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/dns/quota)">[Quotas]</para>
+    /// <para type="link" uri="(https://cloud.google.com/dns/troubleshooting)">[Troubleshooting]</para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcdQuota")]
+    [OutputType(typeof(Quota))]
     public class GetGcdQuotaCmdlet : GcdCmdlet
     {
         /// <summary>
