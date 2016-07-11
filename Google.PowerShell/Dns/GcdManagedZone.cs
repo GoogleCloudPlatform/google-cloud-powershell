@@ -166,7 +166,7 @@ namespace Google.PowerShell.Dns
 
         /// <summary>
         /// <para type="description">
-        /// Get the name of the new ManagedZone to create.
+        /// The name of the new ManagedZone to create.
         /// </para>
         /// <para type="description">
         /// The name must be 1-32 characters long, begin with a letter, end with a letter or digit, and only contain 
@@ -178,7 +178,7 @@ namespace Google.PowerShell.Dns
 
         /// <summary>
         /// <para type="description">
-        /// Get the DNS name of the new ManagedZone.
+        /// The DNS name of the new ManagedZone.
         /// </para>
         /// <para type="description">
         /// The DnsName must be a valid absolute zone and end in a period. If it does not, the cmdlet will 
