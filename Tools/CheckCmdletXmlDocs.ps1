@@ -13,16 +13,21 @@ function Check-CmdletDoc() {
     Give another example of how to use it
 
     .PARAMETER CloudProducts
+    Alias: Products
     List the Cloud Product(s) (by full name or cmdlet abbreviation) whose cmdlet docs you want to check.
 
+    .PARAMETER Cmdlets
+    List the Cmdlet(s) (by full name) whose docs you want to check.
+
     .PARAMETER DeepExampleCheck
+    Alias: DEC, ExampleCheck
     Include this optional switch to check example format, intro, and output.
     #>   
 
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName="AllCmdlets")]
     param
     (
-        [Parameter(Mandatory=$false,
+        [Parameter(Mandatory=$true,
                    ParameterSetName = "ProductNames",
                    HelpMessage='List the Cloud Product(s) (by full name or cmdlet abbreviation)' +
                                'whose cmdlet docs you want to check.')]
@@ -32,14 +37,14 @@ function Check-CmdletDoc() {
         [String[]]
         $CloudProducts,
 
-        [Parameter(Mandatory=$false,
+        [Parameter(Mandatory=$true,
                    ValueFromPipeline=$true,
                    ValueFromPipelineByPropertyName=$true,
                    ParameterSetName = "CmdletNames",
                    HelpMessage='List the full names of the cmdlets that you want to check.')]
-        [Alias('Cmdlets')]
+        [ValidateNotNullOrEmpty()]
         [String[]]
-        $CmdletNames,
+        $Cmdlets,
 
         [Parameter(Mandatory=$false, 
                    HelpMessage='Include this optional switch to check example format, intro, and output.')]
@@ -109,10 +114,12 @@ function Check-CmdletDoc() {
         # Get the cmdlet's documentation.
         $docObj = Get-Help -Full $cmdlet.Name
         
+        #<#
         if ($cmdlet.Name -match "Get-GcdManagedZone")
         {
             $docObj2 = $docObj
         }
+        ##>
         
         $name = ($docObj.Name | Out-String).Trim()
         $synopsis = ($docObj.Synopsis | Out-String).Trim()
