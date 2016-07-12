@@ -2,11 +2,8 @@
 // Licensed under the Apache License Version 2.0.
 
 using Google.Apis.Compute.v1.Data;
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Management.Automation;
 
 namespace Google.PowerShell.ComputeEngine
 {
@@ -22,14 +19,17 @@ namespace Google.PowerShell.ComputeEngine
                 Items = new List<Metadata.ItemsData>()
             };
 
-            var e = table.GetEnumerator();
-            while (e.MoveNext())
+            if (table != null)
             {
-                metadata.Items.Add(new Metadata.ItemsData
+                IDictionaryEnumerator e = table.GetEnumerator();
+                while (e.MoveNext())
                 {
-                    Key = e.Key.ToString(),
-                    Value = e.Value.ToString()
-                });
+                    metadata.Items.Add(new Metadata.ItemsData
+                    {
+                        Key = e.Key.ToString(),
+                        Value = e.Value.ToString()
+                    });
+                }
             }
             return metadata;
         }

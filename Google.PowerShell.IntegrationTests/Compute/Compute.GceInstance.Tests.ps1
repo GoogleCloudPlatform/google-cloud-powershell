@@ -1,13 +1,11 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
 
-$project = "gcloud-powershell-testing"
-$zone = "us-central1-f"
+$project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
+
 $zone2 = "us-central1-a"
-
-$image = "projects/debian-cloud/global/images/debian-8-jessie-v20160511"
-
-Get-GceInstance -Project $project | Remove-GceInstance -Project $project
+$image = Get-GceImage "debian-cloud" -Family "debian-8"
+Get-GceInstance -Project $project | Remove-GceInstance
 
 Describe "Get-GceInstance" {
 
@@ -15,43 +13,36 @@ Describe "Get-GceInstance" {
     $instance = "gcps-instance-exist-$r"
     $instance2 = "gcps-instance-exist2-$r"
     $instance3 = "gcps-instance-exist3-$r"
-
-    @($instance, $instance2) |
-        New-GceInstanceConfig -DiskImage $image -MachineType "f1-micro" |
-        Add-GceInstance -Project $project -Zone $zone
-
-    $instance3 |
-        New-GceInstanceConfig -DiskImage $image -MachineType "f1-micro" |
-        Add-GceInstance -Project $project -Zone $zone2
+    
+    $instance, $instance2 | Add-GceInstance -BootDiskImage $image -MachineType "f1-micro"
+    Add-GceInstance $instance3 -BootDiskImage $image -MachineType "f1-micro" -Zone $zone2
 
 
     It "should fail to return non-existing instances" {
-        {
-            Get-GceInstance -Project $project -Zone $zone -Name "gcps-instance-no-exist-$r"
-        } | Should Throw "404"
+        { Get-GceInstance "gcps-instance-no-exist-$r" } | Should Throw "404"
     }
     
     It "should get one" {
-        $result = Get-GceInstance -Project $project -Zone $zone -Name $instance
+        $result = Get-GceInstance $instance
         ($result | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.Instance"
         $result.Name | Should Be $instance
         $result.Kind | Should Be "compute#instance"
     }
 
     It "should use the pipeline" {
-        $instances = @($instance, $instance2) | Get-GceInstance -Project $project -Zone $zone
+        $instances = $instance, $instance2 | Get-GceInstance
         $instances.Count | Should Be 2
     }
 
     It "should get only zone" {
-        $zoneInstances = Get-GceInstance -Project $project -Zone $zone
+        $zoneInstances = Get-GceInstance -Zone $zone
         $zoneInstances.Length | Should Be 2
         $zoneInstances.Kind | Should Be "compute#instance"
         $zoneInstances.Zone | Should Match $zone
     }
 
     It "should list all instances in a project" {
-        $projectInstances = Get-GceInstance -Project $project
+        $projectInstances = Get-GceInstance
         $projectInstances.Count | Should Be 3
     }
 
@@ -63,6 +54,7 @@ Describe "Get-GceInstance" {
     It "should get by object" {
         $instanceObj = New-Object Google.Apis.Compute.v1.Data.Instance
         $instanceObj.Name = $instance
+        $instanceObj.Zone = "projects/$project/zones/$zone"
         $instanceObj.SelfLink = "projects/$project/zones/$zone/instances/$instance"
         $result = Get-GceInstance $instanceObj
         ($result | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.Instance"
@@ -86,7 +78,7 @@ Describe "Get-GceInstance" {
 
     It "should return serial port output" {
         $output = Get-GceInstance -Project $project -Zone $zone -Name $instance -SerialPortOutput
-        $output | Should Match "$instance run-startup-scripts"
+        $output | Should Match "$instance\s*kernel"
     }
     
     $templateName = "test-template-get-instance-$r"
@@ -113,22 +105,24 @@ Describe "New-GceInstanceConfig" {
     $r = Get-Random
     $instance = "gcps-instance-1-$r"
     $instance2 = "gcps-instance-2-$r"
+    $defaultNetwork = Get-GceNetwork "default"
+    $attachedDisk = New-GceAttachedDiskConfig $image -Boot
 
     It "should work" {
         $instanceConfig = New-GceInstanceConfig -Name $instance `
             -MachineType "f1-micro" `
-            -Disk @{"boot"=$true; "initializeParams" = @{"sourceImage" = $image}} `
-            -NetworkInterface @{"network"="global/networks/fake"} `
+            -Disk $attachedDisk `
+            -Network $default `
             -Tag "alpha", "beta"
         $instanceConfig.MachineType | Should Be "f1-micro"
         $instanceConfig.Disks.Boot | Should Be $true
         $instanceConfig.Tags.Items | Should Be @("alpha", "beta")
-        $instanceConfig.NetworkInterfaces.Network | Should Be "global/networks/fake"
+        $instanceConfig.NetworkInterfaces.Network | Should Match "global/networks/default"
     }
 
     It "should handle defaults" {
         $instanceConfig = New-GceInstanceConfig -Name $instance -MachineType "f1-micro" `
-            -Disk @{"boot"=$true; "initializeParams" = @{"sourceImage" = $image}}
+            -Disk $attachedDisk
         $instanceConfig.NetworkInterfaces.Network | Should Be "global/networks/default"
         $instanceConfig.NetworkInterfaces.AccessConfigs.Type | Should Be "ONE_TO_ONE_NAT"
     }
@@ -138,17 +132,21 @@ Describe "New-GceInstanceConfig" {
              -DiskImage $image
         $instanceConfig.Disks.Boot | Should Be $true
         $instanceConfig.Disks.AutoDelete | Should Be $true
-        $instanceConfig.Disks.InitializeParams.SourceImage | Should Be $image
+        $instanceConfig.Disks.InitializeParams.SourceImage | Should Be $image.SelfLink
     }
+
+    $persistantDisk = New-GceDisk "test-new-instanceconfig-$r" $image
 
     It "should attach disk" {
         $instanceConfig = New-GceInstanceConfig -Name $instance  -MachineType "f1-micro" `
-            -DiskSource "someDisk"
+            -BootDisk $persistantDisk
         $instanceConfig.Disks.Boot | Should Be $true
         $instanceConfig.Disks.AutoDelete | Should Be $false
-        $instanceConfig.Disks.Source | Should Be "someDisk"
+        $instanceConfig.Disks.Source | Should Be $persistantDisk.SelfLink
         $instanceConfig.Disks.InitializeParams | Should BeNullOrEmpty
     }
+
+    Remove-GceDisk $persistantDisk
 
     It "should use pipeline" {
         $instanceConfigs = $instance, $instance2 |
@@ -389,3 +387,5 @@ Describe "Set-GceInstance" {
 
     Remove-GceInstance -Project $project -Zone $zone $instance
 }
+
+Reset-GCloudConfig $oldActiveConfig $configName

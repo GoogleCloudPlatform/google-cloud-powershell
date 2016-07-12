@@ -2,9 +2,8 @@
 // Licensed under the Apache License Version 2.0.
 
 using Google.Apis.Compute.v1.Data;
+using Google.PowerShell.Common;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Management.Automation;
 
 namespace Google.PowerShell.ComputeEngine
@@ -19,14 +18,8 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GceInstanceConfig")]
-    public class NewGceInstanceConfigCmdlet : GceCmdlet
+    public class NewGceInstanceConfigCmdlet : GceInstanceDescriptionCmdlet
     {
-        internal class ParameterSetNames
-        {
-            public const string DiskByObject = "DiskByObject";
-            public const string DiskByImage = "DiskByImage";
-            public const string DiskBySource = "DiskBySource";
-        }
 
         /// <summary>
         /// <para type="description">
@@ -35,211 +28,153 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true)]
-        public string Name { get; set; }
+        public override string Name { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// Allows this instance to send and receive packets with non-matching destination
-        /// or source IPs. This is required if you plan to use this instance to forward routes.
+        /// The machine type of this instance. Can be a name, a URL or a MachineType object from
+        /// Get-GceMachineType.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 1, Mandatory = true)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(MachineType),
+            Property = nameof(Apis.Compute.v1.Data.MachineType.SelfLink))]
+        public override string MachineType { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Enables instances to send and receive packets for IP addresses other than their own. Switch on if
+        /// these instances will be used as an IP gateway or it will be set as the next-hop in a Route
+        /// resource.
         /// </para>
         /// </summary>
         [Parameter]
-        public bool? CanIpForward { get; set; }
+        public override SwitchParameter CanIpForward { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// A description of this resource.
+        /// Human readable description of this instance.
         /// </para>
         /// </summary>
         [Parameter]
-        public string Description { get; set; }
+        public override string Description { get; set; }
+
 
         /// <summary>
         /// <para type="description">
-        /// Disks associated with this instance.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.DiskByObject)]
-        public List<AttachedDisk> Disk { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The path to the boot disk image.
-        /// For example: "projects/debian-cloud/global/images/debian-8-jessie-v20160511".
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.DiskByImage)]
-        public string DiskImage { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The path to the boot disk.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.DiskBySource)]
-        public string DiskSource { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// A string describing the machine type. This can be either just the machine type name,
-        /// or the full url. For example: n1-standard-4
-        /// <para type="description">
-        /// </summary>
-        [Parameter(Mandatory = true)]
-        public string MachineType { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The metadata key/value pairs assigned to this instance. This includes custom
-        /// metadata and predefined keys.
+        /// The persistant disk to use as a boot disk. Use Get-GceDisk to get one of these.
         /// </para>
         /// </summary>
         [Parameter]
-        public Hashtable Metadata { get; set; }
+        public override Disk BootDisk { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// An array of configurations for this interface. This specifies how this interface
-        /// is configured to interact with other network services, such as connecting to
-        /// the internet.
+        /// The the image used to create the boot disk. Use Get-GceImage to get one of these.
         /// </para>
         /// </summary>
         [Parameter]
-        public List<NetworkInterface> NetworkInterface { get; set; }
+        [Alias("DiskImage")]
+        public override Image BootDiskImage { get; set; }
+
 
         /// <summary>
         /// <para type="description">
-        /// Scheduling options for this instance.
+        /// An existing disk to attach in read only mode.
         /// </para>
         /// </summary>
         [Parameter]
-        public Scheduling Scheduling { get; set; }
+        public override Disk[] ExtraDisk { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// A list of service accounts, with their specified scopes, authorized for this
-        /// instance. Service accounts generate access tokens that can be accessed through
-        /// the metadata server and used to authenticate applications on the instance. See
-        /// Authenticating from Google Compute Engine for more information.
+        /// An AttachedDisk object specifying a disk to attach. Do not specify `-BootDiskImage` or
+        /// `-BootDiskSnapshot` if this is a boot disk. You can build one using New-GceAttachedDiskConfig.
         /// </para>
         /// </summary>
         [Parameter]
-        public List<ServiceAccount> ServiceAccount { get; set; }
+        public override AttachedDisk[] Disk { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// A list of tags to apply to this instance. Tags are used to identify valid sources
-        /// or targets for network firewalls. Each tag within
-        /// the list must comply with RFC1035.
+        /// The keys and values of the Metadata of this instance.
         /// </para>
         /// </summary>
         [Parameter]
-        public List<string> Tag { get; set; }
+        public override IDictionary Metadata { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the network to use. If not specified, is default. This can be a Network object you get
+        /// from Get-GceNetwork.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [PropertyByTypeTransformation(Property = nameof(Apis.Compute.v1.Data.Network.SelfLink),
+            TypeToTransform = typeof(Network))]
+        public override string Network { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// If set, the instances will not have an external ip address.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        public override SwitchParameter NoExternalIp { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// If set, the instances will be preemptible. If set, AutomaticRestart will be false.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        public override SwitchParameter Preemptible { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// If set, the instances will not restart when shut down by Google Compute Engine.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        public override bool AutomaticRestart { get; set; } = true;
+
+        /// <summary>
+        /// <para type="description">
+        /// If set, the instances will terminate rather than migrate when the host undergoes maintenance.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        public override SwitchParameter TerminateOnMaintenance { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The ServiceAccount used to specify access tokens.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        public override ServiceAccount[] ServiceAccount { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// A tag of this instance.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        public override string[] Tag { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The static ip address this instance will have. Can be a string, or and Address object from
+        /// Get-GceAddress.
+        /// </para>
+        /// </summary>
+        [PropertyByTypeTransformation(Property = nameof(Apis.Compute.v1.Data.Address.AddressValue),
+            TypeToTransform = typeof(Address))]
+        protected override string Address { get; set; }
 
         protected override void ProcessRecord()
         {
-            Instance newInstance = ProduceInstance();
-
-            WriteObject(newInstance);
-        }
-
-        private Instance ProduceInstance()
-        {
-            Instance newInstance = new Instance
-            {
-                Name = Name,
-                CanIpForward = CanIpForward,
-                Description = Description,
-                MachineType = MachineType,
-                Scheduling = Scheduling,
-                ServiceAccounts = ServiceAccount,
-            };
-
-            if (NetworkInterface != null)
-            {
-                newInstance.NetworkInterfaces = NetworkInterface;
-            }
-            else
-            {
-                newInstance.NetworkInterfaces = new List<NetworkInterface> {
-                    new NetworkInterface {
-                        Network = "global/networks/default",
-                        AccessConfigs = new List<AccessConfig> {
-                            new AccessConfig {
-                                Type = "ONE_TO_ONE_NAT"
-                            }
-                        }
-                    }
-                };
-            }
-
-            newInstance.Disks = GetDisk();
-
-            if (Metadata != null)
-            {
-                newInstance.Metadata = GetMetadata();
-            }
-
-            if (Tag != null)
-            {
-                newInstance.Tags = new Tags { Items = Tag.ToList() };
-            }
-
-            return newInstance;
-        }
-
-        /// <summary>
-        /// Creates a metadata object from the Metadata Hashtable
-        /// </summary>
-        /// <returns>
-        /// The Metadata object.
-        /// </returns>
-        private Metadata GetMetadata()
-        {
-            IList<Metadata.ItemsData> items = new List<Metadata.ItemsData>();
-            for (var e = Metadata.GetEnumerator(); e.MoveNext();)
-            {
-                items.Add(new Metadata.ItemsData { Key = e.Key.ToString(), Value = e.Value.ToString() });
-            }
-            return new Metadata { Items = items };
-        }
-
-        /// <summary>
-        /// Creates the attached disks based on various parameters. The parameter set "DiskByObject" will
-        /// simply return the parameter Disks. The parameter sets "DiskByImage" and "DiskBySource" will
-        /// generate a new list of attached disks that reflect these parameters.
-        /// </summary>
-        /// <returns>
-        /// The attached disks of the image.
-        /// </returns>
-        private IList<AttachedDisk> GetDisk()
-        {
-            switch (ParameterSetName)
-            {
-                case ParameterSetNames.DiskByObject:
-                    return Disk.ToList();
-
-                case ParameterSetNames.DiskByImage:
-                    return new List<AttachedDisk> {
-                        new AttachedDisk {
-                            Boot = true,
-                            AutoDelete = true,
-                            InitializeParams = new AttachedDiskInitializeParams { SourceImage = DiskImage }
-                        }
-                    };
-
-                case ParameterSetNames.DiskBySource:
-                    return new List<AttachedDisk> {
-                        new AttachedDisk {
-                            Boot = true,
-                            AutoDelete = false,
-                            Source = DiskSource
-                        }
-                    };
-
-                default:
-                    throw UnknownParameterSetException;
-            }
+            WriteObject(BuildInstance());
         }
     }
 }
