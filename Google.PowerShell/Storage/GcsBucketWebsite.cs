@@ -20,6 +20,7 @@ namespace Google.PowerShell.CloudStorage
     public class RemoveGcsBucketWebsiteCmdlet : GcsCmdlet
     {
         [Parameter(Position = 0, Mandatory = true)]
+        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Name { get; set; }
 
         protected override void ProcessRecord()
@@ -48,6 +49,7 @@ namespace Google.PowerShell.CloudStorage
     public class WriteGcsBucketWebsiteCmdlet : GcsCmdlet
     {
         [Parameter(Position = 0, Mandatory = true)]
+        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Name { get; set; }
 
         [Parameter(Position = 1)]

@@ -130,6 +130,7 @@ namespace Google.PowerShell.CloudStorage
         private static readonly Random ActivityIdGenerator = new Random();
 
         [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true)]
+        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Name { get; set; }
 
         /// <summary>
@@ -240,6 +241,7 @@ namespace Google.PowerShell.CloudStorage
         /// The name of the bucket to test for.
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
+        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Name { get; set; }
 
         protected override void ProcessRecord()
