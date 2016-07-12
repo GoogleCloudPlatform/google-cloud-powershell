@@ -7,7 +7,7 @@ namespace Google.PowerShell.ComputeEngine
 {
     /// <summary>
     /// This abstract class describes all of the information needed to create an instance template description.
-    /// It is extended by AddGceInstanceTemplateCmdlet, which sends an instnace template description to the
+    /// It is extended by AddGceInstanceTemplateCmdlet, which sends an instance template description to the
     /// server, and by GceInstanceDescriptionCmdlet to provide a unifed set of parameters for instances and
     /// instance templates.
     /// </summary>
