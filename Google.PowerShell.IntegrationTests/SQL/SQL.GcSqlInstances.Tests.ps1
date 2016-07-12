@@ -55,7 +55,7 @@ Describe "Add-GcSqlInstance" {
         $config = New-GcSqlInstanceConfig $instance -SettingConfig $setting
         Add-GcSqlInstance $config
         $newInstances = Get-GcSqlInstance
-        $newInstances.Count | Should Be ($instances.Count + 1)
+        ($instances.Name -contains $instance) | Should Be false
         ($newInstances.Name -contains $instance) | Should Be true
         gcloud sql instances delete $instance --quiet 2>$null
     }
@@ -104,6 +104,40 @@ Describe "Remove-GcSqlInstance" {
 
     It "shouldn't delete anything that doesn't exist" {
         { Remove-GcSqlInstance "should-fail" } | Should Throw "The client is not authorized to make this request. [403]"
+    }
+}
+
+Describe "Copy-GcSqlInstance" {
+    # For these tests, test-db2 was used because an instance must have a database and a binarylog 
+    # for it to work. These cannot be easily instantiated like in other tests.
+    It "should work" {
+        $r = Get-Random
+        # A random number is used to avoid collisions with the speed of creating
+        # and deleting instances.
+        $instance = "test-copy$r"
+        Copy-GcSqlInstance "test-db2" $instance "mysql-bin.000001" 1133
+        $original = Get-GcSqlInstance "test-db2"
+        $clones = Get-GcSqlInstance 
+        ($clones.Name -contains $instance) | Should Be true
+        $clone = Get-GcSqlInstance $instance
+        $clone.BackendType | Should Be $original.BackendType
+        gcloud sql instances delete $instance --quiet 2>$null
+    }
+
+    It "should be able to take a pipelined Instance" {
+    $r = Get-Random
+        # A random number is used to avoid collisions with the speed of creating
+        # and deleting instances.
+        $instance = "test-copy$r"
+        Get-GcSqlInstance "test-db2" | Copy-GcSqlInstance -CloneName $instance -binaryLogFileName "mysql-bin.000001" -binaryLogPosition 1133
+        $clones = Get-GcSqlInstance 
+        ($clones.Name -contains $instance) | Should Be true
+        gcloud sql instances delete $instance --quiet 2>$null
+    }
+
+    It "shouldn't copy something if it doesn't exist" {
+        { Copy-GcSqlInstance "fail" "shouldfail" "mysql-bin.000001" 1133}`
+            | Should Throw "The client is not authorized to make this request. [403]"
     }
 }
 
