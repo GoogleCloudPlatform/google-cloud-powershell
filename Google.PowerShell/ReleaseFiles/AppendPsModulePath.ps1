@@ -1,30 +1,32 @@
-﻿# Get the ID and security principal of the current user account
-$windowsId = [System.Security.Principal.WindowsIdentity]::GetCurrent()
-$windowsPrincipal = New-Object System.Security.Principal.WindowsPrincipal($windowsId)
-
-# Get the security principal for the Administrator role
-$adminRole = [System.Security.Principal.WindowsBuiltInRole]::Administrator
-
-if(-not ($env:PSModulePath -split ";" -contains $PSScriptRoot))
-{
-    Write-Verbose "Adding to environment variable"
-    $env:PSModulePath = "$PSScriptRoot;$env:PSModulePath"
-    Write-Verbose "PSModulePath = $env:PSModulePath"
+﻿$hklmPath = "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Google Cloud SDK"
+if(Test-Path $HklmPath) {
+    $installPath = Get-ItemPropertyValue $HklmPath InstallLocation
+} else {
+    $hkcuPath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Google Cloud SDK"
+    $installPath = Get-ItemPropertyValue $HkcuPath InstallLocation
 }
-Push-Location 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
-$regValue = Get-ItemPropertyValue . PSModulePath
-if(-not ($regValue -split ";" -contains $PSScriptRoot))
+$installPath = $installPath -replace '"'
+$googlePowerShellPath = "$installPath\platform\GoogleCloudPowerShell"
+
+$hklmLocation = "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
+$hklmValue = Get-ItemPropertyValue $hklmLocation PSModulePath
+$hkcuLocation = "HKCU:\Environment"
+$hkcuValue = Get-ItemPropertyValue $hkcuLocation PSModulePath -ErrorAction SilentlyContinue
+$regValue = "$hklmValue$hkcuValue"
+if(-not ($regValue -split ";" -contains $googlePowerShellPath))
 {
-    Write-Verbose "Adding to registry key"
-    if ($windowsPrincipal.IsInRole($adminRole))
+    if (Test-IsElevated -and (Test-Path $HklmPath))
     {
-        Set-ItemProperty . PSModulePath "$PSScriptRoot;$regValue"
+        Write-Verbose "Adding to registry key for all users."
+        Push-Location $hklmLocation
+        Set-ItemProperty . PSModulePath "$hklmValue;$googlePowerShellPath"
     }
     else
     {
-        Start-Process Powershell -Verb RunAs -Wait "-NoLogo", "-NoProfile", "-NonInteractive",
-                "-File $($MyInvocation.MyCommand.Definition)"
+        Write-Verbose "Adding to registry key for this user."
+        Push-Location $hkcuLocation
+        Set-ItemProperty . PSModulePath "$hkcuValue;$googlePowerShellPath"
     }
     Write-Verbose "PSModulePath = $(Get-ItemPropertyValue . PSModulePath)"
+    Pop-Location
 }
-Pop-Location

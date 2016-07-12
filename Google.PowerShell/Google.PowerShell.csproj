@@ -179,9 +179,6 @@
     <None Include="README.md" />
     <None Include="ReleaseFiles\BootstrapGoogleCloudPowerShell.ps1" />
     <None Include="ReleaseFiles\GoogleCloudPowerShell.psd1" />
-    <None Include="ReleaseFiles\RemovePsModulePath.ps1">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
