@@ -12,6 +12,7 @@ $r = Get-Random
 Describe "New-GceAttachedDiskConfig" {
     $image = Get-GceImage "debian-cloud" -Family "debian-8"
     $source = New-GceDisk "test-attached-disk-config-$r" $image
+
     It "should set defaults for persistant disks" {
         $disk = New-GceAttachedDiskConfig $source
         $disk.AutoDelete | Should Be $false
