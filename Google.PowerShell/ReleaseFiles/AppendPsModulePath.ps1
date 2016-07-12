@@ -1,7 +1,7 @@
 ﻿# Get the ID and security principal of the current user account
 $windowsId = [System.Security.Principal.WindowsIdentity]::GetCurrent()
 $windowsPrincipal = New-Object System.Security.Principal.WindowsPrincipal($windowsId)
- $VerbosePreference = "Continue"
+
 # Get the security principal for the Administrator role
 $adminRole = [System.Security.Principal.WindowsBuiltInRole]::Administrator
 
