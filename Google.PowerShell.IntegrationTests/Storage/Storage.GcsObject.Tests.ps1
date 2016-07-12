@@ -139,6 +139,35 @@ Describe "New-GcsObject" {
         Read-GcsObject $bucket $objectName | Should BeExactly $objectContents
     }
 
+    It "will have default MIME types for files and text" {
+        # Text file
+        "text" | New-GcsObject $bucket "text-file" | Out-Null
+        $textObj = Get-GcsObject $bucket "text-file"
+        $textObj.ContentType | Should Be "text/plain; charset=utf-8"
+        Remove-GcsObject $textObj
+
+        # Binary file
+        $tempFile = [System.IO.Path]::GetTempFileName()
+        # TODO(chrsmith): Support creating 0-byte files on GCS.
+        [System.IO.File]::WriteAllText($tempFile, "<binary-data>")
+        New-GcsObject $bucket "binary-file" -File $tempFile | Out-Null
+        $binObj = Get-GcsObject $bucket "binary-file"
+        $binObj.ContentType | Should Be "application/octet-stream"
+        Remove-GcsObject $binObj
+        Remove-Item $tempFile
+    }
+
+    It "will infer mime type based on file extension" {
+        $tempFile = [System.IO.Path]::GetTempFileName() + ".png"
+        # TODO(chrsmith): Support creating 0-byte files on GCS.
+        [System.IO.File]::WriteAllText($tempFile,"<binary-data>")
+        New-GcsObject $bucket "png-file" -File $tempFile | Out-Null
+        $binObj = Get-GcsObject $bucket "png-file"
+        $binObj.ContentType | Should Be "image/png"
+        Remove-GcsObject $binObj
+        Remove-Item $tempFile
+    }
+
     # TODO(chrsmith): Confirm it works for 0-byte files (currently it doesn't).
 }
 
