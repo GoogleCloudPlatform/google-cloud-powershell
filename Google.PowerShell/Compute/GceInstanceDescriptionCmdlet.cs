@@ -5,6 +5,12 @@ using System.Management.Automation;
 
 namespace Google.PowerShell.ComputeEngine
 {
+    /// <summary>
+    /// This abstract class describes all of the information needed to create an instance template description.
+    /// It is extended by AddGceInstanceTemplateCmdlet, which sends an instnace template description to the
+    /// server, and by GceInstanceDescriptionCmdlet to provide a unifed set of parameters for instances and
+    /// instance templates.
+    /// </summary>
     public abstract class GceTemplateDescriptionCmdlet : GceConcurrentCmdlet
     {
         /// <summary>
@@ -87,6 +93,12 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         public abstract string[] Tag { get; set; }
 
+        /// <summary>
+        /// Builds a network interface given the Network and NoExternalIp parameters.
+        /// </summary>
+        /// <returns>
+        /// The NetworkInsterface object to use in the instance template description.
+        /// </returns>
         protected virtual NetworkInterface BuildNetworkInterfaces()
         {
             var accessConfigs = new List<AccessConfig>();
@@ -120,6 +132,9 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// Creates a list of AttachedDisk objects form Disk, BootDiskImage, and ExtraDis.
         /// </summary>
+        /// <returns>
+        /// A list of AttachedDisk objects to be used in the instance template description.
+        /// </returns>
         protected virtual IList<AttachedDisk> BuildAttachedDisks()
         {
             var disks = new List<AttachedDisk>();
@@ -158,7 +173,8 @@ namespace Google.PowerShell.ComputeEngine
         /// Builds an InstanceTemplate from parameter values.
         /// </summary>
         /// <returns>
-        /// The new instance template to create.
+        /// An InstanceTemplate to be sent to Google Compute Engine as part of a insert instance template
+        /// request.
         /// </returns>
         protected InstanceTemplate BuildInstanceTemplate()
         {
@@ -191,7 +207,9 @@ namespace Google.PowerShell.ComputeEngine
     }
 
     /// <summary>
-    /// Base cmdlet class indicating what parameters are needed to describe an instance.
+    /// Base cmdlet class indicating what parameters are needed to describe an instance. Used by
+    /// NewGceInstanceConfigCmdlet and AdGceInstanceCmdlet to provide a unifed way to build an instance
+    /// description.
     /// </summary>
     public abstract class GceInstanceDescriptionCmdlet : GceTemplateDescriptionCmdlet
     {
@@ -207,6 +225,12 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         protected abstract string Address { get; set; }
 
+        /// <summary>
+        /// Extend the parent BuildAttachedDisks by optionally appending a disk from the BootDisk attribute.
+        /// </summary>
+        /// <returns>
+        /// A list of AttachedDisk objects to be used in the instance description.
+        /// </returns>
         protected override IList<AttachedDisk> BuildAttachedDisks()
         {
             IList<AttachedDisk> disks = base.BuildAttachedDisks();
@@ -223,6 +247,12 @@ namespace Google.PowerShell.ComputeEngine
             return disks;
         }
 
+        /// <summary>
+        /// Extends the parent BuildnetworkInterfaces by adding the static address to the network interface.
+        /// </summary>
+        /// <returns>
+        /// The NetworkInsterface object to use in the instance description.
+        /// </returns>
         protected override NetworkInterface BuildNetworkInterfaces()
         {
             NetworkInterface networkInterface = base.BuildNetworkInterfaces();
@@ -230,6 +260,12 @@ namespace Google.PowerShell.ComputeEngine
             return networkInterface;
         }
 
+        /// <summary>
+        /// Builds the instance description based on the cmdlet parameters.
+        /// </summary>
+        /// <returns>
+        /// An Instance object to be sent to Google Compute Engine as part of an insert instance request.
+        /// </returns>
         protected Instance BuildInstance()
         {
             return new Instance

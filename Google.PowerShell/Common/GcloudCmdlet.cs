@@ -100,6 +100,10 @@ namespace Google.PowerShell.Common
             UpdateConfigPropertyNameAttribute();
         }
 
+        /// <summary>
+        /// Updates the properties of the cmdlet that are marked with a ConfigPropertyName attribute, are an
+        /// active PowerShell parameter for the current parameter set, and do not yet have a value.
+        /// </summary>
         protected void UpdateConfigPropertyNameAttribute()
         {
             foreach (PropertyInfo property in GetType().GetProperties())
