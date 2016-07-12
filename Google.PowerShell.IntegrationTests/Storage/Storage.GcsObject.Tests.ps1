@@ -209,6 +209,12 @@ Describe "Find-GcsObject" {
         $objs.Length | Should Be 10
     }
 
+    It "should support getting the bucket via the pipeline (and via Bucket object)" {
+        $bucketObj = Get-GcsBucket $bucket
+        $objs = $bucketObj | Find-GcsObject
+        $objs.Length | Should Be 10
+    }
+
     It "should support prefix matching" {
         $objs = Find-GcsObject $bucket -Prefix "A/"
         $objs.Length | Should Be 3

@@ -340,7 +340,7 @@ namespace Google.PowerShell.CloudStorage
         /// Name of the bucket to search.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
+        [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true)]
         [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Bucket { get; set; }
 
