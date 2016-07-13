@@ -1,6 +1,6 @@
 # Site settings
 title: Google Cloud Powershell Cmdlet Reference
-baseurl: "/gcloud-powershell"
+baseurl: "/google-cloud-powershell"
 url: "http://googlecloudplatform.github.io"
 
 # Enable cust plug-ins.
