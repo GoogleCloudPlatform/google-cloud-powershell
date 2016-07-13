@@ -13,7 +13,7 @@ if (-not $installPath) {
     if (Test-Path $hklmPath) {
         $installPath = Get-ItemPropertyValue $hklmPath InstallLocation
     } elseif (Test-Path $hkcuPath) {
-        $installPath = Get-ItemPropertyValue $HkcuPath InstallLocation
+        $installPath = Get-ItemPropertyValue $hkcuPath InstallLocation
     } else {
         Write-Error "Can not find Cloud SDK from the registry."
         return
@@ -29,14 +29,14 @@ if (-not (Test-Path $googlePowerShellPath)) {
 
 # Get the value of the two registry keys that initialize the environment variable.
 $hklmLocation = "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
-$hklmValue = Get-ItemPropertyValue $hklmLocation PSModulePath
+$hklmValue = (Get-ItemProperty $hklmLocation).PSModulePath
 $hkcuLocation = "HKCU:\Environment"
-$hkcuValue = Get-ItemPropertyValue $hkcuLocation PSModulePath -ErrorAction SilentlyContinue
-$regValue = "$hklmValue$hkcuValue"
+$hkcuValue = (Get-ItemProperty $hkcuLocation).PSModulePath
+$regValue = (($hklmValue, $hkcuValue | ?{$_}) -join ";")
 
 if(($regValue -split ";" -contains $googlePowerShellPath))
 {
-    Write-Verbose "Path already exists."
+    Write-Warning "Path already exists."
     return
 }
 
@@ -58,5 +58,5 @@ else
     # Don't add a semicolon if $hkcuValue is $null
     Set-ItemProperty . PSModulePath (($hkcuValue, $googlePowerShellPath | ?{$_}) -join ";")
 }
-Write-Verbose "PSModulePath = $(Get-ItemPropertyValue . PSModulePath)"
+Write-Output (Get-ItemProperty . PSModulePath)
 Pop-Location
