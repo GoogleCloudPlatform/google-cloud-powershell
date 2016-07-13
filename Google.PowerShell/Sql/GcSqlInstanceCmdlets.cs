@@ -245,7 +245,7 @@ namespace Google.PowerShell.Sql
         /// </summary>
         [Parameter(Mandatory = true, Position = 1,
             ParameterSetName = ParameterSetNames.ByName)]
-        [Parameter(Mandatory = true, 
+        [Parameter(Mandatory = true, Position = 1, 
             ParameterSetName = ParameterSetNames.ByInstance)]
         public string CloneName { get; set; }
 
@@ -255,8 +255,8 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 2, ParameterSetName = ParameterSetNames.ByName)]
-        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByInstance)]
-        public string binaryLogFileName { get; set; }
+        [Parameter(Mandatory = true, Position = 2, ParameterSetName = ParameterSetNames.ByInstance)]
+        public string BinaryLogFileName { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -264,15 +264,15 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 3, ParameterSetName = ParameterSetNames.ByName)]
-        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByInstance)]
-        public long binaryLogPosition { get; set; }
+        [Parameter(Mandatory = true, Position = 3, ParameterSetName = ParameterSetNames.ByInstance)]
+        public long BinaryLogPosition { get; set; }
 
         /// <summary>
         /// <para type="description">
         /// The DatabaseInstance that describes the instance we want to remove.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true, 
+        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Position = 0, Mandatory = true, 
             ValueFromPipeline = true)]
         public DatabaseInstance InstanceObject { get; set; }
 
@@ -281,8 +281,8 @@ namespace Google.PowerShell.Sql
             InstancesCloneRequest body = new InstancesCloneRequest {
                CloneContext = new CloneContext {
                    BinLogCoordinates = new BinLogCoordinates {
-                       BinLogFileName = binaryLogFileName,
-                       BinLogPosition = binaryLogPosition,
+                       BinLogFileName = BinaryLogFileName,
+                       BinLogPosition = BinaryLogPosition,
                        Kind = "sql#binLogCoordinates"
                    },
                    Kind = "sql#cloneContext",
@@ -308,7 +308,8 @@ namespace Google.PowerShell.Sql
             Operation result = request.Execute();
             /// Copying an instance takes too long to wait, so this time we write the operation to demonstrate
             /// That the request went through.
-            WriteObject(result);
+            DatabaseInstance clone = Service.Instances.Get(project, CloneName).Execute();
+            WriteObject(clone);
         }
     }
 }
