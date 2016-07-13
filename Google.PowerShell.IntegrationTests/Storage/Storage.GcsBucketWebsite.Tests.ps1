@@ -1,16 +1,17 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
 
-$project = "gcloud-powershell-testing"
+$project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 # Both commands tested together.
 Describe "{Delete, Write}-GcsBucketWebsite" {
     It "should work" {
-        $bucket = "gcps-website-testing"
-        Create-TestBucket $project $bucket
+        $bucketName = "gcps-logging-testing"
+        Remove-GcsBucket $bucketName -Force
+        $bucket = New-GcsBucket $bucketName
 
         # Confirm not set by default.
-        (Get-GcsBucket $bucket).Website | Should BeNullOrEmpty
+        $bucket.Website | Should BeNullOrEmpty
 
         # Write, and confirm in output.
         $result = Write-GcsBucketWebsite `
@@ -19,7 +20,7 @@ Describe "{Delete, Write}-GcsBucketWebsite" {
         $result.Website.NotFoundPage | Should BeExactly "www.google.com/404"
 
         # Confirm added
-        $result = Get-GcsBucket $bucket
+        $result = Get-GcsBucket $bucketName
         $result.Website.MainPageSuffix | Should BeExactly "www.google.com"
         $result.Website.NotFoundPage | Should BeExactly "www.google.com/404"
 
@@ -29,8 +30,12 @@ Describe "{Delete, Write}-GcsBucketWebsite" {
         $result.Website.NotFoundPage | Should BeNullOrEmpty
 
         # Confirm removed.
-        $result = (Get-GcsBucket $bucket).Website
+        $result = (Get-GcsBucket $bucketName).Website
         $result.Website.MainPageSuffix | Should BeNullOrEmpty
         $result.Website.NotFoundPage | Should BeNullOrEmpty
+
+        Remove-GcsBucket $bucketName -Force
     }
 }
+
+Reset-GCloudConfig $oldActiveConfig $configName

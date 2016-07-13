@@ -104,10 +104,11 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
-        /// The name of the bucket to upload to.
+        /// The name of the bucket to upload to. Will also accept a Bucket object.
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
+        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Bucket { get; set; }
 
         /// <summary>
@@ -140,7 +141,9 @@ namespace Google.PowerShell.CloudStorage
         /// Content type of the Cloud Storage object. e.g. "image/png" or "text/plain".
         /// </para>
         /// <para type="description">
-        /// Defaults to "application/octet-stream" if not set.
+        /// For file uploads, the type will be inferred based on the file extension, defaulting to
+        /// "application/octet-stream" if no match is found. When passing object content via the
+        /// -Contents parameter, the type will default to "text/plain; charset=utf-8".
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
@@ -194,17 +197,11 @@ namespace Google.PowerShell.CloudStorage
             base.ProcessRecord();
             var service = GetStorageService();
 
-            if (string.IsNullOrEmpty(ContentType))
-            {
-                ContentType = OctetStreamMimeType;
-            }
-
             string objContentType = null;
             Stream contentStream = null;
             if (!string.IsNullOrEmpty(File))
             {
-                // TODO(chrsmith): Look at the file extension and infer content type.
-                objContentType = OctetStreamMimeType;
+                objContentType = ContentType ?? InferContentType(File) ?? OctetStreamMimeType;
                 string qualifiedPath = GetFullPath(File);
                 if (!System.IO.File.Exists(qualifiedPath))
                 {
@@ -216,15 +213,9 @@ namespace Google.PowerShell.CloudStorage
             {
                 // We store string data as UTF-8, which is different from .NET's default encoding
                 // (UTF-16). But this simplifies several other issues.
-                objContentType = UTF8TextMimeType;
+                objContentType = ContentType ?? UTF8TextMimeType;
                 byte[] contentBuffer = Encoding.UTF8.GetBytes(Contents);
                 contentStream = new MemoryStream(contentBuffer);
-            }
-
-            // Use the user-specified content type instead of ours if provided.
-            if (string.IsNullOrEmpty(ContentType))
-            {
-                objContentType = ContentType;
             }
 
             using (contentStream)
@@ -246,6 +237,40 @@ namespace Google.PowerShell.CloudStorage
                 WriteObject(newGcsObject);
             }
         }
+
+        /// <summary>
+        /// Infer the MIME type of a non-qualified file path. Returns null if no match is found.
+        /// </summary>
+        private string InferContentType(string file)
+        {
+            int index = file.LastIndexOf('.');
+            if (index == -1)
+            {
+                return null;
+            }
+            string extension = file.ToLowerInvariant().Substring(index);
+            // http://www.freeformatter.com/mime-types-list.html
+            switch (extension)
+            {
+                case ".htm":
+                case ".html":
+                    return "text/html";
+                case ".jpg":
+                case ".jpeg":
+                    return "image/jpeg";
+                case ".js":
+                    return "application/javascript";
+                case ".json":
+                    return "application/json";
+                case ".png":
+                    return "image/png";
+                case ".txt":
+                    return "text/plain";
+                case ".zip":
+                    return "application/zip";
+            }
+            return null;
+        }
     }
 
     /// <summary>
@@ -262,10 +287,11 @@ namespace Google.PowerShell.CloudStorage
     {
         /// <summary>
         /// <para type="description">
-        /// Name of the bucket to check.
+        /// Name of the bucket to check. Will also accept a Bucket object.
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
+        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Bucket { get; set; }
 
         /// <summary>
@@ -311,10 +337,11 @@ namespace Google.PowerShell.CloudStorage
     {
         /// <summary>
         /// <para type="description">
-        /// Name of the bucket to search.
+        /// Name of the bucket to search. Will also accept a Bucket object.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
+        [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true)]
+        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Bucket { get; set; }
 
         /// <summary>
@@ -384,10 +411,11 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
-        /// Name of the bucket containing the object.
+        /// Name of the bucket containing the object. Will also accept a Bucket object.
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.FromName)]
+        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Bucket { get; set; }
 
         /// <summary>
@@ -451,10 +479,11 @@ namespace Google.PowerShell.CloudStorage
     {
         /// <summary>
         /// <para type="description">
-        /// Name of the bucket containing the object.
+        /// Name of the bucket containing the object. Will also accept a Bucket object.
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
+        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Bucket { get; set; }
 
         /// <summary>
@@ -552,10 +581,11 @@ namespace Google.PowerShell.CloudStorage
     {
         /// <summary>
         /// <para type="description">
-        /// Name of the bucket containing the object.
+        /// Name of the bucket containing the object. Will also accept a Bucket object.
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
+        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Bucket { get; set; }
 
         /// <summary>
@@ -618,7 +648,7 @@ namespace Google.PowerShell.CloudStorage
             {
                 // Fail if the GCS Object does not exist. We don't use TestGcsObjectExists
                 // so we can reuse the existing objects metadata when uploading a new file.
-                string contentType = OctetStreamMimeType;
+                string contentType = null;
                 try
                 {
                     ObjectsResource.GetRequest getReq = service.Objects.Get(Bucket, ObjectName);

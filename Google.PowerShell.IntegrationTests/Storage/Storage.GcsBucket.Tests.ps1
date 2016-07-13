@@ -1,7 +1,7 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
 
-$project = "gcloud-powershell-testing"
+$project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 # TODO(chrsmith): When Posh updates, newer versions of Pester have Should BeOfType.
 # TODO(chrsmith): Add a random suffix to bucket names to avoid collisions between devs.
@@ -84,6 +84,11 @@ Describe "Remove-GcsBucket" {
     It "will work with pipeline" {
         $bucket | Remove-GcsBucket -Force
         { Get-GcsBucket -Name $bucket } | Should Throw "404"
+
+        # Also passing a Bucket object.
+        $bucketObj = New-GcsBucket "gcps-bucket-removal2"
+        $bucketObj | Remove-GcsBucket -Force
+        { Get-GcsBucket -Name $bucketObj.Name } | Should Throw "404"
     }
 
     It "will be unstoppable with the Force flag" {
@@ -102,11 +107,17 @@ Describe "Test-GcsBucket" {
         $bucket = "gcps-test-gcsbucket"
         Create-TestBucket $project $bucket
         Test-GcsBucket -Name $bucket | Should Be $true
-        gsutil rb gs://gcps-test-gcsbucket 2>$null
+        Remove-GcsBucket $bucket
+
+        # Test using a Bucket object.
+        $bucketObj = New-GcsBucket "gcps-test-gcsbucket"
+        Test-GcsBucket $bucketObj | Should Be $true
+        Remove-GcsBucket $bucketObj
       
         # Buckets that exists but we don't have access to.
         Test-GcsBucket -Name "asdf" | Should Be $true
-
         Test-GcsBucket -Name "yt4fm3blvo9shden" | Should Be $false
     }
 }
+
+Reset-GCloudConfig $oldActiveConfig $configName
