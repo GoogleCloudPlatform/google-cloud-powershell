@@ -14,11 +14,22 @@ using Google.PowerShell.Common;
 namespace Google.PowerShell.CloudStorage
 {
     /// <summary>
-    /// Removes the website associated with a Google Cloud Storage bucket.
+    /// <para type="synopsis">
+    /// Removes the website associated with a Cloud Storage Bucket.
+    /// </para>
+    /// <para type="description">
+    /// Removes the website associated with a Cloud Storage Bucket.
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GcsBucketWebsite")]
     public class RemoveGcsBucketWebsiteCmdlet : GcsCmdlet
     {
+        /// <summary>
+        /// <para typedef="description">
+        /// The name of the bucket to remove logging for. This parameter will also accept a Bucket
+        /// object.
+        /// </para>
+        /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
         [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Name { get; set; }
@@ -43,11 +54,21 @@ namespace Google.PowerShell.CloudStorage
     }
 
     /// <summary>
-    /// Removes the website associated with a Google Cloud Storage bucket.
+    /// <para type="synopsis">
+    /// Updates the website associated with a Cloud Storage Bucket.
+    /// </para>
+    /// <para type="description">
+    /// Updates the website associated with a Cloud Storage Bucket.
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommunications.Write, "GcsBucketWebsite")]
     public class WriteGcsBucketWebsiteCmdlet : GcsCmdlet
     {
+        /// <summary>
+        /// <para typedef="description">
+        /// The name of the bucket to configure. This parameter will also accept a Bucket object.
+        /// </para>
+        /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
         [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Name { get; set; }

@@ -104,7 +104,7 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
-        /// The name of the bucket to upload to.
+        /// The name of the bucket to upload to. Will also accept a Bucket object.
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
@@ -287,7 +287,7 @@ namespace Google.PowerShell.CloudStorage
     {
         /// <summary>
         /// <para type="description">
-        /// Name of the bucket to check.
+        /// Name of the bucket to check. Will also accept a Bucket object.
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
@@ -337,7 +337,7 @@ namespace Google.PowerShell.CloudStorage
     {
         /// <summary>
         /// <para type="description">
-        /// Name of the bucket to search.
+        /// Name of the bucket to search. Will also accept a Bucket object.
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true)]
@@ -411,7 +411,7 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
-        /// Name of the bucket containing the object.
+        /// Name of the bucket containing the object. Will also accept a Bucket object.
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.FromName)]
@@ -479,7 +479,7 @@ namespace Google.PowerShell.CloudStorage
     {
         /// <summary>
         /// <para type="description">
-        /// Name of the bucket containing the object.
+        /// Name of the bucket containing the object. Will also accept a Bucket object.
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
@@ -581,7 +581,7 @@ namespace Google.PowerShell.CloudStorage
     {
         /// <summary>
         /// <para type="description">
-        /// Name of the bucket containing the object.
+        /// Name of the bucket containing the object. Will also accept a Bucket object.
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]

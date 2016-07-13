@@ -50,7 +50,8 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
-        /// The project to check for Storage buckets.
+        /// The project to check for Storage buckets. If not set via PowerShell parameter processing, will
+        /// default to the Cloud SDK's DefaultProject property.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = "BucketsByProject")]
@@ -232,13 +233,20 @@ namespace Google.PowerShell.CloudStorage
     }
 
     /// <summary>
-    /// Test-GcsBucket tests if a bucket with the given name already exists.
+    /// <para type="synopsis">
+    /// Tests if a bucket with the given name already exists.
+    /// </para>
+    /// <para type="description">
+    /// Tests if a bucket with the given name already exists.
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsDiagnostic.Test, "GcsBucket")]
     public class TestGcsBucketCmdlet : GcsCmdlet
     {
         /// <summary>
-        /// The name of the bucket to test for.
+        /// <para typedef="description">
+        /// The name of the bucket to test for. This parameter will also accept a Bucket object.
+        /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
         [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
