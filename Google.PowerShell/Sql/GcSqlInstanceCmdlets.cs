@@ -325,9 +325,11 @@ namespace Google.PowerShell.Sql
     /// <para type="description">
     /// Exports data from the specified Cloud SQL instance
     /// to a Google Cloud Storage bucket as a MySQL dump or CSV file.
+    /// Defaults to a SQL file, but if the CSV Parameter set is used it will export as
+    /// a CSV file.
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsData.Export, "GcSqlInstance")]
+    [Cmdlet(VerbsData.Export, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.Sql)]
     public class ExportGcSqlInstanceCmdlet : GcSqlCmdlet
     {
         private class ParameterSetNames
@@ -368,38 +370,21 @@ namespace Google.PowerShell.Sql
         [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.Csv)]
         public string Uri { get; set; }
 
-        public enum FileType
-        {
-            SQL,
-            CSV
-        }
-
-        /// <summary>
-        /// <para type="description">
-        /// The file type for the specified URI.
-        /// SQL: The file contains SQL statements.
-        /// CSV: The file contains CSV data.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = true, Position = 2, ParameterSetName = ParameterSetNames.Sql)]
-        [Parameter(Mandatory = true, Position = 2, ParameterSetName = ParameterSetNames.Csv)]
-        public FileType exportType { get; set; }
-
         /// <summary>
         /// <para type="description">
         /// Export only schemas.
-        /// Not a switchparameter so that the cmdlet is sure which parameter set it is.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 3, ParameterSetName = ParameterSetNames.Sql)]
-        public bool SchemaOnly { get; set; }
+        [Parameter(Mandatory = false,  ParameterSetName = ParameterSetNames.Sql)]
+        public SwitchParameter SchemaOnly { get; set; }
 
         /// <summary>
         /// <para type="description">
         /// The select query used to extract the data. 
+        /// If this is used, a CSV file will be exported, rather than SQL.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 3, ParameterSetName = ParameterSetNames.Csv)]
+        [Parameter(Mandatory = true, Position = 2, ParameterSetName = ParameterSetNames.Csv)]
         public string SelectQuery { get; set; }
 
         /// <summary>
@@ -412,7 +397,7 @@ namespace Google.PowerShell.Sql
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.Sql)]
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.Csv)]
-        public string[] Databases { get; set; }
+        public string[] Database { get; set; }
 
 
         /// <summary>
@@ -422,7 +407,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.Sql)]
-        public string[] Tables { get; set; }
+        public string[] Table { get; set; }
 
 
         protected override void ProcessRecord()
@@ -432,30 +417,21 @@ namespace Google.PowerShell.Sql
                 ExportContext = new ExportContext
                 {
                     Kind = "sql#exportContext",
-                    Databases = Databases,
+                    Databases = Database,
                     Uri = Uri,
-                    FileType = exportType.ToString()
+                    FileType = ParameterSetName.ToString()
                 }
             };
             switch (ParameterSetName)
             {
                 case ParameterSetNames.Sql:
-                    if (exportType == FileType.CSV) {
-                        throw new GoogleApiException("Google Cloud SQL Api",
-                             "CSV files should only be made with CSV parameters");
-                    }
                     body.ExportContext.SqlExportOptions = new ExportContext.SqlExportOptionsData
                     {
                         SchemaOnly = SchemaOnly,
-                        Tables = Tables
+                        Tables = Table
                     };
                     break;
                 case ParameterSetNames.Csv:
-                    if (exportType == FileType.SQL)
-                    {
-                        throw new GoogleApiException("Google Cloud SQL Api",
-                             "SQL files should only be made with SQL parameters");
-                    }
                     body.ExportContext.CsvExportOptions = new ExportContext.CsvExportOptionsData
                     {
                         SelectQuery = SelectQuery

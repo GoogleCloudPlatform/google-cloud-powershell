@@ -157,7 +157,7 @@ Describe "Export-GcSqlInstance" {
     It "should export an applicable SQL file" {
         $beforeObjects = gsutil ls gs://gcsql-instance-testing
         ($beforeObjects -contains "gs://gcsql-instance-testing/testsql$r.gz") | Should Be false
-        Export-GcSqlInstance "test-db2" "gs://gcsql-instance-testing/testsql$r.gz" SQL $False
+        Export-GcSqlInstance "test-db2" "gs://gcsql-instance-testing/testsql$r.gz"
         $afterObjects = gsutil ls gs://gcsql-instance-testing
         ($afterObjects -contains "gs://gcsql-instance-testing/testsql$r.gz") | Should Be true
     }
@@ -165,7 +165,7 @@ Describe "Export-GcSqlInstance" {
     It "should export an applicable CSV file" {
         $beforeObjects = gsutil ls gs://gcsql-instance-testing
         ($beforeObjects -contains "gs://gcsql-instance-testing/testcsv$r.csv") | Should Be false
-        Export-GcSqlInstance "test-db2" "gs://gcsql-instance-testing/testcsv$r.csv" CSV "SELECT * FROM guestbook.entries"
+        Export-GcSqlInstance "test-db2" "gs://gcsql-instance-testing/testcsv$r.csv" "SELECT * FROM guestbook.entries"
         $afterObjects = gsutil ls gs://gcsql-instance-testing
         ($afterObjects -contains "gs://gcsql-instance-testing/testcsv$r.csv") | Should Be true
     }
@@ -173,7 +173,7 @@ Describe "Export-GcSqlInstance" {
     It "should be able to export a specific SQL file" {
         $beforeObjects = gsutil ls gs://gcsql-instance-testing
         ($beforeObjects -contains "gs://gcsql-instance-testing/testothersql$r.gz") | Should Be false
-        Export-GcSqlInstance "test-db2" "gs://gcsql-instance-testing/testothersql$r.gz" SQL $False -Databases "guestbook","guestbook2" 
+        Export-GcSqlInstance "test-db2" "gs://gcsql-instance-testing/testothersql$r.gz" -Database "guestbook","guestbook2" 
         $afterObjects = gsutil ls gs://gcsql-instance-testing
         ($afterObjects -contains "gs://gcsql-instance-testing/testothersql$r.gz") | Should Be true
     }
@@ -181,18 +181,11 @@ Describe "Export-GcSqlInstance" {
     It "should be able to export a specific CSV file" {
         $beforeObjects = gsutil ls gs://gcsql-instance-testing
         ($beforeObjects -contains "gs://gcsql-instance-testing/testothercsv$r.csv") | Should Be false
-        Export-GcSqlInstance "test-db2" "gs://gcsql-instance-testing/testothercsv$r.csv" CSV -Databases @("guestbook") "SELECT * FROM entries"
+        Export-GcSqlInstance "test-db2" "gs://gcsql-instance-testing/testothercsv$r.csv" -Database "guestbook" "SELECT * FROM entries"
         $afterObjects = gsutil ls gs://gcsql-instance-testing
         ($afterObjects -contains "gs://gcsql-instance-testing/testothercsv$r.csv") | Should Be true
     }
 
-    It "should fail if given the opposite parameter set for a CSV file type" {
-        {Export-GcSqlInstance "test-db2" "gs://gcsql-instance-testing/testcsv4.csv" SQL "SELECT * FROM guestbook.entries"} | Should Throw
-    }
-
-    It "should fail if given the opposite parameter set for a SQL file type" {
-        {Export-GcSqlInstance "test-db2" "gs://gcsql-instance-testing/testcsv4.csv" CSV -SchemaOnly} | Should Throw
-    }
 }
 
 Reset-GCloudConfig $oldActiveConfig $configName
