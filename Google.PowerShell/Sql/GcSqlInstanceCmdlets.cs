@@ -200,4 +200,116 @@ namespace Google.PowerShell.Sql
             WaitForSqlOperation(result);
         }
     }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Creates a Cloud SQL instance as a clone of the source instance. 
+    /// </para>
+    /// <para type="description">
+    /// Creates a Cloud SQL instance as a clone of the specified instance.
+    /// WARNING: This may not work for second-generation instances.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Copy, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.ByName)]
+    public class CopyGcSqlInstanceCmdlet : GcSqlCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByInstance = "ByInstance";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the project.
+        /// Defaults to the cloud sdk config for properties if not specified.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the instance to be cloned.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, 
+            ParameterSetName = ParameterSetNames.ByName)]
+        public string Instance { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the Cloud SQL instance to be created as a clone.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 1,
+            ParameterSetName = ParameterSetNames.ByName)]
+        [Parameter(Mandatory = true, Position = 1, 
+            ParameterSetName = ParameterSetNames.ByInstance)]
+        public string CloneName { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the binary log file for a Cloud SQL instance.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 2, ParameterSetName = ParameterSetNames.ByName)]
+        [Parameter(Mandatory = true, Position = 2, ParameterSetName = ParameterSetNames.ByInstance)]
+        public string BinaryLogFileName { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Position (offset) within the binary log file.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 3, ParameterSetName = ParameterSetNames.ByName)]
+        [Parameter(Mandatory = true, Position = 3, ParameterSetName = ParameterSetNames.ByInstance)]
+        public long BinaryLogPosition { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The DatabaseInstance that describes the instance we want to remove.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Position = 0, Mandatory = true, 
+            ValueFromPipeline = true)]
+        public DatabaseInstance InstanceObject { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            InstancesCloneRequest body = new InstancesCloneRequest {
+               CloneContext = new CloneContext {
+                   BinLogCoordinates = new BinLogCoordinates {
+                       BinLogFileName = BinaryLogFileName,
+                       BinLogPosition = BinaryLogPosition,
+                       Kind = "sql#binLogCoordinates"
+                   },
+                   Kind = "sql#cloneContext",
+                   DestinationInstanceName = CloneName
+               }
+            };
+            string project;
+            string instance;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.ByName:
+                    instance = Instance;
+                    project = Project;
+                    break;
+                case ParameterSetNames.ByInstance:
+                    instance = InstanceObject.Name;
+                    project = InstanceObject.Project;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+            InstancesResource.CloneRequest request = Service.Instances.Clone(body, project, instance);
+            Operation result = request.Execute();
+            /// Copying an instance takes too long to wait, so this time we write the operation to demonstrate
+            /// That the request went through.
+            DatabaseInstance clone = Service.Instances.Get(project, CloneName).Execute();
+            WriteObject(clone);
+        }
+    }
 }

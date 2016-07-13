@@ -1,15 +1,15 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
 $project, $_, $oldActiveConfig, $configName = Set-GCloudConfig
-$instance = "test-db-fg"
+$instance = "test-fg"
 
 Describe "Get-GcSqlDatabase" {
     It "should error if given a non-first-generation instance" {
-        {$databases = Get-GcSqlDatabase "test-db"} | Should Throw 
+        {$databases = Get-GcSqlDatabase "test-db2"} | Should Throw 
     }
 
     It "should not error if given a second-generation instance" {
-        {$databases = Get-GcSqlDatabase "test-db-fg"} | Should Not Throw 
+        {$databases = Get-GcSqlDatabase "test-fg"} | Should Not Throw 
     }
 
     It "should list databases for an instance" {
@@ -20,7 +20,7 @@ Describe "Get-GcSqlDatabase" {
 
     It "should get the correct information for a database" {
         $database = Get-GcSqlDatabase $instance "guestbook"
-        $database.SelfLink | Should Be "https://www.googleapis.com/sql/v1beta4/projects/gcloud-powershell-testing/instances/test-db-fg/databases/guestbook"
+        $database.SelfLink | Should Be "https://www.googleapis.com/sql/v1beta4/projects/gcloud-powershell-testing/instances/test-fg/databases/guestbook"
         $database.Collation | Should Be "utf8_general_ci"
     }
 
