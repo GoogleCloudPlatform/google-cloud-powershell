@@ -130,6 +130,11 @@ namespace Google.PowerShell.CloudStorage
         /// </summary>
         private static readonly Random ActivityIdGenerator = new Random();
 
+        /// <summary>
+        /// <para typedef="description">
+        /// The name of the bucket to remove. This parameter will also accept a Bucket object.
+        /// </para>
+        /// </summary>
         [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true)]
         [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Name { get; set; }
