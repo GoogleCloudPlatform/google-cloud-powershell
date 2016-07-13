@@ -51,7 +51,8 @@ namespace Google.PowerShell.Sql
 
         protected override void ProcessRecord()
         {
-            if (Name != null) {
+            if (Name != null)
+            {
                 InstancesResource.GetRequest request = Service.Instances.Get(Project, Name);
                 DatabaseInstance result = request.Execute();
                 WriteObject(result);
@@ -234,7 +235,7 @@ namespace Google.PowerShell.Sql
         /// The name of the instance to be cloned.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0, 
+        [Parameter(Mandatory = true, Position = 0,
             ParameterSetName = ParameterSetNames.ByName)]
         public string Instance { get; set; }
 
@@ -245,7 +246,7 @@ namespace Google.PowerShell.Sql
         /// </summary>
         [Parameter(Mandatory = true, Position = 1,
             ParameterSetName = ParameterSetNames.ByName)]
-        [Parameter(Mandatory = true, Position = 1, 
+        [Parameter(Mandatory = true, Position = 1,
             ParameterSetName = ParameterSetNames.ByInstance)]
         public string CloneName { get; set; }
 
@@ -272,22 +273,25 @@ namespace Google.PowerShell.Sql
         /// The DatabaseInstance that describes the instance we want to remove.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Position = 0, Mandatory = true, 
+        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Position = 0, Mandatory = true,
             ValueFromPipeline = true)]
         public DatabaseInstance InstanceObject { get; set; }
 
         protected override void ProcessRecord()
         {
-            InstancesCloneRequest body = new InstancesCloneRequest {
-               CloneContext = new CloneContext {
-                   BinLogCoordinates = new BinLogCoordinates {
-                       BinLogFileName = BinaryLogFileName,
-                       BinLogPosition = BinaryLogPosition,
-                       Kind = "sql#binLogCoordinates"
-                   },
-                   Kind = "sql#cloneContext",
-                   DestinationInstanceName = CloneName
-               }
+            InstancesCloneRequest body = new InstancesCloneRequest
+            {
+                CloneContext = new CloneContext
+                {
+                    BinLogCoordinates = new BinLogCoordinates
+                    {
+                        BinLogFileName = BinaryLogFileName,
+                        BinLogPosition = BinaryLogPosition,
+                        Kind = "sql#binLogCoordinates"
+                    },
+                    Kind = "sql#cloneContext",
+                    DestinationInstanceName = CloneName
+                }
             };
             string project;
             string instance;
@@ -310,6 +314,159 @@ namespace Google.PowerShell.Sql
             /// That the request went through.
             DatabaseInstance clone = Service.Instances.Get(project, CloneName).Execute();
             WriteObject(clone);
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Exports data from a Cloud SQL instance
+    /// to a Google Cloud Storage bucket as a MySQL dump or CSV file. 
+    /// </para>
+    /// <para type="description">
+    /// Exports data from the specified Cloud SQL instance
+    /// to a Google Cloud Storage bucket as a MySQL dump or CSV file.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsData.Export, "GcSqlInstance")]
+    public class ExportGcSqlInstanceCmdlet : GcSqlCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string Sql = "SQL";
+            public const string Csv = "CSV";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the project.
+        /// Defaults to the cloud sdk config for properties if not specified.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.Sql)]
+        [Parameter(ParameterSetName = ParameterSetNames.Csv)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the instance to have data exported.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.Sql)]
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.Csv)]
+        public string Instance { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        ///  The path to the file in Google Cloud Storage where the export will be stored.
+        ///  The URI is in the form gs://bucketName/fileName.
+        ///  If the file already exists, the operation fails.
+        ///  If fileType is SQL and the filename ends with .gz, the contents are compressed.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.Sql)]
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.Csv)]
+        public string Uri { get; set; }
+
+        public enum FileType
+        {
+            SQL,
+            CSV
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// The file type for the specified URI.
+        /// SQL: The file contains SQL statements.
+        /// CSV: The file contains CSV data.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 2, ParameterSetName = ParameterSetNames.Sql)]
+        [Parameter(Mandatory = true, Position = 2, ParameterSetName = ParameterSetNames.Csv)]
+        public FileType exportType { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Export only schemas.
+        /// Not a switchparameter so that the cmdlet is sure which parameter set it is.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 3, ParameterSetName = ParameterSetNames.Sql)]
+        public bool SchemaOnly { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The select query used to extract the data. 
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 3, ParameterSetName = ParameterSetNames.Csv)]
+        public string SelectQuery { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Databases (for example, guestbook) from which the export is made.
+        /// If fileType is SQL and no database is specified, all databases are exported. 
+        /// If fileType is CSV, you can optionally specify at most one database to export.
+        /// If exporting as CSV and selectQuery also specifies the database, this field will be ignored.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.Sql)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.Csv)]
+        public string[] Databases { get; set; }
+
+
+        /// <summary>
+        /// <para type="description">
+        /// Tables to export, or that were exported, from the specified database.
+        /// If you specify tables, specify one and only one database.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.Sql)]
+        public string[] Tables { get; set; }
+
+
+        protected override void ProcessRecord()
+        {
+            InstancesExportRequest body = new InstancesExportRequest
+            {
+                ExportContext = new ExportContext
+                {
+                    Kind = "sql#exportContext",
+                    Databases = Databases,
+                    Uri = Uri,
+                    FileType = exportType.ToString()
+                }
+            };
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.Sql:
+                    if (exportType == FileType.CSV) {
+                        throw new GoogleApiException("Google Cloud SQL Api",
+                             "CSV files should only be made with CSV parameters");
+                    }
+                    body.ExportContext.SqlExportOptions = new ExportContext.SqlExportOptionsData
+                    {
+                        SchemaOnly = SchemaOnly,
+                        Tables = Tables
+                    };
+                    break;
+                case ParameterSetNames.Csv:
+                    if (exportType == FileType.SQL)
+                    {
+                        throw new GoogleApiException("Google Cloud SQL Api",
+                             "SQL files should only be made with SQL parameters");
+                    }
+                    body.ExportContext.CsvExportOptions = new ExportContext.CsvExportOptionsData
+                    {
+                        SelectQuery = SelectQuery
+                    };
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+            InstancesResource.ExportRequest request = Service.Instances.Export(body, Project, Instance);
+            Operation result = request.Execute();
+            WaitForSqlOperation(result);
         }
     }
 }

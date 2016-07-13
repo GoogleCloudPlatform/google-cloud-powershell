@@ -125,7 +125,7 @@ Describe "Copy-GcSqlInstance" {
     }
 
     It "should be able to take a pipelined Instance" {
-    $r = Get-Random
+        $r = Get-Random
         # A random number is used to avoid collisions with the speed of creating
         # and deleting instances.
         $instance = "test-copy$r"
@@ -138,6 +138,60 @@ Describe "Copy-GcSqlInstance" {
     It "shouldn't copy something if it doesn't exist" {
         { Copy-GcSqlInstance "fail" "shouldfail" "mysql-bin.000001" 1133}`
             | Should Throw "The client is not authorized to make this request. [403]"
+    }
+}
+
+Describe "Export-GcSqlInstance" {
+    AfterAll {
+        gsutil -q rm gs://gcsql-instance-testing/*
+    }
+
+    # For these tests, test-db2 was used because an instance must have a populated database for it to work.
+    # A specific nondescript bucket was also used because the permissions have to be set correctly
+    $r = Get-Random
+    # A random number is used to avoid collisions with the speed of creating
+    # and deleting instances.
+    $instance = "test-db2"
+
+
+    It "should export an applicable SQL file" {
+        $beforeObjects = gsutil ls gs://gcsql-instance-testing
+        ($beforeObjects -contains "gs://gcsql-instance-testing/testsql$r.gz") | Should Be false
+        Export-GcSqlInstance "test-db2" "gs://gcsql-instance-testing/testsql$r.gz" SQL $False
+        $afterObjects = gsutil ls gs://gcsql-instance-testing
+        ($afterObjects -contains "gs://gcsql-instance-testing/testsql$r.gz") | Should Be true
+    }
+
+    It "should export an applicable CSV file" {
+        $beforeObjects = gsutil ls gs://gcsql-instance-testing
+        ($beforeObjects -contains "gs://gcsql-instance-testing/testcsv$r.csv") | Should Be false
+        Export-GcSqlInstance "test-db2" "gs://gcsql-instance-testing/testcsv$r.csv" CSV "SELECT * FROM guestbook.entries"
+        $afterObjects = gsutil ls gs://gcsql-instance-testing
+        ($afterObjects -contains "gs://gcsql-instance-testing/testcsv$r.csv") | Should Be true
+    }
+
+    It "should be able to export a specific SQL file" {
+        $beforeObjects = gsutil ls gs://gcsql-instance-testing
+        ($beforeObjects -contains "gs://gcsql-instance-testing/testothersql$r.gz") | Should Be false
+        Export-GcSqlInstance "test-db2" "gs://gcsql-instance-testing/testothersql$r.gz" SQL $False -Databases "guestbook","guestbook2" 
+        $afterObjects = gsutil ls gs://gcsql-instance-testing
+        ($afterObjects -contains "gs://gcsql-instance-testing/testothersql$r.gz") | Should Be true
+    }
+
+    It "should be able to export a specific CSV file" {
+        $beforeObjects = gsutil ls gs://gcsql-instance-testing
+        ($beforeObjects -contains "gs://gcsql-instance-testing/testothercsv$r.csv") | Should Be false
+        Export-GcSqlInstance "test-db2" "gs://gcsql-instance-testing/testothercsv$r.csv" CSV -Databases @("guestbook") "SELECT * FROM entries"
+        $afterObjects = gsutil ls gs://gcsql-instance-testing
+        ($afterObjects -contains "gs://gcsql-instance-testing/testothercsv$r.csv") | Should Be true
+    }
+
+    It "should fail if given the opposite parameter set for a CSV file type" {
+        {Export-GcSqlInstance "test-db2" "gs://gcsql-instance-testing/testcsv4.csv" SQL "SELECT * FROM guestbook.entries"} | Should Throw
+    }
+
+    It "should fail if given the opposite parameter set for a SQL file type" {
+        {Export-GcSqlInstance "test-db2" "gs://gcsql-instance-testing/testcsv4.csv" CSV -SchemaOnly} | Should Throw
     }
 }
 
