@@ -82,7 +82,8 @@
           <a href="/google-cloud-powershell/cmdlets/google-cloud-storage.html">See all Cloud Storage cmdlets</a>
         </p>
         <p>
-          Google Cloud Storage allows world-wide storage and retrieval of any
+          <a href="https://cloud.google.com/storage/docs/">Google Cloud Storage</a>
+          allows world-wide storage and retrieval of any
           amount of data at any time. You can use Google Cloud Storage for a
           range of scenarios including serving website content, storing data
           for archival and disaster recovery, or distributing large data objects
@@ -117,6 +118,14 @@ Find-GcsObject -Bucket $bucket | Select -ExpandProperty Name
 # Write a GCS object to disk.
 Read-GcsObject "bucket-name" "object-name" -OutFile "output-file.png"
         </pre>
+
+        <h2>Examples</h2>
+        <p>
+          For a larger example of using the Google Cloud Storage cmdlets to
+          copy data to and from the cloud see <code>
+            <a href="https://github.com/GoogleCloudPlatform/dotnet-docs-samples/blob/master/storage/powershell/Copy-GcsObject.ps1">
+              Copy-GcsObject.ps1</a></code>
+        </p>
 
         <!-- Google Compute Engine -->
         <h1 id="google-compute-engine">Google Compute Engine</h1>
