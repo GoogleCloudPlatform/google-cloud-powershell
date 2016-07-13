@@ -3,7 +3,7 @@ Install-GcloudCmdlets
 
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
-Get-GceImage | Remove-GceImage
+Get-GceImage -Project $project | Remove-GceImage
 
 $r = Get-Random
 
@@ -29,7 +29,7 @@ Describe "Add-GceImage" {
 
     Context "add successes" {
         AfterEach {
-            Get-GceImage | Remove-GceImage
+            Get-GceImage -Project $project | Remove-GceImage
         }
 
         It "should work" {
@@ -62,26 +62,42 @@ Describe "Get-GceImage" {
     }
 
     It "should fail for non-existant image" {
-        { Get-GceImage $imageName1 } | Should Throw 404
+        { Get-GceImage $imageName1 -Project $project} | Should Throw 404
     }
 
     It "should work when no images exist" {
-        $images = Get-GceImage
+        $images = Get-GceImage -Project $project
         $images | Should BeNullOrEmpty
+    }
+
+    $defaultProjects =  "centos-cloud", "coreos-cloud", "debian-cloud", "debian-cloud",
+                "rhel-cloud", "suse-cloud", "ubuntu-os-cloud", "windows-cloud"
+
+    It "should get images from default projects" {
+        $images = Get-GceImage
+        # Check that we get at least one image for each default project
+        $defaultProjects | %{ ($images.SelfLink -match $_).Count } | Should BeGreaterThan 0
+        $images.Deprecated | Should BeNullOrEmpty
+    }
+
+    It "should include deprecated images from project" {
+        $images = Get-GceImage "windows-cloud" -IncludeDeprecated
+        $images.SelfLink | Should Match "windows-cloud"
+        ($images.Deprecated -ne $null).Count | Should BeGreaterThan 0
     }
 
     $disk | Add-GceImage -Name $imageName1
     $disk | Add-GceImage -Name $imageName2 -Family $familyName
 
     It "should get all project images" {
-        $images = Get-GceImage
+        $images = Get-GceImage -Project $project
         ($images | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Image
         $images.Count | Should Be 2
         $images.SourceDisk | Should Match $diskName
     }
 
     It "should get by name" {
-        $image = Get-GceImage $imageName1
+        $image = Get-GceImage $imageName1 -Project $project
         ($image | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Image
         $image.Count | Should Be 1
         $image.Name | Should Be $imageName1
@@ -89,7 +105,7 @@ Describe "Get-GceImage" {
     }
 
     It "should get by name with pipeline" {
-        $image = $imageName1 | Get-GceImage 
+        $image = $imageName1 | Get-GceImage -Project $project
         ($image | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Image
         $image.Count | Should Be 1
         $image.Name | Should Be $imageName1
@@ -97,7 +113,7 @@ Describe "Get-GceImage" {
     }
 
     It "should get by family" {
-        $image = Get-GceImage -Family $familyName
+        $image = Get-GceImage -Family $familyName -Project $project
         ($image | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Image
         $image.Count | Should Be 1
         $image.Name | Should Be $imageName2
@@ -105,7 +121,7 @@ Describe "Get-GceImage" {
     }
 
     Remove-GceDisk $diskName
-    Get-GceImage | Remove-GceImage
+    Get-GceImage -Project $project | Remove-GceImage
 }
 
 Describe "Disable-GceImage" {
@@ -145,7 +161,7 @@ Describe "Disable-GceImage" {
     }
 
     Remove-GceDisk $diskName
-    Get-GceImage | Remove-GceImage
+    Get-GceImage -Project $project | Remove-GceImage
 }
 
 Describe "Remove-GceImage" {
@@ -167,23 +183,23 @@ Describe "Remove-GceImage" {
 
         It "should work by name" {
             Remove-GceImage $imageName
-            { Get-GceImage $imageName } | Should Throw 404
+            { Get-GceImage $imageName -Project $project} | Should Throw 404
         }
 
         It "should work by name with pipeline" {
             $imageName | Remove-GceImage
-            { Get-GceImage $imageName } | Should Throw 404
+            { Get-GceImage $imageName -Project $project} | Should Throw 404
         }
 
         It "should work by object" {
-            $image = Get-GceImage $imageName
+            $image = Get-GceImage $imageName -Project $project
             Remove-GceImage $image
-            { Get-GceImage $imageName } | Should Throw 404
+            { Get-GceImage $imageName -Project $project} | Should Throw 404
         }
 
         It "should work by object with pipeline" {
-            Get-GceImage $imageName | Remove-GceImage
-            { Get-GceImage $imageName } | Should Throw 404
+            Get-GceImage $imageName -Project $project| Remove-GceImage
+            { Get-GceImage $imageName -Project $project } | Should Throw 404
         }
     }
 
