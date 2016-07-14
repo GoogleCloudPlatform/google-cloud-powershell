@@ -74,10 +74,12 @@ namespace Google.PowerShell.ComputeEngine
                     images = GetAllProjectImages();
                     break;
                 case ParameterSetNames.ByName:
-                    images = GetImagesByName();
+                    images = GetImagesByProject($"No image named {Name} was found.",
+                        (project) => Service.Images.Get(project, Name).Execute());
                     break;
                 case ParameterSetNames.ByFamily:
-                    images = GetImagesByFamilyName();
+                    images = GetImagesByProject($"No image of family {Family} was found.",
+                        (project) => Service.Images.GetFromFamily(project, Family).Execute());
                     break;
                 default:
                     throw UnknownParameterSetException;
@@ -85,7 +87,7 @@ namespace Google.PowerShell.ComputeEngine
             WriteObject(images, true);
         }
 
-        private IEnumerable<Image> GetImagesByFamilyName()
+        private IEnumerable<Image> GetImagesByProject(string exceptionMessage, Func<string, Image> getImage)
         {
             var images = new List<Image>();
             var exceptions = new List<Exception>();
@@ -93,7 +95,7 @@ namespace Google.PowerShell.ComputeEngine
             {
                 try
                 {
-                    images.Add(Service.Images.GetFromFamily(project, Family).Execute());
+                    images.Add(getImage(project));
                 }
                 catch (Exception e)
                 {
@@ -108,43 +110,7 @@ namespace Google.PowerShell.ComputeEngine
                 }
                 else
                 {
-                    throw new AggregateException($"No image of family {Family} was found.", exceptions);
-                }
-            }
-            else
-            {
-                foreach (Exception e in exceptions)
-                {
-                    WriteVerbose(e.Message);
-                }
-                return images;
-            }
-        }
-
-        private IEnumerable<Image> GetImagesByName()
-        {
-            var images = new List<Image>();
-            var exceptions = new List<Exception>();
-            foreach (string project in Project)
-            {
-                try
-                {
-                    images.Add(Service.Images.Get(project, Name).Execute());
-                }
-                catch (Exception e)
-                {
-                    exceptions.Add(e);
-                }
-            }
-            if (images.Count == 0)
-            {
-                if (exceptions.Count == 1)
-                {
-                    throw exceptions[0];
-                }
-                else
-                {
-                    throw new AggregateException($"No image named {Name} was found.", exceptions);
+                    throw new AggregateException(exceptionMessage, exceptions);
                 }
             }
             else

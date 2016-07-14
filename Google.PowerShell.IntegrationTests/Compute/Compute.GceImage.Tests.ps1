@@ -75,7 +75,7 @@ Describe "Get-GceImage" {
 
     It "should get images from default projects" {
         $images = Get-GceImage
-        # Check that we get at least one image for each default project
+        # Check that we get at least one image for each default project.
         $defaultProjects | %{ ($images.SelfLink -match $_).Count } | Should BeGreaterThan 0
         $images.Deprecated | Should BeNullOrEmpty
     }
