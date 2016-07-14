@@ -460,7 +460,10 @@ namespace Google.PowerShell.CloudStorage
 
             ObjectsResource.DeleteRequest delReq = service.Objects.Delete(Bucket, ObjectName);
             string result = delReq.Execute();
-            WriteObject(result);
+            if (!string.IsNullOrWhiteSpace(result))
+            {
+                WriteObject(result);
+            }
         }
     }
 
