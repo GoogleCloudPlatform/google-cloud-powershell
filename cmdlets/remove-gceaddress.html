@@ -10,9 +10,9 @@
 
     <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
 
-    <title>Get-GcsObject</title>
+    <title>Remove-GceAddress</title>
     <script src="//www.google.com/js/google.js"></script>
-    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/get-gcsobject.html">
+    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/remove-gceaddress.html">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
     <link rel="stylesheet" href="//www.google.com/css/maia.css">
 </head>
@@ -49,7 +49,7 @@
           <!-- cmdlet-specific pages include the parent product. -->
           
           <li class="active">
-            <a href="/google-cloud-powershell/cmdlets/google-cloud-storage">Google Cloud Storage</a>
+            <a href="/google-cloud-powershell/cmdlets/google-compute-engine">Google Compute Engine</a>
           </li>
           
 
@@ -67,39 +67,70 @@ pre {
 }
 </style>
 
-<h1>Get-GcsObject</h1>
+<h1>Remove-GceAddress</h1>
 <pre>
 NAME
-    Get-GcsObject
+    Remove-GceAddress
     
 SYNOPSIS
-    Get-GcsObject returns the Google Cloud Storage Object metadata with the given name. (Use Find-GcsObject to return multiple objects.)
+    Removes a Google Compute Engine address.
     
 SYNTAX
-    Get-GcsObject [-Bucket] <string> [-ObjectName] <string> [<CommonParameters>]
+    Remove-GceAddress [-Project <string>] [-Region <string>] [-Name] <string> [<CommonParameters>]
+    
+    Remove-GceAddress [-Project <string>] [-Name] <string> -Global <SwitchParameter> [<CommonParameters>]
+    
+    Remove-GceAddress [-Project <string>] [-Object] <Address> [<CommonParameters>]
     
     
 DESCRIPTION
-    Returns the give Storage object's metadata.
+    Removes a Google Compute Engine static external IP address.
     
 
 PARAMETERS
-    -Bucket <string>
-        Name of the bucket to check. Will also accept a Bucket object.
+    -Project <string>
+        The project that owns the address. Defaults to the gcloud config project.
         
-        Required?                    true
-        Position?                    0
+        Required?                    false
+        Position?                    named
         Default value                
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -ObjectName <string>
-        Name of the object to inspect.
+    -Region <string>
+        The region the address is in. Defaults to the gcloud config region.
         
-        Required?                    true
-        Position?                    1
+        Required?                    false
+        Position?                    named
         Default value                
         Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Name <string>
+        The name of the address to delete.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -Global <SwitchParameter>
+        If set, will delete a global address, rather than a region specific one.
+        
+        Required?                    true
+        Position?                    named
+        Default value                False
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Object <Address>
+        The address object to delete.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
         Accept wildcard characters?  false
         
     <CommonParameters>
@@ -109,6 +140,12 @@ PARAMETERS
         about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
     
 INPUTS
+    System.String
+        The name of the address to delete.
+    
+    Google.Apis.Compute.v1.Data.Address
+        The address object to delete.
+    
     
 OUTPUTS
     

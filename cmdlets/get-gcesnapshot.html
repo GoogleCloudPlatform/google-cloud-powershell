@@ -10,9 +10,9 @@
 
     <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
 
-    <title>Get-GcsObject</title>
+    <title>Get-GceSnapshot</title>
     <script src="//www.google.com/js/google.js"></script>
-    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/get-gcsobject.html">
+    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/get-gcesnapshot.html">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
     <link rel="stylesheet" href="//www.google.com/css/maia.css">
 </head>
@@ -49,7 +49,7 @@
           <!-- cmdlet-specific pages include the parent product. -->
           
           <li class="active">
-            <a href="/google-cloud-powershell/cmdlets/google-cloud-storage">Google Cloud Storage</a>
+            <a href="/google-cloud-powershell/cmdlets/google-compute-engine">Google Compute Engine</a>
           </li>
           
 
@@ -67,39 +67,39 @@ pre {
 }
 </style>
 
-<h1>Get-GcsObject</h1>
+<h1>Get-GceSnapshot</h1>
 <pre>
 NAME
-    Get-GcsObject
+    Get-GceSnapshot
     
 SYNOPSIS
-    Get-GcsObject returns the Google Cloud Storage Object metadata with the given name. (Use Find-GcsObject to return multiple objects.)
+    Gets information about a Google Compute Engine disk snapshots.
     
 SYNTAX
-    Get-GcsObject [-Bucket] <string> [-ObjectName] <string> [<CommonParameters>]
+    Get-GceSnapshot [-Project <string>] [-Name] <string> [<CommonParameters>]
     
     
 DESCRIPTION
-    Returns the give Storage object's metadata.
+    Gets information about a Google Compute Engine disk snapshots.
     
 
 PARAMETERS
-    -Bucket <string>
-        Name of the bucket to check. Will also accept a Bucket object.
+    -Project <string>
+        The project that owns the snapshot. Defaults to the gcloud config project.
         
-        Required?                    true
-        Position?                    0
+        Required?                    false
+        Position?                    named
         Default value                
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -ObjectName <string>
-        Name of the object to inspect.
+    -Name <string>
+        The name of the snapshot to get.
         
         Required?                    true
-        Position?                    1
+        Position?                    0
         Default value                
-        Accept pipeline input?       false
+        Accept pipeline input?       true (ByValue)
         Accept wildcard characters?  false
         
     <CommonParameters>
@@ -109,6 +109,9 @@ PARAMETERS
         about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
     
 INPUTS
+    System.String
+        The name of the snapshot to get.
+    
     
 OUTPUTS
     

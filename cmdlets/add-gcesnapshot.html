@@ -10,9 +10,9 @@
 
     <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
 
-    <title>Get-GcsObject</title>
+    <title>Add-GceSnapshot</title>
     <script src="//www.google.com/js/google.js"></script>
-    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/get-gcsobject.html">
+    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/add-gcesnapshot.html">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
     <link rel="stylesheet" href="//www.google.com/css/maia.css">
 </head>
@@ -49,7 +49,7 @@
           <!-- cmdlet-specific pages include the parent product. -->
           
           <li class="active">
-            <a href="/google-cloud-powershell/cmdlets/google-cloud-storage">Google Cloud Storage</a>
+            <a href="/google-cloud-powershell/cmdlets/google-compute-engine">Google Compute Engine</a>
           </li>
           
 
@@ -67,25 +67,54 @@ pre {
 }
 </style>
 
-<h1>Get-GcsObject</h1>
+<h1>Add-GceSnapshot</h1>
 <pre>
 NAME
-    Get-GcsObject
+    Add-GceSnapshot
     
 SYNOPSIS
-    Get-GcsObject returns the Google Cloud Storage Object metadata with the given name. (Use Find-GcsObject to return multiple objects.)
+    Creates a new disk snapshot.
     
 SYNTAX
-    Get-GcsObject [-Bucket] <string> [-ObjectName] <string> [<CommonParameters>]
+    Add-GceSnapshot [-Disk] <Disk> [-Name <string>] [-Description <string>] [<CommonParameters>]
+    
+    Add-GceSnapshot [-Project <string>] [-Zone <string>] [-DiskName] <string> [-Name <string>] [-Description <string>] [<CommonParameters>]
     
     
 DESCRIPTION
-    Returns the give Storage object's metadata.
+    Creates a new disk snapshot to backup the data of the disk.
     
 
 PARAMETERS
-    -Bucket <string>
-        Name of the bucket to check. Will also accept a Bucket object.
+    -Disk <Disk>
+        The disk object to create the snapshot from.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -Project <string>
+        The project of the disk. Defaults to the gcloud config project.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Zone <string>
+        The zone the disk is in. Defaults to the gloud config zone.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -DiskName <string>
+        The name of the disk to get a snapshot of.
         
         Required?                    true
         Position?                    0
@@ -93,11 +122,20 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -ObjectName <string>
-        Name of the object to inspect.
+    -Name <string>
+        The name of the snapshot. Defaults to <DiskName>-<Timestamp>
         
-        Required?                    true
-        Position?                    1
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Description <string>
+        Human readable description of the snapshot.
+        
+        Required?                    false
+        Position?                    named
         Default value                
         Accept pipeline input?       false
         Accept wildcard characters?  false
@@ -109,6 +147,9 @@ PARAMETERS
         about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
     
 INPUTS
+    Google.Apis.Compute.v1.Data.Disk
+        The disk object to create the snapshot from.
+    
     
 OUTPUTS
     

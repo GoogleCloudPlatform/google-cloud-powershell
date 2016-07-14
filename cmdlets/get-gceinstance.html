@@ -76,7 +76,17 @@ SYNOPSIS
     Gets information about Google Compute Engine VM Instances.
     
 SYNTAX
-    Get-GceInstance [-Project <string>] [[-Zone] <string>] [[-Name] <string>] [-Filter <string>] [-SerialPortOutput <SwitchParameter>] [<CommonParameters>]
+    Get-GceInstance [-Project <string>] [-SerialPortOutput <SwitchParameter>] [<CommonParameters>]
+    
+    Get-GceInstance [-Project <string>] -Zone <string> [-SerialPortOutput <SwitchParameter>] [<CommonParameters>]
+    
+    Get-GceInstance [-Project <string>] [-Zone <string>] [-Name] <string> [-SerialPortOutput <SwitchParameter>] [<CommonParameters>]
+    
+    Get-GceInstance [-Project <string>] [-Zone <string>] -ManagedGroupName <string> [-SerialPortOutput <SwitchParameter>] [<CommonParameters>]
+    
+    Get-GceInstance [-Object] <Instance> [-SerialPortOutput <SwitchParameter>] [<CommonParameters>]
+    
+    Get-GceInstance [-ManagedGroupObject] <InstanceGroupManager> [-SerialPortOutput <SwitchParameter>] [<CommonParameters>]
     
     
 DESCRIPTION
@@ -96,8 +106,8 @@ PARAMETERS
     -Zone <string>
         The zone in which the instance resides.
         
-        Required?                    false
-        Position?                    1
+        Required?                    true
+        Position?                    named
         Default value                
         Accept pipeline input?       false
         Accept wildcard characters?  false
@@ -105,19 +115,37 @@ PARAMETERS
     -Name <string>
         The name of the instance.
         
-        Required?                    false
-        Position?                    2
+        Required?                    true
+        Position?                    0
         Default value                
         Accept pipeline input?       true (ByValue)
         Accept wildcard characters?  false
         
-    -Filter <string>
-        A filter to send along with the request. This has the name of the property to filter on, either eq or ne, and a constant to test against.
+    -Object <Instance>
+        The Instance object to get a new copy of.
         
-        Required?                    false
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -ManagedGroupName <string>
+        The name of the instance group manager to get the instances of.
+        
+        Required?                    true
         Position?                    named
         Default value                
         Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -ManagedGroupObject <InstanceGroupManager>
+        The InstanceGroupManager object to get the instances of.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
         Accept wildcard characters?  false
         
     -SerialPortOutput <SwitchParameter>
@@ -138,6 +166,12 @@ PARAMETERS
 INPUTS
     System.String
         The name of the instance.
+    
+    Google.Apis.Compute.v1.Data.Instance
+        The Instance object to get a new copy of.
+    
+    Google.Apis.Compute.v1.Data.InstanceGroupManager
+        The InstanceGroupManager object to get the instances of.
     
     
 OUTPUTS

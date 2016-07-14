@@ -10,9 +10,9 @@
 
     <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
 
-    <title>Get-GcdManagedZone</title>
+    <title>Add-GceImage</title>
     <script src="//www.google.com/js/google.js"></script>
-    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/get-gcdmanagedzone.html">
+    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/add-gceimage.html">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
     <link rel="stylesheet" href="//www.google.com/css/maia.css">
 </head>
@@ -49,7 +49,7 @@
           <!-- cmdlet-specific pages include the parent product. -->
           
           <li class="active">
-            <a href="/google-cloud-powershell/cmdlets/"></a>
+            <a href="/google-cloud-powershell/cmdlets/google-compute-engine">Google Compute Engine</a>
           </li>
           
 
@@ -67,27 +67,25 @@ pre {
 }
 </style>
 
-<h1>Get-GcdManagedZone</h1>
+<h1>Add-GceImage</h1>
 <pre>
 NAME
-    Get-GcdManagedZone
+    Add-GceImage
     
 SYNOPSIS
-    Gets the Google DNS ManagedZones within a project.
+    Creates a Google Compute Engine image.
     
 SYNTAX
-    Get-GcdManagedZone [-Project <string>] [[-ManagedZone] <string>] [<CommonParameters>]
+    Add-GceImage [-Project <string>] [-SourceDisk] <Disk> [-Name <string>] [-Family <string>] [-Description <string>] [<CommonParameters>]
     
     
 DESCRIPTION
-    Lists the project's ManagedZones.
-    
-    If a project is specified, will instead return all ManagedZones governed by that project. The filter ManagedZone can be provided to return that specific zone.
+    Creates a Google Compute Engine image from the given disk.
     
 
 PARAMETERS
     -Project <string>
-        Get the project to check for managed zones.
+        The project that will own the image. This defaults to the gcloud config project.
         
         Required?                    false
         Position?                    named
@@ -95,11 +93,38 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -ManagedZone <string>
-        Get the specific ManagedZone to return (name or id permitted).
+    -SourceDisk <Disk>
+        The Disk object that describes the disk to build the image from. You can get this from Get-GceDisk.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -Name <string>
+        The name of the image to create. This defaults to the name of the disk the image is being created from.
         
         Required?                    false
-        Position?                    1
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Family <string>
+        The family this image is part of.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Description <string>
+        Human readable description of the image.
+        
+        Required?                    false
+        Position?                    named
         Default value                
         Accept pipeline input?       false
         Accept wildcard characters?  false
@@ -111,22 +136,11 @@ PARAMETERS
         about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
     
 INPUTS
+    Google.Apis.Compute.v1.Data.Disk
+        The Disk object that describes the disk to build the image from. You can get this from Get-GceDisk.
+    
     
 OUTPUTS
-    
-    ----------  EXAMPLE 1  ----------
-    
-    Get the managed zones for the project "testing."
-    Get-GcdManagedZones -Project "testing"
-    
-    
-    
-    ----------  EXAMPLE 2  ----------
-    
-    Get the managed zone "test1" for the project "testing."
-    Get-GcdManagedZones -Project "testing" -ManagedZone "test1"
-    
-    
     
     
 RELATED LINKS

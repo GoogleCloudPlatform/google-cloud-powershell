@@ -10,9 +10,9 @@
 
     <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
 
-    <title>Get-GcsObject</title>
+    <title>Get-GceMachineType</title>
     <script src="//www.google.com/js/google.js"></script>
-    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/get-gcsobject.html">
+    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/get-gcemachinetype.html">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
     <link rel="stylesheet" href="//www.google.com/css/maia.css">
 </head>
@@ -49,7 +49,7 @@
           <!-- cmdlet-specific pages include the parent product. -->
           
           <li class="active">
-            <a href="/google-cloud-powershell/cmdlets/google-cloud-storage">Google Cloud Storage</a>
+            <a href="/google-cloud-powershell/cmdlets/google-compute-engine">Google Compute Engine</a>
           </li>
           
 
@@ -67,39 +67,50 @@ pre {
 }
 </style>
 
-<h1>Get-GcsObject</h1>
+<h1>Get-GceMachineType</h1>
 <pre>
 NAME
-    Get-GcsObject
+    Get-GceMachineType
     
 SYNOPSIS
-    Get-GcsObject returns the Google Cloud Storage Object metadata with the given name. (Use Find-GcsObject to return multiple objects.)
+    Get Google Compute Engine machine types.
     
 SYNTAX
-    Get-GcsObject [-Bucket] <string> [-ObjectName] <string> [<CommonParameters>]
+    Get-GceMachineType [-Project <string>] -Zone <string> [<CommonParameters>]
+    
+    Get-GceMachineType [-Project <string>] [-Zone <string>] [-Name] <string> [<CommonParameters>]
     
     
 DESCRIPTION
-    Returns the give Storage object's metadata.
+    Gets all machine types of a project, or all machine types of a project in a zone, or a single machine type of a project in a zone with a name.
     
 
 PARAMETERS
-    -Bucket <string>
-        Name of the bucket to check. Will also accept a Bucket object.
+    -Project <string>
         
-        Required?                    true
-        Position?                    0
+        
+        Required?                    false
+        Position?                    named
         Default value                
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -ObjectName <string>
-        Name of the object to inspect.
+    -Zone <string>
+        
         
         Required?                    true
-        Position?                    1
+        Position?                    named
         Default value                
         Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Name <string>
+        
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
         Accept wildcard characters?  false
         
     <CommonParameters>
@@ -109,6 +120,9 @@ PARAMETERS
         about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
     
 INPUTS
+    System.String
+        
+    
     
 OUTPUTS
     

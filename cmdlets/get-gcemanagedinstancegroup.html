@@ -10,9 +10,9 @@
 
     <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
 
-    <title>Get-GcsObject</title>
+    <title>Get-GceManagedInstanceGroup</title>
     <script src="//www.google.com/js/google.js"></script>
-    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/get-gcsobject.html">
+    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/get-gcemanagedinstancegroup.html">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
     <link rel="stylesheet" href="//www.google.com/css/maia.css">
 </head>
@@ -49,7 +49,7 @@
           <!-- cmdlet-specific pages include the parent product. -->
           
           <li class="active">
-            <a href="/google-cloud-powershell/cmdlets/google-cloud-storage">Google Cloud Storage</a>
+            <a href="/google-cloud-powershell/cmdlets/google-compute-engine">Google Compute Engine</a>
           </li>
           
 
@@ -67,38 +67,82 @@ pre {
 }
 </style>
 
-<h1>Get-GcsObject</h1>
+<h1>Get-GceManagedInstanceGroup</h1>
 <pre>
 NAME
-    Get-GcsObject
+    Get-GceManagedInstanceGroup
     
 SYNOPSIS
-    Get-GcsObject returns the Google Cloud Storage Object metadata with the given name. (Use Find-GcsObject to return multiple objects.)
+    Gets Google Compute Engine instance group managers.
     
 SYNTAX
-    Get-GcsObject [-Bucket] <string> [-ObjectName] <string> [<CommonParameters>]
+    Get-GceManagedInstanceGroup [-Project <string>] [-InstanceStatus <SwitchParameter>] [<CommonParameters>]
+    
+    Get-GceManagedInstanceGroup [-Project <string>] -Zone <string> [-InstanceStatus <SwitchParameter>] [<CommonParameters>]
+    
+    Get-GceManagedInstanceGroup [-Project <string>] [-Zone <string>] [-Name] <string> [-InstanceStatus <SwitchParameter>] [<CommonParameters>]
+    
+    Get-GceManagedInstanceGroup -Uri <string> [-InstanceStatus <SwitchParameter>] [<CommonParameters>]
+    
+    Get-GceManagedInstanceGroup -Object <InstanceGroupManager> [-InstanceStatus <SwitchParameter>] [<CommonParameters>]
     
     
 DESCRIPTION
-    Returns the give Storage object's metadata.
+    Gets Google Compute Engine instance group managers.
     
 
 PARAMETERS
-    -Bucket <string>
-        Name of the bucket to check. Will also accept a Bucket object.
+    -Project <string>
+        The project that owns the instance group.
         
-        Required?                    true
-        Position?                    0
+        Required?                    false
+        Position?                    named
         Default value                
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -ObjectName <string>
-        Name of the object to inspect.
+    -Zone <string>
+        The zone the instance group is in.
         
         Required?                    true
-        Position?                    1
+        Position?                    named
         Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Name <string>
+        The name of the instance group to get.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -Uri <string>
+        The full uri of the managed instance group
+        
+        Required?                    true
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Object <InstanceGroupManager>
+        The InstanceGroupManager object to get.
+        
+        Required?                    true
+        Position?                    named
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -InstanceStatus <SwitchParameter>
+        If set, will return ManagedInstance objects describing the state of the instances of this group, including whether they exist yet or not.
+        
+        Required?                    false
+        Position?                    named
+        Default value                False
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
@@ -109,6 +153,12 @@ PARAMETERS
         about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
     
 INPUTS
+    System.String
+        The name of the instance group to get.
+    
+    Google.Apis.Compute.v1.Data.InstanceGroupManager
+        The InstanceGroupManager object to get.
+    
     
 OUTPUTS
     

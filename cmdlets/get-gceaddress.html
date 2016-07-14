@@ -10,9 +10,9 @@
 
     <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
 
-    <title>Get-GcSqlFlags</title>
+    <title>Get-GceAddress</title>
     <script src="//www.google.com/js/google.js"></script>
-    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/get-gcsqlflags.html">
+    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/get-gceaddress.html">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
     <link rel="stylesheet" href="//www.google.com/css/maia.css">
 </head>
@@ -49,7 +49,7 @@
           <!-- cmdlet-specific pages include the parent product. -->
           
           <li class="active">
-            <a href="/google-cloud-powershell/cmdlets/"></a>
+            <a href="/google-cloud-powershell/cmdlets/google-compute-engine">Google Compute Engine</a>
           </li>
           
 
@@ -67,21 +67,67 @@ pre {
 }
 </style>
 
-<h1>Get-GcSqlFlags</h1>
+<h1>Get-GceAddress</h1>
 <pre>
 NAME
-    Get-GcSqlFlags
+    Get-GceAddress
     
 SYNOPSIS
-    Lists all available database flags for Google Cloud SQL instances.
+    Gets information about a Google Compute Engine address.
     
 SYNTAX
+    Get-GceAddress [-Project <string>] [<CommonParameters>]
+    
+    Get-GceAddress [-Project <string>] -Region <string> [<CommonParameters>]
+    
+    Get-GceAddress [-Project <string>] [-Region <string>] [-Name] <string> [<CommonParameters>]
+    
+    Get-GceAddress [-Project <string>] -Global <SwitchParameter> [<CommonParameters>]
+    
+    Get-GceAddress [-Project <string>] [-Name] <string> -Global <SwitchParameter> [<CommonParameters>]
+    
     
 DESCRIPTION
-    Lists all available database flags for instances.
+    Get an object that has information about an address.
     
 
 PARAMETERS
+    -Project <string>
+        The project that owns the address. Required if not specified by the gcloud config.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Region <string>
+        The region the address is in. Requried when listing addresses of a region. Defaults to gcloud config region when getting a non-global named address.
+        
+        Required?                    true
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Name <string>
+        The name of the address to get.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -Global <SwitchParameter>
+        If set, will get global addresses, rather than region specific ones.
+        
+        Required?                    true
+        Position?                    named
+        Default value                False
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
     <CommonParameters>
         This cmdlet supports the common parameters: Verbose, Debug,
         ErrorAction, ErrorVariable, WarningAction, WarningVariable,
@@ -89,6 +135,9 @@ PARAMETERS
         about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
     
 INPUTS
+    System.String
+        The name of the address to get.
+    
     
 OUTPUTS
     

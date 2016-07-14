@@ -10,9 +10,9 @@
 
     <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
 
-    <title>New-GceDisk</title>
+    <title>Add-GceRoute</title>
     <script src="//www.google.com/js/google.js"></script>
-    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/new-gcedisk.html">
+    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/add-gceroute.html">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
     <link rel="stylesheet" href="//www.google.com/css/maia.css">
 </head>
@@ -67,27 +67,28 @@ pre {
 }
 </style>
 
-<h1>New-GceDisk</h1>
+<h1>Add-GceRoute</h1>
 <pre>
 NAME
-    New-GceDisk
+    Add-GceRoute
     
 SYNOPSIS
-    Creates a new Google Compute Engine disk object.
+    Adds a new networking route.
     
 SYNTAX
-    New-GceDisk [-Project <string>] [-Zone <string>] [-DiskName] <string> [-Description <string>] [-SizeGb <long>] [-DiskType <string>] [-Image] <Image> [<CommonParameters>]
+    Add-GceRoute [-Project <string>] [-Object] <Route> [<CommonParameters>]
     
-    New-GceDisk [-Project <string>] [-Zone <string>] [-DiskName] <string> [-Description <string>] [-SizeGb <long>] [-DiskType <string>] [-Snapshot] <Snapshot> [<CommonParameters>]
+    Add-GceRoute [-Project <string>] [-Name] <string> [-DestinationIpRange] <string> [-Network] <string> [-Priority <long>] [-Description <string>] [-Tag <string[]>] [-NextHopInstance <string>] [-NextHopIp <string>] [-NextHopVpnTunnel <string>] 
+    [-NextHopInternetGateway <SwitchParameter>] [<CommonParameters>]
     
     
 DESCRIPTION
-    Creates a new Google Compute Engine disk object.
+    Adds a new networking route.
     
 
 PARAMETERS
     -Project <string>
-        The project to associate the new Compute Engine disk.
+        The project to add the route to. Defaults to the gcloud config project.
         
         Required?                    false
         Position?                    named
@@ -95,17 +96,17 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -Zone <string>
-        Specific zone to create the disk in, e.g. "us-central1-a".
+    -Object <Route>
+        An object describing a route to add.
         
-        Required?                    false
-        Position?                    named
+        Required?                    true
+        Position?                    0
         Default value                
-        Accept pipeline input?       false
+        Accept pipeline input?       true (ByValue)
         Accept wildcard characters?  false
         
-    -DiskName <string>
-        Name of the disk.
+    -Name <string>
+        The name of the route to add.
         
         Required?                    true
         Position?                    0
@@ -113,7 +114,36 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
+    -DestinationIpRange <string>
+        The destination range of outgoing packets that this route applies to.
+        
+        Required?                    true
+        Position?                    1
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Network <string>
+        The network this route applies to. Can be either a URL, or a network object from Get-GceNetwork.
+        
+        Required?                    true
+        Position?                    2
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Priority <long>
+        The priority of this route. Priority is used to break ties in cases where there is more than one matching route of equal prefix length. In the case of two routes with equal prefix length, the one with the lowest-numbered priority value wins. 
+        Default value is 1000. Valid range is 0 through 65535.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
     -Description <string>
+        Human readable description of this route.
         
         Required?                    false
         Position?                    named
@@ -121,7 +151,8 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -SizeGb <long>
+    -Tag <string[]>
+        Instance tag(s) this route applies to. May only contain lowercase letters, dashes and numbers.
         
         Required?                    false
         Position?                    named
@@ -129,7 +160,8 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -DiskType <string>
+    -NextHopInstance <string>
+        The instance that should handle matching packets. Can be either a URL, or an instance from Get-GceInstance.
         
         Required?                    false
         Position?                    named
@@ -137,26 +169,31 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -Image <Image>
-        Source image to apply to the disk.
+    -NextHopIp <string>
+        The IP Address of an instance that should handle matching packets.
         
-        Use Get-GceImage to get the image to apply. For instance, to get the latest windows instance, use Get-GceImage -Family "windows-2012-r2" -Project "windows-cloud".
-        
-        Required?                    true
-        Position?                    1
+        Required?                    false
+        Position?                    named
         Default value                
-        Accept pipeline input?       true (ByValue)
+        Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -Snapshot <Snapshot>
-        Source snapshot to apply to the disk.
+    -NextHopVpnTunnel <string>
+        The URL of a VPN Tunnel that should handle matching packets.
         
-        Use Get-GceSnapshot to get a previously made backup snapshot to apply to this disk.
-        
-        Required?                    true
-        Position?                    1
+        Required?                    false
+        Position?                    named
         Default value                
-        Accept pipeline input?       true (ByValue)
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -NextHopInternetGateway <SwitchParameter>
+        The URL to a gateway that should handle matching packets.
+        
+        Required?                    false
+        Position?                    named
+        Default value                False
+        Accept pipeline input?       false
         Accept wildcard characters?  false
         
     <CommonParameters>
@@ -166,15 +203,8 @@ PARAMETERS
         about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
     
 INPUTS
-    Google.Apis.Compute.v1.Data.Image
-        Source image to apply to the disk.
-        
-        Use Get-GceImage to get the image to apply. For instance, to get the latest windows instance, use Get-GceImage -Family "windows-2012-r2" -Project "windows-cloud".
-    
-    Google.Apis.Compute.v1.Data.Snapshot
-        Source snapshot to apply to the disk.
-        
-        Use Get-GceSnapshot to get a previously made backup snapshot to apply to this disk.
+    Google.Apis.Compute.v1.Data.Route
+        An object describing a route to add.
     
     
 OUTPUTS

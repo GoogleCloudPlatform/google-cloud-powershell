@@ -78,9 +78,8 @@ SYNOPSIS
 SYNTAX
     Add-GceInstanceTemplate [-Project <string>] [-Object] <InstanceTemplate> [<CommonParameters>]
     
-    Add-GceInstanceTemplate [-Project <string>] [-Name] <string> [-MachineType] <string> [-CanIpForward <SwitchParameter>] [-Description <string>] [-BootDiskImage <string>] [-ExtraDiskName 
-    <string[]>] [-Disk <AttachedDisk[]>] [-Metadata <IDictionary>] [-Network <string>] [-NoExternalIp <SwitchParameter>] [-Preemptible <SwitchParameter>] [-AutomaticRestart <bool>] 
-    [-TerminateOnMaintenance <SwitchParameter>] [-ServiceAccount <ServiceAccount[]>] [-Tag <string[]>] [<CommonParameters>]
+    Add-GceInstanceTemplate [-Project <string>] [-Name] <string> [-MachineType] <string> [-CanIpForward <SwitchParameter>] [-Description <string>] [-BootDiskImage <Image>] [-ExtraDisk <Disk[]>] [-Disk <AttachedDisk[]>] [-Metadata <IDictionary>] [-Network 
+    <string>] [-NoExternalIp <SwitchParameter>] [-Preemptible <SwitchParameter>] [-AutomaticRestart <bool>] [-TerminateOnMaintenance <SwitchParameter>] [-ServiceAccount <ServiceAccount[]>] [-Tag <string[]>] [<CommonParameters>]
     
     
 DESCRIPTION
@@ -125,8 +124,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -CanIpForward <SwitchParameter>
-        Enables instances to send and receive packets for IP addresses other than their own. Switch on if these instances will be used as an IP gateway or it will be set as the next-hop in 
-        a Route resource.
+        Enables instances to send and receive packets for IP addresses other than their own. Switch on if these instances will be used as an IP gateway or it will be set as the next-hop in a Route resource.
         
         Required?                    false
         Position?                    named
@@ -143,8 +141,8 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -BootDiskImage <string>
-        The path to the image to be used to create the boot disk.
+    -BootDiskImage <Image>
+        The the image used to create the boot disk. Use Get-GceImage to get one of these.
         
         Required?                    false
         Position?                    named
@@ -152,8 +150,8 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -ExtraDiskName <string[]>
-        Name of existing disk to attach in read-only mode. All instances of this template will be able to read this disk.
+    -ExtraDisk <Disk[]>
+        An existing disk to attach. All instances of this template will be able to read this disk. Will attach in read only mode.
         
         Required?                    false
         Position?                    named
@@ -162,7 +160,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -Disk <AttachedDisk[]>
-        An AttachedDisk object specifying a disk to attach. Do not specify `-BootDiskImage` if this is a boot disk. You can build one using New-GceAttachedDiskConfig.
+        An AttachedDisk object specifying a disk to attach. Do not specify `-BootDiskImage` or `-BootDiskSnapshot` if this is a boot disk. You can build one using New-GceAttachedDiskConfig.
         
         Required?                    false
         Position?                    named
@@ -180,7 +178,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -Network <string>
-        The name of the network to use. If not specified, is default.
+        The name of the network to use. If not specified, it is global/networks/default. This can be a string, or Network object you get from Get-GceNetwork.
         
         Required?                    false
         Position?                    named
@@ -198,7 +196,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -Preemptible <SwitchParameter>
-        If set, the instances will be preemptible. If set, AutomaticRestart will be false.
+        If set, the instances will be preemptible, and AutomaticRestart will be false.
         
         Required?                    false
         Position?                    named
@@ -225,7 +223,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -ServiceAccount <ServiceAccount[]>
-        The ServiceAccount used to specify access tokens.
+        The ServiceAccount used to specify access tokens. Use New-GceServiceAccountConfig to build one.
         
         Required?                    false
         Position?                    named

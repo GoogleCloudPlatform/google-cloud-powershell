@@ -76,18 +76,62 @@ SYNOPSIS
     Creates a single new AttachedDisk object.
     
 SYNTAX
-    New-GceAttachedDiskConfig [-AutoDelete <SwitchParameter>] [-Boot <SwitchParameter>] [-Pipeline <object>] [-Name <string>] [-Nvme <SwitchParameter>] [-DeviceName <string>] -SourceImage 
-    <string> [-DiskType <string>] [-ReadOnly <SwitchParameter>] [-Size <long>] [<CommonParameters>]
+    New-GceAttachedDiskConfig [-Source] <Disk> [-AutoDelete <SwitchParameter>] [-Boot <SwitchParameter>] [-Nvme <SwitchParameter>] [-DeviceName <string>] [-ReadOnly <SwitchParameter>] [<CommonParameters>]
     
-    New-GceAttachedDiskConfig [-AutoDelete <SwitchParameter>] [-Boot <SwitchParameter>] [-Pipeline <object>] [-Nvme <SwitchParameter>] [-DeviceName <string>] -Source <string> [-ReadOnly 
-    <SwitchParameter>] [<CommonParameters>]
+    New-GceAttachedDiskConfig [-SourceImage] <Image> [-Name <string>] [-DiskType <string>] [-Size <long>] [-AutoDelete <SwitchParameter>] [-Boot <SwitchParameter>] [-Nvme <SwitchParameter>] [-DeviceName <string>] [-ReadOnly <SwitchParameter>] 
+    [<CommonParameters>]
     
     
 DESCRIPTION
-    Creates a single new AttachedDisk object. These objects are used by New-GceInstanceConfig and Add-GceInstanceTemplate.
+    Creates a single new AttachedDisk object. These objects are used by New-GceInstanceConfig, Add-GceInstance, and Add-GceInstanceTemplate.
     
 
 PARAMETERS
+    -Source <Disk>
+        The URI of the preexisting disk to attach to an instance.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -SourceImage <Image>
+        The source image of the new disk.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -Name <string>
+        The name of the disk to create.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -DiskType <string>
+        Specifies the type of the disk. Defaults to pd-standard.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Size <long>
+        The size of the disk to create, in GB.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
     -AutoDelete <SwitchParameter>
         When set, disk will be deleted when the instance is.
         
@@ -106,25 +150,8 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -Pipeline <object>
-        Pipeline values to be passed on to the next cmdlet.
-        
-        Required?                    false
-        Position?                    named
-        Default value                
-        Accept pipeline input?       true (ByValue)
-        Accept wildcard characters?  false
-        
-    -Name <string>
-        The name of the disk to create.
-        
-        Required?                    false
-        Position?                    named
-        Default value                
-        Accept pipeline input?       false
-        Accept wildcard characters?  false
-        
     -Nvme <SwitchParameter>
+        When set, the disk interface will be NVME rather than SCSI.
         
         Required?                    false
         Position?                    named
@@ -141,48 +168,12 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -SourceImage <string>
-        The source image of the new disk.
-        
-        Required?                    true
-        Position?                    named
-        Default value                
-        Accept pipeline input?       false
-        Accept wildcard characters?  false
-        
-    -DiskType <string>
-        Specifies the type of the disk. Defaults to pd-standard.
-        
-        Required?                    false
-        Position?                    named
-        Default value                
-        Accept pipeline input?       false
-        Accept wildcard characters?  false
-        
-    -Source <string>
-        The URI of the preexisting disk to attach to an instance.
-        
-        Required?                    true
-        Position?                    named
-        Default value                
-        Accept pipeline input?       false
-        Accept wildcard characters?  false
-        
     -ReadOnly <SwitchParameter>
         Set to limit the instance to read operations.
         
         Required?                    false
         Position?                    named
         Default value                False
-        Accept pipeline input?       false
-        Accept wildcard characters?  false
-        
-    -Size <long>
-        The size of the disk to create, in GB.
-        
-        Required?                    false
-        Position?                    named
-        Default value                
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
@@ -193,16 +184,18 @@ PARAMETERS
         about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
     
 INPUTS
-    System.Object
-        Pipeline values to be passed on to the next cmdlet.
+    Google.Apis.Compute.v1.Data.Disk
+        The URI of the preexisting disk to attach to an instance.
+    
+    Google.Apis.Compute.v1.Data.Image
+        The source image of the new disk.
     
     
 OUTPUTS
     
     ----------  EXAMPLE 1  ----------
     
-    $disks = New-GceAttachedDisk -Boot -AutoDelete -SourceImage "projects/debian-cloud/global/images/family/debian-8" | New-GceAttachedDis -Source "projectDiskName" -ReadOnly 
-    Add-GceinstanceTemplate -Name "instanceName" -MachineType n1-standard-1 -Disk $disks
+    $disks = (New-GceAttachedDisk (Get-GceImage "debian-cloud" -Family "debian-8") -Boot -AutoDelete), (New-GceAttachedDis (Get-GceDisk "persistant-disk-name") -ReadOnly) Add-GceInstanceTemplate -Name "template-name" -MachineType n1-standard-1 -Disk $disks
     
     
     

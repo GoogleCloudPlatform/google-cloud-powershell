@@ -78,6 +78,8 @@ SYNOPSIS
 SYNTAX
     Remove-GcsObject [-Bucket] <string> [-ObjectName] <string> [<CommonParameters>]
     
+    Remove-GcsObject [-Object] <Object> [<CommonParameters>]
+    
     
 DESCRIPTION
     Deletes a Cloud Storage object.
@@ -85,7 +87,7 @@ DESCRIPTION
 
 PARAMETERS
     -Bucket <string>
-        Name of the bucket containing the object.
+        Name of the bucket containing the object. Will also accept a Bucket object.
         
         Required?                    true
         Position?                    0
@@ -102,6 +104,15 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
+    -Object <Object>
+        Name of the object to delete.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
     <CommonParameters>
         This cmdlet supports the common parameters: Verbose, Debug,
         ErrorAction, ErrorVariable, WarningAction, WarningVariable,
@@ -109,6 +120,9 @@ PARAMETERS
         about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
     
 INPUTS
+    Google.Apis.Storage.v1.Data.Object
+        Name of the object to delete.
+    
     
 OUTPUTS
     

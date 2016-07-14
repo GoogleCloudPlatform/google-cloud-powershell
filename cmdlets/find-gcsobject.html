@@ -82,18 +82,18 @@ SYNTAX
 DESCRIPTION
     Returns all Cloud Storage objects identified by the given prefix string. If no prefix string is provided, all objects in the bucket are returned.
     
-    An optional delimiter may be provided. If used, will return results in a directory-like mode, delimited by the given string. e.g. with objects "1, "2", "subdir/3" and delimited "/"; 
-    "subdir/3" would not be returned. (There is no way to just return "subdir" in the previous example.)
+    An optional delimiter may be provided. If used, will return results in a directory-like mode, delimited by the given string. e.g. with objects "1, "2", "subdir/3" and delimited "/"; "subdir/3" would not be returned. (There is no way to just return 
+    "subdir" in the previous example.)
     
 
 PARAMETERS
     -Bucket <string>
-        Name of the bucket to search.
+        Name of the bucket to search. Will also accept a Bucket object.
         
         Required?                    true
         Position?                    0
         Default value                
-        Accept pipeline input?       false
+        Accept pipeline input?       true (ByValue)
         Accept wildcard characters?  false
         
     -Prefix <string>
@@ -121,6 +121,9 @@ PARAMETERS
         about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
     
 INPUTS
+    System.String
+        Name of the bucket to search. Will also accept a Bucket object.
+    
     
 OUTPUTS
     

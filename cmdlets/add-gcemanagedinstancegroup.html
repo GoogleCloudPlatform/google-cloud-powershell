@@ -10,9 +10,9 @@
 
     <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
 
-    <title>Remove-GceDisk</title>
+    <title>Add-GceManagedInstanceGroup</title>
     <script src="//www.google.com/js/google.js"></script>
-    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/remove-gcedisk.html">
+    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/add-gcemanagedinstancegroup.html">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
     <link rel="stylesheet" href="//www.google.com/css/maia.css">
 </head>
@@ -67,26 +67,28 @@ pre {
 }
 </style>
 
-<h1>Remove-GceDisk</h1>
+<h1>Add-GceManagedInstanceGroup</h1>
 <pre>
 NAME
-    Remove-GceDisk
+    Add-GceManagedInstanceGroup
     
 SYNOPSIS
-    Deletes a Compute Engine disk.
+    Creates a new Google Compute Engine instance group manager.
     
 SYNTAX
-    Remove-GceDisk [-Project <string>] [-Zone <string>] [-DiskName] <string> [<CommonParameters>]
+    Add-GceManagedInstanceGroup [-Project <string>] [-Zone <string>] [-Name] <string> [-InstanceTemplate] <string> [-TargetSize] <int> [-BaseInstanceName <string>] [-Description <string>] [-TargetPool <string[]>] [-PortName <string[]>] [-PortNumber 
+    <int[]>] [-NamedPort <NamedPort[]>] [<CommonParameters>]
     
-    Remove-GceDisk [-Object] <Disk> [<CommonParameters>]
+    Add-GceManagedInstanceGroup [-Project <string>] [-Zone <string>] [-Object] <InstanceGroupManager> [<CommonParameters>]
     
     
 DESCRIPTION
+    Creates a new Google Compute Engine instance group manager.
     
 
 PARAMETERS
     -Project <string>
-        The project to associate the new Compute Engine disk.
+        The project that will own the instance group.
         
         Required?                    false
         Position?                    named
@@ -95,7 +97,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -Zone <string>
-        Specific zone to create the disk in, e.g. "us-central1-a".
+        The zone where the instance gorup will live.
         
         Required?                    false
         Position?                    named
@@ -103,8 +105,8 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -DiskName <string>
-        Name of the disk.
+    -Name <string>
+        The name of the instance group.
         
         Required?                    true
         Position?                    0
@@ -112,8 +114,80 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -Object <Disk>
-        The Disk object that describes the disk to remove
+    -InstanceTemplate <string>
+        The instance template to use when creating instances. Can be a string URL to a template, or an InstanceTemplate object from Get-GceInstanceTemplate.
+        
+        Required?                    true
+        Position?                    1
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -TargetSize <int>
+        The target number of instances for this instance group to have.
+        
+        Required?                    true
+        Position?                    2
+        Default value                0
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -BaseInstanceName <string>
+        The base instance name for this group. Instances will take this name and append a hypen and a random four character string. Defaults to the group name.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Description <string>
+        The human readable description of this instance group.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -TargetPool <string[]>
+        The URLs for all TargetPool resources to which instances in the instanceGroup field are added. The target pools automatically apply to all of the instances in the managed instance group.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -PortName <string[]>
+        The name you want to give to a port. Must have the same number of elements as PortNumber.
+        
+        Required?                    false
+        Position?                    named
+        Default value                System.String[]
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -PortNumber <int[]>
+        The number of the port you want to give a name. Must have the same number of elements as PortName.
+        
+        Required?                    false
+        Position?                    named
+        Default value                System.Int32[]
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -NamedPort <NamedPort[]>
+        A NamedPort object you want to include in the list of named ports.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Object <InstanceGroupManager>
+        An InstanceGroupManager object used to create a new managed instance group.
         
         Required?                    true
         Position?                    0
@@ -128,8 +202,8 @@ PARAMETERS
         about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
     
 INPUTS
-    Google.Apis.Compute.v1.Data.Disk
-        The Disk object that describes the disk to remove
+    Google.Apis.Compute.v1.Data.InstanceGroupManager
+        An InstanceGroupManager object used to create a new managed instance group.
     
     
 OUTPUTS

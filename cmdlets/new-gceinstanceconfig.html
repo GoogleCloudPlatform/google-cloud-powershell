@@ -76,14 +76,8 @@ SYNOPSIS
     Makes a new Google Compute Engine VM instance description.
     
 SYNTAX
-    New-GceInstanceConfig [-Name] <string> [-CanIpForward <bool>] [-Description <string>] -Disk <List`1> -MachineType <string> [-Metadata <Hashtable>] [-NetworkInterface <List`1>] 
-    [-Scheduling <Scheduling>] [-ServiceAccount <List`1>] [-Tag <List`1>] [<CommonParameters>]
-    
-    New-GceInstanceConfig [-Name] <string> [-CanIpForward <bool>] [-Description <string>] -DiskImage <string> -MachineType <string> [-Metadata <Hashtable>] [-NetworkInterface <List`1>] 
-    [-Scheduling <Scheduling>] [-ServiceAccount <List`1>] [-Tag <List`1>] [<CommonParameters>]
-    
-    New-GceInstanceConfig [-Name] <string> [-CanIpForward <bool>] [-Description <string>] -DiskSource <string> -MachineType <string> [-Metadata <Hashtable>] [-NetworkInterface <List`1>] 
-    [-Scheduling <Scheduling>] [-ServiceAccount <List`1>] [-Tag <List`1>] [<CommonParameters>]
+    New-GceInstanceConfig [-Name] <string> [-MachineType] <string> [-CanIpForward <SwitchParameter>] [-Description <string>] [-BootDisk <Disk>] [-BootDiskImage <Image>] [-ExtraDisk <Disk[]>] [-Disk <AttachedDisk[]>] [-Metadata <IDictionary>] [-Network 
+    <string>] [-NoExternalIp <SwitchParameter>] [-Preemptible <SwitchParameter>] [-AutomaticRestart <bool>] [-TerminateOnMaintenance <SwitchParameter>] [-ServiceAccount <ServiceAccount[]>] [-Tag <string[]>] [<CommonParameters>]
     
     
 DESCRIPTION
@@ -100,17 +94,26 @@ PARAMETERS
         Accept pipeline input?       true (ByValue)
         Accept wildcard characters?  false
         
-    -CanIpForward <bool>
-        Allows this instance to send and receive packets with non-matching destination or source IPs. This is required if you plan to use this instance to forward routes.
+    -MachineType <string>
+        The machine type of this instance. Can be a name, a URL or a MachineType object from Get-GceMachineType.
+        
+        Required?                    true
+        Position?                    1
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -CanIpForward <SwitchParameter>
+        Enables instances to send and receive packets for IP addresses other than their own. Switch on if these instances will be used as an IP gateway or it will be set as the next-hop in a Route resource.
         
         Required?                    false
         Position?                    named
-        Default value                
+        Default value                False
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
     -Description <string>
-        A description of this resource.
+        Human readable description of this instance.
         
         Required?                    false
         Position?                    named
@@ -118,43 +121,8 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -Disk <List`1>
-        Disks associated with this instance.
-        
-        Required?                    true
-        Position?                    named
-        Default value                
-        Accept pipeline input?       false
-        Accept wildcard characters?  false
-        
-    -DiskImage <string>
-        The path to the boot disk image. For example: "projects/debian-cloud/global/images/debian-8-jessie-v20160511".
-        
-        Required?                    true
-        Position?                    named
-        Default value                
-        Accept pipeline input?       false
-        Accept wildcard characters?  false
-        
-    -DiskSource <string>
-        The path to the boot disk.
-        
-        Required?                    true
-        Position?                    named
-        Default value                
-        Accept pipeline input?       false
-        Accept wildcard characters?  false
-        
-    -MachineType <string>
-        
-        Required?                    true
-        Position?                    named
-        Default value                
-        Accept pipeline input?       false
-        Accept wildcard characters?  false
-        
-    -Metadata <Hashtable>
-        The metadata key/value pairs assigned to this instance. This includes custom metadata and predefined keys.
+    -BootDisk <Disk>
+        The persistant disk to use as a boot disk. Use Get-GceDisk to get one of these.
         
         Required?                    false
         Position?                    named
@@ -162,8 +130,8 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -NetworkInterface <List`1>
-        An array of configurations for this interface. This specifies how this interface is configured to interact with other network services, such as connecting to the internet.
+    -BootDiskImage <Image>
+        The the image used to create the boot disk. Use Get-GceImage to get one of these.
         
         Required?                    false
         Position?                    named
@@ -171,8 +139,10 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -Scheduling <Scheduling>
-        Scheduling options for this instance.
+    -DiskImage <Image>
+        The the image used to create the boot disk. Use Get-GceImage to get one of these.
+        
+        This is an alias of the BootDiskImage parameter.
         
         Required?                    false
         Position?                    named
@@ -180,9 +150,8 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -ServiceAccount <List`1>
-        A list of service accounts, with their specified scopes, authorized for this instance. Service accounts generate access tokens that can be accessed through the metadata server and 
-        used to authenticate applications on the instance. See Authenticating from Google Compute Engine for more information.
+    -ExtraDisk <Disk[]>
+        An existing disk to attach in read only mode.
         
         Required?                    false
         Position?                    named
@@ -190,8 +159,80 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -Tag <List`1>
-        A list of tags to apply to this instance. Tags are used to identify valid sources or targets for network firewalls. Each tag within the list must comply with RFC1035.
+    -Disk <AttachedDisk[]>
+        An AttachedDisk object specifying a disk to attach. Do not specify `-BootDiskImage` or `-BootDiskSnapshot` if this is a boot disk. You can build one using New-GceAttachedDiskConfig.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Metadata <IDictionary>
+        The keys and values of the Metadata of this instance.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Network <string>
+        The name of the network to use. If not specified, is default. This can be a Network object you get from Get-GceNetwork.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -NoExternalIp <SwitchParameter>
+        If set, the instances will not have an external ip address.
+        
+        Required?                    false
+        Position?                    named
+        Default value                False
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Preemptible <SwitchParameter>
+        If set, the instances will be preemptible. If set, AutomaticRestart will be false.
+        
+        Required?                    false
+        Position?                    named
+        Default value                False
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -AutomaticRestart <bool>
+        If set, the instances will not restart when shut down by Google Compute Engine.
+        
+        Required?                    false
+        Position?                    named
+        Default value                True
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -TerminateOnMaintenance <SwitchParameter>
+        If set, the instances will terminate rather than migrate when the host undergoes maintenance.
+        
+        Required?                    false
+        Position?                    named
+        Default value                False
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -ServiceAccount <ServiceAccount[]>
+        The ServiceAccount used to specify access tokens.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Tag <string[]>
+        A tag of this instance.
         
         Required?                    false
         Position?                    named

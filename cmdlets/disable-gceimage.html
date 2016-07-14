@@ -10,9 +10,9 @@
 
     <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
 
-    <title>Remove-GceDisk</title>
+    <title>Disable-GceImage</title>
     <script src="//www.google.com/js/google.js"></script>
-    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/remove-gcedisk.html">
+    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/disable-gceimage.html">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
     <link rel="stylesheet" href="//www.google.com/css/maia.css">
 </head>
@@ -67,26 +67,29 @@ pre {
 }
 </style>
 
-<h1>Remove-GceDisk</h1>
+<h1>Disable-GceImage</h1>
 <pre>
 NAME
-    Remove-GceDisk
+    Disable-GceImage
     
 SYNOPSIS
-    Deletes a Compute Engine disk.
+    Marks an image or schedules an image to be marked as DEPRECATED, OBSOLETE, or DELETED.
     
 SYNTAX
-    Remove-GceDisk [-Project <string>] [-Zone <string>] [-DiskName] <string> [<CommonParameters>]
+    Disable-GceImage [-Project <string>] [-Name] <string> [-Replacement <Image>] [-ReplacementUrl <string>] [-State] <ImageDisableState> {DEPRECATED | OBSOLETE | DELETED} [-DeprecateOn <DateTimeOffset>] [-ObsoleteOn <DateTimeOffset>] [-DeleteOn 
+    <DateTimeOffset>] [<CommonParameters>]
     
-    Remove-GceDisk [-Object] <Disk> [<CommonParameters>]
+    Disable-GceImage [-Object] <Image> [-Replacement <Image>] [-ReplacementUrl <string>] [-State] <ImageDisableState> {DEPRECATED | OBSOLETE | DELETED} [-DeprecateOn <DateTimeOffset>] [-ObsoleteOn <DateTimeOffset>] [-DeleteOn <DateTimeOffset>] 
+    [<CommonParameters>]
     
     
 DESCRIPTION
+    Marks an image or schedules an image to be marked as DEPRECATED, OBSOLETE, or DELETED.
     
 
 PARAMETERS
     -Project <string>
-        The project to associate the new Compute Engine disk.
+        The project that owns the image to disable. Defaults to the gcloud config project.
         
         Required?                    false
         Position?                    named
@@ -94,31 +97,78 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -Zone <string>
-        Specific zone to create the disk in, e.g. "us-central1-a".
-        
-        Required?                    false
-        Position?                    named
-        Default value                
-        Accept pipeline input?       false
-        Accept wildcard characters?  false
-        
-    -DiskName <string>
-        Name of the disk.
-        
-        Required?                    true
-        Position?                    0
-        Default value                
-        Accept pipeline input?       false
-        Accept wildcard characters?  false
-        
-    -Object <Disk>
-        The Disk object that describes the disk to remove
+    -Name <string>
+        The name of the image to disable.
         
         Required?                    true
         Position?                    0
         Default value                
         Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -Object <Image>
+        The Image object that describes the image to disable.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -Replacement <Image>
+        The Image object that is the suggested replacement for the image being disabled.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -ReplacementUrl <string>
+        The url of the image that is the suggested replacement for the image being disabled.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -State <ImageDisableState>
+        The new state of the image.
+        
+        Possible values: DEPRECATED, OBSOLETE, DELETED
+        
+        Required?                    true
+        Position?                    1
+        Default value                DEPRECATED
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -DeprecateOn <DateTimeOffset>
+        The date to mark the image as deprecated.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -ObsoleteOn <DateTimeOffset>
+        The date to mark the image as obsolete.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -DeleteOn <DateTimeOffset>
+        The date to mark the image as deleted. The image will only be marked, and not actually destroyed until a request is made to remove it.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
         Accept wildcard characters?  false
         
     <CommonParameters>
@@ -128,8 +178,11 @@ PARAMETERS
         about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
     
 INPUTS
-    Google.Apis.Compute.v1.Data.Disk
-        The Disk object that describes the disk to remove
+    System.String
+        The name of the image to disable.
+    
+    Google.Apis.Compute.v1.Data.Image
+        The Image object that describes the image to disable.
     
     
 OUTPUTS

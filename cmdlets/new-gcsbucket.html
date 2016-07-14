@@ -73,16 +73,19 @@ NAME
     New-GcsBucket
     
 SYNOPSIS
+    Creates a new Google Cloud Storage bucket.
     
 SYNTAX
     New-GcsBucket [-Name] <string> [-Project <string>] [-StorageClass <string>] [-Location <string>] [<CommonParameters>]
     
     
 DESCRIPTION
+    Creates a new Google Cloud Storage bucket.
     
 
 PARAMETERS
     -Name <string>
+        Name of the bucket.
         
         Required?                    true
         Position?                    0
@@ -91,6 +94,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -Project <string>
+        The name of the project associated with the command. If not set via PowerShell parameter processing, will default to the Cloud SDK's DefaultProject property.
         
         Required?                    false
         Position?                    named
@@ -99,6 +103,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -StorageClass <string>
+        Storage class for the bucket. STANDARD, NEARLINE, or DURABLE_REDUCED_AVAILABILITY. See https://cloud.google.com/storage/docs/storage-classes for more information.
         
         Required?                    false
         Position?                    named
@@ -107,6 +112,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -Location <string>
+        Location for the bucket. e.g. ASIA, EU, US.
         
         Required?                    false
         Position?                    named

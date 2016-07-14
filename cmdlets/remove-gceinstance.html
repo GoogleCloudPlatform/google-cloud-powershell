@@ -78,6 +78,8 @@ SYNOPSIS
 SYNTAX
     Remove-GceInstance [-Project <string>] [-Zone <string>] [-Name] <string> [<CommonParameters>]
     
+    Remove-GceInstance [-Object] <Instance> [<CommonParameters>]
+    
     
 DESCRIPTION
     Deletes a Google Compute Engine VM instance.
@@ -106,7 +108,16 @@ PARAMETERS
         The name of the instance to delete.
         
         Required?                    true
-        Position?                    2
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -Object <Instance>
+        The instance object to delete.
+        
+        Required?                    true
+        Position?                    0
         Default value                
         Accept pipeline input?       true (ByValue)
         Accept wildcard characters?  false
@@ -120,6 +131,9 @@ PARAMETERS
 INPUTS
     System.String
         The name of the instance to delete.
+    
+    Google.Apis.Compute.v1.Data.Instance
+        The instance object to delete.
     
     
 OUTPUTS

@@ -76,8 +76,7 @@ SYNOPSIS
     Adds a new firewall rule.
     
 SYNTAX
-    Add-GceFirewall [-Project <string>] [-Name] <string> -AllowedProtocol <List`1> [-Description <string>] [-Network <string>] [-SourceRange <List`1>] [-SourceTag <List`1>] [-TargetTag 
-    <List`1>] [<CommonParameters>]
+    Add-GceFirewall [-Project <string>] [-Name] <string> -AllowedProtocol <List`1> [-Description <string>] [-Network <string>] [-SourceRange <List`1>] [-SourceTag <List`1>] [-TargetTag <List`1>] [<CommonParameters>]
     
     
 DESCRIPTION
@@ -153,8 +152,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -SourceRange <List`1>
-        The IP address block that this rule applies to, expressed in CIDR format. One or both of SourceRange and SourceTag may be set. If both parameters are set, an inbound connection is 
-        allowed if it matches either SourceRange or SourceTag.
+        The IP address block that this rule applies to, expressed in CIDR format. One or both of SourceRange and SourceTag may be set. If both parameters are set, an inbound connection is allowed if it matches either SourceRange or SourceTag.
         
         Required?                    false
         Position?                    named
@@ -163,9 +161,8 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -SourceTag <List`1>
-        The instance tag which this rule applies to. One or both of SourceRange and SourceTag may be set. If both parameters are set, an inbound connection is allowed it matches either 
-        SourceRange or SourceTag. Source tags cannot be used to allow access to an instance's external IP address. Source tags can only be used to control traffic traveling from an instance 
-        inside the same network as the firewall rule.
+        The instance tag which this rule applies to. One or both of SourceRange and SourceTag may be set. If both parameters are set, an inbound connection is allowed it matches either SourceRange or SourceTag. Source tags cannot be used to allow access to 
+        an instance's external IP address. Source tags can only be used to control traffic traveling from an instance inside the same network as the firewall rule.
         
         Required?                    false
         Position?                    named
@@ -174,8 +171,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -TargetTag <List`1>
-        An instance tag indicating sets of instances located in the network that may make network connections as specified in allowed[]. If TargetTag is not specified, the firewall rule 
-        applies to all instances on the specified network.
+        An instance tag indicating sets of instances located in the network that may make network connections as specified in allowed[]. If TargetTag is not specified, the firewall rule applies to all instances on the specified network.
         
         Required?                    false
         Position?                    named

@@ -73,19 +73,21 @@ NAME
     New-GcsObject
     
 SYNOPSIS
+    Uploads a local file into a Google Cloud Storage bucket.
     
 SYNTAX
-    New-GcsObject [-Bucket] <string> [-ObjectName] <string> [[-Contents] <string>] [-ContentType <string>] [-PredefinedAcl <string>] [-Force <SwitchParameter>] [<CommonParameters>]
+    New-GcsObject [-Bucket] <string> [-ObjectName] <string> [-Contents] <string> [-ContentType <string>] [-PredefinedAcl <string>] [-Force <SwitchParameter>] [<CommonParameters>]
     
     New-GcsObject [-Bucket] <string> [-ObjectName] <string> [-File] <string> [-ContentType <string>] [-PredefinedAcl <string>] [-Force <SwitchParameter>] [<CommonParameters>]
     
     
 DESCRIPTION
+    Uploads a local file into a Google Cloud Storage bucket.
     
 
 PARAMETERS
     -Bucket <string>
-        The name of the bucket to upload to.
+        The name of the bucket to upload to. Will also accept a Bucket object.
         
         Required?                    true
         Position?                    0
@@ -105,7 +107,7 @@ PARAMETERS
     -Contents <string>
         Text content to write to the Storage object. Ignored if File is specified.
         
-        Required?                    false
+        Required?                    true
         Position?                    2
         Default value                
         Accept pipeline input?       true (ByValue)
@@ -123,7 +125,7 @@ PARAMETERS
     -ContentType <string>
         Content type of the Cloud Storage object. e.g. "image/png" or "text/plain".
         
-        Defaults to "application/octet-stream" if not set.
+        For file uploads, the type will be inferred based on the file extension, defaulting to "application/octet-stream" if no match is found. When passing object content via the -Contents parameter, the type will default to "text/plain; charset=utf-8".
         
         Required?                    false
         Position?                    named
@@ -161,6 +163,14 @@ INPUTS
     
     
 OUTPUTS
+    
+    ----------  EXAMPLE 1  ----------
+    
+    Upload a local log file to GCS.
+    New-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt" `
+    -File "C:\logs\log-000.txt"
+    
+    
     
     
 RELATED LINKS

@@ -10,9 +10,9 @@
 
     <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
 
-    <title>Get-GcsObject</title>
+    <title>Add-GceAddress</title>
     <script src="//www.google.com/js/google.js"></script>
-    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/get-gcsobject.html">
+    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/add-gceaddress.html">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
     <link rel="stylesheet" href="//www.google.com/css/maia.css">
 </head>
@@ -49,7 +49,7 @@
           <!-- cmdlet-specific pages include the parent product. -->
           
           <li class="active">
-            <a href="/google-cloud-powershell/cmdlets/google-cloud-storage">Google Cloud Storage</a>
+            <a href="/google-cloud-powershell/cmdlets/google-compute-engine">Google Compute Engine</a>
           </li>
           
 
@@ -67,38 +67,80 @@ pre {
 }
 </style>
 
-<h1>Get-GcsObject</h1>
+<h1>Add-GceAddress</h1>
 <pre>
 NAME
-    Get-GcsObject
+    Add-GceAddress
     
 SYNOPSIS
-    Get-GcsObject returns the Google Cloud Storage Object metadata with the given name. (Use Find-GcsObject to return multiple objects.)
+    Adds a new address.
     
 SYNTAX
-    Get-GcsObject [-Bucket] <string> [-ObjectName] <string> [<CommonParameters>]
+    Add-GceAddress [-Project <string>] [-Region <string>] [-Object] <Address> [<CommonParameters>]
+    
+    Add-GceAddress [-Project <string>] [-Region <string>] [-Name] <string> [[-Description] <string>] [<CommonParameters>]
+    
+    Add-GceAddress [-Project <string>] [-Object] <Address> -Global <SwitchParameter> [<CommonParameters>]
+    
+    Add-GceAddress [-Project <string>] [-Name] <string> [[-Description] <string>] -Global <SwitchParameter> [<CommonParameters>]
     
     
 DESCRIPTION
-    Returns the give Storage object's metadata.
+    Adds a new static external IP address to Google Compute Engine.
     
 
 PARAMETERS
-    -Bucket <string>
-        Name of the bucket to check. Will also accept a Bucket object.
+    -Project <string>
+        The project that will own the address. Will default to the gcloud config.
         
-        Required?                    true
-        Position?                    0
+        Required?                    false
+        Position?                    named
         Default value                
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -ObjectName <string>
-        Name of the object to inspect.
+    -Region <string>
+        The region the address will be in. For non-global addresses, will default to the gcloud config.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Object <Address>
+        The Google.Apis.Compute.v1.Data.Address object with the information used to create an address.
         
         Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -Name <string>
+        The name of the address to create. Must comply with RFC1035.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -Description <string>
+        Human readable description of the address.
+        
+        Required?                    false
         Position?                    1
         Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Global <SwitchParameter>
+        If set, will create a global address, rather than a region specific one.
+        
+        Required?                    true
+        Position?                    named
+        Default value                False
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
@@ -109,6 +151,12 @@ PARAMETERS
         about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
     
 INPUTS
+    Google.Apis.Compute.v1.Data.Address
+        The Google.Apis.Compute.v1.Data.Address object with the information used to create an address.
+    
+    System.String
+        The name of the address to create. Must comply with RFC1035.
+    
     
 OUTPUTS
     

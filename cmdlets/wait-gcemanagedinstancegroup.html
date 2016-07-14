@@ -10,9 +10,9 @@
 
     <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
 
-    <title>Get-GcsObject</title>
+    <title>Wait-GceManagedInstanceGroup</title>
     <script src="//www.google.com/js/google.js"></script>
-    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/get-gcsobject.html">
+    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/wait-gcemanagedinstancegroup.html">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
     <link rel="stylesheet" href="//www.google.com/css/maia.css">
 </head>
@@ -49,7 +49,7 @@
           <!-- cmdlet-specific pages include the parent product. -->
           
           <li class="active">
-            <a href="/google-cloud-powershell/cmdlets/google-cloud-storage">Google Cloud Storage</a>
+            <a href="/google-cloud-powershell/cmdlets/google-compute-engine">Google Compute Engine</a>
           </li>
           
 
@@ -67,38 +67,67 @@ pre {
 }
 </style>
 
-<h1>Get-GcsObject</h1>
+<h1>Wait-GceManagedInstanceGroup</h1>
 <pre>
 NAME
-    Get-GcsObject
+    Wait-GceManagedInstanceGroup
     
 SYNOPSIS
-    Get-GcsObject returns the Google Cloud Storage Object metadata with the given name. (Use Find-GcsObject to return multiple objects.)
+    Waits for a Google Compute Engine managed instance group to be stable.
     
 SYNTAX
-    Get-GcsObject [-Bucket] <string> [-ObjectName] <string> [<CommonParameters>]
+    Wait-GceManagedInstanceGroup [-Project <string>] [-Zone <string>] [-Name] <string> [[-Timeout] <int>] [<CommonParameters>]
+    
+    Wait-GceManagedInstanceGroup [-Object] <InstanceGroupManager> [[-Timeout] <int>] [<CommonParameters>]
     
     
 DESCRIPTION
-    Returns the give Storage object's metadata.
+    Waits for all of the instances of a managed instance group to reach normal running state.
     
 
 PARAMETERS
-    -Bucket <string>
-        Name of the bucket to check. Will also accept a Bucket object.
+    -Project <string>
+        The project that owns the managed instance group.
         
-        Required?                    true
-        Position?                    0
+        Required?                    false
+        Position?                    named
         Default value                
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -ObjectName <string>
-        Name of the object to inspect.
+    -Zone <string>
+        The zone the managed instance group is in.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Name <string>
+        The name of the managed instance group to wait on.
         
         Required?                    true
-        Position?                    1
+        Position?                    0
         Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -Object <InstanceGroupManager>
+        The mananged instance group object to wait on.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -Timeout <int>
+        The maximum number of seconds to wait for each managed instance group. -1, the default, waits until all instances have no current action, no matter how long it takes. If the timeout expires, the wait will end with a warning.
+        
+        Required?                    false
+        Position?                    1
+        Default value                -1
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
@@ -109,6 +138,12 @@ PARAMETERS
         about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
     
 INPUTS
+    System.String
+        The name of the managed instance group to wait on.
+    
+    Google.Apis.Compute.v1.Data.InstanceGroupManager
+        The mananged instance group object to wait on.
+    
     
 OUTPUTS
     
