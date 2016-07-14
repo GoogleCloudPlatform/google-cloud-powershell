@@ -11,8 +11,10 @@
             <a href="{{ site.baseurl }}/">Home</a>
           </li>
 
-          {% assign isProductPage = '' + page.product + page.productName %}
-          <li {% unless isProductPage %}class="active"{% endunless %}>
+          <li
+              {% unless page.product or page.productName %}
+                class="active"
+              {% endunless %}>
             <a href="{{ site.baseurl }}/cmdlets/">Reference</a>
           </li>
 
