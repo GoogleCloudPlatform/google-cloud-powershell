@@ -3,6 +3,7 @@ using Google.Apis.Compute.v1.Data;
 using Google.PowerShell.Common;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Management.Automation;
 
 namespace Google.PowerShell.ComputeEngine
@@ -19,6 +20,11 @@ namespace Google.PowerShell.ComputeEngine
     [Cmdlet(VerbsCommon.Get, "GceImage", DefaultParameterSetName = ParameterSetNames.OfProject)]
     public class GetGceImageCmdlets : GceCmdlet
     {
+        private static readonly string[] DefaultProjects = {
+                "centos-cloud", "coreos-cloud", "debian-cloud", "debian-cloud",
+                "rhel-cloud", "suse-cloud", "ubuntu-os-cloud", "windows-cloud"
+            };
+
         private class ParameterSetNames
         {
             public const string OfProject = "OfProject";
@@ -45,47 +51,119 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The project that owns the image. This defaults to the gcloud config project, but very likely should
-        /// be something else, such as "debian-cloud", or "windows-cloud".
+        /// The project that owns the image. This defaults to a standard set of public image projects.
         /// </para>
         /// </summary>
         [Parameter(Position = 1)]
-        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; set; }
+        public string[] Project { get; set; } = DefaultProjects;
+
+        /// <summary>
+        /// <para type="description">
+        /// If set, deprecated images will be included.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.OfProject)]
+        public SwitchParameter IncludeDeprecated { get; set; }
 
         protected override void ProcessRecord()
         {
+            IEnumerable<Image> images;
             switch (ParameterSetName)
             {
                 case ParameterSetNames.OfProject:
-                    WriteObject(GetAllProjectImages(), true);
+                    images = GetAllProjectImages();
                     break;
                 case ParameterSetNames.ByName:
-                    WriteObject(Service.Images.Get(Project, Name).Execute());
+                    images = GetImagesByProject($"No image named {Name} was found.",
+                        (project) => Service.Images.Get(project, Name).Execute());
                     break;
                 case ParameterSetNames.ByFamily:
-                    WriteObject(Service.Images.GetFromFamily(Project, Family).Execute());
+                    images = GetImagesByProject($"No image of family {Family} was found.",
+                        (project) => Service.Images.GetFromFamily(project, Family).Execute());
                     break;
                 default:
                     throw UnknownParameterSetException;
+            }
+            WriteObject(images, true);
+        }
+
+        private IEnumerable<Image> GetImagesByProject(string exceptionMessage, Func<string, Image> getImage)
+        {
+            var images = new List<Image>();
+            var exceptions = new List<Exception>();
+            foreach (string project in Project)
+            {
+                try
+                {
+                    images.Add(getImage(project));
+                }
+                catch (Exception e)
+                {
+                    exceptions.Add(e);
+                }
+            }
+            if (images.Count == 0)
+            {
+                if (exceptions.Count == 1)
+                {
+                    throw exceptions[0];
+                }
+                else
+                {
+                    throw new AggregateException(exceptionMessage, exceptions);
+                }
+            }
+            else
+            {
+                foreach (Exception e in exceptions)
+                {
+                    WriteVerbose(e.Message);
+                }
+                return images;
             }
         }
 
         private IEnumerable<Image> GetAllProjectImages()
         {
-            ImagesResource.ListRequest request = Service.Images.List(Project);
-            do
+            var exceptions = new List<Exception>();
+            var unfilteredImages = Enumerable.Empty<Image>();
+            foreach (string project in Project)
             {
-                ImageList response = request.Execute();
-                if (response.Items != null)
+                try
                 {
-                    foreach (Image image in response.Items)
+                    ImagesResource.ListRequest request = Service.Images.List(project);
+                    do
                     {
-                        yield return image;
-                    }
+                        ImageList response = request.Execute();
+                        if (response.Items != null)
+                        {
+                            unfilteredImages = unfilteredImages.Concat(response.Items);
+                        }
+                        request.PageToken = response.NextPageToken;
+                    } while (request.PageToken != null && !Stopping);
                 }
-                request.PageToken = response.NextPageToken;
-            } while (request.PageToken != null && !Stopping);
+                catch (Exception e)
+                {
+                    exceptions.Add(e);
+                }
+            }
+
+            var filteredImages = unfilteredImages.Where(i => i.Deprecated == null);
+            var images = IncludeDeprecated ? unfilteredImages : filteredImages;
+
+            foreach (Image image in images)
+            {
+                yield return image;
+            }
+
+            if (exceptions.Count > 1)
+            {
+                throw new AggregateException("Errors occured for multiple projects", exceptions);
+            }
+            else if (exceptions.Count == 1)
+            {
+                throw exceptions[0];
+            }
         }
     }
 
