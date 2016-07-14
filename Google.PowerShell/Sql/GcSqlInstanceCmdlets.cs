@@ -375,7 +375,7 @@ namespace Google.PowerShell.Sql
         /// Export only schemas.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false,  ParameterSetName = ParameterSetNames.Sql)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.Sql)]
         public SwitchParameter SchemaOnly { get; set; }
 
         /// <summary>
@@ -442,7 +442,123 @@ namespace Google.PowerShell.Sql
             }
             InstancesResource.ExportRequest request = Service.Instances.Export(body, Project, Instance);
             Operation result = request.Execute();
-            WaitForSqlOperation(result);
+            result = WaitForSqlOperation(result);
+            if (result.Error != null)
+            {
+                throw new GoogleApiException("Google Cloud SQL Api", result.Error.ToString());
+            }
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Imports data into a Cloud SQL instance from a MySQL dump 
+    /// or CSV file in a Google Cloud Storage bucket. 
+    /// </para>
+    /// <para type="description">
+    /// Imports data into a Cloud SQL instance from a MySQL dump 
+    /// or CSV file in a Google Cloud Storage bucket.
+    /// Defaults to a SQL file, but if the CSV Parameter set is used it will export as
+    /// a CSV file.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsData.Import, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.Sql)]
+    public class ImportGcSqlInstanceCmdlet : GcSqlCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string Sql = "SQL";
+            public const string Csv = "CSV";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the project.
+        /// Defaults to the cloud sdk config for properties if not specified.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.Sql)]
+        [Parameter(ParameterSetName = ParameterSetNames.Csv)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the instance to have data exported.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.Sql)]
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.Csv)]
+        public string Instance { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        ///  The path to the file in Google Cloud Storage where the export will be stored.
+        ///  The URI is in the form gs://bucketName/fileName.
+        ///  If the file already exists, the operation fails.
+        ///  If fileType is SQL and the filename ends with .gz, the contents are compressed.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.Sql)]
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.Csv)]
+        public string Uri { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        ///  The database (for example, guestbook) to which the import is made.
+        ///  If fileType is SQL and no database is specified,
+        ///  it is assumed that the database is specified in the file to be imported.
+        ///  If fileType is CSV, it must be specified.
+        ///  If fileType is SQL and the filename ends with .gz, the contents are compressed.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 2, ParameterSetName = ParameterSetNames.Sql)]
+        [Parameter(Mandatory = true, Position = 2, ParameterSetName = ParameterSetNames.Csv)]
+        public string Database { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        ///  The table to which CSV data is imported.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 3, ParameterSetName = ParameterSetNames.Csv)]
+        public string DestinationTable { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        ///  The columns to which CSV data is imported. 
+        ///  If not specified, all columns of a database table are loaded with CSV data.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, Position = 4, ParameterSetName = ParameterSetNames.Csv)]
+        public string[] Column { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            InstancesImportRequest body = new InstancesImportRequest
+            {
+                ImportContext = new ImportContext
+                {
+                    Kind = "sql#importContext",
+                    Uri = Uri,
+                    FileType = ParameterSetName.ToString(),
+                    Database = Database
+                }
+            };
+            if (ParameterSetName == ParameterSetNames.Csv)
+            {
+                body.ImportContext.CsvImportOptions = new ImportContext.CsvImportOptionsData
+                {
+                    Columns = Column,
+                    Table = DestinationTable
+                };
+            }
+            InstancesResource.ImportRequest request = Service.Instances.Import(body, Project, Instance);
+            Operation result = request.Execute();
+            result = WaitForSqlOperation(result);
+            if (result.Error != null) {
+                throw new GoogleApiException("Google Cloud SQL Api", result.Error.Errors.ToString());
+            }
         }
     }
 }

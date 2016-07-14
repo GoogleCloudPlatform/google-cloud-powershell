@@ -188,4 +188,30 @@ Describe "Export-GcSqlInstance" {
 
 }
 
+Describe "Import-GcSqlInstance" {
+    # For these tests, test-db2 was used because an instance must have a database for it to work.
+    # A specific nondescript bucket with nondescript files was also used 
+    # because the permissions have to be set correctly
+    $r = Get-Random
+    # A random number is used to avoid collisions with the speed of creating
+    # and deleting instances.
+    $instance = "test-db2"
+
+    #Since getting operations can suffer from race conditions and Import- shouldn't return anything,
+    # We can only verify if these work by making sure the operation works until completion without erroring.
+    # This signifies the operation was successful in the regular API as well, since an operation can
+    # go through but still not be successful.
+    It "should be able to import a regular SQL file" {
+        {Import-GcSqlInstance "test-db2" "gs://gcsql-csharp-import-testing/testsqlS" "newguestbook"} | Should not Throw
+    }
+
+    It "should be able to import a regular CSV file" {
+        {Import-GcSqlInstance "test-db2" "gs://gcsql-csharp-import-testing/testsql.csv" "newguestbook" "entries"} | Should not Throw
+    }
+
+    It "should throw an error if something's wrong" {
+        {Import-GcSqlInstance "test-db2" "gs://gcsql-csharp-import-testing/testsql.gz" "newguestbook"} | Should Throw
+    }
+}
+
 Reset-GCloudConfig $oldActiveConfig $configName
