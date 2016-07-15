@@ -525,8 +525,8 @@ namespace Google.PowerShell.ComputeEngine
     {
         private class ParameterSetNames
         {
-            public const string ByName = nameof(ByName);
-            public const string ByObject = nameof(ByObject);
+            public const string ByName = "ByName";
+            public const string ByObject = "ByObject";
         }
         /// <summary>
         /// <para type="description">
@@ -607,8 +607,8 @@ namespace Google.PowerShell.ComputeEngine
     {
         private class ParameterSetNames
         {
-            public const string ByName = nameof(ByName);
-            public const string ByObject = nameof(ByObject);
+            public const string ByName = "ByName";
+            public const string ByObject = "ByObject";
         }
 
         /// <summary>
@@ -691,8 +691,8 @@ namespace Google.PowerShell.ComputeEngine
     {
         private class ParameterSetNames
         {
-            public const string ByName = nameof(ByName);
-            public const string ByObject = nameof(ByObject);
+            public const string ByName = "ByName";
+            public const string ByObject = "ByObject";
         }
 
         /// <summary>
@@ -775,8 +775,8 @@ namespace Google.PowerShell.ComputeEngine
     {
         private class ParameterSetNames
         {
-            public const string ByName = nameof(ByName);
-            public const string ByObject = nameof(ByObject);
+            public const string ByName = "ByName";
+            public const string ByObject = "ByObject";
         }
 
         /// <summary>
