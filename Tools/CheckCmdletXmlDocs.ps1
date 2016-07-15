@@ -78,7 +78,7 @@ function Check-CmdletDoc() {
         [ValidateSet('Gcs','Gce','Gcd','GcSql',
                      'Google Cloud Storage','Google Compute Engine','Google Cloud DNS','Google Cloud SQL')]
         [Alias('Products')]
-        [String[]]$CloudProducts,
+        [String[]] $CloudProducts,
 
         [Parameter(Mandatory=$true,
                    ValueFromPipeline=$true,
@@ -87,19 +87,19 @@ function Check-CmdletDoc() {
                    HelpMessage='List the full names of the cmdlets that you want to check.')]
         [ValidateNotNullOrEmpty()]
         [Alias('Cmdlets')]
-        [String[]]$CmdletNames,
+        [String[]] $CmdletNames,
 
         [Parameter(Mandatory=$false, 
                    HelpMessage='Include this optional switch to check example format, intro, and output.')]
         [Alias('DEC','ExampleCheck')]
-        [Switch]$DeepExampleCheck
+        [Switch] $DeepExampleCheck 
     )
 
     $binDirectory = Join-Path $PSScriptRoot "\..\Google.PowerShell\bin\"
     Write-Host($PSScriptRoot)
     Import-Module "$binDirectory\Debug\Google.PowerShell.dll"
 
-    $cmdlets = Get-Command -Module "Google.PowerShell" | sort Noun
+    $cmdlets = Get-Command -Module "Google.PowerShell" | Sort Noun
 
     # Get the cmdlets explicitly named if the CmdletNames parameter is specified.
     if ($CmdletNames) {
@@ -198,9 +198,9 @@ function InSpecifiedCloudProducts($specifiedProducts, $productMapping, $apiMappi
 function DoDeepExampleCheck($docObj) { 
     # Only do deep check if the documentation has at least 1 example.
     if (($docObj.examples | Out-String).Trim() -ne "") { 
-        $noPSStart = New-Object System.Collections.Generic.List[System.Object]
-        $noIntro = New-Object System.Collections.Generic.List[System.Object]
-        $noOutput = New-Object System.Collections.Generic.List[System.Object]
+        $noPSStart = @{}
+        $noIntro = @{}
+        $noOutput = @{}
         $currentExample = 1; 
 
         foreach ($example in $docObj.examples.example) {
@@ -208,35 +208,35 @@ function DoDeepExampleCheck($docObj) {
                 
             # Check if example has command starting with PS C:\>.
             if (-not ($exampleString -match [regex]::Escape('PS C:\>'))) {
-                $noPSStart.Add($currentExample)
+                $noPSStart.Add($currentExample, "PS")
             } else {
                 # If yes, check if the command has an intro and example output.
                 $lineSplitExample = $exampleString.Split("`n")
-                $PSline = ($lineSplitExample | select-string "PS C:\\>" | select LineNumber).LineNumber
+                $PSline = ($lineSplitExample | Select-string "PS C:\\>" | Select LineNumber).LineNumber
 
                 if ($PSline -le 3) {
-                    $noIntro.Add($currentExample)
+                    $noIntro.Add($currentExample, "Intro")
                 }
 
                 if (($lineSplitExample.Count - $PSline) -le 0) {
-                    $noOutput.Add($currentExample)
+                    $noOutput.Add($currentExample, "Output")
                 }
             }
 
             $currentExample++
         }
 
-        if ($noPSStart) {
-            "Example number(s) " + ($noPSStart -join ", ") + " does(do) not have commands starting with the " + 
+        if ($noPSStart.Count -gt 0) {
+            "Example number(s) " + (($noPSStart.Keys | Sort { [int]$_ }) -join ", ") + " does(do) not have commands starting with the " + 
             "expected PS C:\>. (Thus, cannot check for command intro or example output.)" | Write-Warning
         }
 
-        if ($noIntro) {
-            "Example number(s) " + ($noIntro -join ", ") + " has(have) no introduction." | Write-Warning
+        if ($noIntro.Count -gt 0) {
+            "Example number(s) " + (($noIntro.Keys | Sort { [int]$_ }) -join ", ") + " has(have) no introduction." | Write-Warning
         }
 
-        if ($noOutput) {
-            "Example number(s) " + ($noOutput -join ", ") + " has(have) no outputs." | Write-Warning
+        if ($noOutput.Count -gt 0) {
+            "Example number(s) " + (($noOutput.Keys | Sort { [int]$_ }) -join ", ") + " has(have) no outputs." | Write-Warning
         }
     }
 }
