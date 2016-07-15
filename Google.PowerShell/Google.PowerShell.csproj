@@ -172,9 +172,7 @@
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="ReleaseFiles\AppendPsModulePath.ps1">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <None Include="ReleaseFiles\AppendPsModulePath.ps1" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>

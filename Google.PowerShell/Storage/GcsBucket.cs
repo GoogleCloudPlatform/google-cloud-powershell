@@ -81,24 +81,50 @@ namespace Google.PowerShell.CloudStorage
         }
     }
 
+    /// <summary>
+    /// <para type="synopsis">
+    /// Creates a new Google Cloud Storage bucket.
+    /// </para>
+    /// <para type="description">
+    /// Creates a new Google Cloud Storage bucket.
+    /// </para>
+    /// </summary>
     [Cmdlet(VerbsCommon.New, "GcsBucket")]
     public class NewGcsBucketCmdlet : GcsCmdlet
     {
+        /// <summary>
+        /// <para type="description">
+        /// Name of the bucket.
+        /// </para>
+        /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
         public string Name { get; set; }
 
         /// <summary>
+        /// <para type="description">
         /// The name of the project associated with the command. If not set via PowerShell parameter processing, will
         /// default to the Cloud SDK's DefaultProject property.
+        /// </para>
         /// </summary>
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// Storage class for the bucket. STANDARD, NEARLINE, or DURABLE_REDUCED_AVAILABILITY. See
+        /// https://cloud.google.com/storage/docs/storage-classes for more information.
+        /// </para>
+        /// </summary>
         [Parameter(Mandatory = false)]
         [ValidateSet("DURABLE_REDUCED_AVAILABILITY", "NEARLINE", "STANDARD", IgnoreCase = true)]
         public string StorageClass { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// Location for the bucket. e.g. ASIA, EU, US.
+        /// </para>
+        /// </summary>
         [Parameter(Mandatory = false)]
         [ValidateSet("ASIA", "EU", "US", IgnoreCase = false)]
         public string Location { get; set; }
@@ -122,6 +148,14 @@ namespace Google.PowerShell.CloudStorage
         }
     }
 
+    /// <summary>
+    /// <para type="synopsis">
+    /// Deletes a Google Cloud Storage Bucket.
+    /// </para>
+    /// <para type="description">
+    /// Deletes a Google Cloud Storage Bucket.
+    /// </para>
+    /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GcsBucket", SupportsShouldProcess = true)]
     public class RemoveGcsBucketCmdlet : GcsCmdlet
     {
