@@ -87,9 +87,9 @@ Describe "Add-GceRoute" {
             Compare-Object $getRoute $addedRoute | Should BeNullOrEmpty
         }
         
-        $image = (Get-GceImage debian-cloud -Family debian-8).SelfLink
+        $image = Get-GceImage debian-cloud -Family debian-8
         $instanceName = "test-route-instance-$r"
-        New-GceInstanceConfig $instanceName -DiskImage $image -MachineType "f1-micro" -CanIpForward $true |
+        New-GceInstanceConfig $instanceName -DiskImage $image -MachineType "f1-micro" -CanIpForward |
             Add-GceInstance -Project $project -Zone $zone
         $instance = Get-GceInstance $instanceName
 

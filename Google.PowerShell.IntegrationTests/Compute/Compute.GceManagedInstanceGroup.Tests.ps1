@@ -2,7 +2,7 @@
 Install-GcloudCmdlets
 
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
-$image = "projects/windows-cloud/global/images/family/windows-2012-r2"
+$image = Get-GceImage -Family "windows-2012-r2"
 $machineType = "f1-micro"
 $r = Get-Random
 $templateName = "test-managed-instance-groups-$r"
