@@ -1,10 +1,7 @@
 ﻿// Copyright 2015 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
-using Google;
-using Google.Apis.Auth.OAuth2;
 using Google.Apis.Download;
-using Google.Apis.Services;
 using Google.Apis.Storage.v1;
 using Google.Apis.Storage.v1.Data;
 using Google.PowerShell.Common;
@@ -108,7 +105,8 @@ namespace Google.PowerShell.CloudStorage
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
-        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
+        [PropertyByTypeTransformation(Property = nameof(Apis.Storage.v1.Data.Bucket.Name),
+            TypeToTransform = typeof(Bucket))]
         public string Bucket { get; set; }
 
         /// <summary>
@@ -124,9 +122,9 @@ namespace Google.PowerShell.CloudStorage
         /// Text content to write to the Storage object. Ignored if File is specified.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = true, ValueFromPipeline = true,
-            ParameterSetName = ParameterSetNames.ContentsFromString)]
-        public string Contents { get; set; }
+        [Parameter(ParameterSetName = ParameterSetNames.ContentsFromString,
+            Position = 2, ValueFromPipeline = true)]
+        public string Contents { get; set; } = "";
 
         /// <summary>
         /// <para type="description">
