@@ -227,7 +227,7 @@ namespace Google.PowerShell.CloudStorage
                 bool objectExists = TestObjectExists(service, Bucket, ObjectName);
                 if (objectExists && !Force.IsPresent)
                 {
-                    throw new PSArgumentException("Storage object already exists. Use -Force to overwrite.");
+                    throw new PSArgumentException($"Storage object '{ObjectName}' already exists. Use -Force to overwrite.");
                 }
 
                 Object newGcsObject = UploadGcsObject(
@@ -460,7 +460,10 @@ namespace Google.PowerShell.CloudStorage
 
             ObjectsResource.DeleteRequest delReq = service.Objects.Delete(Bucket, ObjectName);
             string result = delReq.Execute();
-            WriteObject(result);
+            if (!string.IsNullOrWhiteSpace(result))
+            {
+                WriteObject(result);
+            }
         }
     }
 
@@ -552,7 +555,7 @@ namespace Google.PowerShell.CloudStorage
             bool fileExists = File.Exists(qualifiedPath);
             if (fileExists && !Force.IsPresent)
             {
-                throw new PSArgumentException("File already exists. Use -Force to overwrite.");
+                throw new PSArgumentException($"File '{qualifiedPath}' already exists. Use -Force to overwrite.");
             }
 
 
@@ -659,7 +662,7 @@ namespace Google.PowerShell.CloudStorage
                 {
                     if (!Force.IsPresent)
                     {
-                        throw new PSArgumentException("Storage object does not exist. Use -Force to ignore.");
+                        throw new PSArgumentException($"Storage object '{ObjectName}' does not exist. Use -Force to ignore.");
                     }
                 }
                 // TODO(chrsmith): In the -Force case we are using the default octet-stream MIME type. Guess
