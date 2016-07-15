@@ -198,9 +198,9 @@ function InSpecifiedCloudProducts($specifiedProducts, $productMapping, $apiMappi
 function DoDeepExampleCheck($docObj) { 
     # Only do deep check if the documentation has at least 1 example.
     if (($docObj.examples | Out-String).Trim() -ne "") { 
-        $noPSStart = @{}
-        $noIntro = @{}
-        $noOutput = @{}
+        $noPSStart = @()
+        $noIntro = @()
+        $noOutput = @()
         $currentExample = 1; 
 
         foreach ($example in $docObj.examples.example) {
@@ -208,18 +208,18 @@ function DoDeepExampleCheck($docObj) {
                 
             # Check if example has command starting with PS C:\>.
             if (-not ($exampleString -match [regex]::Escape('PS C:\>'))) {
-                $noPSStart.Add($currentExample, "PS")
+                $noPSStart += $currentExample
             } else {
                 # If yes, check if the command has an intro and example output.
                 $lineSplitExample = $exampleString.Split("`n")
                 $PSline = ($lineSplitExample | Select-string "PS C:\\>" | Select LineNumber).LineNumber
 
                 if ($PSline -le 3) {
-                    $noIntro.Add($currentExample, "Intro")
+                    $noIntro += $currentExample
                 }
 
                 if (($lineSplitExample.Count - $PSline) -le 0) {
-                    $noOutput.Add($currentExample, "Output")
+                    $noOutput += $currentExample
                 }
             }
 
@@ -227,16 +227,16 @@ function DoDeepExampleCheck($docObj) {
         }
 
         if ($noPSStart.Count -gt 0) {
-            "Example number(s) " + (($noPSStart.Keys | Sort { [int]$_ }) -join ", ") + " does(do) not have commands starting with the " + 
+            "Example number(s) " + ($noPSStart -join ", ") + " does(do) not have commands starting with the " + 
             "expected PS C:\>. (Thus, cannot check for command intro or example output.)" | Write-Warning
         }
 
         if ($noIntro.Count -gt 0) {
-            "Example number(s) " + (($noIntro.Keys | Sort { [int]$_ }) -join ", ") + " has(have) no introduction." | Write-Warning
+            "Example number(s) " + ($noIntro -join ", ") + " has(have) no introduction." | Write-Warning
         }
 
         if ($noOutput.Count -gt 0) {
-            "Example number(s) " + (($noOutput.Keys | Sort { [int]$_ }) -join ", ") + " has(have) no outputs." | Write-Warning
+            "Example number(s) " + ($noOutput -join ", ") + " has(have) no outputs." | Write-Warning
         }
     }
 }
