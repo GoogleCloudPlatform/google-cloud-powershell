@@ -856,7 +856,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceInstance")]
-    public class UpdateGceInstanceCmdlet : GceConcurrentCmdlet
+    public class SetGceInstanceCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
         {
@@ -977,7 +977,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Disk)]
         [Parameter(ParameterSetName = ParameterSetNames.DiskByObject)]
-        public string[] DetachDisk { get; set; } = { };
+        public string[] RemoveDisk { get; set; } = { };
 
         /// <summary>
         /// <para type="description">
@@ -1089,7 +1089,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         private void ProcessDisk()
         {
-            foreach (string diskName in DetachDisk)
+            foreach (string diskName in RemoveDisk)
             {
                 InstancesResource.DetachDiskRequest request = Service.Instances.DetachDisk(
                     _project, _zone, _name, diskName);

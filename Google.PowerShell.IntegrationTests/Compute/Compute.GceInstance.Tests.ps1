@@ -343,7 +343,7 @@ Describe "Set-GceInstance" {
         { Set-GceInstance $instance -Project "asdf" -AddTag "alpha" } | Should Throw 403
     }
 
-    It "should fail changinon existing instance" {
+    It "should fail changing non-existing instance" {
         { Set-GceInstance $instance -AddTag "alpha" } | Should Throw 404
     }
 
@@ -410,7 +410,7 @@ Describe "Set-GceInstance" {
             $instanceObj.Disks.Count | Should Be 2
             ($instanceObj.Disks | Where {$_.DeviceName -eq $newDiskName}).Count | Should Be 1
 
-            Set-GceInstance -Project $project -Zone $zone2 $instance -DetachDisk $newDiskName
+            Set-GceInstance -Project $project -Zone $zone2 $instance -RemoveDisk $newDiskName
             (Get-GceInstance -Project $project -Zone $zone2 $instance).Disks.Count | Should Be 1
         }
 
