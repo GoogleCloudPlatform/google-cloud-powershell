@@ -20,7 +20,7 @@ namespace Google.PowerShell.Sql
     /// This is determined by if Instance is specified or not.
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Get, "GcSqlInstance")]
+    [Cmdlet(VerbsCommon.Get, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.GetList)]
     public class GetGcSqlInstanceCmdlet : GcSqlCmdlet
     {
         internal class ParameterSetNames
@@ -35,8 +35,7 @@ namespace Google.PowerShell.Sql
         /// Defaults to the cloud sdk config for properties if not specified.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.GetSingle)]
-        [Parameter(ParameterSetName = ParameterSetNames.GetList)]
+        [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
@@ -244,10 +243,7 @@ namespace Google.PowerShell.Sql
         /// The name of the Cloud SQL instance to be created as a clone.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 1,
-            ParameterSetName = ParameterSetNames.ByName)]
-        [Parameter(Mandatory = true, Position = 1,
-            ParameterSetName = ParameterSetNames.ByInstance)]
+        [Parameter(Mandatory = true, Position = 1)]
         public string CloneName { get; set; }
 
         /// <summary>
@@ -255,8 +251,7 @@ namespace Google.PowerShell.Sql
         /// Name of the binary log file for a Cloud SQL instance.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 2, ParameterSetName = ParameterSetNames.ByName)]
-        [Parameter(Mandatory = true, Position = 2, ParameterSetName = ParameterSetNames.ByInstance)]
+        [Parameter(Mandatory = true, Position = 2)]
         public string BinaryLogFileName { get; set; }
 
         /// <summary>
@@ -264,8 +259,7 @@ namespace Google.PowerShell.Sql
         /// Position (offset) within the binary log file.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 3, ParameterSetName = ParameterSetNames.ByName)]
-        [Parameter(Mandatory = true, Position = 3, ParameterSetName = ParameterSetNames.ByInstance)]
+        [Parameter(Mandatory = true, Position = 3)]
         public long BinaryLogPosition { get; set; }
 
         /// <summary>
@@ -340,12 +334,10 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// Name of the project.
-        /// Defaults to the cloud sdk config for properties if not specified.
+        /// Name of the project. Defaults to the active cloud sdk config for properties if not specified.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.Sql)]
-        [Parameter(ParameterSetName = ParameterSetNames.Csv)]
+        [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
@@ -354,21 +346,21 @@ namespace Google.PowerShell.Sql
         /// The name of the instance to have data exported.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.Sql)]
-        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.Csv)]
+        [Parameter(Mandatory = true, Position = 0)]
         public string Instance { get; set; }
 
         /// <summary>
         /// <para type="description">
         ///  The path to the file in Google Cloud Storage where the export will be stored.
-        ///  The URI is in the form gs://bucketName/fileName.
-        ///  If the file already exists, the operation fails.
-        ///  If fileType is SQL and the filename ends with .gz, the contents are compressed.
+        ///  The URI is in the form "gs://bucketName/fileName."
+        ///  <para type="description">
+        ///   If the file already exists, the operation fails.
+        ///  </para>
+        ///  If the parameter set is SQL and the filename ends with .gz, the contents are compressed.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.Sql)]
-        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.Csv)]
-        public string Uri { get; set; }
+        [Parameter(Mandatory = true, Position = 1)]
+        public string CloudStorageDestination { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -395,8 +387,7 @@ namespace Google.PowerShell.Sql
         /// If exporting as CSV and selectQuery also specifies the database, this field will be ignored.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.Sql)]
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.Csv)]
+        [Parameter(Mandatory = false)]
         public string[] Database { get; set; }
 
 
@@ -418,7 +409,7 @@ namespace Google.PowerShell.Sql
                 {
                     Kind = "sql#exportContext",
                     Databases = Database,
-                    Uri = Uri,
+                    Uri = CloudStorageDestination,
                     FileType = ParameterSetName.ToString()
                 }
             };
@@ -445,7 +436,10 @@ namespace Google.PowerShell.Sql
             result = WaitForSqlOperation(result);
             if (result.Error != null)
             {
-                throw new GoogleApiException("Google Cloud SQL Api", result.Error.ToString());
+                foreach (OperationError error in result.Error.Errors)
+                {
+                    throw new GoogleApiException("Google Cloud SQL API", error.Message + error.Code);
+                }
             }
         }
     }
@@ -457,9 +451,10 @@ namespace Google.PowerShell.Sql
     /// </para>
     /// <para type="description">
     /// Imports data into a Cloud SQL instance from a MySQL dump 
-    /// or CSV file in a Google Cloud Storage bucket.
-    /// Defaults to a SQL file, but if the CSV Parameter set is used it will export as
-    /// a CSV file.
+    /// or CSV file stored in a Google Cloud Storage bucket.
+    /// 
+    /// Only one database may be imported from a MySQL file,
+    /// and only one table may be imported from a CSV file.
     /// </para>
     /// </summary>
     [Cmdlet(VerbsData.Import, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.Sql)]
@@ -473,52 +468,46 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// Name of the project.
-        /// Defaults to the cloud sdk config for properties if not specified.
+        /// Name of the project. Defaults to the active cloud sdk config for properties if not specified.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.Sql)]
-        [Parameter(ParameterSetName = ParameterSetNames.Csv)]
+        [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// The name of the instance to have data exported.
+        /// The name of the instance to have data exported to.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.Sql)]
-        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.Csv)]
+        [Parameter(Mandatory = true, Position = 0)]
         public string Instance { get; set; }
 
         /// <summary>
         /// <para type="description">
-        ///  The path to the file in Google Cloud Storage where the export will be stored.
-        ///  The URI is in the form gs://bucketName/fileName.
-        ///  If the file already exists, the operation fails.
-        ///  If fileType is SQL and the filename ends with .gz, the contents are compressed.
+        ///  The path to the file in Google Cloud Storage where the import file is stored.
+        ///  The URI is in the form "gs://bucketName/fileName".
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.Sql)]
-        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.Csv)]
-        public string Uri { get; set; }
+        [Parameter(Mandatory = true, Position = 1)]
+        public string CloudStorageObject { get; set; }
 
         /// <summary>
         /// <para type="description">
-        ///  The database (for example, guestbook) to which the import is made.
-        ///  If fileType is SQL and no database is specified,
+        ///  The database inside of the Instance (for example, guestbook) to which the import is made.
+        ///  It must already exist.
+        ///  If filetype is SQL and no database is specified,
         ///  it is assumed that the database is specified in the file to be imported.
-        ///  If fileType is CSV, it must be specified.
-        ///  If fileType is SQL and the filename ends with .gz, the contents are compressed.
+        ///  The filetype of the file is assumed to be the corresponding parameter set.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 2, ParameterSetName = ParameterSetNames.Sql)]
-        [Parameter(Mandatory = true, Position = 2, ParameterSetName = ParameterSetNames.Csv)]
+        [Parameter(Mandatory = true, Position = 2)]
         public string Database { get; set; }
 
         /// <summary>
         /// <para type="description">
         ///  The table to which CSV data is imported.
+        ///  Must be specified for a CSV file.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 3, ParameterSetName = ParameterSetNames.Csv)]
@@ -526,8 +515,8 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        ///  The columns to which CSV data is imported. 
-        ///  If not specified, all columns of a database table are loaded with CSV data.
+        ///  The columns of the CSV data to import.
+        ///  If not specified, all columns are imported.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, Position = 4, ParameterSetName = ParameterSetNames.Csv)]
@@ -540,9 +529,9 @@ namespace Google.PowerShell.Sql
                 ImportContext = new ImportContext
                 {
                     Kind = "sql#importContext",
-                    Uri = Uri,
+                    Uri = CloudStorageObject,
                     FileType = ParameterSetName.ToString(),
-                    Database = Database
+                    Database = Database,
                 }
             };
             if (ParameterSetName == ParameterSetNames.Csv)
@@ -557,7 +546,10 @@ namespace Google.PowerShell.Sql
             Operation result = request.Execute();
             result = WaitForSqlOperation(result);
             if (result.Error != null) {
-                throw new GoogleApiException("Google Cloud SQL Api", result.Error.Errors.ToString());
+                foreach (OperationError error in result.Error.Errors)
+                {
+                    throw new GoogleApiException("Google Cloud SQL API", error.Message + error.Code);
+                }
             }
         }
     }
