@@ -130,7 +130,7 @@ function Check-CmdletDoc() {
         $docObj = Get-Help -Full $cmdlet.Name
 
         # Check the documentation for important information/categories and write relevant warnings.
-        AllFieldWarnings $docObj $productMapping.Value
+        WriteAllFieldWarnings $docObj $productMapping.Value
 
         # If there are examples, and the user has chosen a DeepExampleCheck, check if the examples include a command
         # starting with the usual PS C:\>. 
@@ -142,13 +142,11 @@ function Check-CmdletDoc() {
 }
 
 # Write warnings for all important fields in a cmdlet's documentation.
-function AllFieldWarnings ($docObj, $cloudProduct) {
-    $cmdletName = ($docObj.Name | Out-String).Trim()
-
+function WriteAllFieldWarnings ($docObj, $cloudProduct) {
     # Creating mapping for field name and value in this cmdlet's documentation.
     $docFields = @{
         "CloudProduct" = $cloudProduct
-        "Name" = $cmdletName
+        "Name" = ($docObj.Name | Out-String).Trim()
         "Synopsis" = ($docObj.Synopsis | Out-String).Trim()
         "Description" = ($docObj.Description | Out-String).Trim()
         "OutputType" = ($docObj.returnValues | Out-String).Trim()
@@ -158,7 +156,7 @@ function AllFieldWarnings ($docObj, $cloudProduct) {
     # Add warnings for each empty field.
     foreach ($docField in $docFields.GetEnumerator()) {
         if ($docField.Value -eq "") {
-            $warning = WriteMissingFieldWarning $docField.Key
+            WriteMissingFieldWarning $docField.Key
         }
     }
 }
@@ -198,8 +196,6 @@ function InSpecifiedCloudProducts($specifiedProducts, $productMapping, $apiMappi
 
 # Given a cmdlet's documention, conduct a deep example check and return relevant warnings for its examples.
 function DoDeepExampleCheck($docObj) { 
-    $deepExampleWarnings = New-Object System.Collections.Generic.List[System.Object]
-
     # Only do deep check if the documentation has at least 1 example.
     if (($docObj.examples | Out-String).Trim() -ne "") { 
         $noPSStart = New-Object System.Collections.Generic.List[System.Object]
@@ -208,7 +204,7 @@ function DoDeepExampleCheck($docObj) {
         $currentExample = 1; 
 
         foreach ($example in $docObj.examples.example) {
-            $exampleString = ($example  | Out-String).Trim()
+            $exampleString = ($example | Out-String).Trim()
                 
             # Check if example has command starting with PS C:\>.
             if (-not ($exampleString -match [regex]::Escape('PS C:\>'))) {
