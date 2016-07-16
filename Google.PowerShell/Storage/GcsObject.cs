@@ -22,8 +22,6 @@ namespace Google.PowerShell.CloudStorage
     // TODO(chrsmith): Provide a way to upload an entire directory to Gcs. Reuse New-GcsObject?
     // Upload-GcsObject?
 
-    // TODO(chrsmith): Provide a way to test if an object exists, a la Test-GcsObject.
-
     /// <summary>
     /// Base class for Cloud Storage Object cmdlets. Used to reuse common methods.
     /// </summary>
@@ -677,6 +675,55 @@ namespace Google.PowerShell.CloudStorage
                 Object updatedGcsObject = UploadGcsObject(
                     service, Bucket, ObjectName, contentStream,
                     contentType);
+            }
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Verify the existence of a Cloud Storage Object.
+    /// </para>
+    /// <para type="description">
+    /// Verify the existence of a Cloud Storage Object.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsDiagnostic.Test, "GcsObject")]
+    public class TestGcsObjectCmdlet : GcsCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// Name of the containing bucket. Will also accept a Bucket object.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true)]
+        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
+        public string Bucket { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the object to check for.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 1, Mandatory = true)]
+        public string ObjectName { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            base.ProcessRecord();
+            var service = GetStorageService();
+
+            // Unfortunately there is no way to test if an object exists on the API, so we
+            // just issue a GET and intercept the 404 case.
+            try
+            {
+                ObjectsResource.GetRequest objGetReq = service.Objects.Get(Bucket, ObjectName);
+                objGetReq.Execute();
+
+                WriteObject(true);
+            }
+            catch (GoogleApiException ex) when (ex.Error.Code == 404)
+            {
+                WriteObject(false);
             }
         }
     }
