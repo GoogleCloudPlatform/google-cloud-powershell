@@ -433,4 +433,24 @@ Describe "Write-GcsObject" {
     # as its existing ACLs. (Since we are uploading a new object in-place.)
 }
 
+Describe "Test-GcsObject" {
+    $bucket = "gcps-test-object-testing"
+    Create-TestBucket $project $bucket
+
+    It "should work" {
+        Test-GcsObject $bucket "test-obj" | Should Be $false
+        $obj = "can you hear me now?" | New-GcsObject $bucket "test-obj"
+        Test-GcsObject $bucket "test-obj" | Should Be $true
+        $obj | Remove-GcsObject
+    }
+
+    It "should return false if the Bucket does not exist" {
+        Test-GcsObject "bucket-aad2fjadkdmgzadfhj4" "obj.txt"| Should Be $false
+    }
+
+    It "should fail if the bucket is not accessible" {
+        { Test-GcsObject "asdf" "gcs-object.txt" } | Should Throw "has been disabled"
+    }
+}
+
 Reset-GCloudConfig $oldActiveConfig $configName
