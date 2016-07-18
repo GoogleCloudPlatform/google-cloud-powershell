@@ -546,4 +546,83 @@ namespace Google.PowerShell.Sql
             }
         }
     }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Restarts a Cloud SQL Instance.
+    /// </para>
+    /// <para type="description">
+    /// Restarts the specified Cloud SQL Instance.
+    /// </para>
+    /// <para type="description">
+    /// If a Project is specified, it will restart the specified Instance in that project. Otherwise, the project 
+    /// defaults to the Cloud SDK Config for properties. 
+    /// </para>
+    /// <example>
+    ///   <para> Restart the SQL instance "test1" from the Project "testing."</para>
+    ///   <para><code>PS C:\> Restart-GcSqlInstance -Project "testing" -Instance "test1"</code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command returns nothing.)</para>
+    /// </example>
+    /// </summary>
+    [Cmdlet(VerbsLifecycle.Restart, "GcSqlInstance")]
+    public class RestartGcSqlInstanceCmdlet : GcSqlCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByInstance = "ByInstance";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the project in which the instance resides.
+        /// Defaults to the cloud sdk config for properties if not specified.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name/ID of the Instance resource to restart.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 1)]
+        [Alias("Name","Id")]
+        public string Instance { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The DatabaseInstance that describes the instance we want to remove.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true, Position = 0, 
+                   ValueFromPipeline = true)]
+        public DatabaseInstance InstanceObject { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            string projectName;
+            string instanceName;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.ByName:
+                    projectName = Project;
+                    instanceName = Instance;
+                    break;
+                case ParameterSetNames.ByInstance:
+                    projectName = InstanceObject.Project;
+                    instanceName = InstanceObject.Name;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+
+            InstancesResource.RestartRequest instRestartRequest = Service.Instances.Restart(projectName, instanceName);
+            Operation instRestartResponse = instRestartRequest.Execute();
+            WaitForSqlOperation(instRestartResponse);
+        }
+    }
 }

@@ -856,7 +856,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceInstance")]
-    public class UpdateGceInstanceCmdlet : GceConcurrentCmdlet
+    public class SetGceInstanceCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
         {
@@ -950,7 +950,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.AccessConfig)]
         [Parameter(ParameterSetName = ParameterSetNames.AccessConfigByObject)]
-        public AccessConfig[] NewAccessConfig { get; set; } = { };
+        public AccessConfig[] AddAccessConfig { get; set; } = { };
 
         /// <summary>
         /// <para type="description">
@@ -959,11 +959,12 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.AccessConfig)]
         [Parameter(ParameterSetName = ParameterSetNames.AccessConfigByObject)]
-        public string[] DeleteAccessConfig { get; set; } = { };
+        public string[] RemoveAccessConfig { get; set; } = { };
 
         /// <summary>
         /// <para type="description">
-        /// Name of the disk to attach.
+        /// The disk to attach. Can the name of a disk, a disk object from Get-GceDisk, or an attached disk
+        /// object from New-GceAttachedDiskConfig.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Disk)]
@@ -977,7 +978,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Disk)]
         [Parameter(ParameterSetName = ParameterSetNames.DiskByObject)]
-        public string[] DetachDisk { get; set; } = { };
+        public string[] RemoveDisk { get; set; } = { };
 
         /// <summary>
         /// <para type="description">
@@ -1067,7 +1068,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         private void ProcessAccessConfig()
         {
-            foreach (string configName in DeleteAccessConfig)
+            foreach (string configName in RemoveAccessConfig)
             {
                 InstancesResource.DeleteAccessConfigRequest request = Service.Instances.DeleteAccessConfig(
                     _project, _zone, _name, configName, NetworkInterface);
@@ -1075,7 +1076,7 @@ namespace Google.PowerShell.ComputeEngine
                 AddZoneOperation(_project, _zone, operation);
             }
 
-            foreach (AccessConfig accessConfig in NewAccessConfig)
+            foreach (AccessConfig accessConfig in AddAccessConfig)
             {
                 InstancesResource.AddAccessConfigRequest request = Service.Instances.AddAccessConfig(
                     accessConfig, _project, _zone, _name, NetworkInterface);
@@ -1089,7 +1090,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         private void ProcessDisk()
         {
-            foreach (string diskName in DetachDisk)
+            foreach (string diskName in RemoveDisk)
             {
                 InstancesResource.DetachDiskRequest request = Service.Instances.DetachDisk(
                     _project, _zone, _name, diskName);
@@ -1101,13 +1102,13 @@ namespace Google.PowerShell.ComputeEngine
             {
                 // Allow for taking Disk, AttachedDisk, and string objects.
                 AttachedDisk newDisk;
-                if (diskParam is AttachedDisk)
+                if (diskParam is AttachedDisk || (diskParam as PSObject)?.BaseObject is AttachedDisk)
                 {
-                    newDisk = diskParam as AttachedDisk;
+                    newDisk = diskParam as AttachedDisk ?? (diskParam as PSObject)?.BaseObject as AttachedDisk;
                 }
                 else
                 {
-                    Disk disk = diskParam as Disk;
+                    Disk disk = diskParam as Disk ?? (diskParam as PSObject)?.BaseObject as Disk;
                     if (disk == null)
                     {
                         disk = Service.Disks.Get(_project, _zone, diskParam.ToString()).Execute();
