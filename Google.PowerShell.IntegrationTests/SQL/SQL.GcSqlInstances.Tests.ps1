@@ -223,7 +223,8 @@ Describe "Import-GcSqlInstance" {
     }
 
     It "should throw an error if something's wrong" {
-        { Import-GcSqlInstance "test-db2" "gs://gcsql-csharp-import-testing/testsql.gz" "newguestbook" } | Should Throw
+        { Import-GcSqlInstance "test-db2" "gs://gcsql-csharp-import-testing/testsql.gz" "newguestbook" } | Should Throw `
+        "ERROR 1840 (HY000) at line 24: @@GLOBAL.GTID_PURGED can only be set when @@GLOBAL.GTID_EXECUTED is empty."
     }
 }
 

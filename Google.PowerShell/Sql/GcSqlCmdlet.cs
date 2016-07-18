@@ -42,6 +42,7 @@ namespace Google.PowerShell.Sql
             {
                 if (op.Error != null) {
                     WriteWarning(op.Error.ToString());
+                    return op;
                 }
                 Thread.Sleep(200);
                 OperationsResource.GetRequest request = Service.Operations.Get(op.TargetProject, op.Name);

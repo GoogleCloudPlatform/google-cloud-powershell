@@ -32,7 +32,7 @@ namespace Google.PowerShell.Sql
         /// <summary>
         /// <para type="description">
         /// Project name of the project that contains instance(s).
-        /// Defaults to the cloud sdk config for properties if not specified.
+        /// Defaults to the Cloud SDK configuration for properties if not specified.
         /// </para>
         /// </summary>
         [Parameter]
@@ -97,8 +97,7 @@ namespace Google.PowerShell.Sql
     {
         /// <summary>
         /// <para type="description">
-        /// Name of the project.
-        /// Defaults to the cloud sdk config for properties if not specified.
+        /// Name of the project. Defaults to the Cloud SDK configuration for properties if not specified.
         /// </para>
         /// </summary>
         [Parameter]
@@ -148,8 +147,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// Name of the project.
-        /// Defaults to the cloud sdk config for properties if not specified.
+        /// Name of the project. Defaults to the Cloud SDK configuration for properties if not specified.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
@@ -221,8 +219,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// Name of the project.
-        /// Defaults to the cloud sdk config for properties if not specified.
+        /// Name of the project. Defaults to the Cloud SDK configuration for properties if not specified.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
@@ -334,8 +331,8 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// Name of the project. Defaults to the active cloud sdk config for properties if not specified.
-        /// </para>
+        /// Name of the project. Defaults to the Cloud SDK configuration for properties if not specified.
+        /// /// </para>
         /// </summary>
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
@@ -353,10 +350,8 @@ namespace Google.PowerShell.Sql
         /// <para type="description">
         ///  The path to the file in Google Cloud Storage where the export will be stored.
         ///  The URI is in the form "gs://bucketName/fileName."
-        ///  <para type="description">
-        ///   If the file already exists, the operation fails.
-        ///  </para>
-        ///  If the parameter set is SQL and the filename ends with .gz, the contents are compressed.
+        /// </para><para type="description">
+        ///  If the file already exists, the operation will fail.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 1)]
@@ -381,7 +376,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// Databases (for example, guestbook) from which the export is made.
+        /// Databases (for example, "guestbook" or "orders") from which the export is made.
         /// If fileType is SQL and no database is specified, all databases are exported. 
         /// If fileType is CSV, you can optionally specify at most one database to export.
         /// If exporting as CSV and selectQuery also specifies the database, this field will be ignored.
@@ -494,7 +489,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        ///  The database inside of the Instance (for example, guestbook) to which the import is made.
+        ///  The database inside of the Instance (for example, "guestbook" or "orders") to which the import is made.
         ///  It must already exist.
         ///  If filetype is SQL and no database is specified,
         ///  it is assumed that the database is specified in the file to be imported.
@@ -506,8 +501,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        ///  The table to which CSV data is imported.
-        ///  Must be specified for a CSV file.
+        ///  The table to which CSV data is imported. Must be specified for a CSV file.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 3, ParameterSetName = ParameterSetNames.Csv)]
@@ -515,8 +509,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        ///  The columns of the CSV data to import.
-        ///  If not specified, all columns are imported.
+        ///  The columns of the CSV data to import. If not specified, all columns are imported.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, Position = 4, ParameterSetName = ParameterSetNames.Csv)]
