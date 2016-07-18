@@ -188,4 +188,40 @@ Describe "Export-GcSqlInstance" {
 
 }
 
+Describe "Restart-GcSqlInstance" {
+    It "should work and restart a test instance" {
+        # A random number is used to avoid collisions with the speed of creating and deleting instances.
+        $r = Get-Random
+        $instance = "test-inst$r"
+        gcloud sql instances create $instance --quiet 2>$null
+        Restart-GcSqlInstance -Instance $instance
+
+        $operations = Get-GcSqlOperation -Instance $instance
+        $operations.Count | Should Be 2
+        $operations[0].OperationType | Should Match "RESTART"
+        $operations[0].Status | Should Match "DONE"
+        $operations[0].Error | Should Match ""
+        $operations[1].OperationType | Should Match "CREATE"
+
+        gcloud sql instances delete $instance --quiet 2>$null
+    }
+
+     It "should work and restart a pipelined instance" {
+         # A random number is used to avoid collisions with the speed of creating and deleting instances.
+        $r = Get-Random
+        $instance = "test-inst$r"
+        gcloud sql instances create $instance --quiet 2>$null
+        Get-GcSqlInstance -Name $instance |  Restart-GcSqlInstance
+
+        $operations = Get-GcSqlOperation -Instance $instance
+        $operations.Count | Should Be 2
+        $operations[0].OperationType | Should Match "RESTART"
+        $operations[0].Status | Should Match "DONE"
+        $operations[0].Error | Should Match ""
+        $operations[1].OperationType | Should Match "CREATE"
+
+        gcloud sql instances delete $instance --quiet 2>$null
+     }
+}
+
 Reset-GCloudConfig $oldActiveConfig $configName

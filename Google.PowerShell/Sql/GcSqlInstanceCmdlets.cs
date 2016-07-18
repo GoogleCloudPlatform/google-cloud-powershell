@@ -445,4 +445,51 @@ namespace Google.PowerShell.Sql
             WaitForSqlOperation(result);
         }
     }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Restarts a Cloud SQL Instance.
+    /// </para>
+    /// <para type="description">
+    /// Restarts the specified Cloud SQL Instance in the current project.
+    /// </para>
+    /// <para type="description">
+    /// If a Project is specified, it will instead restart the specified Instance in that project.
+    /// </para>
+    /// <example>
+    ///   <para> Restart the SQL instance "test1" from the Project "testing."</para>
+    ///   <para><code>PS C:\> Restart-GcSqlInstance -Project "testing" -Instance "test1"</code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command returns nothing.)</para>
+    /// </example>
+    /// </summary>
+    [Cmdlet(VerbsLifecycle.Restart, "GcSqlInstance")]
+    public class RestartGcSqlInstanceCmdlet : GcSqlCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// Name of the project in which the instance resides.
+        /// Defaults to the cloud sdk config for properties if not specified.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name/ID of the Instance resource to restart.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 1, ValueFromPipelineByPropertyName = true)]
+        [Alias("Name","Id")]
+        public string Instance { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            InstancesResource.RestartRequest instRestartRequest = Service.Instances.Restart(Project, Instance);
+            Operation instRestartResponse = instRestartRequest.Execute();
+            WaitForSqlOperation(instRestartResponse);
+        }
+    }
 }
