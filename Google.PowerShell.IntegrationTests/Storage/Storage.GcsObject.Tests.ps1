@@ -168,7 +168,11 @@ Describe "New-GcsObject" {
         Remove-Item $tempFile
     }
 
-    # TODO(chrsmith): Confirm it works for 0-byte files (currently it doesn't).
+    It "should write zero byte files" {
+        $emptyObj = New-GcsObject $bucket "zero-byte-test"
+        $emptyObj.Size | Should Be 0
+        Remove-GcsObject $emptyObj
+    }
 }
 
 Describe "Get-GcsObject" {
