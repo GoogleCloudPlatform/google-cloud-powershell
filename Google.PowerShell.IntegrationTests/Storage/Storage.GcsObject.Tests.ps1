@@ -170,9 +170,8 @@ Describe "New-GcsObject" {
 
     It "should write zero byte files" {
         $emptyObj = New-GcsObject $bucket "zero-byte-test"
-        $emptyObj.Size | Shoudl Be 0
+        $emptyObj.Size | Should Be 0
         Remove-GcsObject $emptyObj
-
     }
 }
 
