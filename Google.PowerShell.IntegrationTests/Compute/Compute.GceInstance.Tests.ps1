@@ -394,27 +394,38 @@ Describe "Set-GceInstance" {
 
         # Test adding and deleting
         Set-GceInstance -Project $project -Zone $zone2 $instance -NetworkInterface $interfaceName `
-            -DeleteAccessConfig $configName -NewAccessConfig $newConfig
+            -RemoveAccessConfig $configName -AddAccessConfig $newConfig
 
         $instanceObj = Get-GceInstance -Project $project -Zone $zone2 $instance
         $instanceObj.NetworkInterfaces.AccessConfigs.Name | Should Be "NewConfig$r"
     }
 
     Context "With Disk" {
-        $newDiskName = "attach-disk-test-$r"
-        $newDisk = New-GceDisk -Project $project -Zone $zone2 -DiskName $newDiskName -Size 1
+        BeforeAll {
+            $newDiskName = "attach-disk-test-$r"
+            $newDiskName2 = "attach-disk-test2-$r"
+            $newDiskName3 = "attach-disk-test3-$r"
+            $newDisk = New-GceDisk -Project $project -Zone $zone2 -DiskName $newDiskName -Size 1
+            $newDisk2 = New-GceDisk -Project $project -Zone $zone2 -DiskName $newDiskName2 -Size 1
+            $newDisk3 = New-GceDisk -Project $project -Zone $zone2 -DiskName $newDiskName3 -Size 1
+            $attachedDisk3 = New-GceAttachedDiskConfig $newDisk3 -DeviceName $newDiskName3
+        }
 
         It "should change Disk" {
-            Set-GceInstance -Project $project -Zone $zone2 $instance -AddDisk $newDiskName
+            Set-GceInstance  $instance -Project $project -Zone $zone2 -AddDisk $newDiskName,
+                $newDisk2, $attachedDisk3
             $instanceObj = Get-GceInstance -Project $project -Zone $zone2 $instance
-            $instanceObj.Disks.Count | Should Be 2
+            $instanceObj.Disks.Count | Should Be 4
             ($instanceObj.Disks | Where {$_.DeviceName -eq $newDiskName}).Count | Should Be 1
 
-            Set-GceInstance -Project $project -Zone $zone2 $instance -RemoveDisk $newDiskName
+            Set-GceInstance -Project $project -Zone $zone2 $instance -RemoveDisk $newDiskName,
+                $newDiskName2, $newDiskName3
             (Get-GceInstance -Project $project -Zone $zone2 $instance).Disks.Count | Should Be 1
         }
 
-        Remove-GceDisk -Project $project -Zone $zone2 -DiskName $newDiskName
+        AfterAll {
+            $newDisk, $newDisk2, $newDisk3 | Remove-GceDisk
+        }
     }
 
     Remove-GceInstance -Project $project -Zone $zone2 $instance
