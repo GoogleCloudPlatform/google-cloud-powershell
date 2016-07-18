@@ -188,4 +188,66 @@ Describe "Export-GcSqlInstance" {
 
 }
 
+Describe "Restart-GcSqlInstance" {
+    It "should work and restart a test instance" {
+        # A random number is used to avoid collisions with the speed of creating and deleting instances.
+        $r = Get-Random
+        $instance = "test-inst$r"
+        gcloud sql instances create $instance --quiet 2>$null
+        Restart-GcSqlInstance -Instance $instance
+
+        $operations = Get-GcSqlOperation -Instance $instance
+        $operations.Count | Should Be 2
+        $operations[0].OperationType | Should Match "RESTART"
+        $operations[0].Status | Should Match "DONE"
+        $operations[0].Error | Should Match ""
+        $operations[1].OperationType | Should Match "CREATE"
+
+        gcloud sql instances delete $instance --quiet 2>$null
+    }
+
+     It "should work and restart a pipelined instance (instance and default projects same)" {
+         # A random number is used to avoid collisions with the speed of creating and deleting instances.
+        $r = Get-Random
+        $instance = "test-inst$r"
+        gcloud sql instances create $instance --quiet 2>$null
+        Get-GcSqlInstance -Name $instance |  Restart-GcSqlInstance
+
+        $operations = Get-GcSqlOperation -Instance $instance
+        $operations.Count | Should Be 2
+        $operations[0].OperationType | Should Match "RESTART"
+        $operations[0].Status | Should Match "DONE"
+        $operations[0].Error | Should Match ""
+        $operations[1].OperationType | Should Match "CREATE"
+
+        gcloud sql instances delete $instance --quiet 2>$null
+     }
+
+    It "should work and restart a pipelined instance (instance and default projects differ)" {
+        $nonDefaultProject = "asdf"
+        $defaultProject = "gcloud-powershell-testing"
+
+        # Set gcloud config to a non-default project (not gcloud-powershell-testing)
+        gcloud config set project $nonDefaultProject
+
+         # A random number is used to avoid collisions with the speed of creating and deleting instances.
+        $r = Get-Random
+        $instance = "test-inst$r"
+        gcloud sql instances create $instance --project $defaultProject --quiet 2>$null
+        Get-GcSqlInstance -Project $defaultProject -Name $instance |  Restart-GcSqlInstance
+
+        $operations = Get-GcSqlOperation -Project $defaultProject -Instance $instance
+        $operations.Count | Should Be 2
+        $operations[0].OperationType | Should Match "RESTART"
+        $operations[0].Status | Should Match "DONE"
+        $operations[0].Error | Should Match ""
+        $operations[1].OperationType | Should Match "CREATE"
+
+        gcloud sql instances delete $instance --project $defaultProject --quiet 2>$null
+
+        # Reset gcloud config back to default project (gcloud-powershell-testing)
+        gcloud config set project $defaultProject
+     }
+}
+
 Reset-GCloudConfig $oldActiveConfig $configName
