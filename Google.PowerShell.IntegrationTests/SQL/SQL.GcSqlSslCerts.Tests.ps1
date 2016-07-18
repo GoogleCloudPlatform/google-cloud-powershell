@@ -82,6 +82,26 @@ Describe "Remove-GcSqlSslCert" {
         { Remove-GcSqlSslCert $instance "f02" } | Should Throw "The SSL certificate does not exist. [404]"
     }
 }
-
 gcloud sql instances delete $instance --quiet 2>$null
+
+Describe "Add-GcSqlSslEphemeral" {
+    $instance = "ephem-test$r"
+    # We need to set up a second-generation instance.
+    $setting = New-GcSqlSettingConfig "db-n1-standard-1"
+    $config = New-GcSqlInstanceConfig $instance -SettingConfig $setting
+    Add-GcSqlInstance $config
+
+    It "should work" {
+        $publicKey = Get-Content -Path "$PSScriptRoot\public.pem" -Raw
+        $ssl = Add-GcSqlSslEphemeral $instance $publicKey
+        $ssl.Kind | Should Be "sql#sslCert"
+    }
+
+    It "should error when given a bad public key" {
+        { Add-GcSqlSslEphemeral $instance "no" } | Should Throw "Provided public key was in an invalid or unsupported format. [400]"
+    }
+
+    Remove-GcSqlInstance  $instance
+}
+
 Reset-GCloudConfig $oldActiveConfig $configName

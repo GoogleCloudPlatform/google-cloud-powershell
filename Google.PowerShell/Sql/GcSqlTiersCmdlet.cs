@@ -27,7 +27,7 @@ namespace Google.PowerShell.Sql
     {
         /// <summary>
         /// <para type="description">
-        /// Project name of the project for which to list tiers.
+        /// Name of the project. Defaults to the Cloud SDK configuration for properties if not specified.
         /// </para>
         /// </summary>
         [Parameter]

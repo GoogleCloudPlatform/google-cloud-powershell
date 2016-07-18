@@ -32,12 +32,10 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// Project name of the project that contains an instance.
+        /// Name of the project. Defaults to the Cloud SDK configuration for properties if not specified.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.GetSingle)]
-        [Parameter(ParameterSetName = ParameterSetNames.GetList)]
-        [Parameter(ParameterSetName = ParameterSetNames.GetListInstance)]
+        [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
@@ -117,7 +115,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// Project name of the project that contains an instance.
+        /// Name of the project. Defaults to the Cloud SDK configuration for properties if not specified.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
@@ -137,8 +135,7 @@ namespace Google.PowerShell.Sql
         /// Distinct name for the certificate being added to the instance.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.ByName)]
-        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.ByInstance)]
+        [Parameter(Mandatory = true, Position = 1)]
         public string CommonName { get; set; }
 
         /// <summary>
@@ -199,7 +196,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// Project name of the project that contains an instance.
+        /// Name of the project. Defaults to the Cloud SDK configuration for properties if not specified.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
@@ -262,6 +259,58 @@ namespace Google.PowerShell.Sql
             SslCertsResource.DeleteRequest request = Service.SslCerts.Delete(project, instance, finger);
             Operation result = request.Execute();
             WaitForSqlOperation(result);
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Generates a short-lived X509 certificate containing the provided public key
+    /// and signed by a private key specific to the target instance.
+    /// Users may use the certificate to authenticate as themselves when connecting to the database. 
+    /// </para>
+    /// <para type="description">
+    /// Generates a short-lived X509 certificate containing the provided public key
+    /// and signed by a private key specific to the target instance.
+    /// Users may use the certificate to authenticate as themselves when connecting to the database. 
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Add, "GcSqlSslEphemeral")]
+    public class AddGcSqlSslEphemeralCmdlet : GcSqlCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// Name of the project. Defaults to the Cloud SDK configuration for properties if not specified.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Cloud SQL instance name.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0)]
+        public string Instance { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// PEM encoded public key to include in the signed certificate.
+        /// Should be RSA or EC.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 1, ValueFromPipeline = true)]
+        public string PublicKey { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            SslCertsCreateEphemeralRequest body = new SslCertsCreateEphemeralRequest {
+                PublicKey = PublicKey
+            };
+            SslCertsResource.CreateEphemeralRequest request = Service.SslCerts.CreateEphemeral(body, Project, Instance);
+            SslCert result = request.Execute();
+            WriteObject(result);
         }
     }
 }
