@@ -301,8 +301,8 @@ namespace Google.PowerShell.Sql
             }
             InstancesResource.CloneRequest request = Service.Instances.Clone(body, project, instance);
             Operation result = request.Execute();
-            /// Copying an instance takes too long to wait, so this time we write the operation to demonstrate
-            /// That the request went through.
+            // It takes a long time to clone the instance, so we skip waiting for the operation and return
+            // the pending clone instance.
             DatabaseInstance clone = Service.Instances.Get(project, CloneName).Execute();
             WriteObject(clone);
         }
