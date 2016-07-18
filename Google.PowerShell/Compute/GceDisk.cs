@@ -166,7 +166,10 @@ namespace Google.PowerShell.ComputeEngine
         /// Name of the disk.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0)]
+        [Parameter(ParameterSetName = ParameterSetNames.EmptyDisk, Mandatory = true, Position = 0)]
+        [Parameter(ParameterSetName = ParameterSetNames.FromImage, Mandatory = true, Position = 0)]
+        [Parameter(ParameterSetName = ParameterSetNames.FromSnapshot, Mandatory = true, Position = 0)]
+        // Mention all three paramter sets so help documentation will know about EmptyDisk.
         public string DiskName { get; set; }
 
         /// <summary>
