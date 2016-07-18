@@ -18,9 +18,8 @@ Describe "Get-GcSqlOperations" {
     }
 
 	It "should get a reasonable response from a given query" {
-        # A specific Name has to be used because names are unique to instances. 
-        # See the next test for if a name exclusive to test-1 is used.
-        $operation = Get-GcSqlOperation -Project $project -Name "515a9bb2-fcad-4c62-a8c5-3cfb7cbabfa2"
+        $firstOp.name = Get-GcSqlOperation -Instance $instance | Select-Object -last 1
+        $operation = Get-GcSqlOperation -Project $project -Name $firstOp.name
         $operation.operationType | Should Be "Create"
     }
 
@@ -34,7 +33,8 @@ Describe "Get-GcSqlOperations" {
     }
 
     It "shouldn't require Project to be passed in to work" {
-        $operation = Get-GcSqlOperation -Name "515a9bb2-fcad-4c62-a8c5-3cfb7cbabfa2"
+        $firstOp.name = Get-GcSqlOperation -Instance $instance | Select-Object -last 1
+        $operation = Get-GcSqlOperation -Name $firstOp.name
         $operation.operationType | Should Be "Create"
     }
 
