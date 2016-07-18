@@ -4,6 +4,7 @@
 using Google.Apis.Storage.v1;
 using Google.PowerShell.Common;
 using System;
+using System.Collections.Generic;
 
 namespace Google.PowerShell.CloudStorage
 {
@@ -37,6 +38,38 @@ namespace Google.PowerShell.CloudStorage
         protected string GetBaseUri(string bucket, string objectName)
         {
             return $"https://www.googleapis.com/download/storage/v1/b/{bucket}/o/{Uri.EscapeDataString(objectName)}?alt=media";
+        }
+
+        /// <summary>
+        /// Converts a string such as "publicRead" into the GCS API enum value corresponding to PublicRead. Simple,
+        /// right? Unfortuantely the generated API doesn't reuse any of the DefaultACL objects between types. So there
+        /// is a different predefined ACL for INSERT, PATCH, UPDATE. And also for DefaultAcl, DefaultObjectAcl, etc.
+        ///
+        /// This method provides a generalized "parse string and see if it maps to the value of an enum type", except
+        /// it supports some of the quirks of the GCS API.
+        /// </summary>
+        public static T? ParseGcsDefaultObject<T>(string defaultAclName) where T: struct
+        {
+            if (String.IsNullOrEmpty(defaultAclName))
+            {
+                return null;
+            }
+            defaultAclName = defaultAclName.ToLowerInvariant();
+
+            // Assume that the values returned are in the same order. e.g. enumNames[x] corresponds to enumValues[x].
+            string[] enumNames = Enum.GetNames(typeof(T));
+            Array enumValues = Enum.GetValues(typeof(T));
+
+            for (int i = 0; i < enumNames.Length; i++)
+            {
+                // Name mangling of the API generator to avoid keywords.
+                if (enumNames[i].ToLowerInvariant().Replace("__", "") == defaultAclName)
+                {
+                    return new T?((T)enumValues.GetValue(i));
+                }
+            }
+
+            throw new ArgumentException($"Unable to parse '{defaultAclName}' as type '{typeof(T).GetType().FullName}");
         }
     }
 }
