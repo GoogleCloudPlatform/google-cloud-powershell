@@ -2,7 +2,7 @@
 Install-GcloudCmdlets
 
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
-$image = "projects/windows-cloud/global/images/family/windows-2012-r2"
+$image = Get-GceImage -Family "windows-2012-r2"
 $machineType = "f1-micro"
 
 # Delete all instance templates for the current project.
@@ -50,11 +50,6 @@ Describe "Add-GceInstanceTemplate" {
     $name3 = "test-add-template3-$r"
 
     $serviceAccount = New-GceServiceAccountConfig default -BigQuery
-
-    It "should error with bad image" {
-        { Add-GceInstanceTemplate $name -MachineType $machineType -BootDiskImage "not an image" `
-            -WarningAction SilentlyContinue } | Should Throw 503
-    }
 
     It "should work" {
         Add-GceInstanceTemplate $name -MachineType $machineType -BootDiskImage $image -CanIpForward `
