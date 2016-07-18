@@ -32,7 +32,7 @@ namespace Google.PowerShell.Common
     {
         // TODO(chrsmith): After the code has been submitted and had some bake time,
         // change this to the prod Cloud SDK analytics property ID ("UA-36037335-2").
-        private const string TestWebPropertyId = "UA-19953206-4";
+        private const string TestWebPropertyId = "UA-80810157-1";
 
         // Static constructor initializes the default values.
         static MeasurementProtocolService()

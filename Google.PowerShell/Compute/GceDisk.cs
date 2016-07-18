@@ -43,7 +43,7 @@ namespace Google.PowerShell.ComputeEngine
         /// Specific zone to lookup disks in, e.g. "us-central1-a". Partial names
         /// like "us-" or "us-central1" will also work.
         /// </para>
-        [Parameter(Position = 1, Mandatory = false)]
+        [Parameter(Mandatory = false)]
         public string Zone { get; set; }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace Google.PowerShell.ComputeEngine
         /// Name of the disk you want to have returned.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = false)]
+        [Parameter(Position = 0, Mandatory = false)]
         public string DiskName { get; set; }
 
         protected override void ProcessRecord()
@@ -166,7 +166,10 @@ namespace Google.PowerShell.ComputeEngine
         /// Name of the disk.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0)]
+        [Parameter(ParameterSetName = ParameterSetNames.EmptyDisk, Mandatory = true, Position = 0)]
+        [Parameter(ParameterSetName = ParameterSetNames.FromImage, Mandatory = true, Position = 0)]
+        [Parameter(ParameterSetName = ParameterSetNames.FromSnapshot, Mandatory = true, Position = 0)]
+        // Mention all three paramter sets so help documentation will know about EmptyDisk.
         public string DiskName { get; set; }
 
         /// <summary>

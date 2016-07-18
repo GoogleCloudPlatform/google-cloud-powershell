@@ -114,7 +114,7 @@ Describe "New-GcsObject" {
 
         # Confirm we won't clobber
         { New-GcsObject $bucket $objectName -File $tempFile } `
-            | Should Throw "Storage object already exists"
+            | Should Throw "Storage object 'existing-object' already exists"
 
         # Confirm -Force works
         "updated-object-contents" | Out-File $tempFile -Encoding ascii -NoNewline
@@ -168,7 +168,11 @@ Describe "New-GcsObject" {
         Remove-Item $tempFile
     }
 
-    # TODO(chrsmith): Confirm it works for 0-byte files (currently it doesn't).
+    It "should write zero byte files" {
+        $emptyObj = New-GcsObject $bucket "zero-byte-test"
+        $emptyObj.Size | Should Be 0
+        Remove-GcsObject $emptyObj
+    }
 }
 
 Describe "Get-GcsObject" {
@@ -300,8 +304,9 @@ Describe "Read-GcsObject" {
     It "won't overwrite existing files" {
         # Creates a 0-byte file, which we won't clobber.
         $tempFileName = [System.IO.Path]::GetTempFileName()
+        # File should point to somewhere in Users\AppData\Local\Temp.
         { Read-GcsObject $bucket $testObjectName $tempFileName } `
-            | Should Throw "File already exists"
+            | Should Throw "already exists"
 
         Remove-Item $tempFileName
     }
@@ -389,8 +394,10 @@ Describe "Write-GcsObject" {
         # that is set by the pipeline.
         $objectName = "write-gcsobject-from-pipeline"
         $objectContents = "This is some text from the PowerShell pipeline"
+        # This step fails because Write assumes the Object already exists (unless -Force) is used.
+        # For general objct creation, use New-GcsObject.
         { $objectContents | Write-GcsObject $bucket $objectName } `
-            | Should Throw "Storage object does not exist"
+            | Should Throw "Storage object 'write-gcsobject-from-pipeline' does not exist"
 
         # Adding -Force does the trick. Confirm it worked.
         $objectContents | Write-GcsObject $bucket $objectName -Force
@@ -428,6 +435,26 @@ Describe "Write-GcsObject" {
     # TODO(chrsmith): Confirm it works for 0-byte files (currently it doesn't).
     # TODO(chrsmith): Confirm Write-GcsObject doesn't remove object metadata, such
     # as its existing ACLs. (Since we are uploading a new object in-place.)
+}
+
+Describe "Test-GcsObject" {
+    $bucket = "gcps-test-object-testing"
+    Create-TestBucket $project $bucket
+
+    It "should work" {
+        Test-GcsObject $bucket "test-obj" | Should Be $false
+        $obj = "can you hear me now?" | New-GcsObject $bucket "test-obj"
+        Test-GcsObject $bucket "test-obj" | Should Be $true
+        $obj | Remove-GcsObject
+    }
+
+    It "should return false if the Bucket does not exist" {
+        Test-GcsObject "bucket-aad2fjadkdmgzadfhj4" "obj.txt"| Should Be $false
+    }
+
+    It "should fail if the bucket is not accessible" {
+        { Test-GcsObject "asdf" "gcs-object.txt" } | Should Throw "has been disabled"
+    }
 }
 
 Reset-GCloudConfig $oldActiveConfig $configName

@@ -1,10 +1,7 @@
 ﻿// Copyright 2015 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
-using Google;
-using Google.Apis.Auth.OAuth2;
 using Google.Apis.Download;
-using Google.Apis.Services;
 using Google.Apis.Storage.v1;
 using Google.Apis.Storage.v1.Data;
 using Google.PowerShell.Common;
@@ -21,8 +18,6 @@ namespace Google.PowerShell.CloudStorage
 
     // TODO(chrsmith): Provide a way to upload an entire directory to Gcs. Reuse New-GcsObject?
     // Upload-GcsObject?
-
-    // TODO(chrsmith): Provide a way to test if an object exists, a la Test-GcsObject.
 
     /// <summary>
     /// Base class for Cloud Storage Object cmdlets. Used to reuse common methods.
@@ -90,7 +85,7 @@ namespace Google.PowerShell.CloudStorage
     /// <example>
     ///   <para>Upload a local log file to GCS.</para>
     ///   <para><code>New-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt" `</code></para>
-    ///   <para><code>    -File "C:\logs\log-000.txt"</code></para></code></para>
+    ///   <para><code>    -File "C:\logs\log-000.txt"</code></para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GcsObject", DefaultParameterSetName = ParameterSetNames.ContentsFromString)]
@@ -108,7 +103,8 @@ namespace Google.PowerShell.CloudStorage
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
-        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
+        [PropertyByTypeTransformation(Property = nameof(Apis.Storage.v1.Data.Bucket.Name),
+            TypeToTransform = typeof(Bucket))]
         public string Bucket { get; set; }
 
         /// <summary>
@@ -124,9 +120,9 @@ namespace Google.PowerShell.CloudStorage
         /// Text content to write to the Storage object. Ignored if File is specified.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = true, ValueFromPipeline = true,
-            ParameterSetName = ParameterSetNames.ContentsFromString)]
-        public string Contents { get; set; }
+        [Parameter(ParameterSetName = ParameterSetNames.ContentsFromString,
+            Position = 2, ValueFromPipeline = true)]
+        public string Contents { get; set; } = "";
 
         /// <summary>
         /// <para type="description">
@@ -227,7 +223,7 @@ namespace Google.PowerShell.CloudStorage
                 bool objectExists = TestObjectExists(service, Bucket, ObjectName);
                 if (objectExists && !Force.IsPresent)
                 {
-                    throw new PSArgumentException("Storage object already exists. Use -Force to overwrite.");
+                    throw new PSArgumentException($"Storage object '{ObjectName}' already exists. Use -Force to overwrite.");
                 }
 
                 Object newGcsObject = UploadGcsObject(
@@ -460,7 +456,10 @@ namespace Google.PowerShell.CloudStorage
 
             ObjectsResource.DeleteRequest delReq = service.Objects.Delete(Bucket, ObjectName);
             string result = delReq.Execute();
-            WriteObject(result);
+            if (!string.IsNullOrWhiteSpace(result))
+            {
+                WriteObject(result);
+            }
         }
     }
 
@@ -552,7 +551,7 @@ namespace Google.PowerShell.CloudStorage
             bool fileExists = File.Exists(qualifiedPath);
             if (fileExists && !Force.IsPresent)
             {
-                throw new PSArgumentException("File already exists. Use -Force to overwrite.");
+                throw new PSArgumentException($"File '{qualifiedPath}' already exists. Use -Force to overwrite.");
             }
 
 
@@ -659,7 +658,7 @@ namespace Google.PowerShell.CloudStorage
                 {
                     if (!Force.IsPresent)
                     {
-                        throw new PSArgumentException("Storage object does not exist. Use -Force to ignore.");
+                        throw new PSArgumentException($"Storage object '{ObjectName}' does not exist. Use -Force to ignore.");
                     }
                 }
                 // TODO(chrsmith): In the -Force case we are using the default octet-stream MIME type. Guess
@@ -674,6 +673,55 @@ namespace Google.PowerShell.CloudStorage
                 Object updatedGcsObject = UploadGcsObject(
                     service, Bucket, ObjectName, contentStream,
                     contentType);
+            }
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Verify the existence of a Cloud Storage Object.
+    /// </para>
+    /// <para type="description">
+    /// Verify the existence of a Cloud Storage Object.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsDiagnostic.Test, "GcsObject")]
+    public class TestGcsObjectCmdlet : GcsCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// Name of the containing bucket. Will also accept a Bucket object.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true)]
+        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
+        public string Bucket { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the object to check for.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 1, Mandatory = true)]
+        public string ObjectName { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            base.ProcessRecord();
+            var service = GetStorageService();
+
+            // Unfortunately there is no way to test if an object exists on the API, so we
+            // just issue a GET and intercept the 404 case.
+            try
+            {
+                ObjectsResource.GetRequest objGetReq = service.Objects.Get(Bucket, ObjectName);
+                objGetReq.Execute();
+
+                WriteObject(true);
+            }
+            catch (GoogleApiException ex) when (ex.Error.Code == 404)
+            {
+                WriteObject(false);
             }
         }
     }
