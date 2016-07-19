@@ -113,7 +113,6 @@
     <Compile Include="Common\MeasurementServiceProtocolTests.cs" />
     <Compile Include="Compute\InstanceMetadataConverterTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Storage\GcsCmdletTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config">

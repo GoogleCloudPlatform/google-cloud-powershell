@@ -139,7 +139,7 @@ namespace Google.PowerShell.CloudStorage
         /// </para>
         /// </summary>
         [Parameter]
-        public string DefaultBucketAcl {get; set;}
+        public BucketsResource.InsertRequest.PredefinedAclEnum? DefaultBucketAcl {get; set;}
 
         /// <summary>
         /// <para type="description">
@@ -152,7 +152,7 @@ namespace Google.PowerShell.CloudStorage
         /// </summary>
 
         [Parameter]
-        public string DefaultObjectAcl { get; set; }
+        public BucketsResource.InsertRequest.PredefinedDefaultObjectAclEnum? DefaultObjectAcl { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -165,10 +165,8 @@ namespace Google.PowerShell.CloudStorage
             bucket.StorageClass = StorageClass;
 
             BucketsResource.InsertRequest insertReq = service.Buckets.Insert(bucket, Project);
-            insertReq.PredefinedAcl =
-                ParseGcsDefaultObject<BucketsResource.InsertRequest.PredefinedAclEnum>(DefaultBucketAcl);
-            insertReq.PredefinedDefaultObjectAcl =
-                ParseGcsDefaultObject<BucketsResource.InsertRequest.PredefinedDefaultObjectAclEnum>(DefaultObjectAcl);
+            insertReq.PredefinedAcl = DefaultBucketAcl;
+            insertReq.PredefinedDefaultObjectAcl = DefaultObjectAcl;
             bucket = insertReq.Execute();
 
             WriteObject(bucket);
