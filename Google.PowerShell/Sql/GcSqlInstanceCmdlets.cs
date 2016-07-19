@@ -634,12 +634,12 @@ namespace Google.PowerShell.Sql
     /// Starts the specified Cloud SQL Replica.
     /// </para>
     /// <para type="description">
-    /// If a Project is specified, it will start the specified Replica in that project. Otherwise, the Project 
-    /// defaults to the Cloud SDK config for properties. 
+    /// If a Project is specified, it will start the specified Replica in that Project. Otherwise, starts the replica
+    /// in the Cloud SDK config project. 
     /// </para>
     /// <example>
-    ///   <para> Start the SQL Replica "testRepl1" from the Project "testing."</para>
-    ///   <para><code>PS C:\> Start-GcSqlReplica -Project "testing" -Instance "testRepl1"</code></para>
+    ///   <para>Start the SQL Replica "testRepl1" from the Project "testing."</para>
+    ///   <para><code>PS C:\> Start-GcSqlReplica -Project "testing" -Replica "testRepl1"</code></para>
     ///   <br></br>
     ///   <para>(If successful, the command returns nothing.)</para>
     /// </example>
@@ -701,6 +701,84 @@ namespace Google.PowerShell.Sql
             InstancesResource.StartReplicaRequest replStartRequest = Service.Instances.StartReplica(projectName, replicaName);
             Operation replStartResponse = replStartRequest.Execute();
             WaitForSqlOperation(replStartResponse);
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Stops a Cloud SQL Replica.
+    /// </para>
+    /// <para type="description">
+    /// Stops the specified Cloud SQL Replica.
+    /// </para>
+    /// <para type="description">
+    /// If a Project is specified, it will stop the specified Replica in that Project. Otherwise, stops the replica
+    /// in the Cloud SDK config project. 
+    /// </para>
+    /// <example>
+    ///   <para>Stop the SQL Replica "testRepl1" from the Project "testing."</para>
+    ///   <para><code>PS C:\> Stop-GcSqlReplica -Project "testing" -Replica "testRepl1"</code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command returns nothing.)</para>
+    /// </example>
+    /// </summary>
+    [Cmdlet(VerbsLifecycle.Stop, "GcSqlReplica")]
+    public class StopGcSqlReplicaCmdlet : GcSqlCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByInstance = "ByInstance";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the project in which the instance Replica resides.
+        /// Defaults to the Cloud SDK config for properties if not specified.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name/ID of the Replica resource to stop.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 1)]
+        public string Replica { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The DatabaseInstance that describes the Replica we want to stop.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true, Position = 0,
+                   ValueFromPipeline = true)]
+        public DatabaseInstance ReplicaObject { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            string projectName;
+            string replicaName;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.ByName:
+                    projectName = Project;
+                    replicaName = Replica;
+                    break;
+                case ParameterSetNames.ByInstance:
+                    projectName = ReplicaObject.Project;
+                    replicaName = ReplicaObject.Name;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+
+            InstancesResource.StopReplicaRequest replStopRequest = Service.Instances.StopReplica(projectName, replicaName);
+            Operation replStopResponse = replStopRequest.Execute();
+            WaitForSqlOperation(replStopResponse);
         }
     }
 }
