@@ -19,7 +19,7 @@ namespace Google.PowerShell.Sql
     /// This is decided by if the "Id" parameter is filled or not.
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Get, "GcSqlBackupRun")]
+    [Cmdlet(VerbsCommon.Get, "GcSqlBackupRun", DefaultParameterSetName = ParameterSetNames.GetList)]
     public class GetGcSqlBackupRunCmdlet : GcSqlCmdlet
     {
         internal class ParameterSetNames
@@ -29,12 +29,10 @@ namespace Google.PowerShell.Sql
         }
         /// <summary>
         /// <para type="description">
-        /// Project name of the project that contains an instance.
-        /// Defaults to the cloud sdk config for properties if not specified.
+        /// Name of the project. Defaults to the Cloud SDK configuration for properties if not specified.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.GetSingle)]
-        [Parameter(ParameterSetName = ParameterSetNames.GetList)]
+        [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
@@ -43,8 +41,7 @@ namespace Google.PowerShell.Sql
         /// Cloud SQL instance name. 
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.GetSingle)]
-        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.GetList)]
+        [Parameter(Mandatory = true, Position = 0)]
         public string Instance { get; set; }
 
         /// <summary>
@@ -111,8 +108,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// Project name of the project that contains an instance.
-        /// Defaults to the cloud sdk config for properties if not specified.
+        /// Name of the project. Defaults to the Cloud SDK configuration for properties if not specified.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]

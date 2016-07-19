@@ -38,13 +38,27 @@ namespace Google.PowerShell.Sql
         /// </returns>
         public Operation WaitForSqlOperation(Operation op) 
         {
+            int delay;
+            switch (op.OperationType)
+            {
+                case "CREATE":
+                    {
+                        delay = 10000;
+                        break;
+                    }
+                default:
+                    {
+                        delay = 150;
+                        break;
+                    }
+            }
             while (op.Status != "DONE")
             {
                 if (op.Error != null) {
                     WriteWarning(op.Error.ToString());
                     return op;
                 }
-                Thread.Sleep(200);
+                Thread.Sleep(delay);
                 OperationsResource.GetRequest request = Service.Operations.Get(op.TargetProject, op.Name);
                 op = request.Execute();
             }
