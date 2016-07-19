@@ -135,22 +135,47 @@ namespace Google.PowerShell.CloudStorage
         [ValidateSet("ASIA", "EU", "US", IgnoreCase = false)]
         public string Location { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// Default ACL for the bucket. e.g. "publicRead", "private", etc.
+        /// </para>
+        /// <para type="description">
+        /// You cannot set fine-grained (e.g. individual users or domains) ACLs using PowerShell.
+        /// Instead please use `gsutil`.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        public BucketsResource.InsertRequest.PredefinedAclEnum? DefaultBucketAcl {get; set;}
+
+        /// <summary>
+        /// <para type="description">
+        /// Default ACL for objects added to the bucket. e.g. "publicReadWrite", "authenticatedRead", etc.
+        /// </para>
+        /// <para type="description">
+        /// You cannot set fine-grained (e.g. individual users or domains) ACLs using PowerShell.
+        /// Instead please use `gsutil`.
+        /// </para>
+        /// </summary>
+
+        [Parameter]
+        public BucketsResource.InsertRequest.PredefinedDefaultObjectAclEnum? DefaultObjectAcl { get; set; }
+
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
             var service = GetStorageService();
 
-            // While bucket has many properties, these are the only ones
-            // that can be set as part of an INSERT operation.
-            // https://cloud.google.com/storage/docs/xml-api/put-bucket-create
-            // TODO(chrsmith): Wire in ACL-related parameters.
             var bucket = new Google.Apis.Storage.v1.Data.Bucket();
             bucket.Name = Name;
             bucket.Location = Location;
             bucket.StorageClass = StorageClass;
 
-            Bucket result = service.Buckets.Insert(bucket, Project).Execute();
-            WriteObject(result);
+            BucketsResource.InsertRequest insertReq = service.Buckets.Insert(bucket, Project);
+            insertReq.PredefinedAcl = DefaultBucketAcl;
+            insertReq.PredefinedDefaultObjectAcl = DefaultObjectAcl;
+            bucket = insertReq.Execute();
+
+            WriteObject(bucket);
         }
     }
 
