@@ -697,7 +697,8 @@ namespace Google.PowerShell.Sql
                     throw UnknownParameterSetException;
             }
 
-            InstancesResource.StartReplicaRequest replStartRequest = Service.Instances.StartReplica(projectName, replicaName);
+            InstancesResource.StartReplicaRequest replStartRequest = Service.Instances.StartReplica(projectName,
+                                                                                                    replicaName);
             Operation replStartResponse = replStartRequest.Execute();
             WaitForSqlOperation(replStartResponse);
         }
@@ -775,7 +776,8 @@ namespace Google.PowerShell.Sql
                     throw UnknownParameterSetException;
             }
 
-            InstancesResource.StopReplicaRequest replStopRequest = Service.Instances.StopReplica(projectName, replicaName);
+            InstancesResource.StopReplicaRequest replStopRequest = Service.Instances.StopReplica(projectName,
+                                                                                                 replicaName);
             Operation replStopResponse = replStopRequest.Execute();
             WaitForSqlOperation(replStopResponse);
         }
@@ -853,7 +855,8 @@ namespace Google.PowerShell.Sql
                     throw UnknownParameterSetException;
             }
 
-            InstancesResource.PromoteReplicaRequest replPromoteRequest = Service.Instances.PromoteReplica(projectName, replicaName);
+            InstancesResource.PromoteReplicaRequest replPromoteRequest = Service.Instances.PromoteReplica(projectName,
+                                                                                                          replicaName);
             Operation replPromoteResponse = replPromoteRequest.Execute();
             WaitForSqlOperation(replPromoteResponse);
         }
