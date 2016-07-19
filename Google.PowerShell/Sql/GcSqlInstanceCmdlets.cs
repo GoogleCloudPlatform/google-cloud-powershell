@@ -533,8 +533,8 @@ namespace Google.PowerShell.Sql
     /// Starts the specified Cloud SQL Replica.
     /// </para>
     /// <para type="description">
-    /// If a Project is specified, it will start the specified Replica in that Project. Otherwise, the Project 
-    /// defaults to the Cloud SDK config for properties. 
+    /// If a Project is specified, it will start the specified Replica in that Project. Otherwise, starts the replica
+    /// in the Cloud SDK config project. 
     /// </para>
     /// <example>
     ///   <para>Start the SQL Replica "testRepl1" from the Project "testing."</para>
@@ -611,8 +611,8 @@ namespace Google.PowerShell.Sql
     /// Stops the specified Cloud SQL Replica.
     /// </para>
     /// <para type="description">
-    /// If a Project is specified, it will stop the specified Replica in that Project. Otherwise, the Project 
-    /// defaults to the Cloud SDK config for properties. 
+    /// If a Project is specified, it will stop the specified Replica in that Project. Otherwise, stops the replica
+    /// in the Cloud SDK config project. 
     /// </para>
     /// <example>
     ///   <para>Stop the SQL Replica "testRepl1" from the Project "testing."</para>
