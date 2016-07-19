@@ -28,7 +28,15 @@ Describe "Get-GcsBucket" {
     }
 
     It "should list all buckets in a project" {
-        (Get-GcsBucket -Project $project).Count -gt 0 | Should Be $true
+        $buckets = Get-GcsBucket -Project $projec
+        $buckets | Should Not BeNullOrEmpty
+        ($buckets | Get-Member).TypeName | Should Be Google.Apis.Storage.v1.Data.Bucket
+    }
+
+    It "should list all buckets in the default project" {
+        $buckets = Get-GcsBucket
+        $buckets | Should Not BeNullOrEmpty
+        ($buckets | Get-Member).TypeName | Should Be Google.Apis.Storage.v1.Data.Bucket
     }
 
     It "should give access errors as appropriate" {
