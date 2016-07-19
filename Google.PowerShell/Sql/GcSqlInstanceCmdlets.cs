@@ -454,8 +454,8 @@ namespace Google.PowerShell.Sql
     /// Restarts the specified Cloud SQL Instance.
     /// </para>
     /// <para type="description">
-    /// If a Project is specified, it will restart the specified Instance in that project. Otherwise, the project 
-    /// defaults to the Cloud SDK Config for properties. 
+    /// If a Project is specified, it will restart the specified Instance in that project. Otherwise, the Project 
+    /// defaults to the Cloud SDK config for properties. 
     /// </para>
     /// <example>
     ///   <para> Restart the SQL instance "test1" from the Project "testing."</para>
@@ -476,7 +476,7 @@ namespace Google.PowerShell.Sql
         /// <summary>
         /// <para type="description">
         /// Name of the project in which the instance resides.
-        /// Defaults to the cloud sdk config for properties if not specified.
+        /// Defaults to the Cloud SDK config for properties if not specified.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
@@ -494,7 +494,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// The DatabaseInstance that describes the instance we want to remove.
+        /// The DatabaseInstance that describes the Instance we want to restart.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true, Position = 0, 
@@ -522,6 +522,84 @@ namespace Google.PowerShell.Sql
             InstancesResource.RestartRequest instRestartRequest = Service.Instances.Restart(projectName, instanceName);
             Operation instRestartResponse = instRestartRequest.Execute();
             WaitForSqlOperation(instRestartResponse);
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Starts a Cloud SQL Replica.
+    /// </para>
+    /// <para type="description">
+    /// Starts the specified Cloud SQL Replica.
+    /// </para>
+    /// <para type="description">
+    /// If a Project is specified, it will start the specified Replica in that project. Otherwise, the Project 
+    /// defaults to the Cloud SDK config for properties. 
+    /// </para>
+    /// <example>
+    ///   <para> Start the SQL Replica "testRepl1" from the Project "testing."</para>
+    ///   <para><code>PS C:\> Start-GcSqlReplica -Project "testing" -Instance "testRepl1"</code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command returns nothing.)</para>
+    /// </example>
+    /// </summary>
+    [Cmdlet(VerbsLifecycle.Start, "GcSqlReplica")]
+    public class StartGcSqlReplicaCmdlet : GcSqlCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByInstance = "ByInstance";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the project in which the instance Replica resides.
+        /// Defaults to the Cloud SDK config for properties if not specified.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name/ID of the Replica resource to start.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 1)]
+        public string Replica { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The DatabaseInstance that describes the Replica we want to start.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true, Position = 0,
+                   ValueFromPipeline = true)]
+        public DatabaseInstance ReplicaObject { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            string projectName;
+            string replicaName;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.ByName:
+                    projectName = Project;
+                    replicaName = Replica;
+                    break;
+                case ParameterSetNames.ByInstance:
+                    projectName = ReplicaObject.Project;
+                    replicaName = ReplicaObject.Name;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+
+            InstancesResource.StartReplicaRequest replStartRequest = Service.Instances.StartReplica(projectName, replicaName);
+            Operation replStartResponse = replStartRequest.Execute();
+            WaitForSqlOperation(replStartResponse);
         }
     }
 }
