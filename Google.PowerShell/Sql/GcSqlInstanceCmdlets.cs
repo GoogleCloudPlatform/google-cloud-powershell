@@ -825,7 +825,7 @@ namespace Google.PowerShell.Sql
         /// The name/ID of the Replica resource to promote.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 1)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 0)]
         public string Replica { get; set; }
 
         /// <summary>

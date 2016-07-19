@@ -430,12 +430,12 @@ Describe "Promote-GcSqlReplica" {
     $masterInstance = "test-db2"
     $2ndGenTier = "db-n1-standard-1"
 
-    It "should work and promote a test replica" {
+    It "should work and promote a test replica (replica name as positional param)" {
         # A random number is used to avoid collisions with the speed of creating and deleting instances/replicas.
         $r = Get-Random
         $replica = "test-repl$r"
         gcloud sql instances create $replica --master-instance-name $masterInstance --tier $2ndGenTier --replication SYNCHRONOUS --quiet 2>$null
-        Promote-GcSqlReplica -Replica $replica
+        Promote-GcSqlReplica $replica
 
         $operations = Get-GcSqlOperation -Instance $replica
         $operations.Count | Should Be 2
