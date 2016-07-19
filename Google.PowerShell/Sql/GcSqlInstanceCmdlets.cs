@@ -538,7 +538,7 @@ namespace Google.PowerShell.Sql
     /// </para>
     /// <example>
     ///   <para>Start the SQL Replica "testRepl1" from the Project "testing."</para>
-    ///   <para><code>PS C:\> Start-GcSqlReplica -Project "testing" -Instance "testRepl1"</code></para>
+    ///   <para><code>PS C:\> Start-GcSqlReplica -Project "testing" -Replica "testRepl1"</code></para>
     ///   <br></br>
     ///   <para>(If successful, the command returns nothing.)</para>
     /// </example>
@@ -616,7 +616,7 @@ namespace Google.PowerShell.Sql
     /// </para>
     /// <example>
     ///   <para>Stop the SQL Replica "testRepl1" from the Project "testing."</para>
-    ///   <para><code>PS C:\> Stop-GcSqlReplica -Project "testing" -Instance "testRepl1"</code></para>
+    ///   <para><code>PS C:\> Stop-GcSqlReplica -Project "testing" -Replica "testRepl1"</code></para>
     ///   <br></br>
     ///   <para>(If successful, the command returns nothing.)</para>
     /// </example>
