@@ -22,8 +22,8 @@ namespace Google.PowerShell.CloudStorage
     /// </para>
     /// <para type="description">
     /// If a name is not specified, gets all Google Cloud Storage buckets owned by a project. The project can
-    /// be specifed. If it is not, the project in the gcloud config will be used. The gcloud user must have
-    /// access to view the project.
+    /// be specifed. If it is not, the project in the active Cloud SDK configuration will be used. The gcloud
+    /// user must have access to view the project.
     /// </para>
     /// <example>
     ///   <para>Get the bucket named "widget-co-logs".</para>
