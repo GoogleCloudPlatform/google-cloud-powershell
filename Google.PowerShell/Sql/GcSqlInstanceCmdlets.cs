@@ -950,7 +950,7 @@ namespace Google.PowerShell.Sql
         /// The DatabaseInstance that describes the Replica we want to promote.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, Position = 2)]
+        [Parameter(Mandatory = false)]
         [ValidateNotNullOrEmpty]
         public string BackupInstance { get; set; }
 
