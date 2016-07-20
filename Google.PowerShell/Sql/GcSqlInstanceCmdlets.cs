@@ -981,7 +981,8 @@ namespace Google.PowerShell.Sql
                 }
             };
 
-            InstancesResource.RestoreBackupRequest instRestoreBackupRequest = Service.Instances.RestoreBackup(backupRequestBody, projectName, instanceName);
+            InstancesResource.RestoreBackupRequest instRestoreBackupRequest = 
+                Service.Instances.RestoreBackup(backupRequestBody, projectName, instanceName);
             Operation instRestoreBackupResponse = instRestoreBackupRequest.Execute();
             WaitForSqlOperation(instRestoreBackupResponse);
         }
