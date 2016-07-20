@@ -776,6 +776,11 @@ namespace Google.PowerShell.Sql
                     throw UnknownParameterSetException;
             }
 
+            if (!ShouldProcess($"{projectName}/{replicaName}", "Delete Replica"))
+            {
+                return;
+            }
+
             InstancesResource.StopReplicaRequest replStopRequest = 
                 Service.Instances.StopReplica(projectName, replicaName);
             Operation replStopResponse = replStopRequest.Execute();
