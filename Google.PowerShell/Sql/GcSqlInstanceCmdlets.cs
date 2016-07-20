@@ -1000,6 +1000,29 @@ namespace Google.PowerShell.Sql
     /// <para>
     /// Caution: If "Update" is true, this is not a partial update, so you must include values for all the settings that you want to retain.
     /// </para>
+    /// <example>
+    ///   <para>
+    ///   Patches the SQL Instance "myInstance" (with tier "db-n1-standard-1" and setting version of 15)
+    ///   so that it can have maintenance on Monday at 22:00.
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> Update-GcSqlInstance "myInstance" "db-n1-standard-1"`
+    ///         15 -MaintenanceWindowDay 1 -MaintenanceWindowHour "22:00" -Project "testing" 
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command returns nothing.)</para>
+    /// </example>
+    /// <example>
+    ///   <para>
+    ///   Updates the SQL Instance "myInstance" (with tier "db-n1-standard-1" and setting version of 18)
+    ///   so that its settings default.
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> Update-GcSqlInstance "myInstance" "db-n1-standard-1" 18 -Update
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command returns nothing.)</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsData.Update, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.ByName)]
     public class UpdateGcSqlInstanceCmdlet : GcSqlCmdlet
