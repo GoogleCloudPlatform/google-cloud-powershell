@@ -76,6 +76,15 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
+        /// The name of the failover replica. If specified at instance creation, a failover replica is created for the instance.
+        /// This property is applicable only to Second Generation instances.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        public string FailoverReplica { get; set; }
+
+        /// <summary>
+        /// <para type="description">
         /// The ReplicaConfiguration created by New-GcSqlInstanceReplicaConfig
         /// </para>
         /// </summary>
@@ -113,6 +122,13 @@ namespace Google.PowerShell.Sql
                 Kind = "sql#instance",
                 State = "RUNNABLE"
             };
+            if (FailoverReplica != null) {
+                instance.FailoverReplica = new DatabaseInstance.FailoverReplicaData
+                {
+                    Name = FailoverReplica
+                };
+            }
+            
             WriteObject(instance);
         }
     }
