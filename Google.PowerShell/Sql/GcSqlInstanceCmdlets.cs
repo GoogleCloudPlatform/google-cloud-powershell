@@ -917,7 +917,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// Name of the project in which the instance Replica resides.
+        /// Name of the project in which the instance to backup to and the instance to backup from reside.
         /// Defaults to the Cloud SDK config for properties if not specified.
         /// </para>
         /// </summary>
@@ -927,7 +927,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// The DatabaseInstance that describes the Replica we want to promote.
+        /// The id of the BackupRun to restore to. 
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0)]
@@ -935,7 +935,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// The name/ID of the Replica resource to promote.
+        /// The name/ID of Instance we are backing up. 
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 1)]
@@ -943,7 +943,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// The DatabaseInstance that describes the Replica we want to promote.
+        /// The DatabaseInstance that describes the Instance we are backing up. 
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true, Position = 1,
@@ -952,7 +952,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// The DatabaseInstance that describes the Replica we want to promote.
+        /// The name/ID of Instance we are backing up from. 
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
