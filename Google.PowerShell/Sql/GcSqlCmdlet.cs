@@ -42,6 +42,7 @@ namespace Google.PowerShell.Sql
             switch (op.OperationType)
             {
                 case "CREATE":
+                case "RESTORE_VOLUME":
                     {
                         delay = 10000;
                         break;

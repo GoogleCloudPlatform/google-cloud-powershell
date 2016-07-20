@@ -861,4 +861,129 @@ namespace Google.PowerShell.Sql
             WaitForSqlOperation(replPromoteResponse);
         }
     }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Restores a backup of a Cloud SQL Instance.
+    /// </para>
+    /// <para type="description">
+    /// Restores the specified backup of the specified Cloud SQL Instance.
+    /// </para>
+    /// <para type="description">
+    /// If a BackupInstance is specified, it will restore the specified backup run of that instance to the specified
+    /// Instance. Otherwise, it will assume the backup instance is the same as the specified Instance. 
+    /// </para>
+    /// <para type="description">
+    /// If a Project is specified, it will restore the specified backup in that project. Otherwise, restores the 
+    /// backup in the Cloud SDK config project. 
+    /// </para>
+    /// <example>
+    ///   <para>
+    ///   Restores backup run with id 0 of the SQL Instance "testRepl1" from the Project "testing" to the same SQL
+    ///   Instance.
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> Restore-GcSqlInstanceBackup -Project "testing" -BackupRunId 1243244 -Instance "testRepl1"
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command returns nothing.)</para>
+    /// </example>
+    /// <example>
+    ///   <para>
+    ///   Restores backup run with id 0 of the SQL Instance "testRepl2" from the Project "testing" to the SQL Instance 
+    ///   "testRepl1" (which must be in the same project).
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> Restore-GcSqlInstanceBackup -Project "testing" -BackupRunId 0 -Instance "testRepl1"
+    ///     -BackupInstance "testRepl2"
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command returns nothing.)</para>
+    /// </example>
+    /// </summary>
+    [Cmdlet(VerbsData.Restore, "GcSqlInstanceBackup")]
+    public class RestoreGcSqlInstanceBackupCmdlet : GcSqlCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByInstance = "ByInstance";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the project in which the instance Replica resides.
+        /// Defaults to the Cloud SDK config for properties if not specified.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The DatabaseInstance that describes the Replica we want to promote.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0)]
+        public long BackupRunId { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name/ID of the Replica resource to promote.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 1)]
+        public string Instance { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The DatabaseInstance that describes the Replica we want to promote.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true, Position = 1,
+                   ValueFromPipeline = true)]
+        public DatabaseInstance InstanceObject { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The DatabaseInstance that describes the Replica we want to promote.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, Position = 2)]
+        [ValidateNotNullOrEmpty]
+        public string BackupInstance { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            string projectName;
+            string instanceName;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.ByName:
+                    projectName = Project;
+                    instanceName = Instance;
+                    break;
+                case ParameterSetNames.ByInstance:
+                    projectName = InstanceObject.Project;
+                    instanceName = InstanceObject.Name;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+
+            InstancesRestoreBackupRequest backupRequestBody = new InstancesRestoreBackupRequest
+            {
+                RestoreBackupContext = new RestoreBackupContext
+                {
+                    BackupRunId = BackupRunId,
+                    InstanceId = BackupInstance ?? instanceName
+                }
+            };
+
+            InstancesResource.RestoreBackupRequest instRestoreBackupRequest = Service.Instances.RestoreBackup(backupRequestBody, projectName, instanceName);
+            Operation instRestoreBackupResponse = instRestoreBackupRequest.Execute();
+            WaitForSqlOperation(instRestoreBackupResponse);
+        }
+    }
 }
