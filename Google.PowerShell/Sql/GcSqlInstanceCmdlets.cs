@@ -722,7 +722,7 @@ namespace Google.PowerShell.Sql
     ///   <para>(If successful, the command returns nothing.)</para>
     /// </example>
     /// </summary>
-    [Cmdlet(VerbsLifecycle.Stop, "GcSqlReplica")]
+    [Cmdlet(VerbsLifecycle.Stop, "GcSqlReplica", SupportsShouldProcess = true)]
     public class StopGcSqlReplicaCmdlet : GcSqlCmdlet
     {
         private class ParameterSetNames
@@ -774,6 +774,11 @@ namespace Google.PowerShell.Sql
                     break;
                 default:
                     throw UnknownParameterSetException;
+            }
+
+            if (!ShouldProcess($"{projectName}/{replicaName}", "Stop Replica"))
+            {
+                return;
             }
 
             InstancesResource.StopReplicaRequest replStopRequest = 
@@ -901,7 +906,7 @@ namespace Google.PowerShell.Sql
     ///   <para>(If successful, the command returns nothing.)</para>
     /// </example>
     /// </summary>
-    [Cmdlet(VerbsData.Restore, "GcSqlInstanceBackup")]
+    [Cmdlet(VerbsData.Restore, "GcSqlInstanceBackup", SupportsShouldProcess = true)]
     public class RestoreGcSqlInstanceBackupCmdlet : GcSqlCmdlet
     {
         private class ParameterSetNames
@@ -912,7 +917,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// Name of the project in which the instance Replica resides.
+        /// Name of the project in which the instances to backup to and from reside.
         /// Defaults to the Cloud SDK config for properties if not specified.
         /// </para>
         /// </summary>
@@ -922,7 +927,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// The DatabaseInstance that describes the Replica we want to promote.
+        /// The id of the BackupRun to restore to. 
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0)]
@@ -930,7 +935,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// The name/ID of the Replica resource to promote.
+        /// The name/ID of Instance we are restoring the backup to. 
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 1)]
@@ -938,7 +943,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// The DatabaseInstance that describes the Replica we want to promote.
+        /// The DatabaseInstance that describes the Instance we are restoring the backup to. 
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true, Position = 1,
@@ -947,7 +952,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// The DatabaseInstance that describes the Replica we want to promote.
+        /// The name/ID of Instance we are backing up from. 
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
@@ -972,12 +977,20 @@ namespace Google.PowerShell.Sql
                     throw UnknownParameterSetException;
             }
 
+            string backupInstanceName = BackupInstance ?? instanceName;
+
+            if (!ShouldProcess($"{projectName}/{instanceName}, {projectName}/{backupInstanceName}/Backup#{BackupRunId}",
+                "Restore Backup"))
+            {
+                return;
+            }
+
             InstancesRestoreBackupRequest backupRequestBody = new InstancesRestoreBackupRequest
             {
                 RestoreBackupContext = new RestoreBackupContext
                 {
                     BackupRunId = BackupRunId,
-                    InstanceId = BackupInstance ?? instanceName
+                    InstanceId = backupInstanceName
                 }
             };
 
