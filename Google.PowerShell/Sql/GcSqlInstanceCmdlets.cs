@@ -917,7 +917,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// Name of the project in which the instance to backup to and the instance to backup from reside.
+        /// Name of the project in which the instances to backup to and from reside.
         /// Defaults to the Cloud SDK config for properties if not specified.
         /// </para>
         /// </summary>
@@ -935,7 +935,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// The name/ID of Instance we are backing up. 
+        /// The name/ID of Instance we are restoring the backup to. 
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 1)]
@@ -943,7 +943,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// The DatabaseInstance that describes the Instance we are backing up. 
+        /// The DatabaseInstance that describes the Instance we are restoring the backup to. 
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true, Position = 1,
