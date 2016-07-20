@@ -491,4 +491,78 @@ Describe "Promote-GcSqlReplica" {
      }
 }
 
+Describe "Restore-GcSqlInstanceBackup" {
+    # For these tests, test-db2 and mynewinstance were used because an instance must have backups enabled and a 
+    # binarylog to be backed up. This kind of instance cannot be easily/quickly instantiated like those in other tests.
+    $backupInstance1 = "test-db2"
+    $backupInstance2 = "mynewinstance"
+
+    $backupRunIds1 = (Get-GcSqlBackupRun -Instance $backupInstance1).Id
+    $backupRunIds2 = (Get-GcSqlBackupRun -Instance $backupInstance2).Id
+
+    $numRestoreOps1 = (Get-GcSqlOperation -Instance $backupInstance1 | where { $_.OperationType -eq "RESTORE_VOLUME" }).Count
+    $numRestoreOps2 = (Get-GcSqlOperation -Instance $backupInstance2 | where { $_.OperationType -eq "RESTORE_VOLUME" }).Count
+
+    It "should backup test-db2 to its own backup" {
+        $backupRunId = $backupRunIds1[0]
+
+        Restore-GcSqlInstanceBackup $backupRunId $backupInstance1 
+
+        $operations = Get-GcSqlOperation -Instance $backupInstance1
+        ($operations | where { $_.OperationType -eq "RESTORE_VOLUME" }).Count | Should Be ($numRestoreOps1 + 1)
+        $operations[0].OperationType | Should Match "RESTORE_VOLUME"
+        $operations[0].Status | Should Match "DONE"
+        $operations[0].Error | Should Match ""
+    }
+
+     It "should backup pipelined test-db2 to its own backup (test-db2 and default projects same)" {
+         $backupRunId = $backupRunIds1[1]
+
+        Get-GcSqlInstance -Name $backupInstance1 | Restore-GcSqlInstanceBackup $backupRunId
+
+        $operations = Get-GcSqlOperation -Instance $backupInstance1
+        ($operations | where { $_.OperationType -eq "RESTORE_VOLUME" }).Count | Should Be ($numRestoreOps1 + 2)
+        $operations[0].OperationType | Should Match "RESTORE_VOLUME"
+        $operations[0].Status | Should Match "DONE"
+        $operations[0].Error | Should Match ""
+     }
+
+    It "should backup pipelined test-db2 to its own backup (test-db2 and default projects differ)" {
+        $nonDefaultProject = "asdf"
+        $defaultProject = "gcloud-powershell-testing"
+
+        # Set gcloud config to a non-default project (not gcloud-powershell-testing)
+        gcloud config set project $nonDefaultProject
+
+        $backupRunId = $backupRunIds1[2]
+
+        Get-GcSqlInstance -Project $defaultProject -Name $backupInstance1 | Restore-GcSqlInstanceBackup $backupRunId
+
+        $operations = Get-GcSqlOperation -Project $defaultProject -Instance $backupInstance1
+        ($operations | where { $_.OperationType -eq "RESTORE_VOLUME" }).Count | Should Be ($numRestoreOps1 + 3)
+        $operations[0].OperationType | Should Match "RESTORE_VOLUME"
+        $operations[0].Status | Should Match "DONE"
+        $operations[0].Error | Should Match ""
+
+        # Reset gcloud config back to default project (gcloud-powershell-testing)
+        gcloud config set project $defaultProject
+     }
+
+    It "should backup pipelined mynewinstance to test-db2's backup" {
+        $backupRunId = $backupRunIds1[0]
+
+        Get-GcSqlInstance -Name $backupInstance2 | Restore-GcSqlInstanceBackup $backupRunId -BackupInstance $backupInstance1
+
+        $operations = Get-GcSqlOperation -Instance $backupInstance2
+        ($operations | where { $_.OperationType -eq "RESTORE_VOLUME" }).Count | Should Be ($numRestoreOps2 + 1)
+        $operations[0].OperationType | Should Match "RESTORE_VOLUME"
+        $operations[0].Status | Should Match "DONE"
+        $operations[0].Error | Should Match ""
+     }
+
+    # Reset both instances to their own last backups
+    Restore-GcSqlInstanceBackup $backupRunIds1[0] $backupInstance1
+    Restore-GcSqlInstanceBackup $backupRunIds2[0] $backupInstance2
+}
+
 Reset-GCloudConfig $oldActiveConfig $configName
