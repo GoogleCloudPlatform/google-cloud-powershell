@@ -3,10 +3,9 @@
 
 using Google.Apis.SQLAdmin.v1beta4;
 using Google.Apis.SQLAdmin.v1beta4.Data;
-using System.Management.Automation;
 using Google.PowerShell.Common;
 using System.Collections.Generic;
-using System.Linq;
+using System.Management.Automation;
 
 namespace Google.PowerShell.Sql
 {
@@ -698,7 +697,8 @@ namespace Google.PowerShell.Sql
                     throw UnknownParameterSetException;
             }
 
-            InstancesResource.StartReplicaRequest replStartRequest = Service.Instances.StartReplica(projectName, replicaName);
+            InstancesResource.StartReplicaRequest replStartRequest = 
+                Service.Instances.StartReplica(projectName, replicaName);
             Operation replStartResponse = replStartRequest.Execute();
             WaitForSqlOperation(replStartResponse);
         }
@@ -776,9 +776,89 @@ namespace Google.PowerShell.Sql
                     throw UnknownParameterSetException;
             }
 
-            InstancesResource.StopReplicaRequest replStopRequest = Service.Instances.StopReplica(projectName, replicaName);
+            InstancesResource.StopReplicaRequest replStopRequest = 
+                Service.Instances.StopReplica(projectName, replicaName);
             Operation replStopResponse = replStopRequest.Execute();
             WaitForSqlOperation(replStopResponse);
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Promotes a Cloud SQL Replica.
+    /// </para>
+    /// <para type="description">
+    /// Promotes the specified Cloud SQL Replica to a stand-alone Instance.
+    /// </para>
+    /// <para type="description">
+    /// If a Project is specified, it will promote the specified Replica in that Project. Otherwise, promotes the 
+    /// replica in the Cloud SDK config project. 
+    /// </para>
+    /// <example>
+    ///   <para>Promote the SQL Replica "testRepl1" from the Project "testing."</para>
+    ///   <para><code>PS C:\> Promote-GcSqlReplica -Project "testing" -Replica "testRepl1"</code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command returns nothing.)</para>
+    /// </example>
+    /// </summary>
+    [Cmdlet("Promote", "GcSqlReplica")]
+    public class PromoteGcSqlReplicaCmdlet : GcSqlCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByInstance = "ByInstance";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the project in which the instance Replica resides.
+        /// Defaults to the Cloud SDK config for properties if not specified.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name/ID of the Replica resource to promote.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 0)]
+        public string Replica { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The DatabaseInstance that describes the Replica we want to promote.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true, Position = 0,
+                   ValueFromPipeline = true)]
+        public DatabaseInstance ReplicaObject { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            string projectName;
+            string replicaName;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.ByName:
+                    projectName = Project;
+                    replicaName = Replica;
+                    break;
+                case ParameterSetNames.ByInstance:
+                    projectName = ReplicaObject.Project;
+                    replicaName = ReplicaObject.Name;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+
+            InstancesResource.PromoteReplicaRequest replPromoteRequest = 
+                Service.Instances.PromoteReplica(projectName, replicaName);
+            Operation replPromoteResponse = replPromoteRequest.Execute();
+            WaitForSqlOperation(replPromoteResponse);
         }
     }
 }
