@@ -90,7 +90,7 @@ namespace Google.PowerShell.Dns
         /// </para>
         /// </summary>
         [Alias("ManagedZone")]
-        [Parameter(Position = 1, Mandatory = false)]
+        [Parameter(Position = 0, Mandatory = false)]
         public string Zone { get; set; }
 
         protected override void ProcessRecord()
@@ -173,7 +173,7 @@ namespace Google.PowerShell.Dns
         /// lowercase letters, digits, and dashes.
         /// </para>
         /// </summary>
-        [Parameter(Position = 1, Mandatory = true)]
+        [Parameter(Position = 0, Mandatory = true)]
         public string Name { get; set; }
 
         /// <summary>
@@ -185,7 +185,7 @@ namespace Google.PowerShell.Dns
         /// automatically add a period before attempting zone creation.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = true)]
+        [Parameter(Position = 1, Mandatory = true)]
         public string DnsName { get; set; }
 
         /// <summary>
@@ -193,7 +193,7 @@ namespace Google.PowerShell.Dns
         /// Get the description of the new ManagedZone.
         /// </para>
         /// </summary>
-        [Parameter(Position = 3, Mandatory = false)]
+        [Parameter(Position = 2, Mandatory = false)]
         public string Description { get; set; }
 
         protected override void ProcessRecord()
@@ -260,7 +260,7 @@ namespace Google.PowerShell.Dns
         /// </para>
         /// </summary>
         [Alias("Name", "Id", "ManagedZone")]
-        [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+        [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
         public string Zone { get; set; }
 
         /// <summary>
@@ -268,7 +268,7 @@ namespace Google.PowerShell.Dns
         /// Force removal of even non-empty ManagedZones (e.g., zones with non-NS/SOA type records).
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = false)]
+        [Parameter(Position = 1, Mandatory = false)]
         public SwitchParameter Force { get; set; }
 
         protected override void ProcessRecord()

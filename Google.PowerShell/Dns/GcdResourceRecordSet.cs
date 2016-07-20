@@ -91,7 +91,7 @@ namespace Google.PowerShell.Dns
         /// </para>
         /// </summary>
         [Alias("ManagedZone")]
-        [Parameter(Position = 1, Mandatory = true)]
+        [Parameter(Position = 0, Mandatory = true)]
         public string Zone { get; set; }
 
         /// <summary>
@@ -99,7 +99,7 @@ namespace Google.PowerShell.Dns
         /// Filter the type(s) of ResourceRecordSets to return (e.g., -Filter "CNAME","NS")
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = false)]
+        [Parameter(Position = 1, Mandatory = false)]
         public string[] Filter { get; set; }
 
         protected override void ProcessRecord()
