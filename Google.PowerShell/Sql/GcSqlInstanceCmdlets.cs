@@ -1291,7 +1291,6 @@ namespace Google.PowerShell.Sql
                 Operation result = request.Execute();
                 WaitForSqlOperation(result);
             }
-
         }
 
         private Settings PopulateSetting(Settings newSettings)
