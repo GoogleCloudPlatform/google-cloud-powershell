@@ -906,7 +906,7 @@ namespace Google.PowerShell.Sql
     ///   <para>(If successful, the command returns nothing.)</para>
     /// </example>
     /// </summary>
-    [Cmdlet(VerbsData.Restore, "GcSqlInstanceBackup")]
+    [Cmdlet(VerbsData.Restore, "GcSqlInstanceBackup", SupportsShouldProcess = true)]
     public class RestoreGcSqlInstanceBackupCmdlet : GcSqlCmdlet
     {
         private class ParameterSetNames
@@ -977,12 +977,20 @@ namespace Google.PowerShell.Sql
                     throw UnknownParameterSetException;
             }
 
+            string backupInstanceName = BackupInstance ?? instanceName;
+
+            if (!ShouldProcess($"{projectName}/{instanceName}, {projectName}/{backupInstanceName}/Backup#{BackupRunId}",
+                "Restore Backup"))
+            {
+                return;
+            }
+
             InstancesRestoreBackupRequest backupRequestBody = new InstancesRestoreBackupRequest
             {
                 RestoreBackupContext = new RestoreBackupContext
                 {
                     BackupRunId = BackupRunId,
-                    InstanceId = BackupInstance ?? instanceName
+                    InstanceId = backupInstanceName
                 }
             };
 
