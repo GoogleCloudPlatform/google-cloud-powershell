@@ -1010,7 +1010,7 @@ namespace Google.PowerShell.Sql
     ///         15 -MaintenanceWindowDay 1 -MaintenanceWindowHour "22:00" -Project "testing" 
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns nothing.)</para>
+    ///   <para>(If successful, the command returns the resource for the updated instance.)</para>
     /// </example>
     /// <example>
     ///   <para>
@@ -1021,7 +1021,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Update-GcSqlInstance "myInstance" "db-n1-standard-1" 18 -Update
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns nothing.)</para>
+    ///   <para>(If successful, the command returns the resource for the updated instance.)</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsData.Update, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.ByName)]
@@ -1291,6 +1291,8 @@ namespace Google.PowerShell.Sql
                 Operation result = request.Execute();
                 WaitForSqlOperation(result);
             }
+            DatabaseInstance updated = Service.Instances.Get(project, instance).Execute();
+            WriteObject(updated);
         }
 
         private Settings PopulateSetting(Settings newSettings)
