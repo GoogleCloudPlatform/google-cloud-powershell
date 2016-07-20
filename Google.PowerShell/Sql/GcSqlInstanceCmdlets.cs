@@ -722,7 +722,7 @@ namespace Google.PowerShell.Sql
     ///   <para>(If successful, the command returns nothing.)</para>
     /// </example>
     /// </summary>
-    [Cmdlet(VerbsLifecycle.Stop, "GcSqlReplica")]
+    [Cmdlet(VerbsLifecycle.Stop, "GcSqlReplica", SupportsShouldProcess = true)]
     public class StopGcSqlReplicaCmdlet : GcSqlCmdlet
     {
         private class ParameterSetNames
@@ -776,7 +776,7 @@ namespace Google.PowerShell.Sql
                     throw UnknownParameterSetException;
             }
 
-            if (!ShouldProcess($"{projectName}/{replicaName}", "Delete Replica"))
+            if (!ShouldProcess($"{projectName}/{replicaName}", "Stop Replica"))
             {
                 return;
             }
