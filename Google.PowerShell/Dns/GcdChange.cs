@@ -76,7 +76,7 @@ namespace Google.PowerShell.Dns
         /// </para>
         /// </summary>
         [Alias("ManagedZone")]
-        [Parameter(Position = 1, Mandatory = true)]
+        [Parameter(Position = 0, Mandatory = true)]
         public string Zone { get; set; }
 
         /// <summary>
@@ -84,7 +84,7 @@ namespace Google.PowerShell.Dns
         /// Get the id of the specific change to return.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = false)]
+        [Parameter(Position = 1, Mandatory = false)]
         public string ChangeId { get; set; }
 
         protected override void ProcessRecord()
@@ -182,7 +182,7 @@ namespace Google.PowerShell.Dns
         /// </para>
         /// </summary>
         [Alias("ManagedZone")]
-        [Parameter(Position = 1, Mandatory = true)]
+        [Parameter(Position = 0, Mandatory = true)]
         public string Zone { get; set; }
 
         /// <summary>
@@ -191,7 +191,7 @@ namespace Google.PowerShell.Dns
         /// </para>
         /// </summary>
         [Alias("Change")]
-        [Parameter(ParameterSetName = ParameterSetNames.ChangeRequest, Position = 2, Mandatory = true, 
+        [Parameter(ParameterSetName = ParameterSetNames.ChangeRequest, Position = 1, Mandatory = true, 
             ValueFromPipeline = true)]
         public Change ChangeRequest { get; set; }
 

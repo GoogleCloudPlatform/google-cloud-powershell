@@ -588,7 +588,7 @@ namespace Google.PowerShell.Sql
         /// The name/ID of the Instance resource to restart.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 1)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 0)]
         [Alias("Name","Id")]
         public string Instance { get; set; }
 
@@ -667,7 +667,7 @@ namespace Google.PowerShell.Sql
         /// The name/ID of the Replica resource to start.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 1)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 0)]
         public string Replica { get; set; }
 
         /// <summary>
@@ -746,7 +746,7 @@ namespace Google.PowerShell.Sql
         /// The name/ID of the Replica resource to stop.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 1)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 0)]
         public string Replica { get; set; }
 
         /// <summary>
