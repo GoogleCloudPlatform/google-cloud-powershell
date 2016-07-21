@@ -153,7 +153,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Sql\GcSqlBackupRunCmdlets.cs" />
     <Compile Include="Sql\GcSqlCmdlet.cs" />
-    <Compile Include="Sql\GcSqlDatabaseCmdlets.cs" />
     <Compile Include="Sql\GcSqlFlagsCmdlet.cs" />
     <Compile Include="Sql\GcSqlInstanceCmdlets.cs" />
     <Compile Include="Sql\GcSqlInstanceConfigCmdlets.cs" />

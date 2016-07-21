@@ -1053,24 +1053,13 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// The tier of service for this instance, for example "db-n1-standard-1".
-        /// Pricing information is available at https://cloud.google.com/sql/pricing.
-        /// Get-GcSqlTiers will also tell you what tiers are available for your project.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 1, Mandatory = true, ParameterSetName = ParameterSetNames.ByName)]
-        [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.ByInstance)]
-        public string Tier { get; set; }
-
-        /// <summary>
-        /// <para type="description">
         /// The version of instance settings. 
         /// This is a required field to make sure concurrent updates are handled properly.
         /// During update, use the most recent settingsVersion value for the instance and do not try to update this value.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = true, ParameterSetName = ParameterSetNames.ByName)]
-        [Parameter(Position = 1, Mandatory = true, ParameterSetName = ParameterSetNames.ByInstance)]
+        [Parameter(Position = 1, Mandatory = true, ParameterSetName = ParameterSetNames.ByName)]
+        [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.ByInstance)]
         public long SettingsVersion { get; set; }
 
         /// <summary>
@@ -1090,6 +1079,17 @@ namespace Google.PowerShell.Sql
         /// </summary>
         [Parameter]
         public SwitchParameter Update { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The tier of service for this instance, for example "db-n1-standard-1".
+        /// Pricing information is available at https://cloud.google.com/sql/pricing.
+        /// Get-GcSqlTiers will also tell you what tiers are available for your project.
+        /// If not specified, this will be acquired from the instance.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        public string Tier { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -1278,6 +1278,10 @@ namespace Google.PowerShell.Sql
                     MaintenanceWindow = new MaintenanceWindow(),
                 };
                 newSettings = PopulateSetting(newSettings);
+                if (newSettings.Tier == null)
+                {
+                    newSettings.Tier = body.Settings.Tier;
+                }
                 body.Settings = newSettings;
                 InstancesResource.UpdateRequest request = Service.Instances.Update(body, project, instance);
                 Operation result = request.Execute();

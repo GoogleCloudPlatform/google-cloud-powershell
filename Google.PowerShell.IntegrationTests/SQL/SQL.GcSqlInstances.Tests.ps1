@@ -566,16 +566,15 @@ Describe "Restore-GcSqlInstanceBackup" {
 }
 
 Describe "Update-GcSqlInstance" {
-    $2ndGenTier = "db-n1-standard-1"
     # A random number is used to avoid collisions with the speed of creating and deleting instances.
     $r = Get-Random
     $instance = "test-inst$r"
-    gcloud sql instances create $instance --tier $2ndGenTier --activation-policy "ALWAYS" --quiet 2>$null
+    gcloud sql instances create $instance --tier "db-n1-standard-1" --activation-policy "ALWAYS" --quiet 2>$null
   
     It "should patch even if nothing changes" {
         $before = Get-GcSqlInstance -Name $instance
         $settingVer = $before.Settings.SettingsVersion
-        $after = Update-GcSqlInstance $instance $2ndGenTier $settingVer
+        $after = Update-GcSqlInstance $instance $settingVer
         ($after.Settings.SettingsVersion) | Should BeGreaterThan $settingVer
         ($after.SelfLink) | Should Be $before.SelfLink
     }
@@ -585,7 +584,7 @@ Describe "Update-GcSqlInstance" {
         $hour = Get-Random -Minimum 1 -Maximum 10
         $before = Get-GcSqlInstance -Name $instance
         $settingVer = $before.Settings.SettingsVersion
-        $after = Update-GcSqlInstance $instance $2ndGenTier $settingVer -MaintenanceWindowDay $day -MaintenanceWindowHour $hour
+        $after = Update-GcSqlInstance $instance $settingVer -MaintenanceWindowDay $day -MaintenanceWindowHour $hour
         ($after.Settings.SettingsVersion) | Should BeGreaterThan $settingVer
         ($after.Settings.MaintenanceWindow.Day) | Should Be $day
         ($after.Settings.MaintenanceWindow.Hour) | Should Be $hour
@@ -594,7 +593,7 @@ Describe "Update-GcSqlInstance" {
     It "should patch backup configurations" {
         $before = Get-GcSqlInstance -Name $instance
         $settingVer = $before.Settings.SettingsVersion
-        $after = Update-GcSqlInstance $instance $2ndGenTier $settingVer -BackupBinaryLogEnabled $true -BackupEnabled $true  -BackupStartTime "22:00"
+        $after = Update-GcSqlInstance $instance $settingVer -BackupBinaryLogEnabled $true -BackupEnabled $true  -BackupStartTime "22:00"
         ($after.Settings.SettingsVersion) | Should BeGreaterThan $settingVer
         ($after.Settings.BackupConfiguration.BinaryLogEnabled) | Should Be true
         ($after.Settings.BackupConfiguration.Enabled) | Should Be true
@@ -604,7 +603,7 @@ Describe "Update-GcSqlInstance" {
     It "should patch IP configuations" {
         $before = Get-GcSqlInstance -Name $instance
         $settingVer = $before.Settings.SettingsVersion
-        $after = Update-GcSqlInstance $instance $2ndGenTier $settingVer -IpConfigRequireSsl $False
+        $after = Update-GcSqlInstance $instance $settingVer -IpConfigRequireSsl $False
         ($after.Settings.SettingsVersion) | Should BeGreaterThan $settingVer
         ($after.Settings.IpConfiguration.RequireSsl) | Should Be false
     }
@@ -612,7 +611,7 @@ Describe "Update-GcSqlInstance" {
     It "should patch Location Preferences" {
         $before = Get-GcSqlInstance -Name $instance
         $settingVer = $before.Settings.SettingsVersion
-        $after = Update-GcSqlInstance $instance $2ndGenTier $settingVer -LocationPreferenceZone "us-central1-a"
+        $after = Update-GcSqlInstance $instance $settingVer -LocationPreferenceZone "us-central1-a"
         ($after.Settings.SettingsVersion) | Should BeGreaterThan $settingVer
         ($after.Settings.LocationPreference.Zone) | Should be "us-central1-a"
     }
@@ -620,14 +619,14 @@ Describe "Update-GcSqlInstance" {
     It "should be able to take in an instance" {
         $before = Get-GcSqlInstance -Name $instance
         $settingVer = $before.Settings.SettingsVersion
-        $after = Update-GcSqlInstance $2ndGenTier $settingVer -InstanceObject $before
+        $after = Update-GcSqlInstance $settingVer -InstanceObject $before
         ($after.Settings.SettingsVersion) | Should BeGreaterThan $settingVer
     }
 
     It "should update correctly" {
         $before = Get-GcSqlInstance -Name $instance
         $settingVer = $before.Settings.SettingsVersion
-        $after = Update-GcSqlInstance $instance $2ndGenTier $settingVer -Update
+        $after = Update-GcSqlInstance $instance $settingVer -Update
         ($after.Settings.SettingsVersion) | Should BeGreaterThan $settingVer
         ($after.Settings.MaintenanceWindow.Day) | Should Be 0
     }
