@@ -6,8 +6,10 @@ $r = Get-Random
 # A random number is used to avoid collisions with the speed of creating
 # and deleting instances.
 $instance = "test-inst$r"
+
 Describe "Get-GcSqlSslCert" {
     gcloud sql instances create $instance --quiet 2>$null
+
     It "should get a reasonable list response when no sslcerts exist" {
         $certs = Get-GcSqlSslCert $instance
         $certs.Count | Should Be 0
@@ -82,6 +84,29 @@ Describe "Remove-GcSqlSslCert" {
         { Remove-GcSqlSslCert $instance "f02" } | Should Throw "The SSL certificate does not exist. [404]"
     }
 }
+
+Describe "Reset-GcSqlSslConfig" {
+    It "should work" {
+        Add-GcSqlSslCert $instance  "test-ssl-res1"
+        $instanceCerts = Get-GcSqlSslCert $instance
+        ($instanceCerts.CommonName -contains "test-ssl-res1") | Should Be true
+        Reset-GcSqlSslConfig $instance
+        $instanceCerts = Get-GcSqlSslCert $instance
+        ($instanceCerts.CommonName -contains "test-ssl-res1") | Should Be false
+        $instanceCerts.Count | Should Be 0
+    }
+
+    It "should work with a pipelined instance" {
+        Add-GcSqlSslCert $instance  "test-ssl-res2"
+        $instanceCerts = Get-GcSqlSslCert $instance
+        ($instanceCerts.CommonName -contains "test-ssl-res2") | Should Be true
+        Reset-GcSqlSslConfig $instance
+        $instanceCerts = Get-GcSqlSslCert $instance
+        ($instanceCerts.CommonName -contains "test-ssl-res2") | Should Be false
+        $instanceCerts.Count | Should Be 0
+    }
+}
+
 gcloud sql instances delete $instance --quiet 2>$null
 
 Describe "Add-GcSqlSslEphemeral" {
