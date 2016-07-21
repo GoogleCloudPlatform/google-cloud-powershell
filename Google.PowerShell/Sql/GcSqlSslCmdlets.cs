@@ -317,8 +317,6 @@ namespace Google.PowerShell.Sql
     /// <summary>
     /// <para type="synopsis">
     /// Deletes all client certificates and generates a new server SSL certificate for the instance. 
-    /// The changes will not take effect until the instance is restarted. 
-    /// Existing instances without a server certificate will need to call this once to set a server certificate.
     /// </para>
     /// <para type="description">
     /// Deletes all client certificates and generates a new server SSL certificate for the instance. 
