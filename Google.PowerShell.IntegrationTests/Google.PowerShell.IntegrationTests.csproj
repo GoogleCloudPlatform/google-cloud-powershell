@@ -62,6 +62,7 @@
     <None Include="Compute\Compute.GceSnapshot.Tests.ps1" />
     <None Include="GcloudCmdlets.ps1" />
     <None Include="README.md" />
+    <None Include="SQL\SQL.GcSqlSslCerts.Tests.ps1" />
     <None Include="Storage\Storage.GcsBucket.Tests.ps1" />
     <None Include="Storage\Storage.GcsBucketLogging.Tests.ps1" />
     <None Include="Storage\Storage.GcsBucketWebsite.Tests.ps1" />

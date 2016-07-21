@@ -149,6 +149,8 @@
     <Compile Include="Compute\GceFirewallProtocolCmdlet.cs" />
     <Compile Include="Compute\InstanceMetadataConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Sql\GcSqlCmdlet.cs" />
+    <Compile Include="Sql\GcSqlSslCmdlets.cs" />
     <Compile Include="Storage\GcsBucket.cs" />
     <Compile Include="Storage\GcsBucketLogging.cs" />
     <Compile Include="Storage\GcsBucketWebsite.cs" />
