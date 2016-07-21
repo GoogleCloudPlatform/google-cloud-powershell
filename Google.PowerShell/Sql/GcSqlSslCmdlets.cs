@@ -313,4 +313,94 @@ namespace Google.PowerShell.Sql
             WriteObject(result);
         }
     }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Deletes all client certificates and generates a new server SSL certificate for the instance. 
+    /// The changes will not take effect until the instance is restarted. 
+    /// Existing instances without a server certificate will need to call this once to set a server certificate.
+    /// </para>
+    /// <para type="description">
+    /// Deletes all client certificates and generates a new server SSL certificate for the instance. 
+    /// The changes will not take effect until the instance is restarted. 
+    /// Existing instances without a server certificate will need to call this once to set a server certificate.
+    /// </para>
+    /// <example>
+    ///   <para>
+    ///   Resets the SSL Certificates for the "myInstance" instance.
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> Reset-GcSqlSslConfig "myInstance"
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command returns the resource for the updated instance.)</para>
+    /// </example>
+    /// <example>
+    ///   <para>
+    ///   Resets the SSL Certificates for the instance represented by the resource stored in $instance.
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> Reset-GcSqlSslConfig $instance
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command returns the resource for the updated instance.)</para>
+    /// </example>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Reset, "GcSqlSslConfig", DefaultParameterSetName = ParameterSetNames.ByName)]
+    public class ResetGcSqlSslConfig : GcSqlCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByInstance = "ByInstance";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the project. Defaults to the Cloud SDK configuration for properties if not specified.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Cloud SQL instance name.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByName)]
+        public string Instance { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// An instance resourve that you want to reset the SSL Configuration for.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ByInstance)]
+        public DatabaseInstance InstanceObject { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            string project;
+            string instance;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.ByName:
+                    instance = Instance;
+                    project = Project;
+                    break;
+                case ParameterSetNames.ByInstance:
+                    instance = InstanceObject.Name;
+                    project = InstanceObject.Project;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+            InstancesResource.ResetSslConfigRequest request = Service.Instances.ResetSslConfig(project, instance);
+            Operation result = request.Execute();
+            DatabaseInstance updated = Service.Instances.Get(project, instance).Execute();
+            WriteObject(updated);
+        }
+    }
 }

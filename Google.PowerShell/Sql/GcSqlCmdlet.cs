@@ -47,6 +47,11 @@ namespace Google.PowerShell.Sql
                         delay = 10000;
                         break;
                     }
+                case "UPDATE":
+                    {
+                        delay = 5000;
+                        break;
+                    }
                 default:
                     {
                         delay = 150;
