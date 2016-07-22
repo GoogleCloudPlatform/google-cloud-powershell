@@ -115,7 +115,7 @@ Describe "Copy-GcSqlInstance" {
         # A random number is used to avoid collisions with the speed of creating
         # and deleting instances.
         $instance = "test-copy$r"
-        Copy-GcSqlInstance "test-db2" $instance "mysql-bin.000001" 1133
+        Copy-GcSqlInstance "test-db2" $instance "mysql-bin.000001" 2307
         $original = Get-GcSqlInstance "test-db2"
         $clones = Get-GcSqlInstance 
         ($clones.Name -contains $instance) | Should Be true
@@ -129,14 +129,14 @@ Describe "Copy-GcSqlInstance" {
         # A random number is used to avoid collisions with the speed of creating
         # and deleting instances.
         $instance = "test-copy$r"
-        Get-GcSqlInstance "test-db2" | Copy-GcSqlInstance -CloneName $instance -binaryLogFileName "mysql-bin.000001" -binaryLogPosition 1133
+        Get-GcSqlInstance "test-db2" | Copy-GcSqlInstance -CloneName $instance -binaryLogFileName "mysql-bin.000001" -binaryLogPosition 2307
         $clones = Get-GcSqlInstance 
         ($clones.Name -contains $instance) | Should Be true
         gcloud sql instances delete $instance --quiet 2>$null
     }
 
     It "shouldn't copy something if it doesn't exist" {
-        { Copy-GcSqlInstance "fail" "shouldfail" "mysql-bin.000001" 1133}`
+        { Copy-GcSqlInstance "fail" "shouldfail" "mysql-bin.000001" 2307}`
             | Should Throw "The client is not authorized to make this request. [403]"
     }
 }
