@@ -18,7 +18,7 @@ Describe "Get-GcSqlOperations" {
     }
 
 	It "should get a reasonable response from a given query" {
-        $firstOp.name = Get-GcSqlOperation -Instance $instance | Select-Object -last 1
+        $firstOp = Get-GcSqlOperation -Instance $instance | Select-Object -last 1
         $operation = Get-GcSqlOperation -Project $project -Name $firstOp.name
         $operation.operationType | Should Be "Create"
     }
@@ -33,7 +33,7 @@ Describe "Get-GcSqlOperations" {
     }
 
     It "shouldn't require Project to be passed in to work" {
-        $firstOp.name = Get-GcSqlOperation -Instance $instance | Select-Object -last 1
+        $firstOp = Get-GcSqlOperation -Instance $instance | Select-Object -last 1
         $operation = Get-GcSqlOperation -Name $firstOp.name
         $operation.operationType | Should Be "Create"
     }
