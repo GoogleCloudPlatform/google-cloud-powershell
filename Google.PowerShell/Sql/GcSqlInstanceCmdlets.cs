@@ -21,6 +21,8 @@ namespace Google.PowerShell.Sql
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.GetList)]
+    [OutputType(typeof(DatabaseInstance))]
+    [OutputType(typeof(IEnumerable<DatabaseInstance>))]
     public class GetGcSqlInstanceCmdlet : GcSqlCmdlet
     {
         internal class ParameterSetNames
@@ -93,6 +95,7 @@ namespace Google.PowerShell.Sql
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GcSqlInstance")]
+    [OutputType(typeof(DatabaseInstance))]
     public class AddGcSqlInstanceCmdlet : GcSqlCmdlet
     {
         /// <summary>
@@ -209,6 +212,7 @@ namespace Google.PowerShell.Sql
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Copy, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.ByName)]
+    [OutputType(typeof(DatabaseInstance))]
     public class CopyGcSqlInstanceCmdlet : GcSqlCmdlet
     {
         private class ParameterSetNames
@@ -1038,6 +1042,7 @@ namespace Google.PowerShell.Sql
     /// </example>
     /// </summary>
     [Cmdlet(VerbsData.Update, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.ByName)]
+    [OutputType(typeof(DatabaseInstance))]
     public class UpdateGcSqlInstanceCmdlet : GcSqlCmdlet
     {
         private class ParameterSetNames

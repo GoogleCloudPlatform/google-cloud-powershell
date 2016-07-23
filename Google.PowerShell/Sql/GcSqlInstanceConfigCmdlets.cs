@@ -26,6 +26,7 @@ namespace Google.PowerShell.Sql
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GcSqlInstanceConfig")]
+    [OutputType(typeof(DatabaseInstance))]
     public class NewGcSqlInstanceConfigCmdlet : GcSqlCmdlet
     {
         /// <summary>
