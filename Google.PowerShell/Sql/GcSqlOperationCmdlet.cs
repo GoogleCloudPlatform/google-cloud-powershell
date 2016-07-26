@@ -41,7 +41,6 @@ namespace Google.PowerShell.Sql
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlOperation")]
-    [OutputType(typeof(IEnumerable<Operation>))]
     [OutputType(typeof(Operation))]
     public class GetGcSqlOperationCmdlet : GcSqlCmdlet
     {

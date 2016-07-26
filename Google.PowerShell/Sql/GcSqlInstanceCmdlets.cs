@@ -22,7 +22,6 @@ namespace Google.PowerShell.Sql
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.GetList)]
     [OutputType(typeof(DatabaseInstance))]
-    [OutputType(typeof(IEnumerable<DatabaseInstance>))]
     public class GetGcSqlInstanceCmdlet : GcSqlCmdlet
     {
         internal class ParameterSetNames

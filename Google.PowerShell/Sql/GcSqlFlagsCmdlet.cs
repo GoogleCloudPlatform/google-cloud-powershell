@@ -37,7 +37,7 @@ namespace Google.PowerShell.Sql
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlFlags")]
-    [OutputType(typeof(IList<Flag>))]
+    [OutputType(typeof(Flag))]
     public class GetGcSqlFlagsCmdlet : GcSqlCmdlet
     {
         protected override void ProcessRecord()

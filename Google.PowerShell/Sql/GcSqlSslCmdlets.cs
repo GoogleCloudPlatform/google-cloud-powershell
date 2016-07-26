@@ -52,7 +52,6 @@ namespace Google.PowerShell.Sql
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlSslCert")]
     [OutputType(typeof(SslCert))]
-    [OutputType(typeof(IList<SslCert>))]
     public class GetGcSqlSslCmdlet : GcSqlCmdlet
     {
         internal class ParameterSetNames

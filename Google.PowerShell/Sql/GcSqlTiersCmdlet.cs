@@ -33,7 +33,7 @@ namespace Google.PowerShell.Sql
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlTiers")]
-    [OutputType(typeof(IList<Tier>))]
+    [OutputType(typeof(Tier))]
     public class GcSqlTiersCmdlet : GcSqlCmdlet
     {
         /// <summary>
