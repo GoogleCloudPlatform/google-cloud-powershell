@@ -1388,4 +1388,159 @@ namespace Google.PowerShell.Sql
             return newSettings;
         }
     }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Failover a Cloud SQL Instance.
+    /// </para>
+    /// <para type="description">
+    /// Failover the specified Cloud SQL Instance to its failover replica instance.
+    /// </para>
+    /// <para type="description">
+    /// If a Project is specified, it will failover the specified Instance in that Project. Otherwise, failsover the 
+    /// Instance in the Cloud SDK config project. 
+    /// </para>
+    /// <example>
+    ///   <para>Failover the SQL Instance "test1" in the Project "testing."</para>
+    ///   <para><code>PS C:\> Failover-GcSqlReplica -Project "testing" -Instance "test1"</code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command returns nothing.)</para>
+    /// </example>
+    /// <example>
+    ///   <para>Failover the SQL Instance "test1" with current settings version 3 in the Project "testing."</para>
+    ///   <para>
+    ///     <code>PS C:\> Failover-GcSqlReplica -Project "testing" -Instance "test1" - SettingsVersion 3</code>
+    ///   </para>
+    ///   <br></br>
+    ///   <para>(If successful, the command returns nothing.)</para>
+    /// </example>
+    /// </summary>
+    [Cmdlet("Failover", "GcSqlInstance")]
+    public class FailoverGcSqlInstanceCmdlet : GcSqlCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByInstance = "ByInstance";
+        }
+
+        private class ErrorCodes
+        {
+            public const int InvalidSettingsVersion = 412;
+        }
+
+        private class ErrorMessages
+        {
+            public const string InvalidSettingsVersion =
+                "Input or retrieved settings version does not match current settings version for this instance.";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the project in which the Instance resides.
+        /// Defaults to the Cloud SDK config for properties if not specified.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name/ID of the Instance resource to failover.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 0)]
+        public string Instance { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The DatabaseInstance that describes the Instance we want to failover.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true, Position = 0,
+                   ValueFromPipeline = true)]
+        public DatabaseInstance InstanceObject { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The current settings version of the Instance. If not specified, it will be retrieved from the settings data
+        /// of the Instance. 
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ValidateNotNullOrEmpty]
+        public long? SettingsVersion { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            string projectName;
+            string instanceName;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.ByName:
+                    projectName = Project;
+                    instanceName = Instance;
+                    break;
+                case ParameterSetNames.ByInstance:
+                    projectName = InstanceObject.Project;
+                    instanceName = InstanceObject.Name;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+
+            InstancesResource.GetRequest instanceGetRequest = Service.Instances.Get(projectName, instanceName);
+            DatabaseInstance instanceGetResponse = instanceGetRequest.Execute();
+
+            InstancesFailoverRequest failoverRequestBody = new InstancesFailoverRequest
+            {
+                FailoverContext = new FailoverContext
+                {
+                    SettingsVersion = SettingsVersion ?? instanceGetResponse.Settings.SettingsVersion
+                }
+            };
+
+            InstancesResource.FailoverRequest failoverRequest =
+                Service.Instances.Failover(failoverRequestBody, projectName, instanceName);
+            Operation failoverResponse;
+            try
+            {
+                failoverResponse = failoverRequest.Execute();
+            }
+            catch (GoogleApiException failoverEx)
+            {
+                if (failoverEx.Error.Code == ErrorCodes.InvalidSettingsVersion)
+                {
+                    throw new GoogleApiException("Google Cloud SQL API", failoverEx.Message +
+                                                 ErrorMessages.InvalidSettingsVersion);
+                }
+
+                throw failoverEx;
+            }
+            WaitForSqlOperation(failoverResponse);
+
+            // Wait for recreate operation in failover replica.
+            OperationsResource.ListRequest opListRequest =
+                Service.Operations.List(projectName, instanceGetResponse.FailoverReplica.Name);
+            do
+            {
+                OperationsListResponse opListResponse = opListRequest.Execute();
+                if (opListResponse.Items == null)
+                {
+                    return;
+                }
+                foreach (Operation operation in opListResponse.Items)
+                {
+                    if (operation.OperationType == "RECREATE_REPLICA")
+                    {
+                        WaitForSqlOperation(operation);
+                        return;
+                    }
+                }
+                opListRequest.PageToken = opListResponse.NextPageToken;
+            }
+            while (opListRequest.PageToken != null);
+        }
+    }
 }
