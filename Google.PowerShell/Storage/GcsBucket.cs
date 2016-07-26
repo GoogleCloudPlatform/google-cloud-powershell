@@ -1,10 +1,6 @@
 ﻿// Copyright 2015 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
-using Google;
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Download;
-using Google.Apis.Services;
 using Google.Apis.Storage.v1;
 using Google.Apis.Storage.v1.Data;
 using Google.PowerShell.Common;
@@ -18,15 +14,16 @@ namespace Google.PowerShell.CloudStorage
 {
     /// <summary>
     /// <para type="synopsis">
-    /// Gets the Google Cloud Storage bucket with a given name, or all buckets associated with a
-    /// project.
+    /// Gets Google Cloud Storage buckets
     /// </para>
     /// <para type="description">
-    /// Returns the Google Cloud Storate bucket by name, if the current gcloud user has access.
+    /// If a name is specified, gets the Google Cloud Storage bucket with the given name. The gcloud user must
+    /// have access to view the bucket.
     /// </para>
     /// <para type="description">
-    /// If a Project is specified, will instead return all buckets owned by that project. Again,
-    /// restricted to those that the gcloud user has access to view.
+    /// If a name is not specified, gets all Google Cloud Storage buckets owned by a project. The project can
+    /// be specifed. If it is not, the project in the active Cloud SDK configuration will be used. The gcloud
+    /// user must have access to view the project.
     /// </para>
     /// <example>
     ///   <para>Get the bucket named "widget-co-logs".</para>
@@ -36,16 +33,25 @@ namespace Google.PowerShell.CloudStorage
     ///   <para>Get all buckets for project "widget-co".</para>
     ///   <para><code>Get-GcsBucket -Project "widget-co"</code></para>
     /// </example>
+    /// <example>
+    ///   <para>Get all buckets for gcloud config project.</para>
+    ///   <para><code>Get-GcsBucket</code></para>
+    /// </example>
     /// </summary>
-    [Cmdlet(VerbsCommon.Get, "GcsBucket", DefaultParameterSetName = "SingleBucket")]
+    [Cmdlet(VerbsCommon.Get, "GcsBucket", DefaultParameterSetName = ParameterSetNames.BucketsByProject)]
     public class GetGcsBucketCmdlet : GcsCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string SingleBucket = "SingleBucket";
+            public const string BucketsByProject = "BucketsByProject";
+        }
         /// <summary>
         /// <para type="description">
         /// The name of the bucket to return.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true, ParameterSetName = "SingleBucket")]
+        [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.SingleBucket)]
         public string Name { get; set; }
 
         /// <summary>
@@ -54,7 +60,7 @@ namespace Google.PowerShell.CloudStorage
         /// default to the Cloud SDK's DefaultProject property.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = "BucketsByProject")]
+        [Parameter(ParameterSetName = ParameterSetNames.BucketsByProject)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
@@ -63,7 +69,7 @@ namespace Google.PowerShell.CloudStorage
             base.ProcessRecord();
             var service = GetStorageService();
 
-            if (ParameterSetName == "SingleBucket")
+            if (ParameterSetName == ParameterSetNames.SingleBucket)
             {
                 BucketsResource.GetRequest req = service.Buckets.Get(Name);
                 req.Projection = BucketsResource.GetRequest.ProjectionEnum.Full;
@@ -71,7 +77,7 @@ namespace Google.PowerShell.CloudStorage
                 WriteObject(bucket);
             }
 
-            if (ParameterSetName == "BucketsByProject")
+            if (ParameterSetName == ParameterSetNames.BucketsByProject)
             {
                 var req = service.Buckets.List(Project);
                 req.Projection = BucketsResource.ListRequest.ProjectionEnum.Full;
@@ -129,22 +135,47 @@ namespace Google.PowerShell.CloudStorage
         [ValidateSet("ASIA", "EU", "US", IgnoreCase = false)]
         public string Location { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// Default ACL for the bucket. e.g. "publicRead", "private", etc.
+        /// </para>
+        /// <para type="description">
+        /// You cannot set fine-grained (e.g. individual users or domains) ACLs using PowerShell.
+        /// Instead please use `gsutil`.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        public BucketsResource.InsertRequest.PredefinedAclEnum? DefaultBucketAcl {get; set;}
+
+        /// <summary>
+        /// <para type="description">
+        /// Default ACL for objects added to the bucket. e.g. "publicReadWrite", "authenticatedRead", etc.
+        /// </para>
+        /// <para type="description">
+        /// You cannot set fine-grained (e.g. individual users or domains) ACLs using PowerShell.
+        /// Instead please use `gsutil`.
+        /// </para>
+        /// </summary>
+
+        [Parameter]
+        public BucketsResource.InsertRequest.PredefinedDefaultObjectAclEnum? DefaultObjectAcl { get; set; }
+
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
             var service = GetStorageService();
 
-            // While bucket has many properties, these are the only ones
-            // that can be set as part of an INSERT operation.
-            // https://cloud.google.com/storage/docs/xml-api/put-bucket-create
-            // TODO(chrsmith): Wire in ACL-related parameters.
             var bucket = new Google.Apis.Storage.v1.Data.Bucket();
             bucket.Name = Name;
             bucket.Location = Location;
             bucket.StorageClass = StorageClass;
 
-            Bucket result = service.Buckets.Insert(bucket, Project).Execute();
-            WriteObject(result);
+            BucketsResource.InsertRequest insertReq = service.Buckets.Insert(bucket, Project);
+            insertReq.PredefinedAcl = DefaultBucketAcl;
+            insertReq.PredefinedDefaultObjectAcl = DefaultObjectAcl;
+            bucket = insertReq.Execute();
+
+            WriteObject(bucket);
         }
     }
 
@@ -170,7 +201,7 @@ namespace Google.PowerShell.CloudStorage
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true)]
-        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Name { get; set; }
 
         /// <summary>

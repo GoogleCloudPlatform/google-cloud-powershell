@@ -64,6 +64,7 @@ namespace Google.PowerShell.CloudStorage
             ObjectsResource.InsertMediaUpload insertReq = service.Objects.Insert(
                 newGcsObject, bucket, contentStream, contentType);
             insertReq.PredefinedAcl = predefinedAcl;
+            insertReq.Projection = ProjectionEnum.Full;
 
             var finalProgress = insertReq.Upload();
             if (finalProgress.Exception != null)
@@ -152,11 +153,8 @@ namespace Google.PowerShell.CloudStorage
         /// OWNER access, and allUsers get READER access.
         /// </para>
         /// </summary>
-        [ValidateSet(
-            "authenticatedRead", "bucketOwnerFullControl", "bucketOwnerRead",
-            "private", "projectPrivate", "publicRead", IgnoreCase = false)]
         [Parameter(Mandatory = false)]
-        public string PredefinedAcl { get; set; }
+        public PredefinedAclEnum? PredefinedAcl { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -165,26 +163,6 @@ namespace Google.PowerShell.CloudStorage
         /// </summary>
         [Parameter(Mandatory = false)]
         public SwitchParameter Force { get; set; }
-
-        protected PredefinedAclEnum? GetPredefinedAcl()
-        {
-            switch (PredefinedAcl)
-            {
-                case "authenticatedRead": return PredefinedAclEnum.AuthenticatedRead;
-                case "bucketOwnerFullControl": return PredefinedAclEnum.BucketOwnerFullControl;
-                case "bucketOwnerRead": return PredefinedAclEnum.BucketOwnerRead;
-                case "private": return PredefinedAclEnum.Private__;
-                case "projectPrivate": return PredefinedAclEnum.ProjectPrivate;
-                case "publicRead": return PredefinedAclEnum.PublicRead;
-
-                case "":
-                case null:
-                    return null;
-                default:
-                    throw new PSInvalidOperationException(
-                        string.Format("Invalid predefined ACL: {0}", PredefinedAcl));
-            }
-        }
 
         protected override void ProcessRecord()
         {
@@ -226,7 +204,7 @@ namespace Google.PowerShell.CloudStorage
 
                 Object newGcsObject = UploadGcsObject(
                     service, Bucket, ObjectName, contentStream,
-                    objContentType, GetPredefinedAcl());
+                    objContentType, PredefinedAcl);
 
                 WriteObject(newGcsObject);
             }
@@ -302,7 +280,98 @@ namespace Google.PowerShell.CloudStorage
             var service = GetStorageService();
 
             ObjectsResource.GetRequest getReq = service.Objects.Get(Bucket, ObjectName);
+            getReq.Projection = ObjectsResource.GetRequest.ProjectionEnum.Full;
             Object gcsObject = getReq.Execute();
+            WriteObject(gcsObject);
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Set-GcsObject updates metadata associated with a Cloud Storage Object.
+    /// </para>
+    /// <para type="description">
+    /// Updates the metadata associated with a Cloud Storage Object, such as ACLs.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Set, "GcsObject")]
+    public class SetGcsObjectCmdlet : GcsCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string FromBucketAndObjName = "FromBucketAndObjName";
+            public const string FromObject = "FromObjectObject";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the bucket to check. Will also accept a Bucket object.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.FromBucketAndObjName)]
+        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
+        public string Bucket { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the object to update.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 1, Mandatory = true, ParameterSetName = ParameterSetNames.FromBucketAndObjName)]
+        public string ObjectName { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Storage object instance to update.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true,
+            ValueFromPipeline = true, ParameterSetName = ParameterSetNames.FromObject)]
+        public Object Object { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Provide a predefined ACL to the object. e.g. "publicRead" where the project owner gets
+        /// OWNER access, and allUsers get READER access.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public ObjectsResource.UpdateRequest.PredefinedAclEnum? PredefinedAcl { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            base.ProcessRecord();
+            var service = GetStorageService();
+
+            string bucket = null;
+            string objectName = null;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.FromBucketAndObjName:
+                    bucket = Bucket;
+                    objectName = ObjectName;
+                    break;
+                case ParameterSetNames.FromObject:
+                    bucket = Object.Bucket;
+                    objectName = Object.Name;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+
+            // You cannot specify both an ACL list and a predefined ACL using the API. (b/30358979?)
+            // We issue a GET + Update. Since we aren't using ETags, there is a potential for a
+            // race condition.
+            var getReq = service.Objects.Get(bucket, objectName);
+            getReq.Projection = ObjectsResource.GetRequest.ProjectionEnum.Full;
+            Object objectInsert = getReq.Execute();
+            // The API doesn't allow both predefinedAcl and access controls. So drop existing ACLs.
+            objectInsert.Acl = null;
+
+            ObjectsResource.UpdateRequest updateReq = service.Objects.Update(objectInsert, bucket, objectName);
+            updateReq.PredefinedAcl = PredefinedAcl;
+
+            Object gcsObject = updateReq.Execute();
             WriteObject(gcsObject);
         }
     }
@@ -649,6 +718,7 @@ namespace Google.PowerShell.CloudStorage
                 try
                 {
                     ObjectsResource.GetRequest getReq = service.Objects.Get(Bucket, ObjectName);
+                    getReq.Projection = ObjectsResource.GetRequest.ProjectionEnum.Full;
                     Object existingGcsObject = getReq.Execute();
                     contentType = existingGcsObject.ContentType;
                 }
@@ -713,6 +783,7 @@ namespace Google.PowerShell.CloudStorage
             try
             {
                 ObjectsResource.GetRequest objGetReq = service.Objects.Get(Bucket, ObjectName);
+                objGetReq.Projection = ObjectsResource.GetRequest.ProjectionEnum.Full;
                 objGetReq.Execute();
 
                 WriteObject(true);

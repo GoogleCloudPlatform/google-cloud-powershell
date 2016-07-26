@@ -4,6 +4,7 @@
 using Google.Apis.Storage.v1;
 using Google.PowerShell.Common;
 using System;
+using System.Collections.Generic;
 
 namespace Google.PowerShell.CloudStorage
 {
