@@ -12,19 +12,19 @@ namespace Google.PowerShell.Dns
 {
     /// <summary>
     /// <para type="synopsis">
-    /// Gets the Change resources within a ManagedZone of a DnsProject.
+    /// Gets the Change resources within a ManagedZone of a Project.
     /// </para>
     /// <para type="description">
     /// Lists the ManagedZone's Change resources.
     /// </para>
     /// <para type="description">
-    /// If a DnsProject is specified, will instead return the Changes in the specified ManagedZone governed by that 
+    /// If a Project is specified, will instead return the Changes in the specified ManagedZone governed by that 
     /// project. 
     /// The filter ChangeId can be provided to return that specific Change.
     /// </para>
     /// <example>
-    ///   <para>Get the Change resources in the ManagedZone "test1" in the DnsProject "testing."</para>
-    ///   <para><code>PS C:\> Get-GcdChange -DnsProject "testing" -Zone "test1"</code></para>
+    ///   <para>Get the Change resources in the ManagedZone "test1" in the Project "testing."</para>
+    ///   <para><code>PS C:\> Get-GcdChange -Project "testing" -Zone "test1"</code></para>
     ///   <br></br>
     ///   <para>Additions :</para>
     ///   <para>Deletions : {gcloudexample1.com.}</para>
@@ -43,8 +43,8 @@ namespace Google.PowerShell.Dns
     ///   <para>ETag      :</para>
     /// </example>
     /// <example>
-    ///   <para>Get the Change resource with id "0" in the ManagedZone "test1" in the DnsProject "testing."</para>
-    ///   <para><code>PS C:\> Get-GcdChange -DnsProject "testing" -Zone "test1" -ChangeId "0"</code></para>
+    ///   <para>Get the Change resource with id "0" in the ManagedZone "test1" in the Project "testing."</para>
+    ///   <para><code>PS C:\> Get-GcdChange -Project "testing" -Zone "test1" -ChangeId "0"</code></para>
     ///   <br></br>
     ///   <para>Additions : {gcloudexample1.com., gcloudexample1.com.}</para>
     ///   <para>Deletions : </para>
@@ -63,12 +63,12 @@ namespace Google.PowerShell.Dns
     {
         /// <summary>
         /// <para type="description">
-        /// Get the DnsProject to check.
+        /// Get the Project to check.
         /// </para>
         /// </summary>
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string DnsProject { get; set; }
+        public string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -93,13 +93,13 @@ namespace Google.PowerShell.Dns
 
             if (!String.IsNullOrEmpty(ChangeId))
             {
-                ChangesResource.GetRequest changeGetRequest = Service.Changes.Get(DnsProject, Zone, ChangeId);
+                ChangesResource.GetRequest changeGetRequest = Service.Changes.Get(Project, Zone, ChangeId);
                 Change changeResponse = changeGetRequest.Execute();
                 WriteObject(changeResponse);
             }
             else
             {
-                ChangesResource.ListRequest changeListRequest = Service.Changes.List(DnsProject, Zone);
+                ChangesResource.ListRequest changeListRequest = Service.Changes.List(Project, Zone);
                 ChangesListResponse changeListResponse = changeListRequest.Execute();
                 IList<Change> changeList = changeListResponse.Changes;
                 WriteObject(changeList, true);
@@ -109,19 +109,19 @@ namespace Google.PowerShell.Dns
 
     /// <summary>
     /// <para type="synopsis">
-    /// Add a new Change to a ManagedZone of a DnsProject.
+    /// Add a new Change to a ManagedZone of a Project.
     /// </para>
     /// <para type="description">
-    /// Create, execute, and return a new Change within a specified ManagedZone of a DnsProject.
+    /// Create, execute, and return a new Change within a specified ManagedZone of a Project.
     /// </para>
     /// <para type="description">
-    /// If a DnsProject is specified, will instead create the Change in the specified ManagedZone governed by that 
+    /// If a Project is specified, will instead create the Change in the specified ManagedZone governed by that 
     /// project. 
     /// Either a Change request or ResourceRecordSet[] to add/remove can be given as input.
     /// </para>
     /// <example>
-    ///   <para>Add the Change request $change1 to the ManagedZone "test1" in the DnsProject "testing."</para>
-    ///   <para><code>PS C:\> Add-GcdChange -DnsProject "testing" -Zone "test1" -ChangeRequest $change1</code></para>
+    ///   <para>Add the Change request $change1 to the ManagedZone "test1" in the Project "testing."</para>
+    ///   <para><code>PS C:\> Add-GcdChange -Project "testing" -Zone "test1" -ChangeRequest $change1</code></para>
     ///   <br></br>
     ///   <para>Additions :</para>
     ///   <para>Deletions : {gcloudexample1.com.}</para>
@@ -134,10 +134,10 @@ namespace Google.PowerShell.Dns
     /// <example>
     ///   <para> 
     ///   Add a new Change that adds the ResourceRecordSets $addRrsets and removes the ResourceRecordSets $rmRrsets
-    ///   from the ManagedZone "test1" in the DnsProject "testing."
+    ///   from the ManagedZone "test1" in the Project "testing."
     ///   </para>
     ///   <para>
-    ///     <code>PS C:\> Add-GcdChange -DnsProject "testing" -Zone "test1" -Add $addRrsets -Remove $rmRrsets</code>
+    ///     <code>PS C:\> Add-GcdChange -Project "testing" -Zone "test1" -Add $addRrsets -Remove $rmRrsets</code>
     ///   </para>
     ///   <br></br>
     ///   <para>Additions : {gcloudexample1.com.}</para>
@@ -169,12 +169,12 @@ namespace Google.PowerShell.Dns
 
         /// <summary>
         /// <para type="description">
-        /// Get the DnsProject to change.
+        /// Get the Project to change.
         /// </para>
         /// </summary>
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string DnsProject { get; set; }
+        public string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -244,7 +244,7 @@ namespace Google.PowerShell.Dns
             }
 
             ChangesResource.CreateRequest changeCreateRequest = 
-                Service.Changes.Create(changeContent, DnsProject, Zone);
+                Service.Changes.Create(changeContent, Project, Zone);
             Change changeResponse = changeCreateRequest.Execute();
             WriteObject(changeResponse);
         }

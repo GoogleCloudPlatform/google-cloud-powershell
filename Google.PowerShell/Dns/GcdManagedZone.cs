@@ -12,18 +12,18 @@ namespace Google.PowerShell.Dns
 {
     /// <summary>
     /// <para type="synopsis">
-    /// Gets the Google DNS ManagedZones within a DnsProject.
+    /// Gets the Google DNS ManagedZones within a Project.
     /// </para>
     /// <para type="description">
-    /// Lists the DnsProject's ManagedZones.
+    /// Lists the Project's ManagedZones.
     /// </para>
     /// <para type="description">
-    /// If a DnsProject is specified, will instead return all ManagedZones governed by that project. 
+    /// If a Project is specified, will instead return all ManagedZones governed by that project. 
     /// The filter ManagedZone can be provided to return that specific zone.
     /// </para>
     /// <example>
-    ///   <para>Get the ManagedZones for the DnsProject "testing."</para>
-    ///   <para><code>PS C:\> Get-GcdManagedZone -DnsProject "testing" </code></para>
+    ///   <para>Get the ManagedZones for the Project "testing."</para>
+    ///   <para><code>PS C:\> Get-GcdManagedZone -Project "testing" </code></para>
     ///   <br></br>
     ///   <para>CreationTime     : 2016-06-29T15:30:50.667Z</para>
     ///   <para>Description   	 : testing description</para>
@@ -52,8 +52,8 @@ namespace Google.PowerShell.Dns
     ///   <para>ETag          	 :</para>
     /// </example>
     /// <example>
-    ///   <para>Get the ManagedZone "test1" for the DnsProject "testing."</para>
-    ///   <para><code>PS C:\> Get-GcdManagedZone -DnsProject "testing" -Zone "test1" </code></para>
+    ///   <para>Get the ManagedZone "test1" for the Project "testing."</para>
+    ///   <para><code>PS C:\> Get-GcdManagedZone -Project "testing" -Zone "test1" </code></para>
     ///   <br></br>
     ///   <para>CreationTime     : 2016-06-29T15:30:50.667Z</para>
     ///   <para>Description   	 : testing description</para>
@@ -82,7 +82,7 @@ namespace Google.PowerShell.Dns
         /// </summary>
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string DnsProject { get; set; }
+        public string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -99,13 +99,13 @@ namespace Google.PowerShell.Dns
 
             if (!String.IsNullOrEmpty(Zone))
             {
-                ManagedZonesResource.GetRequest zoneGetRequest = Service.ManagedZones.Get(DnsProject, Zone);
+                ManagedZonesResource.GetRequest zoneGetRequest = Service.ManagedZones.Get(Project, Zone);
                 ManagedZone zoneResponse = zoneGetRequest.Execute();
                 WriteObject(zoneResponse);
             }
             else
             {
-                ManagedZonesResource.ListRequest zoneListRequest = Service.ManagedZones.List(DnsProject);
+                ManagedZonesResource.ListRequest zoneListRequest = Service.ManagedZones.List(Project);
                 ManagedZonesListResponse zoneListResponse = zoneListRequest.Execute();
                 IList<ManagedZone> zoneList = zoneListResponse.ManagedZones;
                 WriteObject(zoneList, true);
@@ -115,13 +115,13 @@ namespace Google.PowerShell.Dns
 
     /// <summary>
     /// <para type="synopsis">
-    /// Add a new Google DNS ManagedZone to the DnsProject.
+    /// Add a new Google DNS ManagedZone to the Project.
     /// </para>
     /// <para type="description">
     /// Creates a new ManagedZone.
     /// </para>
     /// <para type="description">
-    /// If a DnsProject is specified, it will instead add the new ManagedZone to that project.
+    /// If a Project is specified, it will instead add the new ManagedZone to that project.
     /// </para>
     /// <example>
     ///   <para>
@@ -130,7 +130,7 @@ namespace Google.PowerShell.Dns
     ///   </para>
     ///   <para>
     ///     <code>
-    ///     PS C:\> Add-GcdManagedZone -DnsProject "testing" -Name "testzone1" -DnsName "gcloudexample.com." 
+    ///     PS C:\> Add-GcdManagedZone -Project "testing" -Name "testzone1" -DnsName "gcloudexample.com." 
     ///     -Description "test description"
     ///     </code>
     ///   </para>
@@ -157,12 +157,12 @@ namespace Google.PowerShell.Dns
     {
         /// <summary>
         /// <para type="description">
-        /// Get the DnsProject to create a new ManagedZone in.
+        /// Get the Project to create a new ManagedZone in.
         /// </para>
         /// </summary>
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string DnsProject { get; set; }
+        public string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -216,7 +216,7 @@ namespace Google.PowerShell.Dns
       
 
             ManagedZonesResource.CreateRequest zoneCreateRequest = 
-                Service.ManagedZones.Create(zoneContent, DnsProject);
+                Service.ManagedZones.Create(zoneContent, Project);
             ManagedZone newZone = zoneCreateRequest.Execute();
             WriteObject(newZone);
         }
@@ -224,18 +224,18 @@ namespace Google.PowerShell.Dns
 
     /// <summary>
     /// <para type="synopsis">
-    /// Removes an existing Google DNS ManagedZone within a DnsProject.
+    /// Removes an existing Google DNS ManagedZone within a Project.
     /// </para>
     /// <para type="description">
     /// Deletes the specified ManagedZone (and returns nothing).
     /// </para>
     /// <para type="description">
-    /// If a DnsProject is specified, it will instead remove the specified ManagedZone from that project. The optional 
+    /// If a Project is specified, it will instead remove the specified ManagedZone from that project. The optional 
     /// switch -Force will force removal of even non-empty ManagedZones (e.g., zones with non-NS/SOA type records).
     /// </para>
     /// <example>
-    ///   <para>Delete the (non-empty) ManagedZone "test1" from the DnsProject "testing."</para>
-    ///   <para><code>PS C:\> Remove-GcdManagedZone -DnsProject "testing" -Zone "test1" -Force</code></para>
+    ///   <para>Delete the (non-empty) ManagedZone "test1" from the Project "testing."</para>
+    ///   <para><code>PS C:\> Remove-GcdManagedZone -Project "testing" -Zone "test1" -Force</code></para>
     ///   <br></br>
     ///   <para>(If successful, the command returns nothing.)</para>
     /// </example>
@@ -247,12 +247,12 @@ namespace Google.PowerShell.Dns
     {
         /// <summary>
         /// <para type="description">
-        /// Get the DnsProject to check.
+        /// Get the Project to check.
         /// </para>
         /// </summary>
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string DnsProject { get; set; }
+        public string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -275,13 +275,13 @@ namespace Google.PowerShell.Dns
         {
             base.ProcessRecord();
 
-            if (!ShouldProcess($"{DnsProject}/{Zone}", "Delete ManagedZone"))
+            if (!ShouldProcess($"{Project}/{Zone}", "Delete ManagedZone"))
             {
                 return;
             }
 
             ResourceRecordSetsResource.ListRequest rrsetListRequest =
-                    Service.ResourceRecordSets.List(DnsProject, Zone);
+                    Service.ResourceRecordSets.List(Project, Zone);
             ResourceRecordSetsListResponse rrsetListResponse = rrsetListRequest.Execute();
             IList<ResourceRecordSet> rrsetList = rrsetListResponse.Rrsets;
 
@@ -297,7 +297,7 @@ namespace Google.PowerShell.Dns
             if (nonDefaultRrsets.Count > 0)
             {
                 if (!Force &&
-                    !ShouldContinue($"{DnsProject}/{Zone}", "Delete Non-Empty ManagedZone (with non-NS/SOA records)"))
+                    !ShouldContinue($"{Project}/{Zone}", "Delete Non-Empty ManagedZone (with non-NS/SOA records)"))
                 {
                     return;
                 }
@@ -308,11 +308,11 @@ namespace Google.PowerShell.Dns
                 };
 
                 ChangesResource.CreateRequest changeCreateRequest =
-                    Service.Changes.Create(changeContent, DnsProject, Zone);
+                    Service.Changes.Create(changeContent, Project, Zone);
                 changeCreateRequest.Execute();
             }
 
-            ManagedZonesResource.DeleteRequest zoneDeleteRequest = Service.ManagedZones.Delete(DnsProject, Zone);
+            ManagedZonesResource.DeleteRequest zoneDeleteRequest = Service.ManagedZones.Delete(Project, Zone);
             zoneDeleteRequest.Execute();
         }
     }
