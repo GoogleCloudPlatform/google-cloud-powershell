@@ -1425,9 +1425,8 @@ namespace Google.PowerShell.Sql
         }
 
         private const int InvalidSettingsVersionErrCode = 412;
-
         private const string InvalidSettingsVersionErrMsg =
-                "Input or retrieved settings version does not match current settings version for this instance.";
+            "Input or retrieved settings version does not match current settings version for this instance.";
 
         /// <summary>
         /// <para type="description">
