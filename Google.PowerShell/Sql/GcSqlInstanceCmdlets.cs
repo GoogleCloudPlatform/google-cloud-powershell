@@ -1318,21 +1318,15 @@ namespace Google.PowerShell.Sql
             public const string ByInstance = "ByInstance";
         }
 
-        private class ErrorCodes
-        {
-            public const int InvalidSettingsVersion = 412;
-        }
+        private const int InvalidSettingsVersionErrCode = 412;
 
-        private class ErrorMessages
-        {
-            public const string InvalidSettingsVersion =
+        private const string InvalidSettingsVersionErrMsg =
                 "Input or retrieved settings version does not match current settings version for this instance.";
-        }
 
         /// <summary>
         /// <para type="description">
         /// Name of the project in which the Instance resides.
-        /// Defaults to the Cloud SDK config for properties if not specified.
+        /// Defaults to the Cloud SDK config project if not specified.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
@@ -1370,28 +1364,29 @@ namespace Google.PowerShell.Sql
         {
             string projectName;
             string instanceName;
+            DatabaseInstance instanceObject;
             switch (ParameterSetName)
             {
                 case ParameterSetNames.ByName:
                     projectName = Project;
                     instanceName = Instance;
+                    InstancesResource.GetRequest instanceGetRequest = Service.Instances.Get(projectName, instanceName);
+                    instanceObject = instanceGetRequest.Execute();
                     break;
                 case ParameterSetNames.ByInstance:
                     projectName = InstanceObject.Project;
                     instanceName = InstanceObject.Name;
+                    instanceObject = InstanceObject; 
                     break;
                 default:
                     throw UnknownParameterSetException;
             }
 
-            InstancesResource.GetRequest instanceGetRequest = Service.Instances.Get(projectName, instanceName);
-            DatabaseInstance instanceGetResponse = instanceGetRequest.Execute();
-
             InstancesFailoverRequest failoverRequestBody = new InstancesFailoverRequest
             {
                 FailoverContext = new FailoverContext
                 {
-                    SettingsVersion = SettingsVersion ?? instanceGetResponse.Settings.SettingsVersion
+                    SettingsVersion = SettingsVersion ?? instanceObject.Settings.SettingsVersion
                 }
             };
 
@@ -1404,10 +1399,10 @@ namespace Google.PowerShell.Sql
             }
             catch (GoogleApiException failoverEx)
             {
-                if (failoverEx.Error.Code == ErrorCodes.InvalidSettingsVersion)
+                if (failoverEx.Error.Code == InvalidSettingsVersionErrCode)
                 {
                     throw new GoogleApiException("Google Cloud SQL API", failoverEx.Message +
-                                                 ErrorMessages.InvalidSettingsVersion);
+                                                 InvalidSettingsVersionErrMsg);
                 }
 
                 throw failoverEx;
@@ -1416,7 +1411,7 @@ namespace Google.PowerShell.Sql
 
             // Wait for recreate operation in failover replica.
             OperationsResource.ListRequest opListRequest =
-                Service.Operations.List(projectName, instanceGetResponse.FailoverReplica.Name);
+                Service.Operations.List(projectName, instanceObject.FailoverReplica.Name);
             do
             {
                 OperationsListResponse opListResponse = opListRequest.Execute();
