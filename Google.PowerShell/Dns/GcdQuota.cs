@@ -10,17 +10,17 @@ namespace Google.PowerShell.Dns
 {
     /// <summary>
     /// <para type="synopsis">
-    /// Fetch the DNS quota of an existing DnsProject.
+    /// Fetch the DNS quota of an existing Project.
     /// </para>
     /// <para type="description">
-    /// Returns the DNS quota from the DnsProject resource object.
+    /// Returns the DNS quota from the Project resource object.
     /// </para>
     /// <para type="description">
-    /// If a DnsProject is specified, will instead return the DNS quota for that project. 
+    /// If a Project is specified, will instead return the DNS quota for that project. 
     /// </para>
     /// <example>
-    ///   <para>Get the DNS quota of the DnsProject "testing"</para>
-    ///   <para><code>PS C:\> Get-GcdQuota -DnsProject "testing" </code></para>
+    ///   <para>Get the DNS quota of the Project "testing"</para>
+    ///   <para><code>PS C:\> Get-GcdQuota -Project "testing" </code></para>
     ///   <br></br>
     ///   <para>Kind                     : dns#quota</para>
     ///   <para>ManagedZones             : 100</para>
@@ -40,18 +40,18 @@ namespace Google.PowerShell.Dns
     {
         /// <summary>
         /// <para type="description">
-        /// Get the DnsProject to return the DNS quota of.
+        /// Get the Project to return the DNS quota of.
         /// </para>
         /// </summary>
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string DnsProject { get; set; }
+        public string Project { get; set; }
 
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
 
-            ProjectsResource.GetRequest projectGetRequest = Service.Projects.Get(DnsProject);
+            ProjectsResource.GetRequest projectGetRequest = Service.Projects.Get(Project);
             Project projectResponse = projectGetRequest.Execute();
             WriteObject(projectResponse.Quota);
         }

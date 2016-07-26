@@ -11,19 +11,19 @@ namespace Google.PowerShell.Dns
 {
     /// <summary>
     /// <para type="synopsis">
-    /// Gets the ResourceRecordSet resources within a ManagedZone of a DnsProject.
+    /// Gets the ResourceRecordSet resources within a ManagedZone of a Project.
     /// </para>
     /// <para type="description">
     /// Lists the ManagedZone's ResourceRecordSets.
     /// </para>
     /// <para type="description">
-    /// If a DnsProject is specified, the cmdlet will instead return the ResourceRecordSets in the specified 
+    /// If a Project is specified, the cmdlet will instead return the ResourceRecordSets in the specified 
     /// ManagedZone governed by that project. The optional -Filter can be provided to restrict the ResourceRecordSet 
     /// types returned.
     /// </para>
     /// <example>
-    ///   <para>Get the ResourceRecordSet resources in the ManagedZone "test1" in the DnsProject "testing."</para>
-    ///   <para><code>PS C:\> Get-GcdResourceRecordSet -DnsProject "testing" -Zone "test1"</code></para>
+    ///   <para>Get the ResourceRecordSet resources in the ManagedZone "test1" in the Project "testing."</para>
+    ///   <para><code>PS C:\> Get-GcdResourceRecordSet -Project "testing" -Zone "test1"</code></para>
     ///   <br></br>
     ///   <para>Kind    : dns#resourceRecordSet</para>
     ///   <para>Name    : gcloudexample1.com.</para>
@@ -46,10 +46,10 @@ namespace Google.PowerShell.Dns
     /// </example>
     /// <example>
     ///   <para>
-    ///   Get the ResourceRecordSets of type "NS" or "AAAA" in the ManagedZone "testZone2" in the DnsProject "testing."
+    ///   Get the ResourceRecordSets of type "NS" or "AAAA" in the ManagedZone "testZone2" in the Project "testing."
     ///   </para>
     ///   <para>
-    ///     <code>PS C:\> Get-GcdResourceRecordSet -DnsProject "testing" -Zone "testZone2" -Filter "NS","AAAA"</code>
+    ///     <code>PS C:\> Get-GcdResourceRecordSet -Project "testing" -Zone "testZone2" -Filter "NS","AAAA"</code>
     ///   </para>
     ///   <br></br>
     ///   <para>Kind    : dns#resourceRecordSet</para>
@@ -78,12 +78,12 @@ namespace Google.PowerShell.Dns
     {
         /// <summary>
         /// <para type="description">
-        /// Get the DnsProject to check.
+        /// Get the Project to check.
         /// </para>
         /// </summary>
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string DnsProject { get; set; }
+        public string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -107,7 +107,7 @@ namespace Google.PowerShell.Dns
             base.ProcessRecord();
 
             ResourceRecordSetsResource.ListRequest rrsetListRequest = 
-                Service.ResourceRecordSets.List(DnsProject, Zone);
+                Service.ResourceRecordSets.List(Project, Zone);
             ResourceRecordSetsListResponse rrsetListResponse = rrsetListRequest.Execute();
             IList<ResourceRecordSet> rrsetList = rrsetListResponse.Rrsets;
 
@@ -141,7 +141,7 @@ namespace Google.PowerShell.Dns
     /// Creates and returns a new ResourceRecordSet resource.
     /// </para>
     /// <para type="description">
-    /// The newly created ResourceRecordSet will be created and returned independently, not within any DnsProject or 
+    /// The newly created ResourceRecordSet will be created and returned independently, not within any Project or 
     /// ManagedZone. 
     /// </para>
     /// <example>
