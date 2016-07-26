@@ -20,6 +20,7 @@ namespace Google.PowerShell.Sql
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlBackupRun", DefaultParameterSetName = ParameterSetNames.GetList)]
+    [OutputType(typeof(BackupRun))]
     public class GetGcSqlBackupRunCmdlet : GcSqlCmdlet
     {
         internal class ParameterSetNames

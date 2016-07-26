@@ -15,6 +15,7 @@ namespace Google.PowerShell.Sql
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GcSqlInstanceReplicaConfig")]
+    [OutputType(typeof(ReplicaConfiguration))]
     public class NewGcSqlInstanceReplicaConfigCmdlet : GcSqlCmdlet
     {
         /// <summary>

@@ -20,8 +20,29 @@ namespace Google.PowerShell.Sql
     /// Instead it will error once you try to update or add an instance in your project.
     /// Please be careful with inputs.
     /// </para>
+    /// <example>
+    ///   <para>
+    ///   Creates a settings resource with tier "db-n1-standard-1".
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> New-GcSqlSettingConfig "db-n1-standard-1"
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command returns Settings resource containing the setting configuration.)</para>
+    /// </example>
+    /// <example>
+    ///   <para>
+    ///   Creates a settings resource with tier "db-n1-standard-1", and a maintenance window on monday at 22:00.
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> New-GcSqlSettingConfig "db-n1-standard-1" -MaintenanceWindowDay 1 -MaintenanceWindowHour "22:00"
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command returns Settings resource containing the setting configuration.)</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GcSqlSettingConfig")]
+    [OutputType(typeof(Settings))]
     public class NewGcSqlSettingConfigCmdlet : GcSqlCmdlet
     {
         /// <summary>
