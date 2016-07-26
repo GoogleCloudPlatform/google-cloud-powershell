@@ -634,4 +634,70 @@ Describe "Update-GcSqlInstance" {
     gcloud sql instances delete $instance --quiet 2>$null
 }
 
+Describe "Failover-GcSqlInstance" {
+    # For these tests, test0 (which has a failover, test0-failover) was used because this kind of instance with a
+    # failover cannot be easily/quickly instantiated like those in other tests.
+    $instance = "test0"
+    $numFailoverOps = (Get-GcSqlOperation -Instance $instance | where { $_.OperationType -eq "FAILOVER" }).Count
+
+    <#
+    The following tests are flaky in that they can take an extremely long time to run (up to several hours) in some cases. 
+    Occasionally, there have also been "Unknown Errors."
+    They are thus commented out as per Jim's advice. 
+
+    It "should failover a test instance" {
+        Failover-GcSqlInstance $instance
+
+        $operations = Get-GcSqlOperation -Instance $instance | where { $_.OperationType -eq "FAILOVER" }
+        $operations.Count | Should Be ($numFailoverOps + 1)
+        $operations[0].Status | Should Match "DONE"
+        $operations[0].Error | Should Match ""
+    }
+
+     It "should failover a pipelined instance (instance and default projects same)" {
+        Get-GcSqlInstance -Name $instance | Failover-GcSqlInstance
+
+        $operations = Get-GcSqlOperation -Instance $instance | where { $_.OperationType -eq "FAILOVER" }
+        $operations.Count | Should Be ($numFailoverOps + 2)
+        $operations[0].Status | Should Match "DONE"
+        $operations[0].Error | Should Match ""
+     }
+    
+    It "should failover a pipelined instance (instance and default projects differ)" {
+        $nonDefaultProject = "asdf"
+        $defaultProject = "gcloud-powershell-testing"
+
+        # Set gcloud config to a non-default project (not gcloud-powershell-testing)
+        gcloud config set project $nonDefaultProject
+
+        Get-GcSqlInstance -Project $defaultProject -Name $instance | Failover-GcSqlInstance
+
+        $operations = Get-GcSqlOperation -Project $defaultProject -Instance $instance | where { $_.OperationType -eq "FAILOVER" }
+        $operations.Count | Should Be ($numFailoverOps + 3)
+        $operations[0].Status | Should Match "DONE"
+        $operations[0].Error | Should Match ""
+
+        # Reset gcloud config back to default project (gcloud-powershell-testing)
+        gcloud config set project $defaultProject
+     }
+
+    It "should failover a test instance with a correct settings version specified" {
+        $currentSettingsVersion = (Get-GcSqlInstance -Name $instance).Settings.SettingsVersion
+        Failover-GcSqlInstance $instance -SettingsVersion $currentSettingsVersion
+
+        $operations = Get-GcSqlOperation -Instance $instance | where { $_.OperationType -eq "FAILOVER" }
+        $operations.Count | Should Be ($numFailoverOps + 4)
+        $operations[0].Status | Should Match "DONE"
+        $operations[0].Error | Should Match ""
+    }
+    #>
+
+    It "should fail to failover a test instance with an incorrect settings version specified" {
+        $wrongSettingsVersion = (Get-GcSqlInstance -Name $instance).Settings.SettingsVersion + 50
+
+        { Failover-GcSqlInstance $instance -SettingsVersion $wrongSettingsVersion } | Should Throw "412"
+        { Failover-GcSqlInstance $instance -SettingsVersion $wrongSettingsVersion } | Should Throw "Input or retrieved settings version does not match current settings version for this instance."
+    }
+}
+
 Reset-GCloudConfig $oldActiveConfig $configName
