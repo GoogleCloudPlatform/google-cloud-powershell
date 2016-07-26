@@ -3,10 +3,9 @@
 
 using Google.Apis.SQLAdmin.v1beta4;
 using Google.Apis.SQLAdmin.v1beta4.Data;
-using System.Management.Automation;
 using Google.PowerShell.Common;
 using System.Collections.Generic;
-using System.Linq;
+using System.Management.Automation;
 
 namespace Google.PowerShell.Sql
 {
@@ -120,8 +119,8 @@ namespace Google.PowerShell.Sql
             InstancesResource.InsertRequest request = Service.Instances.Insert(InstanceConfig, Project);
             Operation result = request.Execute();
             WaitForSqlOperation(result);
-            /// We get the instance that was just added
-            /// so that the returned DatabaseInstance is as accurate as possible.
+            // We get the instance that was just added
+            // so that the returned DatabaseInstance is as accurate as possible.
             InstancesResource.GetRequest instanceRequest = Service.Instances.Get(Project, InstanceConfig.Name);
             WriteObject(instanceRequest.Execute());
         }
@@ -310,8 +309,8 @@ namespace Google.PowerShell.Sql
             }
             InstancesResource.CloneRequest request = Service.Instances.Clone(body, project, instance);
             Operation result = request.Execute();
-            /// Copying an instance takes too long to wait, so this time we write the operation to demonstrate
-            /// That the request went through.
+            // Copying an instance takes too long to wait, so this time we write the operation to demonstrate
+            // That the request went through.
             DatabaseInstance clone = Service.Instances.Get(project, CloneName).Execute();
             WriteObject(clone);
         }
@@ -375,7 +374,7 @@ namespace Google.PowerShell.Sql
         /// Export only schemas.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false,  ParameterSetName = ParameterSetNames.Sql)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.Sql)]
         public SwitchParameter SchemaOnly { get; set; }
 
         /// <summary>
@@ -489,7 +488,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 1)]
-        [Alias("Name","Id")]
+        [Alias("Name", "Id")]
         public string Instance { get; set; }
 
         /// <summary>
@@ -497,7 +496,7 @@ namespace Google.PowerShell.Sql
         /// The DatabaseInstance that describes the instance we want to remove.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true, Position = 0, 
+        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true, Position = 0,
                    ValueFromPipeline = true)]
         public DatabaseInstance InstanceObject { get; set; }
 

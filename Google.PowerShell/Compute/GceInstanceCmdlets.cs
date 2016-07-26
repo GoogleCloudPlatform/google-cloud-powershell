@@ -918,9 +918,9 @@ namespace Google.PowerShell.ComputeEngine
         private string _name;
 
         /// <summary>
-        /// <paratype="description">
+        /// <para type="description">
         /// The instance object to update.
-        /// </paratype>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.AccessConfigByObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]

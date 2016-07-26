@@ -184,8 +184,6 @@ namespace Google.PowerShell.CloudStorage
                     throw new PSInvalidOperationException(
                         string.Format("Invalid predefined ACL: {0}", PredefinedAcl));
             }
-
-            return null;
         }
 
         protected override void ProcessRecord()
