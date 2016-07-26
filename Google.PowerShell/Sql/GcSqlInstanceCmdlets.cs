@@ -429,11 +429,22 @@ namespace Google.PowerShell.Sql
     /// </para>
     /// <example>
     ///   <para>
-    ///   Imports the MySQL dump file at "gs://bucket/file.csv" into the already existing database "myData"
-    ///   in the instance "myInstance".
+    ///   Imports the MySQL dump file at "gs://bucket/file" into the already
+    ///   existing database "myData" in the instance "myInstance".
     ///   </para>
     ///   <para><code>
-    ///     PS C:\> Import-GcSqlInstance "myInstance" "gs://bucket/file.csv" "myData"
+    ///     PS C:\> Import-GcSqlInstance "myInstance" "gs://bucket/file" "myData"
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command doesn't return anything.)</para>
+    /// </example>
+    /// <example>
+    ///   <para>
+    ///   Imports the CSV file at "gs://bucket/file.csv" into the table "myTable" in the already
+    ///   existing database "myData" in the instance "myInstance".
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> Import-GcSqlInstance "myInstance" "gs://bucket/file.csv" "myData" "myTable"
     ///   </code></para>
     ///   <br></br>
     ///   <para>(If successful, the command doesn't return anything.)</para>
