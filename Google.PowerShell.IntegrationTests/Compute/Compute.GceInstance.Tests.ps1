@@ -121,10 +121,10 @@ Describe "New-GceInstanceConfig" {
     }
 
     It "should handle defaults" {
-        $instanceConfig = New-GceInstanceConfig -Name $instance -MachineType "f1-micro" `
-            -Disk $attachedDisk
+        $instanceConfig = New-GceInstanceConfig -Name $instance -Disk $attachedDisk
         $instanceConfig.NetworkInterfaces.Network | Should Be "global/networks/default"
         $instanceConfig.NetworkInterfaces.AccessConfigs.Type | Should Be "ONE_TO_ONE_NAT"
+        $instanceConfig.MachineType | Should Be "n1-standard-1"
     }
 
     It "should build disk from image" {
@@ -163,6 +163,7 @@ Describe "Add-GceInstance" {
     $instance = "gcps-instance-create-$r"
     $instance2 = "gcps-instance-create2-$r"
     $instance3 = "gcps-instance-create3-$r"
+    $instance4 = "gcps-instance-create4-$r"
     $instanceConfig = New-GceInstanceConfig -Name $instance -DiskImage $image -MachineType "f1-micro"
     $instanceConfig2 = New-GceInstanceConfig -Name $instance2 -DiskImage $image -MachineType "f1-micro"
     $instanceConfig3 = New-GceInstanceConfig -Name $instance3 -DiskImage $image -MachineType "f1-micro"
@@ -177,6 +178,15 @@ Describe "Add-GceInstance" {
         $instanceConfig2, $instanceConfig3 | Add-GceInstance -Project $project -Zone $zone
         $runningInstances = $instance2, $instance3 | Get-GceInstance -Project $project -Zone $zone
         $runningInstances.Count | Should Be 2
+    }
+
+    It "should build with parameters and defaults" {
+        Add-GceInstance -Name $instance4 -DiskImage $image
+        $runningInstance = Get-GceInstance -Project $project -Zone $zone -Name $instance4
+        $runningInstance.Name | Should Be $instance4
+        $runningInstance.SelfLink | Should Match $project
+        $runningInstance.Zone | Should Match $zone
+        $runningInstance.MachineType | Should Match "n1-standard-1"
     }
 
     It "should throw on wrong project" {

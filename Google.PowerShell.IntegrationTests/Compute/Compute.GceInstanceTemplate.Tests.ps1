@@ -52,7 +52,7 @@ Describe "Add-GceInstanceTemplate" {
     $serviceAccount = New-GceServiceAccountConfig default -BigQuery
 
     It "should work" {
-        Add-GceInstanceTemplate $name -MachineType $machineType -BootDiskImage $image -CanIpForward `
+        Add-GceInstanceTemplate $name $machineType -BootDiskImage $image -CanIpForward `
             -Metadata @{"key" = "value"} -Description "desc" -Network default -NoExternalIp -Preemptible `
             -TerminateOnMaintenance -Tag alpha, beta -ServiceAccount $serviceAccount
         $template = Get-GceInstanceTemplate $name
@@ -90,14 +90,14 @@ Describe "Add-GceInstanceTemplate" {
 
     It "should work with attached disk configs" {
         $diskConfigs = New-GceAttachedDiskConfig -SourceImage $image -Boot
-        Add-GceInstanceTemplate $name3 -MachineType $machineType -Disk $diskConfigs
+        Add-GceInstanceTemplate $name3 -Disk $diskConfigs
         $template = Get-GceInstanceTemplate $name3
         $template.Name | Should Be $name3
         $prop = $template.Properties
         $prop.Disks.Count | Should Be 1
         $prop.Disks.Boot | Should Be $true
         $prop.Disks.InitializeParams.SourceImage -match "windows" | Should Be $true
-        $prop.MachineType | Should Be $machineType
+        $prop.MachineType | Should Be "n1-standard-1"
     }
 
     Get-GceInstanceTemplate | Remove-GceInstanceTemplate
