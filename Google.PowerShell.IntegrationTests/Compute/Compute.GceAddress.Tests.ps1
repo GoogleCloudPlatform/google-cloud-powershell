@@ -16,7 +16,7 @@ Describe "Add-GceAddress" {
 
     Context "make region specific addresses" {
         AfterEach {
-            Remove-GceAddress $addressName
+            Get-GceAddress | Remove-GceAddress
         }
 
         It "should make region address by name" {
@@ -29,7 +29,7 @@ Describe "Add-GceAddress" {
         }
 
         It "should make non-default region address by name" {
-            Add-GceAddress $addressName
+            Add-GceAddress $addressName -Region "us-east1"
             $address = Get-GceAddress $addressName -Region "us-east1"
             $address.Name | Should Be $addressName
             $address.AddressValue | Should Not BeNullOrEmpty

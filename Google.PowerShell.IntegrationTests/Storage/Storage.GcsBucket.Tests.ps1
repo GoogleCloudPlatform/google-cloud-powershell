@@ -1,7 +1,7 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
 
-$project = "gcloud-powershell-testing"
+$project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 # TODO(chrsmith): When Posh updates, newer versions of Pester have Should BeOfType.
 # TODO(chrsmith): Add a random suffix to bucket names to avoid collisions between devs.
@@ -28,7 +28,15 @@ Describe "Get-GcsBucket" {
     }
 
     It "should list all buckets in a project" {
-        (Get-GcsBucket -Project $project).Count -gt 0 | Should Be $true
+        $buckets = Get-GcsBucket -Project $projec
+        $buckets | Should Not BeNullOrEmpty
+        ($buckets | Get-Member).TypeName | Should Be Google.Apis.Storage.v1.Data.Bucket
+    }
+
+    It "should list all buckets in the default project" {
+        $buckets = Get-GcsBucket
+        $buckets | Should Not BeNullOrEmpty
+        ($buckets | Get-Member).TypeName | Should Be Google.Apis.Storage.v1.Data.Bucket
     }
 
     It "should give access errors as appropriate" {
@@ -38,10 +46,11 @@ Describe "Get-GcsBucket" {
     }
 }
 
-Describe "Create-GcsBucket" {
+Describe "New-GcsBucket" {
 
     # Should remove the bucket before/after each test to ensure we are in a good state.
     BeforeEach {
+        gsutil -m rm -r "gs://gcps-bucket-creation/*" 2>$null
         gsutil rb gs://gcps-bucket-creation 2>$null
     }
 
@@ -64,6 +73,26 @@ Describe "Create-GcsBucket" {
         $bucket.Location | Should Match "EU"
         $bucket.StorageClass | Should Match "NEARLINE"
     }
+
+    It "supports setting default ACLs" {
+        # "authenticatedRead" means it is only accessible to users authenticated with a
+        # Google address. So a blind HTTP GET won't work, but if you have the right cookies
+        # it will.
+        $bucket = New-GcsBucket `
+            -Name "gcps-bucket-creation" `
+            -DefaultObjectAcl "authenticatedRead"
+
+        $bucket.DefaultObjectAcl.Entity | Should Be "allAuthenticatedUsers"
+        $bucket.DefaultObjectAcl.Role | Should Be "READER"
+
+        $gcsObj = "testing 1, 2, 3..." | New-GcsObject $bucket "test-obj"
+
+        # General requests to the object should fail.
+        { Invoke-WebRequest https://www.googleapis.com/storage/v1/b/gcps-bucket-creation/o/test-obj } |
+            Should Throw "(401) Unauthorized"
+        # But going through gsutil (which passes along your Google credentials) will work.
+        gsutil cat gs://gcps-bucket-creation/test-obj | Should Be "testing 1, 2, 3..."
+    }
 }
 
 Describe "Remove-GcsBucket" {
@@ -84,6 +113,11 @@ Describe "Remove-GcsBucket" {
     It "will work with pipeline" {
         $bucket | Remove-GcsBucket -Force
         { Get-GcsBucket -Name $bucket } | Should Throw "404"
+
+        # Also passing a Bucket object.
+        $bucketObj = New-GcsBucket "gcps-bucket-removal2"
+        $bucketObj | Remove-GcsBucket -Force
+        { Get-GcsBucket -Name $bucketObj.Name } | Should Throw "404"
     }
 
     It "will be unstoppable with the Force flag" {
@@ -102,11 +136,17 @@ Describe "Test-GcsBucket" {
         $bucket = "gcps-test-gcsbucket"
         Create-TestBucket $project $bucket
         Test-GcsBucket -Name $bucket | Should Be $true
-        gsutil rb gs://gcps-test-gcsbucket 2>$null
+        Remove-GcsBucket $bucket
+
+        # Test using a Bucket object.
+        $bucketObj = New-GcsBucket "gcps-test-gcsbucket"
+        Test-GcsBucket $bucketObj | Should Be $true
+        Remove-GcsBucket $bucketObj
       
         # Buckets that exists but we don't have access to.
         Test-GcsBucket -Name "asdf" | Should Be $true
-
         Test-GcsBucket -Name "yt4fm3blvo9shden" | Should Be $false
     }
 }
+
+Reset-GCloudConfig $oldActiveConfig $configName

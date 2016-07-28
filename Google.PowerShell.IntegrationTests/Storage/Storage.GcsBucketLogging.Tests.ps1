@@ -1,16 +1,17 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
 
-$project = "gcloud-powershell-testing"
+$project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 # Both commands tested together.
 Describe "Write-GcsBucketLogging and Remove-GcsBucketLogging" {
     It "should work" {
-        $bucket = "gcps-logging-testing"    
-        Create-TestBucket $project $bucket
+        $bucketName = "gcps-logging-testing"
+        Remove-GcsBucket $bucketName -Force
+        $bucket = New-GcsBucket $bucketName
 
         # Confirm not set by default.
-        (Get-GcsBucket $bucket).Logging | Should BeNullOrEmpty
+        $bucket.Logging | Should BeNullOrEmpty
 
         # Write, and confirm in output.
         $result = Write-GcsBucketLogging `
@@ -19,7 +20,7 @@ Describe "Write-GcsBucketLogging and Remove-GcsBucketLogging" {
         $result.Logging.LogObjectPrefix | Should BeExactly "gcloudps-beta"
 
         # Confirm added
-        $result = Get-GcsBucket $bucket
+        $result = Get-GcsBucket $bucketName
         $result.Logging.LogBucket | Should BeExactly "gcloudps-alpha"
         $result.Logging.LogObjectPrefix | Should BeExactly "gcloudps-beta"
 
@@ -29,8 +30,12 @@ Describe "Write-GcsBucketLogging and Remove-GcsBucketLogging" {
         $result.Logging.LogObjectPrefix | Should BeNullOrEmpty
 
         # Confirm removed.
-        $result = Get-GcsBucket $bucket
+        $result = Get-GcsBucket $bucketName
         $result.Logging.LogBucket | Should BeNullOrEmpty
         $result.Logging.LogObjectPrefix | Should BeNullOrEmpty
+
+        Remove-GcsBucket $bucketName -Force
     }
 }
+
+Reset-GCloudConfig $oldActiveConfig $configName

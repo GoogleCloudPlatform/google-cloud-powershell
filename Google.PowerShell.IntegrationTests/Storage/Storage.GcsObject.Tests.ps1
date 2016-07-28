@@ -1,7 +1,7 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GCloudCmdlets
 
-$project = "gcloud-powershell-testing"
+$project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Describe "New-GcsObject" {
 
@@ -114,7 +114,7 @@ Describe "New-GcsObject" {
 
         # Confirm we won't clobber
         { New-GcsObject $bucket $objectName -File $tempFile } `
-            | Should Throw "Storage object already exists"
+            | Should Throw "Storage object 'existing-object' already exists"
 
         # Confirm -Force works
         "updated-object-contents" | Out-File $tempFile -Encoding ascii -NoNewline
@@ -139,7 +139,40 @@ Describe "New-GcsObject" {
         Read-GcsObject $bucket $objectName | Should BeExactly $objectContents
     }
 
-    # TODO(chrsmith): Confirm it works for 0-byte files (currently it doesn't).
+    It "will have default MIME types for files and text" {
+        # Text file
+        "text" | New-GcsObject $bucket "text-file" | Out-Null
+        $textObj = Get-GcsObject $bucket "text-file"
+        $textObj.ContentType | Should Be "text/plain; charset=utf-8"
+        Remove-GcsObject $textObj
+
+        # Binary file
+        $tempFile = [System.IO.Path]::GetTempFileName()
+        # TODO(chrsmith): Support creating 0-byte files on GCS.
+        [System.IO.File]::WriteAllText($tempFile, "<binary-data>")
+        New-GcsObject $bucket "binary-file" -File $tempFile | Out-Null
+        $binObj = Get-GcsObject $bucket "binary-file"
+        $binObj.ContentType | Should Be "application/octet-stream"
+        Remove-GcsObject $binObj
+        Remove-Item $tempFile
+    }
+
+    It "will infer mime type based on file extension" {
+        $tempFile = [System.IO.Path]::GetTempFileName() + ".png"
+        # TODO(chrsmith): Support creating 0-byte files on GCS.
+        [System.IO.File]::WriteAllText($tempFile,"<binary-data>")
+        New-GcsObject $bucket "png-file" -File $tempFile | Out-Null
+        $binObj = Get-GcsObject $bucket "png-file"
+        $binObj.ContentType | Should Be "image/png"
+        Remove-GcsObject $binObj
+        Remove-Item $tempFile
+    }
+
+    It "should write zero byte files" {
+        $emptyObj = New-GcsObject $bucket "zero-byte-test"
+        $emptyObj.Size | Should Be 0
+        Remove-GcsObject $emptyObj
+    }
 }
 
 Describe "Get-GcsObject" {
@@ -160,6 +193,35 @@ Describe "Get-GcsObject" {
     }
 }
 
+Describe "Set-GcsObject" {
+
+    $bucket = "gcps-get-object-testing"
+    Create-TestBucket $project $bucket
+    Add-TestFile $bucket "testfile1.txt"
+
+    It "should work" {
+        # Default ACLs set on the object from the bucket.
+        $obj = Get-GcsObject $bucket "testfile1.txt"
+        $obj.Acl.Count | Should Be 4
+        $obj.Acl[0].ID.Contains("/project-owners-") | Should Be $true
+        $obj.Acl[1].ID.Contains("/project-editors-") | Should Be $true
+        $obj.Acl[2].ID.Contains("/project-viewers-") | Should Be $true
+        $obj.Acl[3].ID.Contains("/user-") | Should Be $true
+
+        # Set new value for ACLs using a predefined set.
+        $obj = $obj | Set-GcsObject -PredefinedAcl PublicRead
+        $obj.Acl.Count | Should Be 2
+        $obj.Acl[0].ID.Contains("/user-") | Should Be $true
+        $obj.Acl[1].ID.Contains("/allUsers") | Should Be $true
+
+        # Confirm the change took place.
+        $obj = Get-GcsObject $bucket "testfile1.txt"
+        $obj.Acl.Count | Should Be 2
+        $obj.Acl[0].ID.Contains("/user-") | Should Be $true
+        $obj.Acl[1].ID.Contains("/allUsers") | Should Be $true
+    }
+}
+
 Describe "Find-GcsObject" {
 
     $bucket = "gcps-get-object-testing"
@@ -177,6 +239,12 @@ Describe "Find-GcsObject" {
 
     It "should support getting all objects in a bucket" {
         $objs = Find-GcsObject $bucket
+        $objs.Length | Should Be 10
+    }
+
+    It "should support getting the bucket via the pipeline (and via Bucket object)" {
+        $bucketObj = Get-GcsBucket $bucket
+        $objs = $bucketObj | Find-GcsObject
         $objs.Length | Should Be 10
     }
 
@@ -265,8 +333,9 @@ Describe "Read-GcsObject" {
     It "won't overwrite existing files" {
         # Creates a 0-byte file, which we won't clobber.
         $tempFileName = [System.IO.Path]::GetTempFileName()
+        # File should point to somewhere in Users\AppData\Local\Temp.
         { Read-GcsObject $bucket $testObjectName $tempFileName } `
-            | Should Throw "File already exists"
+            | Should Throw "already exists"
 
         Remove-Item $tempFileName
     }
@@ -354,8 +423,10 @@ Describe "Write-GcsObject" {
         # that is set by the pipeline.
         $objectName = "write-gcsobject-from-pipeline"
         $objectContents = "This is some text from the PowerShell pipeline"
+        # This step fails because Write assumes the Object already exists (unless -Force) is used.
+        # For general objct creation, use New-GcsObject.
         { $objectContents | Write-GcsObject $bucket $objectName } `
-            | Should Throw "Storage object does not exist"
+            | Should Throw "Storage object 'write-gcsobject-from-pipeline' does not exist"
 
         # Adding -Force does the trick. Confirm it worked.
         $objectContents | Write-GcsObject $bucket $objectName -Force
@@ -394,3 +465,25 @@ Describe "Write-GcsObject" {
     # TODO(chrsmith): Confirm Write-GcsObject doesn't remove object metadata, such
     # as its existing ACLs. (Since we are uploading a new object in-place.)
 }
+
+Describe "Test-GcsObject" {
+    $bucket = "gcps-test-object-testing"
+    Create-TestBucket $project $bucket
+
+    It "should work" {
+        Test-GcsObject $bucket "test-obj" | Should Be $false
+        $obj = "can you hear me now?" | New-GcsObject $bucket "test-obj"
+        Test-GcsObject $bucket "test-obj" | Should Be $true
+        $obj | Remove-GcsObject
+    }
+
+    It "should return false if the Bucket does not exist" {
+        Test-GcsObject "bucket-aad2fjadkdmgzadfhj4" "obj.txt"| Should Be $false
+    }
+
+    It "should fail if the bucket is not accessible" {
+        { Test-GcsObject "asdf" "gcs-object.txt" } | Should Throw "has been disabled"
+    }
+}
+
+Reset-GCloudConfig $oldActiveConfig $configName

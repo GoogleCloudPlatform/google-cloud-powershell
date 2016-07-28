@@ -332,13 +332,13 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The machine type of this instance. Can be a name, a URL or a MachineType object from
-        /// Get-GceMachineType.
+        /// Get-GceMachineType. Defaults to "n1-standard-1".
         /// </para>
         /// </summary>
-        [Parameter(Position = 1, Mandatory = true, ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(Position = 1, ParameterSetName = ParameterSetNames.ByValues)]
         [PropertyByTypeTransformation(TypeToTransform = typeof(MachineType),
             Property = nameof(Apis.Compute.v1.Data.MachineType.SelfLink))]
-        public override string MachineType { get; set; }
+        public override string MachineType { get; set; } = "n1-standard-1";
 
         /// <summary>
         /// <para type="description">
@@ -525,8 +525,8 @@ namespace Google.PowerShell.ComputeEngine
     {
         private class ParameterSetNames
         {
-            public const string ByName = nameof(ByName);
-            public const string ByObject = nameof(ByObject);
+            public const string ByName = "ByName";
+            public const string ByObject = "ByObject";
         }
         /// <summary>
         /// <para type="description">
@@ -605,12 +605,18 @@ namespace Google.PowerShell.ComputeEngine
     [Cmdlet(VerbsLifecycle.Start, "GceInstance")]
     public class StartGceInstanceCmdlet : GceConcurrentCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByObject = "ByObject";
+        }
+
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
         public string Project { get; set; }
@@ -620,7 +626,7 @@ namespace Google.PowerShell.ComputeEngine
         /// The zone in which the instance resides.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
         public string Zone { get; set; }
@@ -630,15 +636,45 @@ namespace Google.PowerShell.ComputeEngine
         /// The name of the instance to start.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = true, ValueFromPipeline = true)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Instance))]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
         public string Name { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The instance object to start.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        public Instance Object { get; set; }
 
         protected override void ProcessRecord()
         {
-            InstancesResource.StartRequest request = Service.Instances.Start(Project, Zone, Name);
+            string project;
+            string zone;
+            string name;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.ByName:
+                    project = Project;
+                    zone = Zone;
+                    name = Name;
+                    break;
+                case ParameterSetNames.ByObject:
+                    project = GetProjectNameFromUri(Object.SelfLink);
+                    zone = GetZoneNameFromUri(Object.Zone);
+                    name = Object.Name;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+            InstancesResource.StartRequest request = Service.Instances.Start(project, zone, name);
             Operation operation = request.Execute();
-            AddZoneOperation(Project, Zone, operation);
+            AddZoneOperation(project, zone, operation, () =>
+            {
+                WriteObject(Service.Instances.Get(project, zone, name).Execute());
+            });
         }
     }
 
@@ -653,12 +689,18 @@ namespace Google.PowerShell.ComputeEngine
     [Cmdlet(VerbsLifecycle.Stop, "GceInstance")]
     public class StopGceInstanceCmdlet : GceConcurrentCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByObject = "ByObject";
+        }
+
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
         public string Project { get; set; }
@@ -668,7 +710,7 @@ namespace Google.PowerShell.ComputeEngine
         /// The zone in which the instance resides.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
         public string Zone { get; set; }
@@ -678,15 +720,45 @@ namespace Google.PowerShell.ComputeEngine
         /// The name of the instance to stop.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = true, ValueFromPipeline = true)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Instance))]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
         public string Name { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The instance object to stop.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        public Instance Object { get; set; }
 
         protected override void ProcessRecord()
         {
-            InstancesResource.StopRequest request = Service.Instances.Stop(Project, Zone, Name);
+            string project;
+            string zone;
+            string name;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.ByName:
+                    project = Project;
+                    zone = Zone;
+                    name = Name;
+                    break;
+                case ParameterSetNames.ByObject:
+                    project = GetProjectNameFromUri(Object.SelfLink);
+                    zone = GetZoneNameFromUri(Object.Zone);
+                    name = Object.Name;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+            InstancesResource.StopRequest request = Service.Instances.Stop(project, zone, name);
             Operation operation = request.Execute();
-            AddZoneOperation(Project, Zone, operation);
+            AddZoneOperation(project, zone, operation, () =>
+            {
+                WriteObject(Service.Instances.Get(project, zone, name).Execute());
+            });
         }
     }
 
@@ -701,12 +773,18 @@ namespace Google.PowerShell.ComputeEngine
     [Cmdlet(VerbsLifecycle.Restart, "GceInstance")]
     public class RestartGceInstanceCmdlet : GceConcurrentCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByObject = "ByObject";
+        }
+
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
         public string Project { get; set; }
@@ -716,7 +794,7 @@ namespace Google.PowerShell.ComputeEngine
         /// The zone in which the instance resides.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
         public string Zone { get; set; }
@@ -726,15 +804,45 @@ namespace Google.PowerShell.ComputeEngine
         /// The name of the instance to reset.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = true, ValueFromPipeline = true)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Instance))]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
         public string Name { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The instance object to restart.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        public Instance Object { get; set; }
 
         protected override void ProcessRecord()
         {
-            InstancesResource.ResetRequest request = Service.Instances.Reset(Project, Zone, Name);
+            string project;
+            string zone;
+            string name;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.ByName:
+                    project = Project;
+                    zone = Zone;
+                    name = Name;
+                    break;
+                case ParameterSetNames.ByObject:
+                    project = GetProjectNameFromUri(Object.SelfLink);
+                    zone = GetZoneNameFromUri(Object.Zone);
+                    name = Object.Name;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+            InstancesResource.ResetRequest request = Service.Instances.Reset(project, zone, name);
             Operation operation = request.Execute();
-            AddZoneOperation(Project, Zone, operation);
+            AddZoneOperation(project, zone, operation, () =>
+            {
+                WriteObject(Service.Instances.Get(project, zone, name).Execute());
+            });
         }
     }
 
@@ -748,14 +856,18 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceInstance")]
-    public class UpdateGceInstanceCmdlet : GceConcurrentCmdlet
+    public class SetGceInstanceCmdlet : GceConcurrentCmdlet
     {
-        internal class ParameterSetNames
+        private class ParameterSetNames
         {
             public const string AccessConfig = "AccessConfig";
             public const string Disk = "Disk";
             public const string Metadata = "Metadata";
             public const string Tag = "Tag";
+            public const string AccessConfigByObject = "AccessConfigByObject";
+            public const string DiskByObject = "DiskByObject";
+            public const string MetadataByObject = "MetadataByObject";
+            public const string TagByObject = "TagByObject";
         }
 
         /// <summary>
@@ -763,29 +875,62 @@ namespace Google.PowerShell.ComputeEngine
         /// The project that owns the instance to update.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.AccessConfig)]
+        [Parameter(ParameterSetName = ParameterSetNames.Disk)]
+        [Parameter(ParameterSetName = ParameterSetNames.Metadata)]
+        [Parameter(ParameterSetName = ParameterSetNames.Tag)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
         public string Project { get; set; }
+
+        private string _project;
 
         /// <summary>
         /// <para type="description">
         /// The zone in which the instance resides.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.AccessConfig)]
+        [Parameter(ParameterSetName = ParameterSetNames.Disk)]
+        [Parameter(ParameterSetName = ParameterSetNames.Metadata)]
+        [Parameter(ParameterSetName = ParameterSetNames.Tag)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
         public string Zone { get; set; }
+
+        private string _zone;
 
         /// <summary>
         /// <para type="description">
         /// The name of the instance to update.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = true)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Instance))]
-        public string Instance { get; set; }
+        [Parameter(ParameterSetName = ParameterSetNames.AccessConfig, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.Disk, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.Metadata, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.Tag, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        public string Name { get; set; }
+
+        private string _name;
+
+        /// <summary>
+        /// <paratype="description">
+        /// The instance object to update.
+        /// </paratype>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.AccessConfigByObject, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.DiskByObject, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.MetadataByObject, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.TagByObject, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        public Instance Object { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -793,7 +938,9 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.AccessConfig)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(NetworkInterface))]
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.AccessConfigByObject)]
+        [PropertyByTypeTransformation(Property = nameof(Apis.Compute.v1.Data.NetworkInterface.Name),
+            TypeToTransform = typeof(NetworkInterface))]
         public string NetworkInterface { get; set; }
 
         /// <summary>
@@ -802,7 +949,8 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.AccessConfig)]
-        public List<AccessConfig> NewAccessConfig { get; set; } = new List<AccessConfig>();
+        [Parameter(ParameterSetName = ParameterSetNames.AccessConfigByObject)]
+        public AccessConfig[] AddAccessConfig { get; set; } = { };
 
         /// <summary>
         /// <para type="description">
@@ -810,15 +958,18 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.AccessConfig)]
-        public List<string> DeleteAccessConfig { get; set; } = new List<string>();
+        [Parameter(ParameterSetName = ParameterSetNames.AccessConfigByObject)]
+        public string[] RemoveAccessConfig { get; set; } = { };
 
         /// <summary>
         /// <para type="description">
-        /// Name of the disk to attach.
+        /// The disk to attach. Can the name of a disk, a disk object from Get-GceDisk, or an attached disk
+        /// object from New-GceAttachedDiskConfig.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Disk)]
-        public List<object> AddDisk { get; set; } = new List<object>();
+        [Parameter(ParameterSetName = ParameterSetNames.DiskByObject)]
+        public object[] AddDisk { get; set; } = { };
 
         /// <summary>
         /// <para type="description">
@@ -826,7 +977,8 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Disk)]
-        public List<string> DetachDisk { get; set; } = new List<string>();
+        [Parameter(ParameterSetName = ParameterSetNames.DiskByObject)]
+        public string[] RemoveDisk { get; set; } = { };
 
         /// <summary>
         /// <para type="description">
@@ -834,6 +986,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Metadata)]
+        [Parameter(ParameterSetName = ParameterSetNames.MetadataByObject)]
         public Hashtable AddMetadata { get; set; } = new Hashtable();
 
         /// <summary>
@@ -842,7 +995,8 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Metadata)]
-        public List<string> RemoveMetadata { get; set; } = new List<string>();
+        [Parameter(ParameterSetName = ParameterSetNames.MetadataByObject)]
+        public string[] RemoveMetadata { get; set; } = { };
 
         /// <summary>
         /// <para type="description">
@@ -850,7 +1004,8 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Tag)]
-        public List<string> AddTag { get; set; } = new List<string>();
+        [Parameter(ParameterSetName = ParameterSetNames.TagByObject)]
+        public string[] AddTag { get; set; } = { };
 
         /// <summary>
         /// <para type="description">
@@ -858,22 +1013,49 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Tag)]
-        public List<string> RemoveTag { get; set; } = new List<string>();
+        [Parameter(ParameterSetName = ParameterSetNames.TagByObject)]
+        public string[] RemoveTag { get; set; } = { };
 
         protected override void ProcessRecord()
         {
+            // Parameter set can change between pipeline inputs.
+            UpdateConfigPropertyNameAttribute();
             switch (ParameterSetName)
             {
                 case ParameterSetNames.AccessConfig:
+                case ParameterSetNames.Disk:
+                case ParameterSetNames.Metadata:
+                case ParameterSetNames.Tag:
+                    _project = Project;
+                    _zone = Zone;
+                    _name = Name;
+                    break;
+                case ParameterSetNames.AccessConfigByObject:
+                case ParameterSetNames.DiskByObject:
+                case ParameterSetNames.MetadataByObject:
+                case ParameterSetNames.TagByObject:
+                    _project = GetProjectNameFromUri(Object.SelfLink);
+                    _zone = GetZoneNameFromUri(Object.Zone);
+                    _name = Object.Name;
+                    break;
+            }
+
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.AccessConfig:
+                case ParameterSetNames.AccessConfigByObject:
                     ProcessAccessConfig();
                     break;
                 case ParameterSetNames.Disk:
+                case ParameterSetNames.DiskByObject:
                     ProcessDisk();
                     break;
                 case ParameterSetNames.Metadata:
+                case ParameterSetNames.MetadataByObject:
                     ProcessMetadata();
                     break;
                 case ParameterSetNames.Tag:
+                case ParameterSetNames.TagByObject:
                     ProcessTag();
                     break;
                 default:
@@ -886,20 +1068,20 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         private void ProcessAccessConfig()
         {
-            foreach (string configName in DeleteAccessConfig)
+            foreach (string configName in RemoveAccessConfig)
             {
                 InstancesResource.DeleteAccessConfigRequest request = Service.Instances.DeleteAccessConfig(
-                    Project, Zone, Instance, configName, NetworkInterface);
+                    _project, _zone, _name, configName, NetworkInterface);
                 Operation operation = request.Execute();
-                AddZoneOperation(Project, Zone, operation);
+                AddZoneOperation(_project, _zone, operation);
             }
 
-            foreach (AccessConfig accessConfig in NewAccessConfig)
+            foreach (AccessConfig accessConfig in AddAccessConfig)
             {
                 InstancesResource.AddAccessConfigRequest request = Service.Instances.AddAccessConfig(
-                    accessConfig, Project, Zone, Instance, NetworkInterface);
+                    accessConfig, _project, _zone, _name, NetworkInterface);
                 Operation response = request.Execute();
-                AddZoneOperation(Project, Zone, response);
+                AddZoneOperation(_project, _zone, response);
             }
         }
 
@@ -908,35 +1090,35 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         private void ProcessDisk()
         {
-            foreach (string diskName in DetachDisk)
+            foreach (string diskName in RemoveDisk)
             {
                 InstancesResource.DetachDiskRequest request = Service.Instances.DetachDisk(
-                    Project, Zone, Instance, diskName);
+                    _project, _zone, _name, diskName);
                 Operation operation = request.Execute();
-                AddZoneOperation(Project, Zone, operation);
+                AddZoneOperation(_project, _zone, operation);
             }
 
             foreach (object diskParam in AddDisk)
             {
                 // Allow for taking Disk, AttachedDisk, and string objects.
                 AttachedDisk newDisk;
-                if (diskParam is AttachedDisk)
+                if (diskParam is AttachedDisk || (diskParam as PSObject)?.BaseObject is AttachedDisk)
                 {
-                    newDisk = diskParam as AttachedDisk;
+                    newDisk = diskParam as AttachedDisk ?? (diskParam as PSObject)?.BaseObject as AttachedDisk;
                 }
                 else
                 {
-                    Disk disk = diskParam as Disk;
+                    Disk disk = diskParam as Disk ?? (diskParam as PSObject)?.BaseObject as Disk;
                     if (disk == null)
                     {
-                        disk = Service.Disks.Get(Project, Zone, diskParam.ToString()).Execute();
+                        disk = Service.Disks.Get(_project, _zone, diskParam.ToString()).Execute();
                     }
                     newDisk = new AttachedDisk { Source = disk.SelfLink, DeviceName = disk.Name };
                 }
                 InstancesResource.AttachDiskRequest request =
-                    Service.Instances.AttachDisk(newDisk, Project, Zone, Instance);
+                    Service.Instances.AttachDisk(newDisk, _project, _zone, _name);
                 Operation operation = request.Execute();
-                AddZoneOperation(Project, Zone, operation);
+                AddZoneOperation(_project, _zone, operation);
             }
         }
 
@@ -945,7 +1127,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         private void ProcessMetadata()
         {
-            InstancesResource.GetRequest getRequest = Service.Instances.Get(Project, Zone, Instance);
+            InstancesResource.GetRequest getRequest = Service.Instances.Get(_project, _zone, _name);
             Instance instance = getRequest.Execute();
             Metadata metadata = instance.Metadata ?? new Metadata();
             metadata.Items = metadata.Items ?? new List<Metadata.ItemsData>();
@@ -959,8 +1141,8 @@ namespace Google.PowerShell.ComputeEngine
                 });
             }
             InstancesResource.SetMetadataRequest request =
-                Service.Instances.SetMetadata(metadata, Project, Zone, Instance);
-            AddZoneOperation(Project, Zone, request.Execute());
+                Service.Instances.SetMetadata(metadata, _project, _zone, _name);
+            AddZoneOperation(_project, _zone, request.Execute());
         }
 
         /// <summary>
@@ -968,15 +1150,15 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         private void ProcessTag()
         {
-            InstancesResource.GetRequest getRequest = Service.Instances.Get(Project, Zone, Instance);
+            InstancesResource.GetRequest getRequest = Service.Instances.Get(_project, _zone, _name);
             Instance instance = getRequest.Execute();
             Tags tags = instance.Tags ?? new Tags();
             tags.Items = tags.Items ?? new List<string>();
             tags.Items = tags.Items.Where(tag => !RemoveTag.Contains(tag)).Concat(AddTag).ToList();
             InstancesResource.SetTagsRequest setRequest =
-                Service.Instances.SetTags(tags, Project, Zone, Instance);
+                Service.Instances.SetTags(tags, _project, _zone, _name);
             Operation operation = setRequest.Execute();
-            AddZoneOperation(Project, Zone, operation);
+            AddZoneOperation(_project, _zone, operation);
         }
     }
 }

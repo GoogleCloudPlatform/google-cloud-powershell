@@ -1,10 +1,7 @@
 ﻿// Copyright 2015 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
-using Google;
-using Google.Apis.Auth.OAuth2;
 using Google.Apis.Download;
-using Google.Apis.Services;
 using Google.Apis.Storage.v1;
 using Google.Apis.Storage.v1.Data;
 using Google.PowerShell.Common;
@@ -21,8 +18,6 @@ namespace Google.PowerShell.CloudStorage
 
     // TODO(chrsmith): Provide a way to upload an entire directory to Gcs. Reuse New-GcsObject?
     // Upload-GcsObject?
-
-    // TODO(chrsmith): Provide a way to test if an object exists, a la Test-GcsObject.
 
     /// <summary>
     /// Base class for Cloud Storage Object cmdlets. Used to reuse common methods.
@@ -69,6 +64,7 @@ namespace Google.PowerShell.CloudStorage
             ObjectsResource.InsertMediaUpload insertReq = service.Objects.Insert(
                 newGcsObject, bucket, contentStream, contentType);
             insertReq.PredefinedAcl = predefinedAcl;
+            insertReq.Projection = ProjectionEnum.Full;
 
             var finalProgress = insertReq.Upload();
             if (finalProgress.Exception != null)
@@ -90,7 +86,7 @@ namespace Google.PowerShell.CloudStorage
     /// <example>
     ///   <para>Upload a local log file to GCS.</para>
     ///   <para><code>New-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt" `</code></para>
-    ///   <para><code>    -File "C:\logs\log-000.txt"</code></para></code></para>
+    ///   <para><code>    -File "C:\logs\log-000.txt"</code></para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GcsObject", DefaultParameterSetName = ParameterSetNames.ContentsFromString)]
@@ -104,10 +100,12 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
-        /// The name of the bucket to upload to.
+        /// The name of the bucket to upload to. Will also accept a Bucket object.
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
+        [PropertyByTypeTransformation(Property = nameof(Apis.Storage.v1.Data.Bucket.Name),
+            TypeToTransform = typeof(Bucket))]
         public string Bucket { get; set; }
 
         /// <summary>
@@ -123,9 +121,9 @@ namespace Google.PowerShell.CloudStorage
         /// Text content to write to the Storage object. Ignored if File is specified.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = true, ValueFromPipeline = true,
-            ParameterSetName = ParameterSetNames.ContentsFromString)]
-        public string Contents { get; set; }
+        [Parameter(ParameterSetName = ParameterSetNames.ContentsFromString,
+            Position = 2, ValueFromPipeline = true)]
+        public string Contents { get; set; } = "";
 
         /// <summary>
         /// <para type="description">
@@ -140,7 +138,9 @@ namespace Google.PowerShell.CloudStorage
         /// Content type of the Cloud Storage object. e.g. "image/png" or "text/plain".
         /// </para>
         /// <para type="description">
-        /// Defaults to "application/octet-stream" if not set.
+        /// For file uploads, the type will be inferred based on the file extension, defaulting to
+        /// "application/octet-stream" if no match is found. When passing object content via the
+        /// -Contents parameter, the type will default to "text/plain; charset=utf-8".
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
@@ -153,11 +153,8 @@ namespace Google.PowerShell.CloudStorage
         /// OWNER access, and allUsers get READER access.
         /// </para>
         /// </summary>
-        [ValidateSet(
-            "authenticatedRead", "bucketOwnerFullControl", "bucketOwnerRead",
-            "private", "projectPrivate", "publicRead", IgnoreCase = false)]
         [Parameter(Mandatory = false)]
-        public string PredefinedAcl { get; set; }
+        public PredefinedAclEnum? PredefinedAcl { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -167,44 +164,16 @@ namespace Google.PowerShell.CloudStorage
         [Parameter(Mandatory = false)]
         public SwitchParameter Force { get; set; }
 
-        protected PredefinedAclEnum? GetPredefinedAcl()
-        {
-            switch (PredefinedAcl)
-            {
-                case "authenticatedRead": return PredefinedAclEnum.AuthenticatedRead;
-                case "bucketOwnerFullControl": return PredefinedAclEnum.BucketOwnerFullControl;
-                case "bucketOwnerRead": return PredefinedAclEnum.BucketOwnerRead;
-                case "private": return PredefinedAclEnum.Private__;
-                case "projectPrivate": return PredefinedAclEnum.ProjectPrivate;
-                case "publicRead": return PredefinedAclEnum.PublicRead;
-
-                case "":
-                case null:
-                    return null;
-                default:
-                    throw new PSInvalidOperationException(
-                        string.Format("Invalid predefined ACL: {0}", PredefinedAcl));
-            }
-
-            return null;
-        }
-
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
             var service = GetStorageService();
 
-            if (string.IsNullOrEmpty(ContentType))
-            {
-                ContentType = OctetStreamMimeType;
-            }
-
             string objContentType = null;
             Stream contentStream = null;
             if (!string.IsNullOrEmpty(File))
             {
-                // TODO(chrsmith): Look at the file extension and infer content type.
-                objContentType = OctetStreamMimeType;
+                objContentType = ContentType ?? InferContentType(File) ?? OctetStreamMimeType;
                 string qualifiedPath = GetFullPath(File);
                 if (!System.IO.File.Exists(qualifiedPath))
                 {
@@ -216,15 +185,9 @@ namespace Google.PowerShell.CloudStorage
             {
                 // We store string data as UTF-8, which is different from .NET's default encoding
                 // (UTF-16). But this simplifies several other issues.
-                objContentType = UTF8TextMimeType;
+                objContentType = ContentType ?? UTF8TextMimeType;
                 byte[] contentBuffer = Encoding.UTF8.GetBytes(Contents);
                 contentStream = new MemoryStream(contentBuffer);
-            }
-
-            // Use the user-specified content type instead of ours if provided.
-            if (string.IsNullOrEmpty(ContentType))
-            {
-                objContentType = ContentType;
             }
 
             using (contentStream)
@@ -236,15 +199,49 @@ namespace Google.PowerShell.CloudStorage
                 bool objectExists = TestObjectExists(service, Bucket, ObjectName);
                 if (objectExists && !Force.IsPresent)
                 {
-                    throw new PSArgumentException("Storage object already exists. Use -Force to overwrite.");
+                    throw new PSArgumentException($"Storage object '{ObjectName}' already exists. Use -Force to overwrite.");
                 }
 
                 Object newGcsObject = UploadGcsObject(
                     service, Bucket, ObjectName, contentStream,
-                    objContentType, GetPredefinedAcl());
+                    objContentType, PredefinedAcl);
 
                 WriteObject(newGcsObject);
             }
+        }
+
+        /// <summary>
+        /// Infer the MIME type of a non-qualified file path. Returns null if no match is found.
+        /// </summary>
+        private string InferContentType(string file)
+        {
+            int index = file.LastIndexOf('.');
+            if (index == -1)
+            {
+                return null;
+            }
+            string extension = file.ToLowerInvariant().Substring(index);
+            // http://www.freeformatter.com/mime-types-list.html
+            switch (extension)
+            {
+                case ".htm":
+                case ".html":
+                    return "text/html";
+                case ".jpg":
+                case ".jpeg":
+                    return "image/jpeg";
+                case ".js":
+                    return "application/javascript";
+                case ".json":
+                    return "application/json";
+                case ".png":
+                    return "image/png";
+                case ".txt":
+                    return "text/plain";
+                case ".zip":
+                    return "application/zip";
+            }
+            return null;
         }
     }
 
@@ -262,10 +259,11 @@ namespace Google.PowerShell.CloudStorage
     {
         /// <summary>
         /// <para type="description">
-        /// Name of the bucket to check.
+        /// Name of the bucket to check. Will also accept a Bucket object.
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
+        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Bucket { get; set; }
 
         /// <summary>
@@ -282,7 +280,98 @@ namespace Google.PowerShell.CloudStorage
             var service = GetStorageService();
 
             ObjectsResource.GetRequest getReq = service.Objects.Get(Bucket, ObjectName);
+            getReq.Projection = ObjectsResource.GetRequest.ProjectionEnum.Full;
             Object gcsObject = getReq.Execute();
+            WriteObject(gcsObject);
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Set-GcsObject updates metadata associated with a Cloud Storage Object.
+    /// </para>
+    /// <para type="description">
+    /// Updates the metadata associated with a Cloud Storage Object, such as ACLs.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Set, "GcsObject")]
+    public class SetGcsObjectCmdlet : GcsCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string FromBucketAndObjName = "FromBucketAndObjName";
+            public const string FromObject = "FromObjectObject";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the bucket to check. Will also accept a Bucket object.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.FromBucketAndObjName)]
+        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
+        public string Bucket { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the object to update.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 1, Mandatory = true, ParameterSetName = ParameterSetNames.FromBucketAndObjName)]
+        public string ObjectName { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Storage object instance to update.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true,
+            ValueFromPipeline = true, ParameterSetName = ParameterSetNames.FromObject)]
+        public Object Object { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Provide a predefined ACL to the object. e.g. "publicRead" where the project owner gets
+        /// OWNER access, and allUsers get READER access.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public ObjectsResource.UpdateRequest.PredefinedAclEnum? PredefinedAcl { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            base.ProcessRecord();
+            var service = GetStorageService();
+
+            string bucket = null;
+            string objectName = null;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.FromBucketAndObjName:
+                    bucket = Bucket;
+                    objectName = ObjectName;
+                    break;
+                case ParameterSetNames.FromObject:
+                    bucket = Object.Bucket;
+                    objectName = Object.Name;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+
+            // You cannot specify both an ACL list and a predefined ACL using the API. (b/30358979?)
+            // We issue a GET + Update. Since we aren't using ETags, there is a potential for a
+            // race condition.
+            var getReq = service.Objects.Get(bucket, objectName);
+            getReq.Projection = ObjectsResource.GetRequest.ProjectionEnum.Full;
+            Object objectInsert = getReq.Execute();
+            // The API doesn't allow both predefinedAcl and access controls. So drop existing ACLs.
+            objectInsert.Acl = null;
+
+            ObjectsResource.UpdateRequest updateReq = service.Objects.Update(objectInsert, bucket, objectName);
+            updateReq.PredefinedAcl = PredefinedAcl;
+
+            Object gcsObject = updateReq.Execute();
             WriteObject(gcsObject);
         }
     }
@@ -311,10 +400,11 @@ namespace Google.PowerShell.CloudStorage
     {
         /// <summary>
         /// <para type="description">
-        /// Name of the bucket to search.
+        /// Name of the bucket to search. Will also accept a Bucket object.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
+        [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true)]
+        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Bucket { get; set; }
 
         /// <summary>
@@ -384,10 +474,11 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
-        /// Name of the bucket containing the object.
+        /// Name of the bucket containing the object. Will also accept a Bucket object.
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.FromName)]
+        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Bucket { get; set; }
 
         /// <summary>
@@ -432,7 +523,10 @@ namespace Google.PowerShell.CloudStorage
 
             ObjectsResource.DeleteRequest delReq = service.Objects.Delete(Bucket, ObjectName);
             string result = delReq.Execute();
-            WriteObject(result);
+            if (!string.IsNullOrWhiteSpace(result))
+            {
+                WriteObject(result);
+            }
         }
     }
 
@@ -451,10 +545,11 @@ namespace Google.PowerShell.CloudStorage
     {
         /// <summary>
         /// <para type="description">
-        /// Name of the bucket containing the object.
+        /// Name of the bucket containing the object. Will also accept a Bucket object.
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
+        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Bucket { get; set; }
 
         /// <summary>
@@ -523,7 +618,7 @@ namespace Google.PowerShell.CloudStorage
             bool fileExists = File.Exists(qualifiedPath);
             if (fileExists && !Force.IsPresent)
             {
-                throw new PSArgumentException("File already exists. Use -Force to overwrite.");
+                throw new PSArgumentException($"File '{qualifiedPath}' already exists. Use -Force to overwrite.");
             }
 
 
@@ -552,10 +647,11 @@ namespace Google.PowerShell.CloudStorage
     {
         /// <summary>
         /// <para type="description">
-        /// Name of the bucket containing the object.
+        /// Name of the bucket containing the object. Will also accept a Bucket object.
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
+        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Bucket { get; set; }
 
         /// <summary>
@@ -618,10 +714,11 @@ namespace Google.PowerShell.CloudStorage
             {
                 // Fail if the GCS Object does not exist. We don't use TestGcsObjectExists
                 // so we can reuse the existing objects metadata when uploading a new file.
-                string contentType = OctetStreamMimeType;
+                string contentType = null;
                 try
                 {
                     ObjectsResource.GetRequest getReq = service.Objects.Get(Bucket, ObjectName);
+                    getReq.Projection = ObjectsResource.GetRequest.ProjectionEnum.Full;
                     Object existingGcsObject = getReq.Execute();
                     contentType = existingGcsObject.ContentType;
                 }
@@ -629,7 +726,7 @@ namespace Google.PowerShell.CloudStorage
                 {
                     if (!Force.IsPresent)
                     {
-                        throw new PSArgumentException("Storage object does not exist. Use -Force to ignore.");
+                        throw new PSArgumentException($"Storage object '{ObjectName}' does not exist. Use -Force to ignore.");
                     }
                 }
                 // TODO(chrsmith): In the -Force case we are using the default octet-stream MIME type. Guess
@@ -644,6 +741,56 @@ namespace Google.PowerShell.CloudStorage
                 Object updatedGcsObject = UploadGcsObject(
                     service, Bucket, ObjectName, contentStream,
                     contentType);
+            }
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Verify the existence of a Cloud Storage Object.
+    /// </para>
+    /// <para type="description">
+    /// Verify the existence of a Cloud Storage Object.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsDiagnostic.Test, "GcsObject")]
+    public class TestGcsObjectCmdlet : GcsCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// Name of the containing bucket. Will also accept a Bucket object.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true)]
+        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
+        public string Bucket { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the object to check for.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 1, Mandatory = true)]
+        public string ObjectName { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            base.ProcessRecord();
+            var service = GetStorageService();
+
+            // Unfortunately there is no way to test if an object exists on the API, so we
+            // just issue a GET and intercept the 404 case.
+            try
+            {
+                ObjectsResource.GetRequest objGetReq = service.Objects.Get(Bucket, ObjectName);
+                objGetReq.Projection = ObjectsResource.GetRequest.ProjectionEnum.Full;
+                objGetReq.Execute();
+
+                WriteObject(true);
+            }
+            catch (GoogleApiException ex) when (ex.Error.Code == 404)
+            {
+                WriteObject(false);
             }
         }
     }

@@ -143,8 +143,10 @@ namespace Google.PowerShell.Common
         public static bool GetOptIntoUsageReporting()
         {
             string rawValue = GetSettingsValue("disable_usage_reporting");
-            bool value;
-            if (Boolean.TryParse(rawValue, out value))
+            bool value = false;
+            // If the disable_usage_reporting value is not set, fall back to the install default.
+            // (false, meaning to report usage.)
+            if (rawValue == null || Boolean.TryParse(rawValue, out value))
             {
                 // Invert the value, because the value stores whether it is *disabled*.
                 return !value;

@@ -3,9 +3,9 @@
 This folder contains a [Jekyll](https://jekyllrb.com/)-powered website for
 providing basic documentation for PowerShell cmdlets.
 
-The website is published at http://googlecloudplatform.github.io/gcloud-powershell.
-The content is served directly from the `gh-pages` branch using the GitHub Pages
-feature.
+The website is published at
+http://googlecloudplatform.github.io/google-cloud-powershell. The content is
+served directly from the `gh-pages` branch using the GitHub Pages feature.
 
 One major source of confusion is that there are actually *two* websites. First,
 the landing page (index.html) is rendered via an Angular application. The source
