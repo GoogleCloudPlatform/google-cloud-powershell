@@ -3,16 +3,16 @@
 Describe "Get-GcdQuota" {
 
     It "should fail to return DNS quota of non-existent project" {
-        { Get-GcdQuota -DnsProject $nonExistProject } | Should Throw "400"
+        { Get-GcdQuota -Project $nonExistProject } | Should Throw "400"
     }
 
     It "should give access errors as appropriate" {
         # Don't know who created the "asdf" project.
-        { Get-GcdQuota -DnsProject $accessErrProject } | Should Throw "403"
+        { Get-GcdQuota -Project $accessErrProject } | Should Throw "403"
     }
 
     It "should work and retrieve valid DNS quota information" {
-        $quotaInfo = Get-GcdQuota -DnsProject $project
+        $quotaInfo = Get-GcdQuota -Project $project
 
         $quotaInfo.GetType().FullName | Should Match $quotaType
 

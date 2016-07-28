@@ -55,7 +55,7 @@ $Err_ProjectZonesNotDeleted = "All ManagedZones in the specified project have no
 
 # Force remove all existing ManagedZones, including non-empty ones
 function Remove-AllManagedZone($projectName) {
-    Get-GcdManagedZone -DnsProject $project | Remove-GcdManagedZone -Force
+    Get-GcdManagedZone -Project $project | Remove-GcdManagedZone -Force
 }
 
 function Remove-FileIfExists($fileName) {

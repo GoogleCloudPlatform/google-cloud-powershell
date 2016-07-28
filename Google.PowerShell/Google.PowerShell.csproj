@@ -151,16 +151,6 @@
     <Compile Include="Dns\GcdQuota.cs" />
     <Compile Include="Dns\GcdResourceRecordSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Sql\GcSqlBackupRunCmdlets.cs" />
-    <Compile Include="Sql\GcSqlCmdlet.cs" />
-    <Compile Include="Sql\GcSqlFlagsCmdlet.cs" />
-    <Compile Include="Sql\GcSqlInstanceCmdlets.cs" />
-    <Compile Include="Sql\GcSqlInstanceConfigCmdlets.cs" />
-    <Compile Include="Sql\GcSqlInstanceReplicaConfigCmdlet.cs" />
-    <Compile Include="Sql\GcSqlOperationCmdlet.cs" />
-    <Compile Include="Sql\GcSqlSettingConfigCmdlet.cs" />
-    <Compile Include="Sql\GcSqlSslCmdlets.cs" />
-    <Compile Include="Sql\GcSqlTiersCmdlet.cs" />
     <Compile Include="Storage\GcsBucket.cs" />
     <Compile Include="Storage\GcsBucketLogging.cs" />
     <Compile Include="Storage\GcsBucketWebsite.cs" />

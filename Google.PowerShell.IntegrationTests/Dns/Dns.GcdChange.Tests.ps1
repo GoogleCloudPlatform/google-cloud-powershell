@@ -9,27 +9,27 @@ Describe "Get-GcdChange" {
     }
 
     It "should fail to return changes of non-existent project" {
-        { Get-GcdChange -DnsProject $nonExistProject -Zone $testZone1 } | Should Throw "400"
+        { Get-GcdChange -Project $nonExistProject -Zone $testZone1 } | Should Throw "400"
     }
 
     It "should give access errors as appropriate" {
         # Don't know who created the "asdf" project.
-        { Get-GcdChange -DnsProject $accessErrProject -Zone $testZone1 } | Should Throw "403"
+        { Get-GcdChange -Project $accessErrProject -Zone $testZone1 } | Should Throw "403"
     }
 
     It "should fail to return changes of non-existent ManagedZones of existing project" {
-        { Get-GcdChange -DnsProject $project -Zone $nonExistManagedZone } | Should Throw "404"
+        { Get-GcdChange -Project $project -Zone $nonExistManagedZone } | Should Throw "404"
     }
 
     # Create zone for testing 
     gcloud dns managed-zones create --dns-name=$dnsName1 --description="testing zone, 1" $testZone1 --project=$project
     
     # Make 2 new changes for testing by adding and immediately deleting an CNAME-type record to the test zone
-    Add-GcdChange -DnsProject $project -Zone $testZone1 -Add $testRrsetA
-    Add-GcdChange -DnsProject $project -Zone $testZone1 -Remove $testRrsetA
+    Add-GcdChange -Project $project -Zone $testZone1 -Add $testRrsetA
+    Add-GcdChange -Project $project -Zone $testZone1 -Remove $testRrsetA
 
     It "should work and retrieve 3 changes (including A-type record addition & deletion)" {
-        $changes = Get-GcdChange -DnsProject $project -Zone $testZone1
+        $changes = Get-GcdChange -Project $project -Zone $testZone1
 
         $changes.Count | Should Be 3
 
@@ -48,7 +48,7 @@ Describe "Get-GcdChange" {
     }
 
     It "should work and retrieve the first change from creation by Id" {
-        $changes = Get-GcdChange -DnsProject $project -Zone $testZone1 -ChangeId "0"
+        $changes = Get-GcdChange -Project $project -Zone $testZone1 -ChangeId "0"
         $changes.Count | Should Be 1
         $changes.GetType().FullName | Should Match $changeType
         $changes.Id | Should Be 0
@@ -79,33 +79,33 @@ Describe "Add-GcdChange" {
     gcloud dns record-sets transaction execute --zone=$testZone2 --project=$project
 
     # Copy Change request for later use
-    $copyChange = (Get-GcdChange -DnsProject $project -Zone $testZone2)[0]
+    $copyChange = (Get-GcdChange -Project $project -Zone $testZone2)[0]
     $copyChange.Additions.Remove(($copyChange.Additions | Where {$_.Type -ne "CNAME"}))
     $copyChange.Deletions = $null
 
     It "should fail to add a Change to a non-existent project" {
-        { Add-GcdChange -DnsProject $nonExistProject -Zone $testZone1 -ChangeRequest $copyChange } | Should Throw "400"
+        { Add-GcdChange -Project $nonExistProject -Zone $testZone1 -ChangeRequest $copyChange } | Should Throw "400"
     }
 
     It "should give access errors as appropriate" {
         # Don't know who created the "asdf" project.
-        { Add-GcdChange -DnsProject $accessErrProject -Zone $testZone1 -ChangeRequest $copyChange } | Should Throw "403"
+        { Add-GcdChange -Project $accessErrProject -Zone $testZone1 -ChangeRequest $copyChange } | Should Throw "403"
     }
 
     It "should fail to add a Change to a non-existent ManagedZone of an existing project" {
-        { Add-GcdChange -DnsProject $project -Zone $nonExistManagedZone -ChangeRequest $copyChange } | Should Throw "404"
+        { Add-GcdChange -Project $project -Zone $nonExistManagedZone -ChangeRequest $copyChange } | Should Throw "404"
     }
 
     It "should fail to add a Change with only null/empty values for Add/Remove" {
-        { Add-GcdChange -DnsProject $project -Zone $testZone1 -Add $null -Remove $null } | Should Throw $Err_NeedChangeContent
-        { Add-GcdChange -DnsProject $project -Zone $testZone1 -Add $null -Remove @() } | Should Throw $Err_NeedChangeContent
-        { Add-GcdChange -DnsProject $project -Zone $testZone1 -Add @() -Remove @() } | Should Throw $Err_NeedChangeContent
+        { Add-GcdChange -Project $project -Zone $testZone1 -Add $null -Remove $null } | Should Throw $Err_NeedChangeContent
+        { Add-GcdChange -Project $project -Zone $testZone1 -Add $null -Remove @() } | Should Throw $Err_NeedChangeContent
+        { Add-GcdChange -Project $project -Zone $testZone1 -Add @() -Remove @() } | Should Throw $Err_NeedChangeContent
     }
 
     It "should work and add 1 Change from Change Request (CNAME-type record addition)" {
-        $initChanges = Get-GcdChange -DnsProject $project -Zone $testZone1
-        $newChange = Add-GcdChange -DnsProject $project -Zone $testZone1 -ChangeRequest $copyChange
-        $allChanges = Get-GcdChange -DnsProject $project -Zone $testZone1
+        $initChanges = Get-GcdChange -Project $project -Zone $testZone1
+        $newChange = Add-GcdChange -Project $project -Zone $testZone1 -ChangeRequest $copyChange
+        $allChanges = Get-GcdChange -Project $project -Zone $testZone1
 
         Compare-Object $newChange $allChanges[0] -Property Additions,Deletions,Id,Kind,StartTime | Should Match $null
         $allChanges.Length | Should Be ($initChanges.Length + 1)
@@ -128,10 +128,10 @@ Describe "Add-GcdChange" {
     $addRrset2 = $testRrsetAAAA
 
     It "should support Add/Remove arguments in same call" {
-        $initChanges = Get-GcdChange -DnsProject $project -Zone $testZone1
+        $initChanges = Get-GcdChange -Project $project -Zone $testZone1
         
-        $newChange = Add-GcdChange -DnsProject $project -Zone $testZone1 -Add $addRrset1,$addRrset2 -Remove $rmRrset1,$rmRrset2
-        $allChanges = Get-GcdChange -DnsProject $project -Zone $testZone1
+        $newChange = Add-GcdChange -Project $project -Zone $testZone1 -Add $addRrset1,$addRrset2 -Remove $rmRrset1,$rmRrset2
+        $allChanges = Get-GcdChange -Project $project -Zone $testZone1
 
         Compare-Object $newChange $allChanges[0] -Property Additions,Deletions,Id,Kind,StartTime | Should Match $null
         $allChanges.Length | Should Be ($initChanges.Length + 1)
@@ -148,10 +148,10 @@ Describe "Add-GcdChange" {
     }
 
     # Delete the previously added records to empty the ManagedZones
-    Add-GcdChange -DnsProject $project -Zone $testZone1 -Remove $addRrset1,$addRrset2
-    Add-GcdChange -DnsProject $project -Zone $testZone2 -Remove $copyChange.Additions
+    Add-GcdChange -Project $project -Zone $testZone1 -Remove $addRrset1,$addRrset2
+    Add-GcdChange -Project $project -Zone $testZone2 -Remove $copyChange.Additions
 
     It "should fail to add Change that tries to remove a non-existent ResourceRecord" {
-        { Add-GcdChange -DnsProject $project -Zone $testZone1 -Remove $rmRrset1 } | Should Throw "404"
+        { Add-GcdChange -Project $project -Zone $testZone1 -Remove $rmRrset1 } | Should Throw "404"
     }
 }

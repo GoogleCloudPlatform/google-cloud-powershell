@@ -9,20 +9,20 @@ Describe "Get-GcdManagedZone" {
     }
 
     It "should fail to return ManagedZones of non-existent project" {
-        { Get-GcdManagedZone -DnsProject $nonExistProject } | Should Throw "400"
+        { Get-GcdManagedZone -Project $nonExistProject } | Should Throw "400"
     }
 
     It "should give access errors as appropriate" {
         # Don't know who created the "asdf" project.
-        { Get-GcdManagedZone -DnsProject $accessErrProject } | Should Throw "403"
+        { Get-GcdManagedZone -Project $accessErrProject } | Should Throw "403"
     }
 
     It "should fail to return non-existent ManagedZones of existing project" {
-        { Get-GcdManagedZone -DnsProject $project -ManagedZone $nonExistManagedZone } | Should Throw "404"
+        { Get-GcdManagedZone -Project $project -ManagedZone $nonExistManagedZone } | Should Throw "404"
     }
 
     It "should list exactly 0 ManagedZones in project" {
-        (Get-GcdManagedZone -DnsProject $project).Count | Should Be 0
+        (Get-GcdManagedZone -Project $project).Count | Should Be 0
     }
 
     # Create 2 test zones
@@ -30,7 +30,7 @@ Describe "Get-GcdManagedZone" {
     gcloud dns managed-zones create --dns-name=$dnsName2 --description=$testDescrip2 $testZone2 --project=$project
 
     It "should work and list the 2 ManagedZones just created" {
-        $zones = Get-GcdManagedZone -DnsProject $project
+        $zones = Get-GcdManagedZone -Project $project
         $zones.Count | Should Be 2
 
         ($zones | Get-Member).TypeName | Should Match $managedZoneType
@@ -42,7 +42,7 @@ Describe "Get-GcdManagedZone" {
     }
 
     It "should work and retrieve ManagedZone testZone2" {
-        $zones = Get-GcdManagedZone -DnsProject $project -ManagedZone $testZone2
+        $zones = Get-GcdManagedZone -Project $project -ManagedZone $testZone2
         $zones.GetType().FullName | Should Match $managedZoneType
         $zones.Description | Should Match $testDescrip2
         $zones.DnsName | Should Match $dnsName2
@@ -60,16 +60,16 @@ Describe "Add-GcdManagedZone" {
     }
 
     It "should fail to create a ManagedZone in a non-existent project" {
-        { Add-GcdManagedZone -DnsProject $nonExistProject -Name $testZone1 -DnsName $dnsName1 } | Should Throw "400"
+        { Add-GcdManagedZone -Project $nonExistProject -Name $testZone1 -DnsName $dnsName1 } | Should Throw "400"
     }
 
     It "should give access errors as appropriate" {
         # Don't know who created the "asdf" project.
-        { Add-GcdManagedZone -DnsProject $accessErrProject -Name $testZone1 -DnsName $dnsName1 } | Should Throw "403"
+        { Add-GcdManagedZone -Project $accessErrProject -Name $testZone1 -DnsName $dnsName1 } | Should Throw "403"
     }
 
     It "should create and return 1 zone" {
-        $newZone = Add-GcdManagedZone -DnsProject $project -Name $testZone1 -DnsName $dnsName1
+        $newZone = Add-GcdManagedZone -Project $project -Name $testZone1 -DnsName $dnsName1
         $newZone.GetType().FullName | Should Match $managedZoneType
         $newZone.Description | Should Match ""
         $newZone.DnsName | Should Match $dnsName1
@@ -78,23 +78,23 @@ Describe "Add-GcdManagedZone" {
     }
 
     It "should fail to create a new ManagedZone with the same name as an existing one" {
-        { Add-GcdManagedZone -DnsProject $project -Name $testZone1 -DnsName $dnsName1 } | Should Throw "409"
+        { Add-GcdManagedZone -Project $project -Name $testZone1 -DnsName $dnsName1 } | Should Throw "409"
     }
 
     It "should work and have Get-GcdManagedZone retrieve the correct details of both created zones" {
         # Create second zone for testing with dns name that lacks ending period (should be auto-added by cmdlet)
-        Add-GcdManagedZone -DnsProject $project -Name $testZone2 -DnsName $dnsName2 -Description $testDescrip2
+        Add-GcdManagedZone -Project $project -Name $testZone2 -DnsName $dnsName2 -Description $testDescrip2
 
-        (Get-GcdManagedZone -DnsProject $project).Count | Should Be 2
+        (Get-GcdManagedZone -Project $project).Count | Should Be 2
 
-        $zone1 = Get-GcdManagedZone -DnsProject $project -ManagedZone $testZone1
+        $zone1 = Get-GcdManagedZone -Project $project -ManagedZone $testZone1
         $zone1.GetType().FullName | Should Match $managedZoneType
         $zone1.Description | Should Match ""
         $zone1.DnsName | Should Match $dnsName1
         $zone1.Kind | Should Match $managedZoneKind
         $zone1.Name | Should Match $testZone1
 
-        $zone2 = Get-GcdManagedZone -DnsProject $project -ManagedZone $testZone2
+        $zone2 = Get-GcdManagedZone -Project $project -ManagedZone $testZone2
         $zone2.GetType().FullName | Should Match $managedZoneType
         $zone2.Description | Should Match $testDescrip2
         $zone2.DnsName | Should Match $dnsName2
@@ -112,50 +112,50 @@ Describe "Remove-GcdManagedZone" {
     }
 
     It "should fail to delete a ManagedZone in a non-existent project" {
-        { Remove-GcdManagedZone -DnsProject $nonExistProject -ManagedZone $testZone1 } | Should Throw "400"
+        { Remove-GcdManagedZone -Project $nonExistProject -ManagedZone $testZone1 } | Should Throw "400"
     }
 
     It "should give access errors as appropriate" {
         # Don't know who created the "asdf" project.
-        { Remove-GcdManagedZone -DnsProject $accessErrProject -ManagedZone $testZone1 } | Should Throw "403"
+        { Remove-GcdManagedZone -Project $accessErrProject -ManagedZone $testZone1 } | Should Throw "403"
     }
 
     It "should fail to delete a non-existent ManagedZone in an existent project" {
-        { Remove-GcdManagedZone -DnsProject $project -ManagedZone $nonExistManagedZone } | Should Throw "404"
+        { Remove-GcdManagedZone -Project $project -ManagedZone $nonExistManagedZone } | Should Throw "404"
     }
 
     # Create two zones for testing 
-    Add-GcdManagedZone -DnsProject $project -Name $testZone1 -DnsName $dnsName1
-    Add-GcdManagedZone -DnsProject $project -Name $testZone2 -DnsName $dnsName2
+    Add-GcdManagedZone -Project $project -Name $testZone1 -DnsName $dnsName1
+    Add-GcdManagedZone -Project $project -Name $testZone2 -DnsName $dnsName2
 
     It "should delete only the first zone created and output nothing" {
-        Remove-GcdManagedZone -DnsProject $project -ManagedZone $testZone1 | Should Be $null
+        Remove-GcdManagedZone -Project $project -ManagedZone $testZone1 | Should Be $null
 
-        { Get-GcdManagedZone -DnsProject $project -ManagedZone $testZone1 } | Should Throw "404"
-        (Get-GcdManagedZone -DnsProject $project).Count | Should Be 1
-        (Get-GcdManagedZone -DnsProject $project).Name | Should Match $testZone2
+        { Get-GcdManagedZone -Project $project -ManagedZone $testZone1 } | Should Throw "404"
+        (Get-GcdManagedZone -Project $project).Count | Should Be 1
+        (Get-GcdManagedZone -Project $project).Name | Should Match $testZone2
     }
     
     # Recreate deleted zone for testing 
-    Add-GcdManagedZone -DnsProject $project -Name $testZone1 -DnsName $dnsName1
+    Add-GcdManagedZone -Project $project -Name $testZone1 -DnsName $dnsName1
 
     It "should delete all (2) zones in project using pipeline input" {
-        (Get-GcdManagedZone -DnsProject $project | Remove-GcdManagedZone -DnsProject $project) | Should Be $null
+        (Get-GcdManagedZone -Project $project | Remove-GcdManagedZone -Project $project) | Should Be $null
 
-        Get-GcdManagedZone -DnsProject $project | Should Be $null
+        Get-GcdManagedZone -Project $project | Should Be $null
     }
 
     # Create a 2 zones, 1 non-empty, for testing
-    Add-GcdManagedZone -DnsProject $project -Name $testZone1 -DnsName $dnsName1
-    Add-GcdManagedZone -DnsProject $project -Name $testZone2 -DnsName $dnsName2
-    Add-GcdChange -DnsProject $project -Zone $testZone1 -Add $testRrsetA,$testRrsetCNAME
+    Add-GcdManagedZone -Project $project -Name $testZone1 -DnsName $dnsName1
+    Add-GcdManagedZone -Project $project -Name $testZone2 -DnsName $dnsName2
+    Add-GcdChange -Project $project -Zone $testZone1 -Add $testRrsetA,$testRrsetCNAME
 
     It "should delete a non-empty zone when -Force is specified" {
-        Remove-GcdManagedZone -DnsProject $project -ManagedZone $testZone1 -Force | Should Be $null
+        Remove-GcdManagedZone -Project $project -ManagedZone $testZone1 -Force | Should Be $null
 
-        { Get-GcdManagedZone -DnsProject $project -ManagedZone $testZone1 } | Should Throw "404"
-        (Get-GcdManagedZone -DnsProject $project).Count | Should Be 1
-        (Get-GcdManagedZone -DnsProject $project).Name | Should Match $testZone2
+        { Get-GcdManagedZone -Project $project -ManagedZone $testZone1 } | Should Throw "404"
+        (Get-GcdManagedZone -Project $project).Count | Should Be 1
+        (Get-GcdManagedZone -Project $project).Name | Should Match $testZone2
     }
 }
 
