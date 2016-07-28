@@ -179,6 +179,7 @@
     <None Include="README.md" />
     <None Include="ReleaseFiles\BootstrapGoogleCloudPowerShell.ps1" />
     <None Include="ReleaseFiles\GoogleCloudPowerShell.psd1" />
+    <None Include="ReleaseFiles\PatchFromGcs.ps1" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
