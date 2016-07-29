@@ -432,6 +432,7 @@ namespace Google.PowerShell.CloudStorage
             var service = GetStorageService();
 
             ObjectsResource.ListRequest listReq = service.Objects.List(Bucket);
+            listReq.Projection = ObjectsResource.ListRequest.ProjectionEnum.Full;
             listReq.Delimiter = Delimiter;
             listReq.Prefix = Prefix;
             listReq.MaxResults = 100;
