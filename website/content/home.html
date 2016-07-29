@@ -98,7 +98,7 @@ Find-GcsObject $bucket.Name -Prefix "images/" |
       <div hljs hlsj-language="powershell" ng-show="selected == 'compute engine'">
 $config = New-GceInstanceConfig $vmName `
     -MachineType "n1-standard-4" `
-    -DiskImage "projects/windows-cloud/global/images/family/windows-2012-r2"
+    -DiskImage (Get-GceImage -Family "windows-2012-r2")
 
 $config | Add-GceInstance -Project $project -Zone "us-central1-b"
 
