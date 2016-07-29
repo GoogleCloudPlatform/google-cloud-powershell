@@ -500,7 +500,7 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
-        /// The Google Cloud Storage bucket object to read.
+        /// The Google Cloud Storage object to read.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true, ValueFromPipeline = true)]
