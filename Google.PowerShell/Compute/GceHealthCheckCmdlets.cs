@@ -7,7 +7,16 @@ using System.Management.Automation;
 
 namespace Google.PowerShell.ComputeEngine
 {
+    /// <summary>
+    /// <para type="synopsis">
+    /// Adds a Google Compute Engine health check.
+    /// </para>
+    /// <para type="descritpion">
+    /// Adds a Google Compute Engine health check. Use this cmdlet to create both http and https health checks.
+    /// </para>
+    /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceHealthCheck", DefaultParameterSetName = ParameterSetNames.ByValues)]
+    [OutputType(typeof(HttpHealthCheck), typeof(HttpsHealthCheck))]
     public class AddGceHealthCheckCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
@@ -17,47 +26,115 @@ namespace Google.PowerShell.ComputeEngine
             public const string ByHttpsObject = "ByHttpsObject";
         }
 
+        /// <summary>
+        /// <para type="description">
+        /// The project to add the health check to. Defaults to the project in the Cloud SDK config.
+        /// </para>
+        /// </summary>
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; private set; }
+        public string Project { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The name of the health check to add.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues, Mandatory = true, Position = 0)]
-        public string Name { get; private set; }
+        public string Name { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// Human readable description of the health check.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public string Description { get; private set; }
+        public string Description { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The value of the host header in the health check request. If left empty
+        /// (default value), the public IP on behalf of which this health check is performed
+        /// will be used.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public string HostHeader { get; private set; }
+        public string HostHeader { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The TCP port number for the health check request. Defaults to 80 for HTTP and 443 for HTTPS.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public int? Port { get; private set; }
+        public int? Port { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The request path for the health check request. Defaults to "/".
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public string RequestPath { get; private set; }
+        public string RequestPath { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// How often to send a health check request. Defaults to 5 seconds.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public int? CheckIntervalSeconds { get; private set; }
+        public TimeSpan? CheckInterval { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// How long to wait before claiming failure. Defaults to 5 seconds.
+        /// May not be greater than CheckInterval.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public int? TimeoutSeconds { get; private set; }
+        public TimeSpan? Timeout { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// Number of consecutive success required to mark an unhealthy instance healthy. Defaults to 2.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public int? HealthyThreshold { get; private set; }
+        public int? HealthyThreshold { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// Number of consecutive failures required to mark a healthy instance unhealthy. Defaults to 2.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
-        public int? UnhealthyThreshold { get; private set; }
+        public int? UnhealthyThreshold { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// If set, will create an https health check. If not set, will create an http health check.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
         public SwitchParameter Https { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// Object describing a new https health check.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByHttpsObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         public HttpsHealthCheck HttpsObject { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// Object describing a new http health check.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByHttpObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
-        public HttpHealthCheck HttpObject { get; private set; }
+        public HttpHealthCheck HttpObject { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -70,8 +147,8 @@ namespace Google.PowerShell.ComputeEngine
                     Host = HostHeader,
                     Port = Port,
                     RequestPath = RequestPath,
-                    CheckIntervalSec = CheckIntervalSeconds,
-                    TimeoutSec = TimeoutSeconds,
+                    CheckIntervalSec = (int?)CheckInterval?.TotalSeconds,
+                    TimeoutSec = (int?)Timeout?.TotalSeconds,
                     HealthyThreshold = HealthyThreshold,
                     UnhealthyThreshold = UnhealthyThreshold
                 };
@@ -92,8 +169,8 @@ namespace Google.PowerShell.ComputeEngine
                     Host = HostHeader,
                     Port = Port,
                     RequestPath = RequestPath,
-                    CheckIntervalSec = CheckIntervalSeconds,
-                    TimeoutSec = TimeoutSeconds,
+                    CheckIntervalSec = (int?)CheckInterval?.TotalSeconds,
+                    TimeoutSec = (int?)Timeout?.TotalSeconds,
                     HealthyThreshold = HealthyThreshold,
                     UnhealthyThreshold = UnhealthyThreshold
                 };
@@ -108,7 +185,17 @@ namespace Google.PowerShell.ComputeEngine
         }
     }
 
-    [Cmdlet(VerbsCommon.Get, "GceHealthCheck")]
+    /// <summary>
+    /// <para type="synopsis">
+    /// Gets Google Compute Engine health checks.
+    /// </para>
+    /// <para type="description">
+    /// Gets Google Compute Engine health checks.
+    /// This cmdlet can be used to retrieve both http and https health checks.
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Get, "GceHealthCheck", DefaultParameterSetName = ParameterSetNames.OfProject)]
+    [OutputType(typeof(HttpHealthCheck), typeof(HttpsHealthCheck))]
     public class GetGceHealthCheckCmdlet : GceCmdlet
     {
         private class ParameterSetNames
@@ -117,17 +204,41 @@ namespace Google.PowerShell.ComputeEngine
             public const string ByName = "ByName";
         }
 
+        /// <summary>
+        /// <para type="description">
+        /// The name of the project to get the health checks of.
+        /// Defaults to the project in the Cloud SDK config.
+        /// </para>
+        /// </summary>
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the health check to get.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         public string Name { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// If set, will get health checks that use http.
+        /// If neither -Http nor -Https are set, Get-GceHealthCheck will retrieve both.
+        /// </para>
+        /// </summary>
         [Parameter]
         public SwitchParameter Http { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// If set, will get health checks that use https.
+        /// If neither -Http nor -Https are set, Get-GceHealthCheck will retrieve both.
+        /// </para>
+        /// </summary>
         [Parameter]
         public SwitchParameter Https { get; set; }
 
@@ -234,6 +345,15 @@ namespace Google.PowerShell.ComputeEngine
         }
     }
 
+    /// <summary>
+    /// <para type="synopsis">
+    /// Removes a Google Compute Engine health check.
+    /// </para>
+    /// <para type="description">
+    /// Removes a Google Compute Engine Health check. Use this cmdlet to remove both http and https health
+    /// checks.
+    /// </para>
+    /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceHealthCheck", SupportsShouldProcess = true)]
     public class RemoveGceHealthCheckCmdlet : GceConcurrentCmdlet
     {
@@ -244,27 +364,59 @@ namespace Google.PowerShell.ComputeEngine
             public const string ByHttpObject = "ByHttpObject";
             public const string ByHttpsObject = "ByHttpsObject";
         }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the project to remove the health check from.
+        /// Defaults to the project in the Cloud SDK config.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByNameHttp)]
         [Parameter(ParameterSetName = ParameterSetNames.ByNameHttps)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The name of the health check to remove.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByNameHttp, Mandatory = true, Position = 0)]
         [Parameter(ParameterSetName = ParameterSetNames.ByNameHttps, Mandatory = true, Position = 0)]
         public string Name { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// If set, will remove a health check that uses http.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByNameHttp, Mandatory = true)]
         [Parameter(ParameterSetName = ParameterSetNames.ByHttpObject)]
         public SwitchParameter Http { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// If set, will remove a health check that uses https.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByNameHttps, Mandatory = true)]
         [Parameter(ParameterSetName = ParameterSetNames.ByHttpsObject)]
         public SwitchParameter Https { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// An object defining the http health check to remove.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByHttpObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         public HttpHealthCheck HttpObject { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// An object defining the https health check to remove.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByHttpsObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         public HttpsHealthCheck HttpsObject { get; set; }
@@ -311,6 +463,16 @@ namespace Google.PowerShell.ComputeEngine
         }
     }
 
+    /// <summary>
+    /// <para type="synopsis">
+    /// Sets the data of a Google Compute Engine health check.
+    /// </para>
+    /// <para type="description">
+    /// Sets the data of a Google Compute Engine health check.
+    /// First get the health check object with Get-GceHealthCheck.
+    /// Then change the data in the object you received. Finally send that object to Set-GceHealthCheck.
+    /// </para>
+    /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceHealthCheck", SupportsShouldProcess = true)]
     public class SetGceHealthCheckCmdlet : GceConcurrentCmdlet
     {
@@ -320,19 +482,23 @@ namespace Google.PowerShell.ComputeEngine
             public const string ByHttpsObject = "ByHttpsObject";
         }
 
+        /// <summary>
+        /// <para type="description">
+        /// The object describing a health check using http.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByHttpObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         public HttpHealthCheck HttpObject { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The object describing a health check using https.
+        /// </para>
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByHttpsObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         public HttpsHealthCheck HttpsObject { get; set; }
-
-        [Parameter(ParameterSetName = ParameterSetNames.ByHttpObject)]
-        public SwitchParameter Http { get; set; }
-
-        [Parameter(ParameterSetName = ParameterSetNames.ByHttpsObject)]
-        public SwitchParameter Https { get; set; }
 
         protected override void ProcessRecord()
         {
