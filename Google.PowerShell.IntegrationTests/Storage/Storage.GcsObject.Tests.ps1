@@ -330,6 +330,20 @@ Describe "Read-GcsObject" {
         Remove-Item $tempFileName
     }
 
+    It "should take pipeline input" {
+        # GetTempFileName creates a 0-byte file, which will cause problems
+        # because the cmdlet won't overwrite it without -Force.
+        $tempFileName = [System.IO.Path]::Combine(
+                 [System.IO.Path]::GetTempPath(),
+                 [System.IO.Path]::GetRandomFileName())
+        Get-GcsObject $bucket $testObjectName |
+            Read-GcsObject -OutFile $tempFileName
+
+        Get-Content $tempFileName | Should BeExactly $testFileContents
+
+        Remove-Item $tempFileName
+    }
+
     It "won't overwrite existing files" {
         # Creates a 0-byte file, which we won't clobber.
         $tempFileName = [System.IO.Path]::GetTempFileName()
@@ -413,11 +427,6 @@ Describe "Write-GcsObject" {
         Remove-Item $tempFile
     }
 
-    It "requires the -File or -Contents parameter be named (or from pipeline)" {
-        { Write-GcsObject "bucket-name" "object-name" "contents-or-file?" } `
-            | Should Throw "Parameter set cannot be resolved using the specified named parameters"
-    }
-
     It "will accept contents from the pipeline" {
         # Note that we aren't specifying the -Contents or -File parameter. Instead
         # that is set by the pipeline.
@@ -461,7 +470,18 @@ Describe "Write-GcsObject" {
         Pop-Location
     }
 
-    # TODO(chrsmith): Confirm it works for 0-byte files (currently it doesn't).
+    It "should write zero bytes" {
+        $objectName = "write-zero-bytes-test"
+
+        # Create the original GCS object.
+        "contents" | New-GcsObject $bucket $objectName
+
+        Write-GcsObject $bucket $objectName
+        $emptyObj = Get-GcsObject $bucket $objectName
+        $emptyObj.Size | Should Be 0
+        Remove-GcsObject $emptyObj
+    }
+
     # TODO(chrsmith): Confirm Write-GcsObject doesn't remove object metadata, such
     # as its existing ACLs. (Since we are uploading a new object in-place.)
 }

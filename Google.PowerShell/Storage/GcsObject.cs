@@ -479,7 +479,7 @@ namespace Google.PowerShell.CloudStorage
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.FromName)]
-        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Bucket { get; set; }
 
         /// <summary>
@@ -544,13 +544,18 @@ namespace Google.PowerShell.CloudStorage
     [Cmdlet(VerbsCommunications.Read, "GcsObject")]
     public class ReadGcsObjectCmdlet : GcsObjectCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByObject = "ByObject";
+        }
         /// <summary>
         /// <para type="description">
         /// Name of the bucket containing the object. Will also accept a Bucket object.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
-        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
+        [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.ByName)]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Bucket { get; set; }
 
         /// <summary>
@@ -558,15 +563,24 @@ namespace Google.PowerShell.CloudStorage
         /// Name of the object to read.
         /// </para>
         /// </summary>
-        [Parameter(Position = 1, Mandatory = true)]
+        [Parameter(Position = 1, Mandatory = true, ParameterSetName = ParameterSetNames.ByName)]
         public string ObjectName { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The Google Cloud Storage object to read.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true, ValueFromPipeline = true)]
+        public Object InputObject { get; set; }
 
         /// <summary>
         /// <para type="description">
         /// Local file path to write the contents to.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = false)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Position = 2)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByObject)]
         public string OutFile { get; set; }
 
         // Consider adding a -PassThru parameter to enable writing the contents to the
@@ -585,6 +599,12 @@ namespace Google.PowerShell.CloudStorage
         {
             base.ProcessRecord();
             var service = GetStorageService();
+
+            if (InputObject != null)
+            {
+                Bucket = InputObject.Bucket;
+                ObjectName = InputObject.Name;
+            }
 
             string uri = GetBaseUri(Bucket, ObjectName);
             var downloader = new MediaDownloader(service);
@@ -646,13 +666,19 @@ namespace Google.PowerShell.CloudStorage
     [Cmdlet(VerbsCommunications.Write, "GcsObject")]
     public class WriteGcsObjectCmdlet : GcsObjectCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string FromString = "FromString";
+            public const string FromFile = "FromFile";
+        }
+
         /// <summary>
         /// <para type="description">
         /// Name of the bucket containing the object. Will also accept a Bucket object.
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
-        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Bucket { get; set; }
 
         /// <summary>
@@ -668,7 +694,8 @@ namespace Google.PowerShell.CloudStorage
         /// Text content to write to the Storage object. Ignored if File is specified.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = false, ValueFromPipeline = true, ParameterSetName = "ContentsFromString")]
+        [Parameter(ParameterSetName = ParameterSetNames.FromString,
+            Position = 2, ValueFromPipeline = true)]
         public string Contents { get; set; }
 
         /// <summary>
@@ -676,7 +703,7 @@ namespace Google.PowerShell.CloudStorage
         /// Local file path to read, writing its contents into Cloud Storage.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = false, ParameterSetName = "ContentsFromFile")]
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.FromFile)]
         public string File { get; set; }
 
         /// <summary>
@@ -692,7 +719,7 @@ namespace Google.PowerShell.CloudStorage
             base.ProcessRecord();
             var service = GetStorageService();
 
-            Stream contentStream = null;
+            Stream contentStream;
             if (!string.IsNullOrEmpty(File))
             {
                 string qualifiedPath = GetFullPath(File);
@@ -707,7 +734,7 @@ namespace Google.PowerShell.CloudStorage
                 // Get the underlying byte representation of the string using the same encoding (UTF-16).
                 // So the data will be written in the same format it is passed, rather than converting to
                 // UTF-8 or UTF-32 when writen to Cloud Storage.
-                byte[] contentBuffer = Encoding.Unicode.GetBytes(Contents);
+                byte[] contentBuffer = Encoding.Unicode.GetBytes(Contents ?? "");
                 contentStream = new MemoryStream(contentBuffer);
             }
 
