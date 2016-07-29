@@ -28,7 +28,9 @@ if (-not (Test-Path $googlePowerShellPath)) {
 }
 
 $pathToOldCmdlets = "$googlePowerShellPath\..\OldPowerShell"
-Remove-Item $pathToOldCmdlets -Recurse
+if (Test-Path $pathToOldCmdlets) {
+    Remove-Item $pathToOldCmdlets -Recurse
+}
 Move-Item $googlePowerShellPath $pathToOldCmdlets
 Import-Module "$pathToOldCmdlets/GoogleCloudPowerShell.psd1"
 $bucket = Get-GcsBucket g-cloudsharp-unsignedbinaries
