@@ -616,7 +616,7 @@ Describe "Failover-GcSqlInstance" {
         Failover-GcSqlInstance $instance $currentSettingsVersion
 
         $operations = Get-GcSqlOperation -Instance $instance | where { $_.OperationType -eq "FAILOVER" }
-        $operations.Count | Should Be ($numFailoverOps + 4)
+        $operations.Count | Should Be ($numFailoverOps + 1)
         $operations[0].Status | Should Match "DONE"
         $operations[0].Error | Should Match ""
     }
