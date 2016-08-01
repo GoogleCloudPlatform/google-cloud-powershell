@@ -13,6 +13,35 @@ namespace Google.PowerShell.Sql
     /// Creates a configuration for a replicaConfiguration. 
     /// Can be pipelined into New-GcSqlInstanceConfig.
     /// </para>
+    /// <para>
+    /// WARNING: If a parameter passed in is bad, or wrong, this cmdlet will not error.
+    /// Instead it will error once you try to update or add an instance in your project.
+    /// Please be careful with inputs.
+    /// </para>
+    /// <example>
+    ///   <para>
+    ///   Creates a basic replica configuration resource.
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> New-GcSqlInstanceReplicaConfig
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>
+    ///   (If successful, the command returns a ReplicaConfiguration resource containing the replica configuration.)
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <para>
+    ///   Creates a basic replica configuration resource with a heartbeat period of 10 milliseconds.
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> New-GcSqlInstanceReplicaConfig -MySqlRetryInterval 10
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>
+    ///   (If successful, the command returns a ReplicaConfiguration resource containing the replica configuration.)
+    ///   </para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GcSqlInstanceReplicaConfig")]
     [OutputType(typeof(ReplicaConfiguration))]
