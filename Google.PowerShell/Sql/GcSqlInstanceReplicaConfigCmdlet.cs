@@ -32,7 +32,7 @@ namespace Google.PowerShell.Sql
     /// </example>
     /// <example>
     ///   <para>
-    ///   Creates a basic replica configuration resource with a heartbeat period of 10 milliseconds.
+    ///   Creates a basic replica configuration resource with a retry interval of 10 seconds.
     ///   </para>
     ///   <para><code>
     ///     PS C:\> New-GcSqlInstanceReplicaConfig -MySqlRetryInterval 10
