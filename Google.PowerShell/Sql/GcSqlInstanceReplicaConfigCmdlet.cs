@@ -57,7 +57,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public bool FailoverTarget { get; set; } = false;
+        public SwitchParameter FailoverTarget { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -144,7 +144,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public bool MySqlVerifyCertificate { get; set; } = false;
+        public SwitchParameter MySqlVerifyCertificate { get; set; }
 
         protected override void ProcessRecord()
         {
