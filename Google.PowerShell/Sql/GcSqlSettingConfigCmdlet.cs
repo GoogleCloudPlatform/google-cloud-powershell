@@ -76,7 +76,7 @@ namespace Google.PowerShell.Sql
         /// <para type="description">
         /// Whether binary log is enabled.
         /// If backup configuration is disabled, binary log must be disabled as well.
-        /// Defaults to true;
+        /// Defaults to true for non replica instances.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
@@ -85,7 +85,7 @@ namespace Google.PowerShell.Sql
         /// <summary>
         /// <para type="description">
         /// Whether the backup configuration is enabled or not.
-        /// Defaults to true;
+        /// Defaults to true for non replica instances.
         /// </para>
         /// </summary>
         [Parameter]

@@ -28,7 +28,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public SwitchParameter FailoverTarget { get; set; }
+        public bool FailoverTarget { get; set; } = false;
 
         /// <summary>
         /// <para type="description">
@@ -78,10 +78,11 @@ namespace Google.PowerShell.Sql
         /// <summary>
         /// <para type="description">
         /// Interval in milliseconds between replication heartbeats.
+        /// Defaults to 100.
         /// </para>
         /// </summary>
         [Parameter]
-        public long MySqlHeartbeatPeriod { get; set; }
+        public long MySqlHeartbeatPeriod { get; set; } = 100;
 
         /// <summary>
         /// <para type="description">
@@ -114,7 +115,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public SwitchParameter MySqlVerifyCertificate { get; set; }
+        public bool MySqlVerifyCertificate { get; set; } = false;
 
         protected override void ProcessRecord()
         {
@@ -133,7 +134,8 @@ namespace Google.PowerShell.Sql
                     Password = MySqlPassword,
                     SslCipher = MySqlSslCipher,
                     Username = MySqlUser,
-                    VerifyServerCertificate = MySqlVerifyCertificate
+                    VerifyServerCertificate = MySqlVerifyCertificate,
+                    Kind = "sql#mysqlReplicaConfiguration"
                 }
             };
             WriteObject(config);
