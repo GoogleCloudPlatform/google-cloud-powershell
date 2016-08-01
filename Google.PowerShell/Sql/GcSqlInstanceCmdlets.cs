@@ -19,6 +19,26 @@ namespace Google.PowerShell.Sql
     /// or lists all instances in a project.
     /// This is determined by if Instance is specified or not.
     /// </para>
+    /// <example>
+    ///   <para>
+    ///   Gets a list of instances in the project set in gcloud config.
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> Get-GcSqlInstance
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command returns all instances in the project.)</para>
+    /// </example>
+    /// <example>
+    ///   <para>
+    ///   Gets a resource for the instance named "myInstance" in our project.
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> Get-GcSqlInstance "myInstance"
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command returns a resource for the instance.)</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.GetList)]
     [OutputType(typeof(DatabaseInstance))]
@@ -92,6 +112,16 @@ namespace Google.PowerShell.Sql
     /// <para type="description">
     /// Creates the Cloud SQL instance resource in the specified project.
     /// </para>
+    /// <example>
+    ///   <para>
+    ///   Adds the instance represented by $myInstance to our project set in gcloud config.
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> Add-GcSqlInstance $myInstance
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command returns a resource for the added instance.)</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GcSqlInstance")]
     [OutputType(typeof(DatabaseInstance))]
@@ -136,6 +166,26 @@ namespace Google.PowerShell.Sql
     /// 
     /// Warning: This deletes all data inside of it as well.
     /// </para>
+    /// <example>
+    ///   <para>
+    ///   Removes the instance called "myInstance" from our project.
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> Remove-GcSqlInstance "myInstance"
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command doesn't return anything.)</para>
+    /// </example>
+    /// <example>
+    ///   <para>
+    ///   Removes the instance represented by the resource $myInstance from our project.
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> Remove-GcSqlInstance $myInstance
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command doesn't return anything.)</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GcSqlInstance", SupportsShouldProcess = true,
         DefaultParameterSetName = ParameterSetNames.ByName)]
@@ -212,6 +262,39 @@ namespace Google.PowerShell.Sql
     /// Defaults to a SQL file, but if the CSV Parameter set is used it will export as
     /// a CSV file.
     /// </para>
+    /// <example>
+    ///   <para>
+    ///   Exports the databases inside the instance "myInstance" to the Cloud Storage bucket file "gs://bucket/file.gz"
+    ///   as a MySQL dump file.
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> Export-GcSqlInstance "myInstance" "gs://bucket/file.gz"
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command doesn't return anything.)</para>
+    /// </example>
+    /// <example>
+    ///   <para>
+    ///   Exports the databases inside the instance "myInstance" to the Cloud Storage bucket file "gs://bucket/file.csv"
+    ///   as a CSV file with the select query "SELECT * FROM data.table"
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> Export-GcSqlInstance "myInstance" "gs://bucket/file.csv" "SELECT * FROM data.table"
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command doesn't return anything.)</para>
+    /// </example>
+    /// <example>
+    ///   <para>
+    ///   Exports the databases "myData" and "myData2" inside the instance "myInstance"
+    ///   to the Cloud Storage bucket file "gs://bucket/file.gz" as a MySQL dump file.
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> Export-GcSqlInstance "myInstance" "gs://bucket/file.csv" -Database "myData","myData2"
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command doesn't return anything.)</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsData.Export, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.Sql)]
     public class ExportGcSqlInstanceCmdlet : GcSqlCmdlet
@@ -344,6 +427,28 @@ namespace Google.PowerShell.Sql
     /// Only one database may be imported from a MySQL file,
     /// and only one table may be imported from a CSV file.
     /// </para>
+    /// <example>
+    ///   <para>
+    ///   Imports the MySQL dump file at "gs://bucket/file" into the already
+    ///   existing database "myData" in the instance "myInstance".
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> Import-GcSqlInstance "myInstance" "gs://bucket/file" "myData"
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command doesn't return anything.)</para>
+    /// </example>
+    /// <example>
+    ///   <para>
+    ///   Imports the CSV file at "gs://bucket/file.csv" into the table "myTable" in the already
+    ///   existing database "myData" in the instance "myInstance".
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> Import-GcSqlInstance "myInstance" "gs://bucket/file.csv" "myData" "myTable"
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command doesn't return anything.)</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsData.Import, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.Sql)]
     public class ImportGcSqlInstanceCmdlet : GcSqlCmdlet
