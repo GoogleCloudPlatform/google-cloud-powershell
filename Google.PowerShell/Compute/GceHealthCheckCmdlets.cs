@@ -298,7 +298,7 @@ namespace Google.PowerShell.ComputeEngine
                 else
                 {
                     throw new AggregateException(
-                        $"Can not find health check named {Name} in project {Project}", exceptions);
+                        $"The health check named {Name} in project {Project} can not be found", exceptions);
                 }
             }
             else
@@ -474,6 +474,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceHealthCheck", SupportsShouldProcess = true)]
+    [OutputType(typeof(HttpHealthCheck), typeof(HttpsHealthCheck))]
     public class SetGceHealthCheckCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
@@ -516,7 +517,7 @@ namespace Google.PowerShell.ComputeEngine
                         Operation operation = request.Execute();
                         AddGlobalOperation(project, operation, () =>
                         {
-                            WriteObject(Service.HttpHealthChecks.Get(project, name));
+                            WriteObject(Service.HttpHealthChecks.Get(project, name).Execute());
 
                         });
                     }
@@ -531,7 +532,7 @@ namespace Google.PowerShell.ComputeEngine
                         Operation operation = request.Execute();
                         AddGlobalOperation(project, operation, () =>
                         {
-                            WriteObject(Service.HttpsHealthChecks.Get(project, name));
+                            WriteObject(Service.HttpsHealthChecks.Get(project, name).Execute());
 
                         });
                     }
