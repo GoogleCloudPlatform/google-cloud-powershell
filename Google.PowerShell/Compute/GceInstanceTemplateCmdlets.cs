@@ -167,11 +167,11 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The name of the machine type for this template.
+        /// The name of the machine type for this template. Defaults to n1-standard-1.
         /// </para>
         /// </summary>
-        [Parameter(Position = 1, Mandatory = true, ParameterSetName = ParameterSetNames.ByValues)]
-        public override string MachineType { get; set; }
+        [Parameter(Position = 1, ParameterSetName = ParameterSetNames.ByValues)]
+        public override string MachineType { get; set; } = "n1-standard-1";
 
         /// <summary>
         /// <para type="description">

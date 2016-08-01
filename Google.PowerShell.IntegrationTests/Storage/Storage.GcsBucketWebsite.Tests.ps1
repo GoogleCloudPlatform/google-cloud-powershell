@@ -19,7 +19,7 @@ Describe "{Delete, Write}-GcsBucketWebsite" {
         $result.Website.MainPageSuffix | Should BeExactly "www.google.com"
         $result.Website.NotFoundPage | Should BeExactly "www.google.com/404"
 
-        # Confirm added
+        # Confirm added.
         $result = Get-GcsBucket $bucketName
         $result.Website.MainPageSuffix | Should BeExactly "www.google.com"
         $result.Website.NotFoundPage | Should BeExactly "www.google.com/404"

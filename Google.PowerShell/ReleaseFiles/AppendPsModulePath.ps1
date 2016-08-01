@@ -40,7 +40,11 @@ if(($regValue -split ";" -contains $googlePowerShellPath))
     return
 }
 
-if (Test-IsElevated -and (Test-Path $hklmPath))
+$wid = [Security.Principal.WindowsIdentity]::GetCurrent()
+$wip = New-Object Security.Principal.WindowsPrincipal $wid
+$isElevated = $wip.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
+
+if ($isElevated -and (Test-Path $hklmPath))
 {
     # If we are running as administrator, and the Cloud SDK is installed for all users,
     # append to the PSModluePath in the local machine registry location.

@@ -139,6 +139,8 @@ function Check-CmdletDoc() {
             DoDeepExampleCheck $docObj
         }
     }
+
+    Write-Host
 }
 
 # Write warnings for all important fields in a cmdlet's documentation.
