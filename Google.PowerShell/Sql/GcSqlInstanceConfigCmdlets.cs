@@ -24,6 +24,26 @@ namespace Google.PowerShell.Sql
     /// Makes a new Google Cloud SQL instance description.
     /// Use Add-GcSqlInstance to instantiate the instance within a project.
     /// </para>
+    /// <example>
+    ///   <para>
+    ///   Creates an instance resource with name "myInstance" and settings $mySettings
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> New-GcSqlInstanceConfig "myInstance" $mySettings
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command returns the populated Instance resource with the name "myInstance")</para>
+    /// </example>
+    /// <example>
+    ///   <para>
+    ///   Creates an instance resource with name "myInstance", settings $mySettings, and replica configuration $myRepl
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> New-GcSqlInstanceConfig "myInstance" $mySettings -ReplicaConfig $myRepl
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>(If successful, the command returns the populated Instance resource with the name "myInstance")</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GcSqlInstanceConfig")]
     [OutputType(typeof(DatabaseInstance))]
