@@ -1456,12 +1456,10 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// The current settings version of the Instance. If not specified, it will be retrieved from the settings data
-        /// of the Instance. 
+        /// The current settings version of the Instance.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false)]
-        [ValidateNotNullOrEmpty]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 1)]
         public long? SettingsVersion { get; set; }
 
         protected override void ProcessRecord()
@@ -1480,6 +1478,7 @@ namespace Google.PowerShell.Sql
                 case ParameterSetNames.ByInstance:
                     projectName = InstanceObject.Project;
                     instanceName = InstanceObject.Name;
+                    SettingsVersion = InstanceObject.Settings.SettingsVersion;
                     instanceObject = InstanceObject; 
                     break;
                 default:
@@ -1490,7 +1489,7 @@ namespace Google.PowerShell.Sql
             {
                 FailoverContext = new FailoverContext
                 {
-                    SettingsVersion = SettingsVersion ?? instanceObject.Settings.SettingsVersion
+                    SettingsVersion = SettingsVersion
                 }
             };
 
