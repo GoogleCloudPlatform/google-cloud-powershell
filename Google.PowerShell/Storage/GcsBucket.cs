@@ -34,11 +34,12 @@ namespace Google.PowerShell.CloudStorage
     ///   <para><code>Get-GcsBucket -Project "widget-co"</code></para>
     /// </example>
     /// <example>
-    ///   <para>Get all buckets for gcloud config project.</para>
+    ///   <para>Get all buckets for current project in the active gcloud configuration.</para>
     ///   <para><code>Get-GcsBucket</code></para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcsBucket", DefaultParameterSetName = ParameterSetNames.BucketsByProject)]
+    [OutputType(typeof(Bucket))]
     public class GetGcsBucketCmdlet : GcsCmdlet
     {
         private class ParameterSetNames
@@ -94,8 +95,12 @@ namespace Google.PowerShell.CloudStorage
     /// <para type="description">
     /// Creates a new Google Cloud Storage bucket.
     /// </para>
+    /// <example>
+    ///   <para>Creates a new bucket named "widget-co-logs".</para>
+    ///   <para><code>New-GcsBucket "widget-co-logs"</code></para>
+    /// </example>
     /// </summary>
-    [Cmdlet(VerbsCommon.New, "GcsBucket")]
+    [Cmdlet(VerbsCommon.New, "GcsBucket"), OutputType(typeof(Bucket))]
     public class NewGcsBucketCmdlet : GcsCmdlet
     {
         /// <summary>
@@ -186,8 +191,14 @@ namespace Google.PowerShell.CloudStorage
     /// <para type="description">
     /// Deletes a Google Cloud Storage Bucket.
     /// </para>
+    /// <example>
+    ///   <para>Check if bucket "foo" exists.</para>
+    ///   <para><code>PS C:\> Remove-GcsBucket prod-database -WhatIf</code></para>
+    ///   <para><code>What if: Performing the operation "Delete Bucket" on target "prod-database".</code></para>
+    ///   <para>True</para>
+    /// </example>
     /// </summary>
-    [Cmdlet(VerbsCommon.Remove, "GcsBucket", SupportsShouldProcess = true)]
+    [Cmdlet(VerbsCommon.Remove, "GcsBucket", SupportsShouldProcess = true), OutputType(new Type[] { })]
     public class RemoveGcsBucketCmdlet : GcsCmdlet
     {
         /// <summary>
@@ -309,8 +320,13 @@ namespace Google.PowerShell.CloudStorage
     /// <para type="description">
     /// Tests if a bucket with the given name already exists.
     /// </para>
+    /// <example>
+    ///   <para>Check if bucket "foo" exists.</para>
+    ///   <para><code>PS C:\> Test-GcsBucket "foo"</code></para>
+    ///   <para>True</para>
+    /// </example>
     /// </summary>
-    [Cmdlet(VerbsDiagnostic.Test, "GcsBucket")]
+    [Cmdlet(VerbsDiagnostic.Test, "GcsBucket"), OutputType(typeof(bool))]
     public class TestGcsBucketCmdlet : GcsCmdlet
     {
         /// <summary>
