@@ -611,8 +611,9 @@ Describe "Failover-GcSqlInstance" {
     Occasionally, there have also been "Unknown Errors."
     They are thus commented out as per Jim's advice. 
 
-    It "should failover a test instance" {
-        Failover-GcSqlInstance $instance
+    It "should failover a test instance with a correct settings version specified" {
+        $currentSettingsVersion = (Get-GcSqlInstance -Name $instance).Settings.SettingsVersion
+        Failover-GcSqlInstance $instance $currentSettingsVersion
 
         $operations = Get-GcSqlOperation -Instance $instance | where { $_.OperationType -eq "FAILOVER" }
         $operations.Count | Should Be ($numFailoverOps + 1)
@@ -627,7 +628,7 @@ Describe "Failover-GcSqlInstance" {
         $operations.Count | Should Be ($numFailoverOps + 2)
         $operations[0].Status | Should Match "DONE"
         $operations[0].Error | Should Match ""
-     }
+    }
     
     It "should failover a pipelined instance (instance and default projects differ)" {
         $nonDefaultProject = "asdf"
@@ -645,24 +646,14 @@ Describe "Failover-GcSqlInstance" {
 
         # Reset gcloud config back to default project (gcloud-powershell-testing)
         gcloud config set project $defaultProject
-     }
-
-    It "should failover a test instance with a correct settings version specified" {
-        $currentSettingsVersion = (Get-GcSqlInstance -Name $instance).Settings.SettingsVersion
-        Failover-GcSqlInstance $instance -SettingsVersion $currentSettingsVersion
-
-        $operations = Get-GcSqlOperation -Instance $instance | where { $_.OperationType -eq "FAILOVER" }
-        $operations.Count | Should Be ($numFailoverOps + 4)
-        $operations[0].Status | Should Match "DONE"
-        $operations[0].Error | Should Match ""
     }
     #>
 
     It "should fail to failover a test instance with an incorrect settings version specified" {
         $wrongSettingsVersion = (Get-GcSqlInstance -Name $instance).Settings.SettingsVersion + 50
 
-        { Failover-GcSqlInstance $instance -SettingsVersion $wrongSettingsVersion } | Should Throw "412"
-        { Failover-GcSqlInstance $instance -SettingsVersion $wrongSettingsVersion } | Should Throw "Input or retrieved settings version does not match current settings version for this instance."
+        { Failover-GcSqlInstance $instance $wrongSettingsVersion } | Should Throw "412"
+        { Failover-GcSqlInstance $instance $wrongSettingsVersion } | Should Throw "Input or retrieved settings version does not match current settings version for this instance."
     }
 }
 
