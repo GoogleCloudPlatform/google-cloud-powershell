@@ -480,14 +480,13 @@ namespace Google.PowerShell.Sql
                 default:
                     throw UnknownParameterSetException;
             }
-            if (!ShouldProcess($"{project}/{instance}", "Reset SSL Certificate Configuration"))
+            if (ShouldProcess($"{project}/{instance}", "Reset SSL Certificate Configuration"))
             {
-                return;
+                InstancesResource.ResetSslConfigRequest request = Service.Instances.ResetSslConfig(project, instance);
+                Operation result = request.Execute();
+                DatabaseInstance updated = Service.Instances.Get(project, instance).Execute();
+                WriteObject(updated);
             }
-            InstancesResource.ResetSslConfigRequest request = Service.Instances.ResetSslConfig(project, instance);
-            Operation result = request.Execute();
-            DatabaseInstance updated = Service.Instances.Get(project, instance).Execute();
-            WriteObject(updated);
         }
     }
 }

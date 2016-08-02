@@ -14,7 +14,7 @@ namespace Google.PowerShell.Sql
     /// Can be pipelined into New-GcSqlInstanceConfig.
     /// </para>
     /// <para>
-    /// WARNING: If a parameter passed in is bad, or wrong, this cmdlet will not error.
+    /// WARNING: If any parameter is incorrect, this cmdlet will not error.
     /// Instead it will error once you try to update or add an instance in your project.
     /// Please be careful with inputs.
     /// </para>
@@ -27,7 +27,7 @@ namespace Google.PowerShell.Sql
     ///   </code></para>
     ///   <br></br>
     ///   <para>
-    ///   (If successful, the command returns a ReplicaConfiguration resource containing the replica configuration.)
+    ///   If successful, the command returns a ReplicaConfiguration resource containing the replica configuration.
     ///   </para>
     /// </example>
     /// <example>
@@ -39,7 +39,7 @@ namespace Google.PowerShell.Sql
     ///   </code></para>
     ///   <br></br>
     ///   <para>
-    ///   (If successful, the command returns a ReplicaConfiguration resource containing the replica configuration.)
+    ///   If successful, the command returns a ReplicaConfiguration resource containing the replica configuration.
     ///   </para>
     /// </example>
     /// </summary>
@@ -107,11 +107,11 @@ namespace Google.PowerShell.Sql
         /// <summary>
         /// <para type="description">
         /// Interval in milliseconds between replication heartbeats.
-        /// Defaults to 100.
+        /// Defaults to 20 seconds.
         /// </para>
         /// </summary>
         [Parameter]
-        public long MySqlHeartbeatPeriod { get; set; } = 100;
+        public long MySqlHeartbeatPeriod { get; set; } = 20000;
 
         /// <summary>
         /// <para type="description">
@@ -151,7 +151,6 @@ namespace Google.PowerShell.Sql
             ReplicaConfiguration config = new ReplicaConfiguration
             {
                 FailoverTarget = FailoverTarget,
-                Kind = "sql#replicaConfiguration",
                 MysqlReplicaConfiguration = new MySqlReplicaConfiguration
                 {
                     CaCertificate = MySqlCaCert,
@@ -164,7 +163,6 @@ namespace Google.PowerShell.Sql
                     SslCipher = MySqlSslCipher,
                     Username = MySqlUser,
                     VerifyServerCertificate = MySqlVerifyCertificate,
-                    Kind = "sql#mysqlReplicaConfiguration"
                 }
             };
             WriteObject(config);
