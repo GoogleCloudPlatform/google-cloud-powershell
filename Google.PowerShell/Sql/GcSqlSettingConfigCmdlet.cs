@@ -16,7 +16,7 @@ namespace Google.PowerShell.Sql
     /// Meant to be only for Second generation instances.
     /// Can be pipelined into New-GcSqlInstanceConfig.
     /// 
-    /// WARNING: If a parameter passed in is bad, or wrong, this cmdlet will not error.
+    /// WARNING: If any parameter is incorrect, this cmdlet will not error.
     /// Instead it will error once you try to update or add an instance in your project.
     /// Please be careful with inputs.
     /// </para>
@@ -76,7 +76,7 @@ namespace Google.PowerShell.Sql
         /// <para type="description">
         /// Whether binary log is enabled.
         /// If backup configuration is disabled, binary log must be disabled as well.
-        /// Defaults to true;
+        /// Defaults to true for non-replica instances.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
@@ -85,7 +85,7 @@ namespace Google.PowerShell.Sql
         /// <summary>
         /// <para type="description">
         /// Whether the backup configuration is enabled or not.
-        /// Defaults to true;
+        /// Defaults to true for non replica instances.
         /// </para>
         /// </summary>
         [Parameter]

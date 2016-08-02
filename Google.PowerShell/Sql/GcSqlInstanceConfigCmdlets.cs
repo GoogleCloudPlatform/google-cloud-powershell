@@ -89,7 +89,8 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// The name of the instance which will act as master in the replication setup.
+        /// The name of the instance which will act as master in the replication setup. 
+        /// Should only be used for read-replica instances.
         /// </para>
         /// </summary>
         [Parameter]
@@ -106,7 +107,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// The ReplicaConfiguration created by New-GcSqlInstanceReplicaConfig
+        /// The ReplicaConfiguration created by New-GcSqlInstanceReplicaConfig.
         /// </para>
         /// </summary>
         [Parameter(ValueFromPipeline = true)]
@@ -148,6 +149,13 @@ namespace Google.PowerShell.Sql
                 {
                     Name = FailoverReplica
                 };
+            }
+            if (MasterInstanceName != null)
+            {
+                // This should only be specified for read-replica instances, so we make some adjustments.
+                instance.Settings.BackupConfiguration.BinaryLogEnabled = false;
+                instance.Settings.BackupConfiguration.Enabled = false;
+                instance.InstanceType = "READ_REPLICA_INSTANCE";
             }
             
             WriteObject(instance);

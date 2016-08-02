@@ -1013,11 +1013,11 @@ namespace Google.PowerShell.Sql
     /// </para>
     /// <example>
     ///   <para>
-    ///   Patches the SQL Instance "myInstance" (with tier "db-n1-standard-1" and setting version of 15)
+    ///   Patches the SQL Instance "myInstance" (with setting version of 15)
     ///   so that it can have maintenance on Monday at 22:00.
     ///   </para>
     ///   <para><code>
-    ///     PS C:\> Update-GcSqlInstance "myInstance" "db-n1-standard-1"`
+    ///     PS C:\> Update-GcSqlInstance "myInstance" `
     ///         15 -MaintenanceWindowDay 1 -MaintenanceWindowHour "22:00" -Project "testing" 
     ///   </code></para>
     ///   <br></br>
@@ -1025,11 +1025,11 @@ namespace Google.PowerShell.Sql
     /// </example>
     /// <example>
     ///   <para>
-    ///   Updates the SQL Instance "myInstance" (with tier "db-n1-standard-1" and setting version of 18)
+    ///   Updates the SQL Instance "myInstance" (with and setting version of 18)
     ///   so that its settings default.
     ///   </para>
     ///   <para><code>
-    ///     PS C:\> Update-GcSqlInstance "myInstance" "db-n1-standard-1" 18 -Update
+    ///     PS C:\> Update-GcSqlInstance "myInstance" 18 -Update
     ///   </code></para>
     ///   <br></br>
     ///   <para>(If successful, the command returns the resource for the updated instance.)</para>

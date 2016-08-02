@@ -57,7 +57,7 @@ Describe "Add-GcSqlInstance" {
         $newInstances = Get-GcSqlInstance
         ($instances.Name -contains $instance) | Should Be false
         ($newInstances.Name -contains $instance) | Should Be true
-        gcloud sql instances delete $instance --quiet 2>$null
+        Remove-GcSqlInstance $instance
     }
     
     It "should be able to reflect custom settings" {
@@ -71,7 +71,26 @@ Describe "Add-GcSqlInstance" {
         $myInstance = Get-GcSqlInstance $instance
         $myInstance.Settings.MaintenanceWindow.Day | Should Be 1
         $myInstance.Settings.MaintenanceWindow.Hour | Should Be 2
-        gcloud sql instances delete $instance --quiet 2>$null
+        Remove-GcSqlInstance $instance
+    }
+
+    It "should be able to create a read-replica instance" {
+        $r = Get-Random
+        # A random number is used to avoid collisions with the speed of creating
+        # and deleting instances.
+        $instance = "test-inst$r"
+        $setting = New-GcSqlSettingConfig "db-n1-standard-1" 
+        $replicaConfig = New-GcSqlInstanceReplicaConfig
+        $config = New-GcSqlInstanceConfig $instance -SettingConfig $setting `
+            -ReplicaConfig $replicaConfig -MasterInstanceName "test-db2"
+        Add-GcSqlInstance $config
+
+        $newInstances = Get-GcSqlInstance
+        ($newInstances.Name -contains $instance) | Should Be true
+        $myInstance = Get-GcSqlInstance $instance
+        $myInstance.MasterInstanceName | Should Be "gcloud-powershell-testing:test-db2"
+        $myInstance.InstanceType | Should Be "READ_REPLICA_INSTANCE"
+        Remove-GcSqlInstance $instance
     }
 }
 
