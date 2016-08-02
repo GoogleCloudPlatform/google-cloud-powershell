@@ -44,7 +44,7 @@ Describe "Add-GceHealthCheck" {
 
         }
 
-        It "should use an http object over pipeline" {
+        It "should use an HTTP object over pipeline" {
             $initHealthCheck = New-Object Google.Apis.Compute.v1.Data.HttpHealthCheck
             $initHealthCheck.Name = $healthCheckName
             $healthCheck = $initHealthCheck | Add-GceHealthCheck
@@ -58,7 +58,7 @@ Describe "Add-GceHealthCheck" {
             $healthCheck.UnhealthyThreshold | Should Be 2
         }
 
-        It "should use an https object over pipeline" {
+        It "should use an HTTPS object over pipeline" {
             $initHealthCheck = New-Object Google.Apis.Compute.v1.Data.HttpsHealthCheck
             $initHealthCheck.Name = $healthCheckName
             $healthCheck = $initHealthCheck | Add-GceHealthCheck
@@ -86,7 +86,7 @@ Describe "Get-GceHealthCheck" {
         { Get-GceHealthCheck $healthCheckName -Http } | Should Throw 404
     }
 
-    It "should successfully list zero" {
+    It "should not fail when listing from project with zero health checks" {
         $noChecks = Get-GceHealthCheck
         $noChecks.Count | Should Be 0
     }
@@ -95,6 +95,7 @@ Describe "Get-GceHealthCheck" {
         BeforeAll {
             Add-GceHealthCheck $healthCheckName
             Add-GceHealthCheck $healthCheckName2
+            # HTTP health checks and HTTPS health checks have separate namespaces.
             Add-GceHealthCheck $healthCheckName -Https
         }
 
@@ -107,25 +108,25 @@ Describe "Get-GceHealthCheck" {
             $allChecks.Count | Should Be 3
         }
 
-        It "should get all http" {
+        It "should get all HTTP" {
             $httpChecks = Get-GceHealthCheck -Http
             $httpChecks.Count | Should Be 2
             ($httpChecks | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.HttpHealthCheck
         }
 
-        It "should get all https" {
+        It "should get all HTTPS" {
             $httpChecks = Get-GceHealthCheck -Https
             $httpChecks.Count | Should Be 1
             ($httpChecks | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.HttpsHealthCheck
         }
 
-        It "should get both http and https of name" {
+        It "should get both HTTP and HTTPS of name" {
             $healthChecks = Get-GceHealthCheck $healthCheckName
             $healthChecks.Count | Should Be 2
             $healthChecks.Name | Should Be $healthCheckName
         }
 
-        It "should get http by name" {
+        It "should get HTTP by name" {
             $healthCheck = Get-GceHealthCheck $healthCheckName -Http
             $healthCheck.Count | Should Be 1
             $healthCheck.Name | Should Be $healthCheckName
@@ -145,7 +146,7 @@ Describe "Remove-GceHealthCheck" {
         { Remove-GceHealthCheck $healthCheckName -Http } | Should Throw 404
     }
 
-    Context "Remove Http" {
+    Context "Remove HTTP" {
         BeforeEach {
             Add-GceHealthCheck $healthCheckName
         }
@@ -167,7 +168,7 @@ Describe "Remove-GceHealthCheck" {
         }
     }
 
-    Context "Remove Https" {
+    Context "Remove HTTPS" {
         BeforeEach {
             Add-GceHealthCheck $healthCheckName -Https
         }
@@ -197,8 +198,7 @@ Describe "Set-GceHealthCheck" {
     Add-GceHealthCheck $healthCheckName -Https
 
     AfterAll {
-        Get-GceHealthCheck |
-            Remove-GceHealthCheck
+        Get-GceHealthCheck | Remove-GceHealthCheck
     }
 
     It "should work" {
@@ -236,3 +236,5 @@ Describe "Set-GceHealthCheck" {
         $healthChecks.UnhealthyThreshold | Should Be 3
     }
 }
+
+Reset-GCloudConfig $oldActiveConfig $configName

@@ -12,8 +12,29 @@ namespace Google.PowerShell.ComputeEngine
     /// Adds a Google Compute Engine health check.
     /// </para>
     /// <para type="descritpion">
-    /// Adds a Google Compute Engine health check. Use this cmdlet to create both http and https health checks.
+    /// Adds a Google Compute Engine health check. Use this cmdlet to create both HTTP and HTTPS health checks.
+    /// https://cloud.google.com/compute/docs/load-balancing/health-checks
     /// </para>
+    /// <example>
+    ///   <para> Adds an HTTP health to project "my-project". </para>
+    ///   <para><code> Add-GceHealthCheck "my-health-check" -Project "my-project" -Http </code></para>
+    /// </example>
+    /// <example>
+    ///   <para> Adds an HTTP health to project "my-project". </para>
+    ///   <para><code> Add-GceHealthCheck "my-health-check" -Project "my-project" -Http </code></para>
+    /// </example>
+    /// <example>
+    ///   <para> Adds an HTTPS health to the project in the Cloud SDK config. </para>
+    ///   <para><code> Add-GceHealthCheck "my-health-check" -Https </code></para>
+    /// </example>
+    /// <example>
+    ///   <para> Adds an HTTP health with non-default values</para>
+    ///   <para><code>
+    ///     Add-GceHealthCheck "my-health-check" -Http -Description "Description of my health check." `<br/>
+    ///         -HostHeader "mydomain.com" -Port 50 -RequestPath "/some/path" -CheckInterval "0:0:2" `<br/>
+    ///         -Timeout "0:0:2" -HealthyThreshold 3 -UnhealthyThreshold 3 `<br/>
+    ///   </code></para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceHealthCheck", DefaultParameterSetName = ParameterSetNames.ByValues)]
     [OutputType(typeof(HttpHealthCheck), typeof(HttpsHealthCheck))]
@@ -53,9 +74,8 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The value of the host header in the health check request. If left empty
-        /// (default value), the public IP on behalf of which this health check is performed
-        /// will be used.
+        /// The value of the host header in the health check request. If left empty, the public IP on behalf
+        /// of which this health check is performed will be used.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
@@ -112,7 +132,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// If set, will create an https health check. If not set, will create an http health check.
+        /// If set, will create an HTTPS health check. If not set, will create an HTTP health check.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
@@ -120,7 +140,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// Object describing a new https health check.
+        /// Object describing a new HTTPS health check.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByHttpsObject, Mandatory = true,
@@ -191,8 +211,23 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// <para type="description">
     /// Gets Google Compute Engine health checks.
-    /// This cmdlet can be used to retrieve both http and https health checks.
+    /// This cmdlet can be used to retrieve both HTTP and HTTPS health checks. It can list all health checks
+    /// of a project, or get a health check by name.
     /// </para>
+    /// <example>
+    ///   <para> Gets all health checks of project "my-project". </para>
+    ///   <para><code> Get-GceHealthCheck -Project "my-project" </code></para>
+    /// </example>
+    /// <example>
+    ///   <para> Gets all HTTPS health checks of the project in the Cloud SDK config. </para>
+    ///   <para><code> Get-GceHealthCheck -Https </code></para>
+    /// </example>
+    /// <example>
+    ///   <para>
+    ///     Gets the HTTP health check named "my-health-check" in the project of the Cloud SDK config.
+    ///   </para>
+    ///   <para><code> Get-GceHealthCheck "my-health-check" -Http </code></para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceHealthCheck", DefaultParameterSetName = ParameterSetNames.OfProject)]
     [OutputType(typeof(HttpHealthCheck), typeof(HttpsHealthCheck))]
@@ -214,7 +249,6 @@ namespace Google.PowerShell.ComputeEngine
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
-
         /// <summary>
         /// <para type="description">
         /// The name of the health check to get.
@@ -226,7 +260,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// If set, will get health checks that use http.
+        /// If set, will get health checks that use HTTP.
         /// If neither -Http nor -Https are set, Get-GceHealthCheck will retrieve both.
         /// </para>
         /// </summary>
@@ -235,7 +269,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// If set, will get health checks that use https.
+        /// If set, will get health checks that use HTTPS.
         /// If neither -Http nor -Https are set, Get-GceHealthCheck will retrieve both.
         /// </para>
         /// </summary>
@@ -298,7 +332,7 @@ namespace Google.PowerShell.ComputeEngine
                 else
                 {
                     throw new AggregateException(
-                        $"The health check named {Name} in project {Project} can not be found", exceptions);
+                        $"The health check named {Name} in project {Project} could not be found", exceptions);
                 }
             }
             else
@@ -350,9 +384,21 @@ namespace Google.PowerShell.ComputeEngine
     /// Removes a Google Compute Engine health check.
     /// </para>
     /// <para type="description">
-    /// Removes a Google Compute Engine Health check. Use this cmdlet to remove both http and https health
+    /// Removes a Google Compute Engine Health check. Use this cmdlet to remove both HTTP and HTTPS health
     /// checks.
     /// </para>
+    /// <example>
+    ///   <para> Remove HTTP health check "my-health-check" from project "my-project". </para>
+    ///   <para><code> Remove-GceHealthCheck "my-health-check" -Project "my-project" -Http </code></para>
+    /// </example>
+    /// <example>
+    ///   <para> Remove HTTPS health check "my-health-check" from the project in the Cloud SDK config. </para>
+    ///   <para><code> Remove-GceHealthCheck "my-health-check" -Https </code></para>
+    /// </example>
+    /// <example>
+    ///   <para> Remove all health checks from project "my-project". </para>
+    ///   <para><code> Get-GceHealthCheck -Project "my-project | Remove-GceHealthCheck</code></para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceHealthCheck", SupportsShouldProcess = true)]
     public class RemoveGceHealthCheckCmdlet : GceConcurrentCmdlet
@@ -387,7 +433,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// If set, will remove a health check that uses http.
+        /// If set, will remove a health check that uses HTTP.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByNameHttp, Mandatory = true)]
@@ -396,7 +442,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// If set, will remove a health check that uses https.
+        /// If set, will remove a health check that uses HTTPS.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByNameHttps, Mandatory = true)]
@@ -405,7 +451,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// An object defining the http health check to remove.
+        /// An object defining the HTTP health check to remove.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByHttpObject, Mandatory = true,
@@ -414,7 +460,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// An object defining the https health check to remove.
+        /// An object defining the HTTPS health check to remove.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByHttpsObject, Mandatory = true,
@@ -444,7 +490,7 @@ namespace Google.PowerShell.ComputeEngine
 
         private void RemoveHttpsHealthCheck(string project, string name)
         {
-            if (ShouldProcess($"{project}/{name}", "Remove Https Health Check"))
+            if (ShouldProcess($"{project}/{name}", "Remove HTTPS Health Check"))
             {
                 HttpsHealthChecksResource.DeleteRequest request = Service.HttpsHealthChecks.Delete(project, name);
                 Operation operation = request.Execute();
@@ -454,7 +500,7 @@ namespace Google.PowerShell.ComputeEngine
 
         private void RemoveHttpHealthCheck(string project, string name)
         {
-            if (ShouldProcess($"{project}/{name}", "Remove Http Health Check"))
+            if (ShouldProcess($"{project}/{name}", "Remove HTTP Health Check"))
             {
                 HttpHealthChecksResource.DeleteRequest request = Service.HttpHealthChecks.Delete(project, name);
                 Operation operation = request.Execute();
@@ -468,10 +514,18 @@ namespace Google.PowerShell.ComputeEngine
     /// Sets the data of a Google Compute Engine health check.
     /// </para>
     /// <para type="description">
-    /// Sets the data of a Google Compute Engine health check.
-    /// First get the health check object with Get-GceHealthCheck.
-    /// Then change the data in the object you received. Finally send that object to Set-GceHealthCheck.
+    /// Sets the data of a Google Compute Engine health check. First get the health check object with
+    /// Get-GceHealthCheck. Then change the data in the object you received. Finally send that object to
+    /// Set-GceHealthCheck.
     /// </para>
+    /// <example>
+    ///   <para> Changes the  HTTP health check "my-health-check" from project "my-project". </para>
+    ///   <para><code>
+    ///     $healthCheck = Get-GceHealthCheck "my-health-check" -Project "my-project" <br/>
+    ///     $healthCheck.CheckIntervalSec = 30
+    ///     $healthCheck | Set-GceHealthCheck
+    ///   </code></para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceHealthCheck", SupportsShouldProcess = true)]
     [OutputType(typeof(HttpHealthCheck), typeof(HttpsHealthCheck))]
@@ -485,7 +539,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The object describing a health check using http.
+        /// The object describing a health check using HTTP.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByHttpObject, Mandatory = true,
@@ -494,7 +548,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The object describing a health check using https.
+        /// The object describing a health check using HTTPS.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByHttpsObject, Mandatory = true,
@@ -510,7 +564,7 @@ namespace Google.PowerShell.ComputeEngine
                 case ParameterSetNames.ByHttpObject:
                     project = GetProjectNameFromUri(HttpObject.SelfLink);
                     name = HttpObject.Name;
-                    if (ShouldProcess($"{project}/{name}", "Set Http Health Check"))
+                    if (ShouldProcess($"{project}/{name}", "Set HTTP Health Check"))
                     {
                         HttpHealthChecksResource.UpdateRequest request =
                             Service.HttpHealthChecks.Update(HttpObject, project, name);
@@ -525,7 +579,7 @@ namespace Google.PowerShell.ComputeEngine
                 case ParameterSetNames.ByHttpsObject:
                     project = GetProjectNameFromUri(HttpsObject.SelfLink);
                     name = HttpsObject.Name;
-                    if (ShouldProcess($"{project}/{name}", "Set Https Health Check"))
+                    if (ShouldProcess($"{project}/{name}", "Set HTTPS Health Check"))
                     {
                         HttpsHealthChecksResource.UpdateRequest request =
                             Service.HttpsHealthChecks.Update(HttpsObject, project, name);
