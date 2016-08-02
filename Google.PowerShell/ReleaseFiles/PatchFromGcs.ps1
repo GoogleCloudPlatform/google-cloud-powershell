@@ -1,9 +1,11 @@
 ﻿# Copyright 2016 Google Inc. All Rights Reserved.
 # Licensed under the Apache License Version 2.0.
 #
-# Updates Cloud Tools for PowerShell module to the latest found in Google Cloud Storage bucket g-cloudsharp-unsignedbinaries
+# Updates Cloud Tools for PowerShell module to the latest found in 
+# Google Cloud Storage bucket g-cloudsharp-unsignedbinaries.
 
-param($installPath) # Let a user manually select a Cloud SDK install path
+# Let a user manually select a Cloud SDK install path
+param($installPath)
 $installPath = $installPath -or $args[0]
 
 # Find the Google Cloud SDK install path from the registry.
@@ -19,22 +21,26 @@ if (-not $installPath) {
         return
     }
 }
-$installPath = $installPath -replace '"' # Registry values had quotes for some reason
+$installPath = $installPath -replace '"' # Registry values had quotes. This removes them.
 $googlePowerShellPath = Join-Path $installPath "google-cloud-sdk\platform\GoogleCloudPowerShell"
 
 if (-not (Test-Path $googlePowerShellPath)) {
-    Write-Error "Can not find Google PowerShell. $googlePowerShellPath does not exist."
+    Write-Error "Can not find Google PowerShell. '$googlePowerShellPath' does not exist."
     return
 }
 
-$pathToOldCmdlets = "$googlePowerShellPath\..\OldPowerShell"
+$pathToOldCmdlets = "$googlePowerShellPath\..\GoogleCloudPowerShell-unpatched-backup"
 if (Test-Path $pathToOldCmdlets) {
     Remove-Item $pathToOldCmdlets -Recurse
 }
 Move-Item $googlePowerShellPath $pathToOldCmdlets
 Import-Module "$pathToOldCmdlets/GoogleCloudPowerShell.psd1"
 $bucket = Get-GcsBucket g-cloudsharp-unsignedbinaries
+
+# Find objects in the powershell directory, and select the last one by name. This will be the one with the
+# highest version number.
 $zipObject = Find-GcsObject $bucket -Prefix powershell | Sort Name -Descending | Select -First 1
+Write-Verbose ("Found powershell file " + $zipObject.Name)
 $tempFile = New-TemporaryFile
 Read-GcsObject $bucket $zipObject.Name -OutFile $tempFile -Force
 
