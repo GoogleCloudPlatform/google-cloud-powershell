@@ -22,14 +22,15 @@ if (-not $installPath) {
     }
 }
 $installPath = $installPath -replace '"' # Registry values had quotes. This removes them.
-$googlePowerShellPath = Join-Path $installPath "google-cloud-sdk\platform\GoogleCloudPowerShell"
+Push-Location (Join-Path $installPath "google-cloud-sdk\platform")
+$googlePowerShellPath = Resolve-Path "GoogleCloudPowerShell"
 
 if (-not (Test-Path $googlePowerShellPath)) {
     Write-Error "Can not find Google PowerShell. '$googlePowerShellPath' does not exist."
     return
 }
 
-$pathToOldCmdlets = "$googlePowerShellPath\..\GoogleCloudPowerShell-unpatched-backup"
+$pathToOldCmdlets = "GoogleCloudPowerShell-unpatched-backup"
 if (Test-Path $pathToOldCmdlets) {
     Remove-Item $pathToOldCmdlets -Recurse
 }
@@ -37,13 +38,13 @@ Move-Item $googlePowerShellPath $pathToOldCmdlets
 Import-Module "$pathToOldCmdlets/GoogleCloudPowerShell.psd1"
 $bucket = Get-GcsBucket g-cloudsharp-unsignedbinaries
 
-# Find objects in the powershell directory, and select the last one by name. This will be the one with the
-# highest version number.
-$zipObject = Find-GcsObject $bucket -Prefix powershell | Sort Name -Descending | Select -First 1
-Write-Verbose ("Found powershell file " + $zipObject.Name)
-$tempFile = New-TemporaryFile
-Read-GcsObject $bucket $zipObject.Name -OutFile $tempFile -Force
+# Find objects in the powershell directory, and select one most recently created.
+$zipObject = Find-GcsObject $bucket -Prefix powershell | Sort TimeCreated -Descending | Select -First 1
+$zipFileName = Split-Path $zipObject.Name -Leaf
+Write-Verbose "Saving new file to $zipFileName"
+Read-GcsObject $bucket $zipObject.Name -OutFile $zipFileName -Force
 
+$zipPath = Resolve-Path $zipFileName
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-[System.IO.Compression.ZipFile]::ExtractToDirectory($tempFile, "$googlePowerShellPath\..")
-Remove-Item $tempFile
+[System.IO.Compression.ZipFile]::ExtractToDirectory($zipPath, "$googlePowerShellPath\..")
+Pop-Location
