@@ -173,7 +173,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public int MaintenanceWindowDay { get; set; }
+        public int MaintenanceWindowDay { get; set; } = 5;
 
         /// <summary>
         /// <para type="description">
@@ -183,7 +183,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public int MaintenanceWindowHour { get; set; }
+        public int MaintenanceWindowHour { get; set; } = 22;
 
         /// <summary>
         /// <para type="description">
