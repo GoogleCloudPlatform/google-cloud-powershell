@@ -130,13 +130,17 @@ function Check-CmdletDoc() {
         $docObj = Get-Help -Full $cmdlet.Name
 
         # Check the documentation for important information/categories and write relevant warnings.
-        WriteAllFieldWarnings $docObj $productMapping.Value
+        $wroteWarnings = WriteAllFieldWarnings $docObj $productMapping.Value
 
         # If there are examples, and the user has chosen a DeepExampleCheck, check if the examples include a command
         # starting with the usual PS C:\>. 
         # If they do, check that they also have an intro and sample output for the command.
         if ($DeepExampleCheck) {
-            DoDeepExampleCheck $docObj
+            $wroteWarnings = ((DoDeepExampleCheck $docObj) -or $wroteWarnings)
+        }
+
+        if (-not ($wroteWarnings)) {
+            Write-Host "PASSED" -ForegroundColor "Green" -BackgroundColor "Black"
         }
     }
 
@@ -155,12 +159,17 @@ function WriteAllFieldWarnings ($docObj, $cloudProduct) {
         "Examples" = ($docObj.examples | Out-String).Trim()
     }
 
+    $wroteWarnings = $false
+
     # Add warnings for each empty field.
     foreach ($docField in $docFields.GetEnumerator()) {
         if ($docField.Value -eq "") {
             WriteMissingFieldWarning $docField.Key
+            $wroteWarnings = $true
         }
     }
+
+    return $wroteWarnings
 }
 
 # Given a field name, create and return a warning specifically for the missing field.
@@ -198,6 +207,8 @@ function InSpecifiedCloudProducts($specifiedProducts, $productMapping, $apiMappi
 
 # Given a cmdlet's documention, conduct a deep example check and return relevant warnings for its examples.
 function DoDeepExampleCheck($docObj) { 
+    $wroteWarnings = $false 
+
     # Only do deep check if the documentation has at least 1 example.
     if (($docObj.examples | Out-String).Trim() -ne "") { 
         $noPSStart = @()
@@ -231,16 +242,21 @@ function DoDeepExampleCheck($docObj) {
         if ($noPSStart.Count -gt 0) {
             "Example number(s) " + ($noPSStart -join ", ") + " does(do) not have commands starting with the " + 
             "expected PS C:\>. (Thus, cannot check for command intro or example output.)" | Write-Warning
+            $wroteWarnings = $true
         }
 
         if ($noIntro.Count -gt 0) {
             "Example number(s) " + ($noIntro -join ", ") + " has(have) no introduction." | Write-Warning
+            $wroteWarnings = $true
         }
 
         if ($noOutput.Count -gt 0) {
             "Example number(s) " + ($noOutput -join ", ") + " has(have) no outputs." | Write-Warning
+            $wroteWarnings = $true
         }
     }
+
+    return $wroteWarnings
 }
 
 # Get the cmdlets explicitly named as a subset of all Google Cloud cmdlets.
