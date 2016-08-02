@@ -427,7 +427,8 @@ namespace Google.PowerShell.Sql
     ///   <para>(If successful, the command returns the resource for the updated instance.)</para>
     /// </example>
     /// </summary>
-    [Cmdlet(VerbsCommon.Reset, "GcSqlSslConfig", DefaultParameterSetName = ParameterSetNames.ByName)]
+    [Cmdlet(VerbsCommon.Reset, "GcSqlSslConfig", SupportsShouldProcess = true,
+        DefaultParameterSetName = ParameterSetNames.ByName)]
     [OutputType(typeof(DatabaseInstance))]
     public class ResetGcSqlSslConfig : GcSqlCmdlet
     {
@@ -479,10 +480,13 @@ namespace Google.PowerShell.Sql
                 default:
                     throw UnknownParameterSetException;
             }
-            InstancesResource.ResetSslConfigRequest request = Service.Instances.ResetSslConfig(project, instance);
-            Operation result = request.Execute();
-            DatabaseInstance updated = Service.Instances.Get(project, instance).Execute();
-            WriteObject(updated);
+            if (ShouldProcess($"{project}/{instance}", "Reset SSL Certificate Configuration"))
+            {
+                InstancesResource.ResetSslConfigRequest request = Service.Instances.ResetSslConfig(project, instance);
+                Operation result = request.Execute();
+                DatabaseInstance updated = Service.Instances.Get(project, instance).Execute();
+                WriteObject(updated);
+            }
         }
     }
 }
