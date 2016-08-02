@@ -124,7 +124,7 @@ Describe "Get-GceRoute" {
 
     It "should list for project" {
         $routes = Get-GceRoute
-        # the one we created, plus the default internet gateway route plus subnetwork (region) routes.
+        # The one we created, plus the default internet gateway route plus subnetwork (region) routes.
         $routes.Count | Should Be ($defaultRouteCount + 1)
         ($routes | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Route
     }
