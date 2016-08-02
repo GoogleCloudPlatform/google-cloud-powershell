@@ -588,8 +588,11 @@ namespace Google.PowerShell.Sql
             InstancesResource.ImportRequest request = Service.Instances.Import(body, Project, Instance);
             Operation result = request.Execute();
             result = WaitForSqlOperation(result);
-            bucketService.Objects.Delete(bucketName, fileName).Execute();
-            bucketService.Buckets.Delete(bucketName).Execute();
+            if (UploadLocalFile)
+            {
+                bucketService.Objects.Delete(bucketName, fileName).Execute();
+                bucketService.Buckets.Delete(bucketName).Execute();
+            }
             if (result.Error != null)
             {
                 foreach (OperationError error in result.Error.Errors)
