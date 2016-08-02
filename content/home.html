@@ -1,0 +1,145 @@
+<section class="hero-banner">
+  <div class="container clearfix">
+    <div class="quote-box">
+      <h1>PowerShell</h1>
+      <p>Windows PowerShell cmdlets for the Google Cloud Platform
+      — an idiomatic way for PowerShell developers to integrate with Google
+      Cloud Platform services, like Cloud Storage and Compute Engine.</p>
+    </div>
+
+    <div class="quote-box--supplementary">
+      <h2 style="color: white">Installed with the
+        <a href="https://cloud.google.com/sdk/docs/quickstart-windows">Cloud SDK for Windows</a></h2>
+      <pre>$ gcloud components update powershell</pre>
+      <!--
+      Show information about the latest release from GitHub. However updating from
+      gcloud makes the most sense.
+
+      <h4 class="latest-release subtle" ng-if="home.latestRelease">
+        Latest Release <a ng-href="{{home.latestRelease.link}}" class="latest-release--link white">{{home.latestRelease.name}}</a>
+        {{home.latestRelease.date|date}}
+      </h4>
+      -->
+    </div>
+  </div><!-- end of .container -->
+</section><!-- end of .hero-banner -->
+
+<section class="block featuring">
+  <div class="container">
+    <ul class="featuring-links">
+      <li>
+        <a href="{{baseUrl}}cmdlets" title="gcloud-powershell docs" class="btn btn-docs">
+          Cmdlet Reference
+        </a>
+      </li>
+      <li>
+        <a href="https://github.com/GoogleCloudPlatform/gcloud-powershell" title="gcloud-powershell on GitHub" class="ext-link">
+          <img src="src/images/icon-link-github.svg" alt="GitHub icon" />
+          GitHub
+        </a>
+      </li>
+      <li>
+        <a href="https://github.com/GoogleCloudPlatform/gcloud-powershell/issues" title="gcloud-powershell issues on Github" class="ext-link">
+          <img src="src/images/icon-link-github.svg" alt="GitHub icon" />
+          Issues
+        </a>
+      </li>
+      <li>
+        <a href="http://stackoverflow.com/questions/tagged/gcloud-powershell" title="gcloud-powershell on StackOverflow" class="ext-link">
+          <img src="src/images/icon-link-stackoverflow.svg" alt="StackOverflow icon" />
+          StackOverflow
+        </a>
+      </li>
+    </ul>
+  </div><!-- end of .container -->
+</section><!-- end of .featuring -->
+
+<section class="block about">
+  <div class="container clearfix">
+    <div class="quote-box">
+      <h3 class="block-title">What is it?</h3>
+
+      <p><code>Cloud Tools for PowerShell</code> is a set of PowerShell
+      cmdlets for accessing and manipulating Google Cloud Platform
+      resources. With them you will be able to automate tasks by writing
+      programs in PowerShell. And ultimately get more down on the
+      Google Cloud Platform.</p>
+
+      <p><code>Cloud Tools for PowerShell</code> uses the same configuration
+      and credentials used by the Google Cloud SDK (<code>gcloud</code>).
+      Once you authenticate (<code>gcloud auth login</code>) you will be
+      able to use PowerShell cmdlets.</p>
+
+    </div>
+
+    <div class="quote-box--supplementary">
+      <h4>Samples</h4>
+
+      <div class="code-sample-tabs" ng-init="selected = 'cloud storage'">
+        <a ng-click="selected = 'cloud storage'"
+           ng-class="{selected: selected == 'cloud storage'}"
+           >Cloud Storage</a>
+        <a ng-click="selected = 'compute engine'"
+           ng-class="{selected: selected == 'compute engine'}"
+           >Compute Engine</a>
+      </div>
+
+      <div hljs hljs-language="powershell" ng-show="selected == 'cloud storage'">
+$bucket = New-GcsBucket -Project $project -Name "gcs-demo"
+
+New-GcsObject -Bucket $bucket `
+    -ObjectName "images/image001.png" `
+    -ContentType "image/jpeg" -File ".\image001.png"
+
+Find-GcsObject $bucket.Name -Prefix "images/" | 
+    Sort-Object -Property "Updated"
+      </div>
+
+      <div hljs hlsj-language="powershell" ng-show="selected == 'compute engine'">
+$config = New-GceInstanceConfig $vmName `
+    -MachineType "n1-standard-4" `
+    -DiskImage (Get-GceImage -Family "windows-2012-r2")
+
+$config | Add-GceInstance -Project $project -Zone "us-central1-b"
+
+$instance = Get-GceInstance $vmName
+      </div>
+
+    </div>
+  </div><!-- end of .container -->
+</section><!-- end of .featuring -->
+
+<section class="block examples">
+  <div class="container clearfix">
+    <h3 class="block-title">Examples</h3>
+
+    <ul>
+      <li>
+        <a href="{{baseUrl}}cmdlets/#google-cloud-storage">
+          Google Cloud Storage
+        </a>
+      </li>
+      <li>
+        <a href="{{baseUrl}}cmdlets/#google-cloud-storage">
+          Google Compute Engine
+        </a>
+      </li>
+    </ul>
+  </div>
+</section>
+
+ <section class="block">
+    <div class="container clearfix">
+    <h3 class="block-title">FAQ</h3>
+
+    <h4>What is the relationship between the <code>Cloud Tools for PowerShell</code>
+    and the <code>gcloud</code> command-line tool?</h4>
+
+    <p>Both the <code>gcloud</code> command-line tool and <code>Cloud Tools for PowerShell</code>
+    cmdlets allow you to manage your cloud resources. However, the
+    <code>Cloud Tools for PowerShell</code> returns strongly-typed objects rather than
+    plain text. So cmdlet results can be latter transformed within Windows PowerShell.
+    With <code>Cloud Tools for PowerShell</code> you can benefit from things like tab-completion,
+    type checking, and integrated help.</p>
+    </div>
+</section> <!-- end of FAQ -->

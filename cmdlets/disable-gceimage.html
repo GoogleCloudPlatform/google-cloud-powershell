@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html class="google" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script>
+        (function(H){H.className=H.className.replace(/\bgoogle\b/,'google-js')})(document.documentElement)
+    </script>
+    <meta content="initial-scale=1, minimum-scale=1, width=device-width" name="viewport">
+    <meta name="description" content="">
+
+    <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
+
+    <title>Disable-GceImage</title>
+    <script src="//www.google.com/js/google.js"></script>
+    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/disable-gceimage.html">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
+    <link rel="stylesheet" href="//www.google.com/css/maia.css">
+</head>
+
+  <body>
+    <header>
+    <div class="maia-header" id="maia-header" role="banner">
+        <div class="maia-aux">
+            <a href="/google-cloud-powershell/">
+                <h1>
+                    <img alt="Google" src="//www.google.com/images/branding/googlelogo/1x/googlelogo_color_116x41dp.png">&nbsp;Cloud Platform
+                </h1>
+                <h2>
+                    PowerShell
+                </h2>
+            </a>
+        </div>
+    </div>
+</header>
+
+    
+    <div class="maia-nav" id="maia-nav-x" role="navigation">
+      <div class="maia-aux">
+        <ul>
+          <li>
+            <a href="/google-cloud-powershell/">Home</a>
+          </li>
+
+          <li
+              >
+            <a href="/google-cloud-powershell/cmdlets/">Reference</a>
+          </li>
+
+          <!-- cmdlet-specific pages include the parent product. -->
+          
+          <li class="active">
+            <a href="/google-cloud-powershell/cmdlets/google-compute-engine">Google Compute Engine</a>
+          </li>
+          
+
+          <!-- product-specific pages. -->
+          
+        </ul>
+      </div>
+    </div>
+    
+    <div id="maia-main" role="main">
+      <div class="maia-teleport" id="content">
+      <style>
+pre {
+    white-space: pre-wrap;
+}
+</style>
+
+<h1>Disable-GceImage</h1>
+<pre>
+NAME
+    Disable-GceImage
+    
+SYNOPSIS
+    Marks an image or schedules an image to be marked as DEPRECATED, OBSOLETE, or DELETED.
+    
+SYNTAX
+    Disable-GceImage [-Project &lt;string&gt;] [-Name] &lt;string&gt; [-Replacement &lt;Image&gt;] [-ReplacementUrl &lt;string&gt;] [-State] &lt;ImageDisableState&gt; {DEPRECATED | OBSOLETE | DELETED} [-DeprecateOn &lt;DateTimeOffset&gt;] [-ObsoleteOn &lt;DateTimeOffset&gt;] [-DeleteOn 
+    &lt;DateTimeOffset&gt;] [&lt;CommonParameters&gt;]
+    
+    Disable-GceImage [-Object] &lt;Image&gt; [-Replacement &lt;Image&gt;] [-ReplacementUrl &lt;string&gt;] [-State] &lt;ImageDisableState&gt; {DEPRECATED | OBSOLETE | DELETED} [-DeprecateOn &lt;DateTimeOffset&gt;] [-ObsoleteOn &lt;DateTimeOffset&gt;] [-DeleteOn &lt;DateTimeOffset&gt;] 
+    [&lt;CommonParameters&gt;]
+    
+    
+DESCRIPTION
+    Marks an image or schedules an image to be marked as DEPRECATED, OBSOLETE, or DELETED.
+    
+
+PARAMETERS
+    -Project &lt;string&gt;
+        The project that owns the image to disable. Defaults to the gcloud config project.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Name &lt;string&gt;
+        The name of the image to disable.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -Object &lt;Image&gt;
+        The Image object that describes the image to disable.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -Replacement &lt;Image&gt;
+        The Image object that is the suggested replacement for the image being disabled.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -ReplacementUrl &lt;string&gt;
+        The url of the image that is the suggested replacement for the image being disabled.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -State &lt;ImageDisableState&gt;
+        The new state of the image.
+        
+        Possible values: DEPRECATED, OBSOLETE, DELETED
+        
+        Required?                    true
+        Position?                    1
+        Default value                DEPRECATED
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -DeprecateOn &lt;DateTimeOffset&gt;
+        The date to mark the image as deprecated.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -ObsoleteOn &lt;DateTimeOffset&gt;
+        The date to mark the image as obsolete.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -DeleteOn &lt;DateTimeOffset&gt;
+        The date to mark the image as deleted. The image will only be marked, and not actually destroyed until a request is made to remove it.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    &lt;CommonParameters&gt;
+        This cmdlet supports the common parameters: Verbose, Debug,
+        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
+        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
+        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
+    
+INPUTS
+    System.String
+        The name of the image to disable.
+    
+    Google.Apis.Compute.v1.Data.Image
+        The Image object that describes the image to disable.
+    
+    
+OUTPUTS
+    
+    
+RELATED LINKS
+
+
+
+</pre>
+
+      </div>
+    </div>
+    <footer>
+    <div id="maia-signature"></div>
+        <div class="maia-footer" id="maia-footer">
+            <div id="maia-footer-global">
+                <div class="maia-aux">
+                <ul>
+                    <li>
+                        <a href="//www.google.com/">Google</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/about/">About Google</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/policies/privacy/">Privacy</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/policies/terms/">Terms</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+
+    <script src="//www.google.com/js/maia.js">
+    </script>
+</body>
+</html>

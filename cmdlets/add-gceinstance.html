@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html class="google" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script>
+        (function(H){H.className=H.className.replace(/\bgoogle\b/,'google-js')})(document.documentElement)
+    </script>
+    <meta content="initial-scale=1, minimum-scale=1, width=device-width" name="viewport">
+    <meta name="description" content="">
+
+    <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
+
+    <title>Add-GceInstance</title>
+    <script src="//www.google.com/js/google.js"></script>
+    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/add-gceinstance.html">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
+    <link rel="stylesheet" href="//www.google.com/css/maia.css">
+</head>
+
+  <body>
+    <header>
+    <div class="maia-header" id="maia-header" role="banner">
+        <div class="maia-aux">
+            <a href="/google-cloud-powershell/">
+                <h1>
+                    <img alt="Google" src="//www.google.com/images/branding/googlelogo/1x/googlelogo_color_116x41dp.png">&nbsp;Cloud Platform
+                </h1>
+                <h2>
+                    PowerShell
+                </h2>
+            </a>
+        </div>
+    </div>
+</header>
+
+    
+    <div class="maia-nav" id="maia-nav-x" role="navigation">
+      <div class="maia-aux">
+        <ul>
+          <li>
+            <a href="/google-cloud-powershell/">Home</a>
+          </li>
+
+          <li
+              >
+            <a href="/google-cloud-powershell/cmdlets/">Reference</a>
+          </li>
+
+          <!-- cmdlet-specific pages include the parent product. -->
+          
+          <li class="active">
+            <a href="/google-cloud-powershell/cmdlets/google-compute-engine">Google Compute Engine</a>
+          </li>
+          
+
+          <!-- product-specific pages. -->
+          
+        </ul>
+      </div>
+    </div>
+    
+    <div id="maia-main" role="main">
+      <div class="maia-teleport" id="content">
+      <style>
+pre {
+    white-space: pre-wrap;
+}
+</style>
+
+<h1>Add-GceInstance</h1>
+<pre>
+NAME
+    Add-GceInstance
+    
+SYNOPSIS
+    Creates and starts a Google Compute Engine VM instance.
+    
+SYNTAX
+    Add-GceInstance [-Project &lt;string&gt;] [-Zone &lt;string&gt;] [-InstanceConfig] &lt;Instance&gt; [&lt;CommonParameters&gt;]
+    
+    Add-GceInstance [-Project &lt;string&gt;] [-Zone &lt;string&gt;] [-Name] &lt;string&gt; [[-MachineType] &lt;string&gt;] [-CanIpForward &lt;SwitchParameter&gt;] [-Description &lt;string&gt;] [-BootDisk &lt;Disk&gt;] [-BootDiskImage &lt;Image&gt;] [-ExtraDisk &lt;Disk[]&gt;] [-Disk &lt;AttachedDisk[]&gt;] 
+    [-Metadata &lt;IDictionary&gt;] [-Network &lt;string&gt;] [-NoExternalIp &lt;SwitchParameter&gt;] [-Preemptible &lt;SwitchParameter&gt;] [-AutomaticRestart &lt;bool&gt;] [-TerminateOnMaintenance &lt;SwitchParameter&gt;] [-ServiceAccount &lt;ServiceAccount[]&gt;] [-Tag &lt;string[]&gt;] 
+    [&lt;CommonParameters&gt;]
+    
+    
+DESCRIPTION
+    Creates and starts a Google Compute Engine VM instance. Use New-GceInstanceConfig to create an instance description.
+    
+
+PARAMETERS
+    -Project &lt;string&gt;
+        The project that will own the instance.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Zone &lt;string&gt;
+        The zone in which the instance will reside.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -InstanceConfig &lt;Instance&gt;
+        The definition of the instance to create.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -Name &lt;string&gt;
+        The name of the instance to add.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -MachineType &lt;string&gt;
+        The machine type of this instance. Can be a name, a URL or a MachineType object from Get-GceMachineType. Defaults to &quot;n1-standard-1&quot;.
+        
+        Required?                    false
+        Position?                    1
+        Default value                n1-standard-1
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -CanIpForward &lt;SwitchParameter&gt;
+        Enables instances to send and receive packets for IP addresses other than their own. Switch on if this instance will be used as an IP gateway or it will be set as the next-hop in a Route resource.
+        
+        Required?                    false
+        Position?                    named
+        Default value                False
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Description &lt;string&gt;
+        Human readable description of this instance.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -BootDisk &lt;Disk&gt;
+        The persistant disk to use as a boot disk. Use Get-GceDisk to get one of these.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -BootDiskImage &lt;Image&gt;
+        The the image used to create the boot disk. Use Get-GceImage to get one of these.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -DiskImage &lt;Image&gt;
+        The the image used to create the boot disk. Use Get-GceImage to get one of these.
+        
+        This is an alias of the BootDiskImage parameter.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -ExtraDisk &lt;Disk[]&gt;
+        An existing disk to attach. It will attach in read-only mode.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Disk &lt;AttachedDisk[]&gt;
+        An AttachedDisk object specifying a disk to attach. Do not specify `-BootDiskImage` or `-BootDiskSnapshot` if this is a boot disk. You can build one using New-GceAttachedDiskConfig.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Metadata &lt;IDictionary&gt;
+        The keys and values of the Metadata of this instance.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Network &lt;string&gt;
+        The name of the network to use. If not specified, is default. This can be a Network object you get from Get-GceNetwork.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -NoExternalIp &lt;SwitchParameter&gt;
+        If set, the instance will not have an external ip address.
+        
+        Required?                    false
+        Position?                    named
+        Default value                False
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Preemptible &lt;SwitchParameter&gt;
+        If set, the instance will be preemptible. If set, AutomaticRestart will be false.
+        
+        Required?                    false
+        Position?                    named
+        Default value                False
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -AutomaticRestart &lt;bool&gt;
+        If set, the instance will not restart when shut down by Google Compute Engine.
+        
+        Required?                    false
+        Position?                    named
+        Default value                True
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -TerminateOnMaintenance &lt;SwitchParameter&gt;
+        If set, the instance will terminate rather than migrate when the host undergoes maintenance.
+        
+        Required?                    false
+        Position?                    named
+        Default value                False
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -ServiceAccount &lt;ServiceAccount[]&gt;
+        The ServiceAccount used to specify access tokens. Use New-GceServiceAccountConfig to build one.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Tag &lt;string[]&gt;
+        A tag of this instance.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    &lt;CommonParameters&gt;
+        This cmdlet supports the common parameters: Verbose, Debug,
+        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
+        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
+        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
+    
+INPUTS
+    Google.Apis.Compute.v1.Data.Instance
+        The definition of the instance to create.
+    
+    System.String
+        The name of the instance to add.
+    
+    
+OUTPUTS
+    
+    
+RELATED LINKS
+
+
+
+</pre>
+
+      </div>
+    </div>
+    <footer>
+    <div id="maia-signature"></div>
+        <div class="maia-footer" id="maia-footer">
+            <div id="maia-footer-global">
+                <div class="maia-aux">
+                <ul>
+                    <li>
+                        <a href="//www.google.com/">Google</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/about/">About Google</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/policies/privacy/">Privacy</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/policies/terms/">Terms</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+
+    <script src="//www.google.com/js/maia.js">
+    </script>
+</body>
+</html>

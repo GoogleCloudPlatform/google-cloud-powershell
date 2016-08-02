@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html class="google" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script>
+        (function(H){H.className=H.className.replace(/\bgoogle\b/,'google-js')})(document.documentElement)
+    </script>
+    <meta content="initial-scale=1, minimum-scale=1, width=device-width" name="viewport">
+    <meta name="description" content="">
+
+    <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
+
+    <title>Resize-GceDisk</title>
+    <script src="//www.google.com/js/google.js"></script>
+    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/resize-gcedisk.html">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
+    <link rel="stylesheet" href="//www.google.com/css/maia.css">
+</head>
+
+  <body>
+    <header>
+    <div class="maia-header" id="maia-header" role="banner">
+        <div class="maia-aux">
+            <a href="/google-cloud-powershell/">
+                <h1>
+                    <img alt="Google" src="//www.google.com/images/branding/googlelogo/1x/googlelogo_color_116x41dp.png">&nbsp;Cloud Platform
+                </h1>
+                <h2>
+                    PowerShell
+                </h2>
+            </a>
+        </div>
+    </div>
+</header>
+
+    
+    <div class="maia-nav" id="maia-nav-x" role="navigation">
+      <div class="maia-aux">
+        <ul>
+          <li>
+            <a href="/google-cloud-powershell/">Home</a>
+          </li>
+
+          <li
+              >
+            <a href="/google-cloud-powershell/cmdlets/">Reference</a>
+          </li>
+
+          <!-- cmdlet-specific pages include the parent product. -->
+          
+          <li class="active">
+            <a href="/google-cloud-powershell/cmdlets/google-compute-engine">Google Compute Engine</a>
+          </li>
+          
+
+          <!-- product-specific pages. -->
+          
+        </ul>
+      </div>
+    </div>
+    
+    <div id="maia-main" role="main">
+      <div class="maia-teleport" id="content">
+      <style>
+pre {
+    white-space: pre-wrap;
+}
+</style>
+
+<h1>Resize-GceDisk</h1>
+<pre>
+NAME
+    Resize-GceDisk
+    
+SYNOPSIS
+    Resize a Compute Engine disk object.
+    
+SYNTAX
+    Resize-GceDisk [-Project &lt;string&gt;] [-Zone &lt;string&gt;] [-DiskName] &lt;string&gt; [-NewSizeGb] &lt;long&gt; [&lt;CommonParameters&gt;]
+    
+    
+DESCRIPTION
+    Resize a Compute Engine disk object.
+    
+
+PARAMETERS
+    -Project &lt;string&gt;
+        The project to associate the new Compute Engine disk.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Zone &lt;string&gt;
+        Specific zone to create the disk in, e.g. &quot;us-central1-a&quot;.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -DiskName &lt;string&gt;
+        Name of the disk.
+        
+        Required?                    true
+        Position?                    2
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -NewSizeGb &lt;long&gt;
+        
+        Required?                    true
+        Position?                    3
+        Default value                0
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    &lt;CommonParameters&gt;
+        This cmdlet supports the common parameters: Verbose, Debug,
+        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
+        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
+        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
+    
+INPUTS
+    
+OUTPUTS
+    
+    
+RELATED LINKS
+
+
+
+</pre>
+
+      </div>
+    </div>
+    <footer>
+    <div id="maia-signature"></div>
+        <div class="maia-footer" id="maia-footer">
+            <div id="maia-footer-global">
+                <div class="maia-aux">
+                <ul>
+                    <li>
+                        <a href="//www.google.com/">Google</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/about/">About Google</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/policies/privacy/">Privacy</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/policies/terms/">Terms</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+
+    <script src="//www.google.com/js/maia.js">
+    </script>
+</body>
+</html>
