@@ -126,6 +126,7 @@
     <Compile Include="Common\GcloudCmdlet.cs" />
     <Compile Include="Common\MeasurementProtocolService.cs" />
     <Compile Include="Compute\GceAddressCmdlets.cs" />
+    <Compile Include="Compute\GceBackendCmdlets.cs" />
     <Compile Include="Compute\GceCmdlet.cs" />
     <Compile Include="Common\GcloudAttributes.cs" />
     <Compile Include="Compute\GceAttachedDiskConfigCmdlets.cs" />
