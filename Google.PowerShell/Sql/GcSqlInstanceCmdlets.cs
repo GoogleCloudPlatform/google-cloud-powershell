@@ -1,6 +1,7 @@
 ﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
+using Google.Apis.Services;
 using Google.Apis.SQLAdmin.v1beta4;
 using Google.Apis.SQLAdmin.v1beta4.Data;
 using Google.Apis.Storage.v1;
@@ -433,8 +434,8 @@ namespace Google.PowerShell.Sql
     /// </para>
     /// <para>
     /// WARNING: Standard charging rates apply if a file is imported from your local machine.
-    /// A Google Cloud Storage bucket will be set up, uploaded to, imported from,
-    /// and deleted during the local upload process.
+    /// A Google Cloud Storage bucket will be set up, uploaded to, and imported from during the import process.
+    /// It is deleted after the upload and/or import process fails or is completed
     /// </para>
     /// <example>
     ///   <para>
@@ -464,7 +465,7 @@ namespace Google.PowerShell.Sql
     ///   existing database "myData" in the instance "myInstance".
     ///   </para>
     ///   <para><code>
-    ///     PS C:\> Import-GcSqlInstance "myInstance" "C:\Users\Bob\file.csv" "myData" "myTable" -UploadLocalFile
+    ///     PS C:\> Import-GcSqlInstance "myInstance" "C:\Users\Bob\file.csv" "myData" "myTable" 
     ///   </code></para>
     ///   <br></br>
     ///   <para>If successful, the command doesn't return anything.</para>
@@ -536,32 +537,134 @@ namespace Google.PowerShell.Sql
         public string[] Column { get; set; }
 
         /// <summary>
-        /// <para type="description">
-        ///  If true, uploads the object at ImportFilePath to a new Google Cloud Storage bucket, then imports it
-        ///  into the instance. Otherwise, imports the file at the Google Cloud Storage location
-        ///  specified by ImportFilePath
-        /// </para>
+        /// Class containing the local file upload methods.
         /// </summary>
-        [Parameter]
-        public SwitchParameter UploadLocalFile { get; set; }
+        private class GcsFileUploader
+        {
 
-        /// <summary>
-        /// MIME attachment for general binary data. (Octets of bits, commonly referred to as bytes.)
-        /// </summary>
-        protected const string OctetStreamMimeType = "application/octet-stream";
+            private StorageService BucketService;
+            private string Project;
 
-        private string bucketName;
-        private StorageService bucketService;
-        private string fileName;
+            public GcsFileUploader(BaseClientService.Initializer serviceInitializer, string project)
+            {
+                BucketService = new StorageService(serviceInitializer);
+                Project = project;
+            }
+
+            /// <summary>
+            /// Creates a Google Cloud Storage bucket.
+            /// </summary>
+            /// <param name="bucketName"></param>
+            /// <returns></returns>
+            public Bucket CreateBucket(string bucketName)
+            {
+                Bucket bucket = new Google.Apis.Storage.v1.Data.Bucket();
+                bucket.Name = bucketName;
+                return BucketService.Buckets.Insert(bucket, Project).Execute();
+            }
+
+            /// <summary>
+            /// Uploads a local file to a bucket.
+            /// </summary>
+            /// <param name="filePath"></param>
+            /// <param name="bucketName"></param>
+            /// <returns></returns>
+            public Apis.Storage.v1.Data.Object UploadLocalFile(string filePath, string bucketName)
+            {
+                string fileName = "toImport";
+                Stream contentStream = new FileStream(filePath, FileMode.Open);
+                Apis.Storage.v1.Data.Object newGcsObject = new Apis.Storage.v1.Data.Object
+                {
+                    Bucket = bucketName,
+                    Name = fileName,
+                    ContentType = "application/octet-stream"
+                };
+                ObjectsResource.InsertMediaUpload insertReq = BucketService.Objects.Insert(
+                    newGcsObject, bucketName, contentStream, "application/octet-stream");
+                var finalProgress = insertReq.Upload();
+                if (finalProgress.Exception != null)
+                {
+                    throw finalProgress.Exception;
+                }
+                contentStream.Close();
+
+                return BucketService.Objects.Get(bucketName, fileName).Execute();
+            }
+
+            /// <summary>
+            /// Adjusts the ACL for an uploaded object so that a SQL instance can access it.
+            /// </summary>
+            /// <param name="bucketObject"></param>
+            /// <param name="instanceEmail"></param>
+            public void AdjustAcl(Apis.Storage.v1.Data.Object bucketObject, string instanceEmail)
+            {
+                ObjectAccessControl body = new ObjectAccessControl();
+                body.Bucket = bucketObject.Bucket;
+                body.Entity = "user-" + instanceEmail;
+                body.Role = "OWNER";
+                body.Object__ = bucketObject.Name;
+                ObjectAccessControlsResource.InsertRequest aclRequest = 
+                    BucketService.ObjectAccessControls.Insert(body, bucketObject.Bucket, bucketObject.Name);
+                try
+                {
+                    aclRequest.Execute();
+                }
+                catch (Exception e)
+                {
+                    DeleteObject(bucketObject);
+                    BucketService.Buckets.Delete(bucketObject.Bucket).Execute();
+                    throw e;
+                }
+            }
+
+            /// <summary>
+            /// Deletes the bucket object from the Google Cloud Storage bucket.
+            /// </summary>
+            /// <param name="bucketObject"></param>
+            public void DeleteObject(Apis.Storage.v1.Data.Object bucketObject)
+            {
+                BucketService.Objects.Delete(bucketObject.Bucket, bucketObject.Name).Execute();
+            }
+            
+            /// <summary>
+            /// Deletes a Google Cloud Storage bucket.
+            /// </summary>
+            /// <param name="bucket"></param>
+            public void DeleteBucket(Bucket bucket)
+            {
+                BucketService.Buckets.Delete(bucket.Name).Execute();
+            }
+        }
+
+        private Bucket tempGcsBucket = null;
+        private Apis.Storage.v1.Data.Object tempGcsObject = null;
+        private GcsFileUploader tempUploader = null;
 
         protected override void ProcessRecord()
         {
-            if (UploadLocalFile)
+            if (!ImportFilePath.StartsWith("gs://"))
             {
                 if (ShouldProcess($"{Project}/{Instance}/{ImportFilePath}",
-                    "Create a new Google Cloud Storage bucket and upload the file to it for import."))
+                    "Create a new Google Cloud Storage bucket and upload the file to it for import.", 
+                    "Will be deleted after the import completes"))
                 {
-                    ImportFilePath = UploadFile();
+                    tempUploader = new GcsFileUploader(GetBaseClientServiceInitializer(), Project);
+                    Random rnd = new Random();
+                    int bucketRnd = rnd.Next(1000000);
+                    string bucketName = "import" + bucketRnd.ToString();
+                    tempGcsBucket = tempUploader.CreateBucket(bucketName);
+                    try
+                    {
+                        tempGcsObject = tempUploader.UploadLocalFile(ImportFilePath, bucketName);
+                    }
+                    catch (Exception e)
+                    {
+                        tempUploader.DeleteBucket(tempGcsBucket);
+                        throw e;
+                    }
+                    DatabaseInstance myInstance = Service.Instances.Get(Project, Instance).Execute();
+                    tempUploader.AdjustAcl(tempGcsObject, myInstance.ServiceAccountEmailAddress);
+                    ImportFilePath = string.Format("gs://{0}/{1}", bucketName, "toImport");
                 }
                 else return;
             }
@@ -588,10 +691,10 @@ namespace Google.PowerShell.Sql
             InstancesResource.ImportRequest request = Service.Instances.Import(body, Project, Instance);
             Operation result = request.Execute();
             result = WaitForSqlOperation(result);
-            if (UploadLocalFile)
+            if (tempUploader != null)
             {
-                bucketService.Objects.Delete(bucketName, fileName).Execute();
-                bucketService.Buckets.Delete(bucketName).Execute();
+                tempUploader.DeleteObject(tempGcsObject);
+                tempUploader.DeleteBucket(tempGcsBucket);
             }
             if (result.Error != null)
             {
@@ -601,76 +704,6 @@ namespace Google.PowerShell.Sql
                     throw new GoogleApiException("Google Cloud SQL API", error.Message + error.Code);
                 }
             }
-        }
-
-        private string UploadFile()
-        {
-            Random rnd = new Random();
-            int bucketRnd = rnd.Next(1000000);
-            bucketName = "import" + bucketRnd.ToString();
-            fileName = "toImport";
-            bucketService = new StorageService(GetBaseClientServiceInitializer());
-            CreateBucket();
-            try
-            {
-                UploadObject();
-            }
-            catch (Exception e)
-            {
-                bucketService.Buckets.Delete(bucketName).Execute();
-                throw e;
-            }
-            UpdatePermissions();
-            return string.Format("gs://{0}/{1}", bucketName, fileName);
-        }
-
-        private void UpdatePermissions()
-        {
-            ObjectAccessControl body = new ObjectAccessControl();
-            DatabaseInstance myInstance = Service.Instances.Get(Project, Instance).Execute();
-            body.Bucket = bucketName;
-            body.Entity = "user-" + myInstance.ServiceAccountEmailAddress;
-            body.Role = "OWNER";
-            body.Object__ = fileName;
-            ObjectAccessControlsResource.InsertRequest aclRequest = bucketService.ObjectAccessControls.Insert(body, bucketName, fileName);
-            try
-            {
-                aclRequest.Execute();
-            }
-            catch (Exception e)
-            {
-                bucketService.Objects.Delete(bucketName, fileName).Execute();
-                bucketService.Buckets.Delete(bucketName).Execute();
-                throw e;
-            }
-        }
-
-        private void UploadObject()
-        {
-            Stream contentStream = new FileStream(ImportFilePath, FileMode.Open);
-            Apis.Storage.v1.Data.Object newGcsObject = new Apis.Storage.v1.Data.Object
-            {
-                Bucket = bucketName,
-                Name = fileName,
-                ContentType = "application/octet-stream"
-            };
-
-            ObjectsResource.InsertMediaUpload insertReq = bucketService.Objects.Insert(
-                newGcsObject, bucketName, contentStream, "application/octet-stream");
-
-            var finalProgress = insertReq.Upload();
-            if (finalProgress.Exception != null)
-            {
-                throw finalProgress.Exception;
-            }
-            contentStream.Close();
-        }
-
-        private void CreateBucket()
-        {
-            Bucket bucket = new Google.Apis.Storage.v1.Data.Bucket();
-            bucket.Name = bucketName;
-            bucket = bucketService.Buckets.Insert(bucket, Project).Execute();
         }
     }
 

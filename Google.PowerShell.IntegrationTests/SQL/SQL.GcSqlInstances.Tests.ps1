@@ -212,25 +212,28 @@ Describe "Import-GcSqlInstance" {
         "ERROR 1840 (HY000) at line 24: @@GLOBAL.GTID_PURGED can only be set when @@GLOBAL.GTID_EXECUTED is empty."
     }
 
-    It "should import a local file and delete the bucket for a local file upon completion" {
+    It "should import a local file by uploading it to GCS for a local file upon completion" {
         $oldBuckets = Get-GcsBucket
-        { Import-GcSqlInstance "test-db2" "$PSScriptRoot\testsql.csv" "newguestbook" "entries" -UploadLocalFile} | Should not Throw
+        { Import-GcSqlInstance "test-db2" "$PSScriptRoot\sample-table.csv" "newguestbook" "entries" } |
+            Should not Throw
+        # The cmdlet creates a new Google Cloud Storage bucket so that the data can be imported. 
+        # We want to make sure this bucket is deleted after.
         $newBuckets = Get-GcsBucket
         $oldBuckets.Count | Should Be $newBuckets.Count
     }
 
     It "should delete the bucket for a local file upon a file error" {
         $oldBuckets = Get-GcsBucket
-        { Import-GcSqlInstance "test-db2" "$PSScriptRoot\filenotexist" "newguestbook" "entries" -UploadLocalFile} | Should Throw `
-        "Could not find file '$PSScriptRoot\filenotexist'"
+        { Import-GcSqlInstance "test-db2" "$PSScriptRoot\filenotexist" "newguestbook" "entries" } | 
+        Should Throw "Could not find file '$PSScriptRoot\filenotexist'"
         $newBuckets = Get-GcsBucket
         $oldBuckets.Count | Should Be $newBuckets.Count
     }
 
     It "should delete the bucket for a local file upon a instance error" {
         $oldBuckets = Get-GcsBucket
-        { Import-GcSqlInstance "test-db2" "$PSScriptRoot\testsql.csv" "newguestbook" "tablenotexist" -UploadLocalFile} | Should Throw `
-        "Error 1146: Table 'newguestbook.tablenotexist' doesn't exist"
+        { Import-GcSqlInstance "test-db2" "$PSScriptRoot\sample-table.csv" "newguestbook" "tablenotexist" } | 
+        Should Throw "Error 1146: Table 'newguestbook.tablenotexist' doesn't exist"
         $newBuckets = Get-GcsBucket
         $oldBuckets.Count | Should Be $newBuckets.Count
     }
