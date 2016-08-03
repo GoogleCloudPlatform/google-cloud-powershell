@@ -198,7 +198,7 @@ namespace Google.PowerShell.CloudStorage
     ///   <para>True</para>
     /// </example>
     /// </summary>
-    [Cmdlet(VerbsCommon.Remove, "GcsBucket", SupportsShouldProcess = true), OutputType(new Type[] { })]
+    [Cmdlet(VerbsCommon.Remove, "GcsBucket", SupportsShouldProcess = true)]
     public class RemoveGcsBucketCmdlet : GcsCmdlet
     {
         /// <summary>

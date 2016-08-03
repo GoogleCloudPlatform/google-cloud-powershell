@@ -492,7 +492,6 @@ namespace Google.PowerShell.CloudStorage
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GcsObject",
         DefaultParameterSetName = ParameterSetNames.FromName, SupportsShouldProcess = true)]
-    [OutputType(new string[] { })]
     public class RemoveGcsObjectCmdlet : GcsCmdlet
     {
         private class ParameterSetNames
@@ -706,7 +705,7 @@ namespace Google.PowerShell.CloudStorage
     ///   <para><code>PS C:\> "OK" | Write-GcsObject -Bucket "widget-co-logs" -ObjectName "status.txt"</code></para>
     /// </example>
     /// </summary>
-    [Cmdlet(VerbsCommunications.Write, "GcsObject"), OutputType(new string[] { })]
+    [Cmdlet(VerbsCommunications.Write, "GcsObject")]
     public class WriteGcsObjectCmdlet : GcsObjectCmdlet
     {
         private class ParameterSetNames
