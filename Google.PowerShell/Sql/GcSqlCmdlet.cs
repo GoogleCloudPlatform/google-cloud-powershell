@@ -50,6 +50,7 @@ namespace Google.PowerShell.Sql
                         break;
                     }
                 case "UPDATE":
+                case "REMOVE":
                     {
                         delay = 5000;
                         break;
