@@ -152,7 +152,7 @@ function Check-CmdletDoc() {
 # Get the cmdlets explicitly named as a subset of all Google Cloud cmdlets.
 function GetCmdletsByName ($cmdletNames, $allCmdlets) {
     PrintElementsNotFound $cmdletNames $allCmdlets.Name "`nThe following cmdlets you named were not found:"
-    return @($allCmdlets | where { $cmdletNames -contains $_.Name })
+    return @($allCmdlets | where Name -in $cmdletNames)
 }
 
 # Get the names of the cmdlets in the OuputType whitelist.
