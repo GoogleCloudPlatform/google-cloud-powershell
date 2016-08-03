@@ -1,12 +1,7 @@
-﻿$path = $PSScriptRoot
-
-while($child -eq $null) {
-    $child = Get-ChildItem GcloudCmdlets.ps1 -Recurse -Path $path 
-    $path = Split-Path $path
-}
-
-. $child.FullName
+﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
+
+$project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 $r = Get-Random
 Describe "New-GceAttachedDiskConfig" {
@@ -84,3 +79,5 @@ Describe "New-GceAttachedDiskConfig" {
         $diskList[1].InitializeParams | Should BeNullOrEmpty
     }
 }
+
+Reset-GCloudConfig $oldActiveConfig $configName

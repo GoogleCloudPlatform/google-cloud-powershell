@@ -194,6 +194,7 @@ Describe "Set-GceManagedInstanceGroup" {
         $group = Get-GceManagedInstanceGroup $groupName1
         $group.TargetSize | Should Be 2
         { Get-GceInstance $instanceToAbandon } | Should Not Throw 404
+        $instanceToAbandon | Remove-GceInstance
     }
 
     It "should delete instances" {

@@ -1,7 +1,7 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
 
-$project = "gcloud-powershell-testing"
+$project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 # Delete all disks associated with a project.
 function Remove-ProjectDisks($project) {
@@ -195,3 +195,5 @@ Describe "Remove-GceDisk" {
     # the disk is in-use by a VM.
     Remove-ProjectDisks($project)
 }
+
+Reset-GCloudConfig $oldActiveConfig $configName

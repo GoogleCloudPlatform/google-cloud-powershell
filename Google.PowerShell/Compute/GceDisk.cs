@@ -43,6 +43,7 @@ namespace Google.PowerShell.ComputeEngine
         /// Specific zone to lookup disks in, e.g. "us-central1-a". Partial names
         /// like "us-" or "us-central1" will also work.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = false)]
         public string Zone { get; set; }
 
@@ -173,25 +174,25 @@ namespace Google.PowerShell.ComputeEngine
         public string DiskName { get; set; }
 
         /// <summary>
-        /// <paratype="description">
+        /// <para type="description">
         /// Optional description of the disk.
-        /// </paratype>
+        /// </para>
         /// </summary>
         [Parameter]
         public string Description { get; set; }
 
         /// <summary>
-        /// <paratype="description">
+        /// <para type="description">
         /// Specify the size of the disk in GiB.
-        /// </paratype>
+        /// </para>
         /// </summary>
         [Parameter]
         public long? SizeGb { get; set; }
 
         /// <summary>
-        /// <paratype="description">
+        /// <para type="description">
         /// Type of disk, e.g. pd-ssd or pd-standard.
-        /// </paratype>
+        /// </para>
         /// </summary>
         [Parameter, ValidateSet("pd-ssd", "pd-standard")]
         public string DiskType { get; set; }
@@ -296,9 +297,9 @@ namespace Google.PowerShell.ComputeEngine
         public string DiskName { get; set; }
 
         /// <summary>
-        /// <paratype="description">
+        /// <para type="description">
         /// Specify the new size of the disk in GiB. Must be larger than the current disk size.
-        /// </paratype>
+        /// </para>
         /// </summary>
         [Parameter(Position = 3, Mandatory = true)]
         public long NewSizeGb { get; set; }
