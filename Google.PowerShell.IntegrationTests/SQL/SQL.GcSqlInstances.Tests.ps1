@@ -212,11 +212,7 @@ Describe "Import-GcSqlInstance" {
         "ERROR 1840 (HY000) at line 24: @@GLOBAL.GTID_PURGED can only be set when @@GLOBAL.GTID_EXECUTED is empty."
     }
 
-    It "should be able to import a local file" {
-        { Import-GcSqlInstance "test-db2" "$PSScriptRoot\testsql.csv" "newguestbook" "entries" -UploadLocalFile} | Should not Throw
-    }
-
-    It "should delete the bucket for a local file upon completion" {
+    It "should import a local file and delete the bucket for a local file upon completion" {
         $oldBuckets = Get-GcsBucket
         { Import-GcSqlInstance "test-db2" "$PSScriptRoot\testsql.csv" "newguestbook" "entries" -UploadLocalFile} | Should not Throw
         $newBuckets = Get-GcsBucket
@@ -225,16 +221,16 @@ Describe "Import-GcSqlInstance" {
 
     It "should delete the bucket for a local file upon a file error" {
         $oldBuckets = Get-GcsBucket
-        { Import-GcSqlInstance "test-db2" "$PSScriptRoot\testsqll.csv" "newguestbook" "entries" -UploadLocalFile} | Should Throw `
-        "Could not find file '$PSScriptRoot\testsqll.csv'"
+        { Import-GcSqlInstance "test-db2" "$PSScriptRoot\filenotexist" "newguestbook" "entries" -UploadLocalFile} | Should Throw `
+        "Could not find file '$PSScriptRoot\filenotexist'"
         $newBuckets = Get-GcsBucket
         $oldBuckets.Count | Should Be $newBuckets.Count
     }
 
     It "should delete the bucket for a local file upon a instance error" {
         $oldBuckets = Get-GcsBucket
-        { Import-GcSqlInstance "test-db2" "$PSScriptRoot\testsql.csv" "newguestbook" "entriees" -UploadLocalFile} | Should Throw `
-        "Error 1146: Table 'newguestbook.entriees' doesn't exist"
+        { Import-GcSqlInstance "test-db2" "$PSScriptRoot\testsql.csv" "newguestbook" "tablenotexist" -UploadLocalFile} | Should Throw `
+        "Error 1146: Table 'newguestbook.tablenotexist' doesn't exist"
         $newBuckets = Get-GcsBucket
         $oldBuckets.Count | Should Be $newBuckets.Count
     }
