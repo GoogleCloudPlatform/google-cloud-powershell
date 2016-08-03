@@ -96,16 +96,18 @@ function Check-CmdletDoc() {
     )
 
     $binDirectory = Join-Path $PSScriptRoot "\..\Google.PowerShell\bin\"
-    Write-Host($PSScriptRoot)
-    Import-Module "$binDirectory\Debug\Google.PowerShell.dll"
-
-    $cmdlets = Get-Command -Module "Google.PowerShell" | Sort Noun
+    Import-Module "$binDirectory\Debug\Google.PowerShell.dll"    
+    $allCmdlets = $cmdlets = Get-Command -Module "Google.PowerShell" | Sort Noun
 
     # Get the cmdlets explicitly named if the CmdletNames parameter is specified.
     if ($CmdletNames) {
-         $cmdlets = GetCmdletsByName $cmdletNames $cmdlets
+         $cmdlets = GetCmdletsByName $cmdletNames $allCmdlets
     }
 
+    # Get the cmdlets that are whitelisted for (don't need a) OutputType
+    $outputWhitelistDirectory = "$PSScriptRoot\OutputTypeWhitelist.txt"
+    $outputWhitelist = GetOutputTypeWhitelist $outputWhitelistDirectory $allCmdlets
+ 
     # Create mapping between cmdlet name and the Cloud resource.
     $apiMappings = @{
         "Gcs" = "Google Cloud Storage"
@@ -130,7 +132,7 @@ function Check-CmdletDoc() {
         $docObj = Get-Help -Full $cmdlet.Name
 
         # Check the documentation for important information/categories and write relevant warnings.
-        $wroteWarnings = WriteAllFieldWarnings $docObj $productMapping.Value
+        $wroteWarnings = WriteAllFieldWarnings $docObj $productMapping.Value $outputWhitelist
 
         # If there are examples, and the user has chosen a DeepExampleCheck, check if the examples include a command
         # starting with the usual PS C:\>. 
@@ -148,7 +150,7 @@ function Check-CmdletDoc() {
 }
 
 # Write warnings for all important fields in a cmdlet's documentation.
-function WriteAllFieldWarnings ($docObj, $cloudProduct) {
+function WriteAllFieldWarnings ($docObj, $cloudProduct, $outputWhitelist) {
     # Creating mapping for field name and value in this cmdlet's documentation.
     $docFields = @{
         "CloudProduct" = $cloudProduct
@@ -163,7 +165,8 @@ function WriteAllFieldWarnings ($docObj, $cloudProduct) {
 
     # Add warnings for each empty field.
     foreach ($docField in $docFields.GetEnumerator()) {
-        if ($docField.Value -eq "") {
+        if (($docField.Value -eq "") -and 
+            (-not (($docField.Key -eq "OutputType") -and ($outputWhitelist -contains $docFields.Get_Item("Name"))))) {
             WriteMissingFieldWarning $docField.Key
             $wroteWarnings = $true
         }
@@ -261,13 +264,27 @@ function DoDeepExampleCheck($docObj) {
 
 # Get the cmdlets explicitly named as a subset of all Google Cloud cmdlets.
 function GetCmdletsByName ($cmdletNames, $allCmdlets) {
-    $cmdlets = $allCmdlets | where { $CmdletNames -contains $_.Name }
-    $cmdletsNotFound = $CmdletNames | where { -not ($allCmdlets.Name -contains $_) }
+    PrintElementsNotFound $cmdletNames $allCmdlets.Name "`nThe following cmdlets you named were not found:"
+    return @($allCmdlets | where { $cmdletNames -contains $_.Name })
+}
 
-    if ($cmdletsNotFound) {
-        Write-Host ("`nThe following cmdlets you named were not found: ")
-        $cmdletsNotFound | Write-Host
+# Get the names of the cmdlets in the OuputType whitelist.
+function GetOutputTypeWhitelist ($outputWhitelistDirectory, $allCmdlets) {
+    $outputWhitelist = (Get-Content $outputWhitelistDirectory)
+    if (-not $outputWhitelist) {
+        return $null
+    } 
+    $outputWhitelist = $outputWhitelist.Split(" *`n+", [System.StringSplitOptions]::RemoveEmptyEntries)
+    PrintElementsNotFound $outputWhitelist $allCmdlets.Name "`nThe following cmdlets from the OutputType whitelist were not found: "
+    $outputWhitelist = @($allCmdlets.Name | where { $outputWhitelist -contains $_ })
+}
+
+# Print a list of the elements in sublist that are not part of list. 
+function PrintElementsNotFound ($sublist, $list, $message) {
+    $notFound = $sublist | where { -not ($list -contains $_) } 
+
+    if ($notFound) {
+        Write-Host $message
+        $notFound | Write-Host
     }
-
-    return $cmdlets
 }
