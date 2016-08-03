@@ -162,8 +162,8 @@ function GetOutputTypeWhitelist ($outputWhitelistDirectory, $allCmdlets) {
         return $null
     } 
     $outputWhitelist = $outputWhitelist.Split(" *`n+", [System.StringSplitOptions]::RemoveEmptyEntries)
-    PrintElementsNotFound $outputWhitelist $allCmdlets.Name "`nThe following cmdlets from the OutputType whitelist were not found: "
-    $outputWhitelist = @($allCmdlets.Name | where { $outputWhitelist -contains $_ })
+    PrintElementsNotFound $outputWhitelist $allCmdlets.Name "`nThe following cmdlets from the OutputType whitelist were not found:"
+    return @($allCmdlets.Name | where { $outputWhitelist -contains $_ })
 }
 
 # Print a list of the elements in sublist that are not part of list. 
