@@ -149,6 +149,50 @@ function Check-CmdletDoc() {
     Write-Host
 }
 
+# Get the cmdlets explicitly named as a subset of all Google Cloud cmdlets.
+function GetCmdletsByName ($cmdletNames, $allCmdlets) {
+    PrintElementsNotFound $cmdletNames $allCmdlets.Name "`nThe following cmdlets you named were not found:"
+    return @($allCmdlets | where { $cmdletNames -contains $_.Name })
+}
+
+# Get the names of the cmdlets in the OuputType whitelist.
+function GetOutputTypeWhitelist ($outputWhitelistDirectory, $allCmdlets) {
+    $outputWhitelist = (Get-Content $outputWhitelistDirectory)
+    if (-not $outputWhitelist) {
+        return $null
+    } 
+    $outputWhitelist = $outputWhitelist.Split(" *`n+", [System.StringSplitOptions]::RemoveEmptyEntries)
+    PrintElementsNotFound $outputWhitelist $allCmdlets.Name "`nThe following cmdlets from the OutputType whitelist were not found: "
+    $outputWhitelist = @($allCmdlets.Name | where { $outputWhitelist -contains $_ })
+}
+
+# Print a list of the elements in sublist that are not part of list. 
+function PrintElementsNotFound ($sublist, $list, $message) {
+    $notFound = $sublist | where { -not ($list -contains $_) } 
+
+    if ($notFound) {
+        Write-Host $message
+        $notFound | Write-Host
+    }
+}
+
+# Given a cmdlet name and mappings from api name and cloud products, find the cmdlet's associated cloud product.
+function FindAssociatedCloudProduct($cmdletNoun, $apiMappings) {
+    foreach ($apiMapping in $apiMappings.GetEnumerator()) {
+        if ($cmdletNoun.StartsWith($apiMapping.Key)) {
+            return $apiMapping
+        }
+    }
+
+    return ""
+}
+
+# Check if the cmdlet product is one of the specified products.
+function InSpecifiedCloudProducts($specifiedProducts, $productMapping, $apiMappings) {
+    return (($specifiedProducts -contains $productMapping.Key) -or 
+            ($specifiedProducts -contains $productMapping.Value))
+}
+
 # Write warnings for all important fields in a cmdlet's documentation.
 function WriteAllFieldWarnings ($docObj, $cloudProduct, $outputWhitelist) {
     # Creating mapping for field name and value in this cmdlet's documentation.
@@ -189,23 +233,6 @@ function WriteMissingFieldWarning($fieldName) {
     }
 
     Write-Warning $warningText
-}
-
-# Given a cmdlet name and mappings from api name and cloud products, find the cmdlet's associated cloud product.
-function FindAssociatedCloudProduct($cmdletNoun, $apiMappings) {
-    foreach ($apiMapping in $apiMappings.GetEnumerator()) {
-        if ($cmdletNoun.StartsWith($apiMapping.Key)) {
-            return $apiMapping
-        }
-    }
-
-    return ""
-}
-
-# Check if the cmdlet product is one of the specified products.
-function InSpecifiedCloudProducts($specifiedProducts, $productMapping, $apiMappings) {
-    return (($specifiedProducts -contains $productMapping.Key) -or 
-            ($specifiedProducts -contains $productMapping.Value))
 }
 
 # Given a cmdlet's documention, conduct a deep example check and return relevant warnings for its examples.
@@ -260,31 +287,4 @@ function DoDeepExampleCheck($docObj) {
     }
 
     return $wroteWarnings
-}
-
-# Get the cmdlets explicitly named as a subset of all Google Cloud cmdlets.
-function GetCmdletsByName ($cmdletNames, $allCmdlets) {
-    PrintElementsNotFound $cmdletNames $allCmdlets.Name "`nThe following cmdlets you named were not found:"
-    return @($allCmdlets | where { $cmdletNames -contains $_.Name })
-}
-
-# Get the names of the cmdlets in the OuputType whitelist.
-function GetOutputTypeWhitelist ($outputWhitelistDirectory, $allCmdlets) {
-    $outputWhitelist = (Get-Content $outputWhitelistDirectory)
-    if (-not $outputWhitelist) {
-        return $null
-    } 
-    $outputWhitelist = $outputWhitelist.Split(" *`n+", [System.StringSplitOptions]::RemoveEmptyEntries)
-    PrintElementsNotFound $outputWhitelist $allCmdlets.Name "`nThe following cmdlets from the OutputType whitelist were not found: "
-    $outputWhitelist = @($allCmdlets.Name | where { $outputWhitelist -contains $_ })
-}
-
-# Print a list of the elements in sublist that are not part of list. 
-function PrintElementsNotFound ($sublist, $list, $message) {
-    $notFound = $sublist | where { -not ($list -contains $_) } 
-
-    if ($notFound) {
-        Write-Host $message
-        $notFound | Write-Host
-    }
 }
