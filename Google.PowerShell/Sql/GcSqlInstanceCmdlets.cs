@@ -252,7 +252,6 @@ namespace Google.PowerShell.Sql
             }
             InstancesResource.DeleteRequest request = Service.Instances.Delete(project, instance);
             Operation result = request.Execute();
-            WaitForSqlOperation(result);
         }
     }
 
