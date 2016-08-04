@@ -33,7 +33,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Get-GcSqlFlags
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns a list of database flags available for instances)</para>
+    ///   <para>If successful, the command returns a list of database flags available for instances.<para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlFlags")]

@@ -1,10 +1,15 @@
 ﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
+using Google.Apis.Services;
 using Google.Apis.SQLAdmin.v1beta4;
 using Google.Apis.SQLAdmin.v1beta4.Data;
+using Google.Apis.Storage.v1;
+using Google.Apis.Storage.v1.Data;
 using Google.PowerShell.Common;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Management.Automation;
 using System.Text.RegularExpressions;
 
@@ -27,7 +32,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Get-GcSqlInstance
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns all instances in the project.)</para>
+    ///   <para>If successful, the command returns all instances in the project.</para>
     /// </example>
     /// <example>
     ///   <para>
@@ -37,7 +42,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Get-GcSqlInstance "myInstance"
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns a resource for the instance.)</para>
+    ///   <para>If successful, the command returns a resource for the instance.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.GetList)]
@@ -120,7 +125,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Add-GcSqlInstance $myInstance
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns a resource for the added instance.)</para>
+    ///   <para>If successful, the command returns a resource for the added instance.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GcSqlInstance")]
@@ -174,7 +179,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Remove-GcSqlInstance "myInstance"
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command doesn't return anything.)</para>
+    ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
     /// <example>
     ///   <para>
@@ -184,7 +189,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Remove-GcSqlInstance $myInstance
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command doesn't return anything.)</para>
+    ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GcSqlInstance", SupportsShouldProcess = true,
@@ -271,7 +276,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Export-GcSqlInstance "myInstance" "gs://bucket/file.gz"
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command doesn't return anything.)</para>
+    ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
     /// <example>
     ///   <para>
@@ -282,7 +287,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Export-GcSqlInstance "myInstance" "gs://bucket/file.csv" "SELECT * FROM data.table"
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command doesn't return anything.)</para>
+    ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
     /// <example>
     ///   <para>
@@ -293,7 +298,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Export-GcSqlInstance "myInstance" "gs://bucket/file.csv" -Database "myData","myData2"
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command doesn't return anything.)</para>
+    ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsData.Export, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.Sql)]
@@ -418,14 +423,19 @@ namespace Google.PowerShell.Sql
     /// <summary>
     /// <para type="synopsis">
     /// Imports data into a Cloud SQL instance from a MySQL dump 
-    /// or CSV file in a Google Cloud Storage bucket. 
+    /// or CSV file stored either in a Google Cloud Storage bucket or on your local machine.
     /// </para>
     /// <para type="description">
     /// Imports data into a Cloud SQL instance from a MySQL dump 
-    /// or CSV file stored in a Google Cloud Storage bucket.
+    /// or CSV file stored either in a Google Cloud Storage bucket or on your local machine.
     /// 
     /// Only one database may be imported from a MySQL file,
     /// and only one table may be imported from a CSV file.
+    /// </para>
+    /// <para>
+    /// WARNING: Standard charging rates apply if a file is imported from your local machine.
+    /// A Google Cloud Storage bucket will be set up, uploaded to, and imported from during the import process.
+    /// It is deleted after the upload and/or import process fails or is completed
     /// </para>
     /// <example>
     ///   <para>
@@ -436,7 +446,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Import-GcSqlInstance "myInstance" "gs://bucket/file" "myData"
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command doesn't return anything.)</para>
+    ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
     /// <example>
     ///   <para>
@@ -447,7 +457,18 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Import-GcSqlInstance "myInstance" "gs://bucket/file.csv" "myData" "myTable"
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command doesn't return anything.)</para>
+    ///   <para>If successful, the command doesn't return anything.</para>
+    /// </example>
+    /// <example>
+    ///   <para>
+    ///   Imports the CSV file at "C:\Users\Bob\file.csv" into the table "myTable" in the already
+    ///   existing database "myData" in the instance "myInstance".
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> Import-GcSqlInstance "myInstance" "C:\Users\Bob\file.csv" "myData" "myTable" 
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsData.Import, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.Sql)]
@@ -478,12 +499,12 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        ///  The path to the file in Google Cloud Storage where the import file is stored.
-        ///  The URI is in the form "gs://bucketName/fileName".
+        ///  The path to the file where the import file is stored.
+        ///  A Google Cloud Storage path is in the form "gs://bucketName/fileName".
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 1)]
-        public string CloudStorageObject { get; set; }
+        public string ImportFilePath { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -513,18 +534,150 @@ namespace Google.PowerShell.Sql
         [Parameter(Mandatory = false, Position = 4, ParameterSetName = ParameterSetNames.Csv)]
         public string[] Column { get; set; }
 
+        /// <summary>
+        /// Class containing the local file upload methods.
+        /// </summary>
+        private class GcsFileUploader
+        {
+
+            private StorageService BucketService;
+            private string Project;
+
+            public GcsFileUploader(BaseClientService.Initializer serviceInitializer, string project)
+            {
+                BucketService = new StorageService(serviceInitializer);
+                Project = project;
+            }
+
+            /// <summary>
+            /// Creates a Google Cloud Storage bucket.
+            /// </summary>
+            /// <param name="bucketName"></param>
+            /// <returns></returns>
+            public Bucket CreateBucket(string bucketName)
+            {
+                Bucket bucket = new Google.Apis.Storage.v1.Data.Bucket();
+                bucket.Name = bucketName;
+                return BucketService.Buckets.Insert(bucket, Project).Execute();
+            }
+
+            /// <summary>
+            /// Uploads a local file to a bucket.
+            /// </summary>
+            /// <param name="filePath"></param>
+            /// <param name="bucketName"></param>
+            /// <returns></returns>
+            public Apis.Storage.v1.Data.Object UploadLocalFile(string filePath, string bucketName)
+            {
+                string fileName = "toImport";
+                Stream contentStream = new FileStream(filePath, FileMode.Open);
+                Apis.Storage.v1.Data.Object newGcsObject = new Apis.Storage.v1.Data.Object
+                {
+                    Bucket = bucketName,
+                    Name = fileName,
+                    ContentType = "application/octet-stream"
+                };
+                ObjectsResource.InsertMediaUpload insertReq = BucketService.Objects.Insert(
+                    newGcsObject, bucketName, contentStream, "application/octet-stream");
+                var finalProgress = insertReq.Upload();
+                if (finalProgress.Exception != null)
+                {
+                    throw finalProgress.Exception;
+                }
+                contentStream.Close();
+
+                return BucketService.Objects.Get(bucketName, fileName).Execute();
+            }
+
+            /// <summary>
+            /// Adjusts the ACL for an uploaded object so that a SQL instance can access it.
+            /// </summary>
+            /// <param name="bucketObject"></param>
+            /// <param name="instanceEmail"></param>
+            public void AdjustAcl(Apis.Storage.v1.Data.Object bucketObject, string instanceEmail)
+            {
+                ObjectAccessControl body = new ObjectAccessControl();
+                body.Bucket = bucketObject.Bucket;
+                body.Entity = "user-" + instanceEmail;
+                body.Role = "OWNER";
+                body.Object__ = bucketObject.Name;
+                ObjectAccessControlsResource.InsertRequest aclRequest = 
+                    BucketService.ObjectAccessControls.Insert(body, bucketObject.Bucket, bucketObject.Name);
+                try
+                {
+                    aclRequest.Execute();
+                }
+                catch (Exception e)
+                {
+                    DeleteObject(bucketObject);
+                    BucketService.Buckets.Delete(bucketObject.Bucket).Execute();
+                    throw e;
+                }
+            }
+
+            /// <summary>
+            /// Deletes the bucket object from the Google Cloud Storage bucket.
+            /// </summary>
+            /// <param name="bucketObject"></param>
+            public void DeleteObject(Apis.Storage.v1.Data.Object bucketObject)
+            {
+                BucketService.Objects.Delete(bucketObject.Bucket, bucketObject.Name).Execute();
+            }
+            
+            /// <summary>
+            /// Deletes a Google Cloud Storage bucket.
+            /// </summary>
+            /// <param name="bucket"></param>
+            public void DeleteBucket(Bucket bucket)
+            {
+                BucketService.Buckets.Delete(bucket.Name).Execute();
+            }
+        }
+
+        private Bucket tempGcsBucket = null;
+        private Apis.Storage.v1.Data.Object tempGcsObject = null;
+        private GcsFileUploader tempUploader = null;
+
         protected override void ProcessRecord()
         {
+            if (!ImportFilePath.StartsWith("gs://"))
+            {
+                if (ShouldProcess($"{Project}/{Instance}/{ImportFilePath}",
+                    "Create a new Google Cloud Storage bucket and upload the file to it for import.", 
+                    "Will be deleted after the import completes"))
+                {
+                    tempUploader = new GcsFileUploader(GetBaseClientServiceInitializer(), Project);
+                    Random rnd = new Random();
+                    int bucketRnd = rnd.Next(1000000);
+                    string bucketName = "import" + bucketRnd.ToString();
+                    tempGcsBucket = tempUploader.CreateBucket(bucketName);
+                    try
+                    {
+                        tempGcsObject = tempUploader.UploadLocalFile(ImportFilePath, bucketName);
+                    }
+                    catch (Exception e)
+                    {
+                        tempUploader.DeleteBucket(tempGcsBucket);
+                        throw e;
+                    }
+                    DatabaseInstance myInstance = Service.Instances.Get(Project, Instance).Execute();
+                    tempUploader.AdjustAcl(tempGcsObject, myInstance.ServiceAccountEmailAddress);
+                    ImportFilePath = string.Format("gs://{0}/{1}", bucketName, "toImport");
+                }
+                else return;
+            }
+
             InstancesImportRequest body = new InstancesImportRequest
             {
                 ImportContext = new ImportContext
                 {
                     Kind = "sql#importContext",
-                    Uri = CloudStorageObject,
+                    Uri = ImportFilePath,
                     FileType = ParameterSetName.ToString(),
                     Database = Database,
                 }
             };
+
             if (ParameterSetName == ParameterSetNames.Csv)
             {
                 body.ImportContext.CsvImportOptions = new ImportContext.CsvImportOptionsData
@@ -536,9 +689,16 @@ namespace Google.PowerShell.Sql
             InstancesResource.ImportRequest request = Service.Instances.Import(body, Project, Instance);
             Operation result = request.Execute();
             result = WaitForSqlOperation(result);
-            if (result.Error != null) {
+            if (tempUploader != null)
+            {
+                tempUploader.DeleteObject(tempGcsObject);
+                tempUploader.DeleteBucket(tempGcsBucket);
+            }
+            if (result.Error != null)
+            {
                 foreach (OperationError error in result.Error.Errors)
                 {
+
                     throw new GoogleApiException("Google Cloud SQL API", error.Message + error.Code);
                 }
             }
@@ -560,7 +720,7 @@ namespace Google.PowerShell.Sql
     ///   <para> Restart the SQL instance "test1" from the Project "testing."</para>
     ///   <para><code>PS C:\> Restart-GcSqlInstance -Project "testing" -Instance "test1"</code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns nothing.)</para>
+    ///   <para>If successful, the command returns nothing.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Restart, "GcSqlInstance")]
@@ -639,7 +799,7 @@ namespace Google.PowerShell.Sql
     ///   <para>Start the SQL Replica "testRepl1" from the Project "testing."</para>
     ///   <para><code>PS C:\> Start-GcSqlReplica -Project "testing" -Replica "testRepl1"</code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns nothing.)</para>
+    ///   <para>If successful, the command returns nothing.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Start, "GcSqlReplica")]
@@ -718,7 +878,7 @@ namespace Google.PowerShell.Sql
     ///   <para>Stop the SQL Replica "testRepl1" from the Project "testing."</para>
     ///   <para><code>PS C:\> Stop-GcSqlReplica -Project "testing" -Replica "testRepl1"</code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns nothing.)</para>
+    ///   <para>If successful, the command returns nothing.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Stop, "GcSqlReplica", SupportsShouldProcess = true)]
@@ -802,7 +962,7 @@ namespace Google.PowerShell.Sql
     ///   <para>Promote the SQL Replica "testRepl1" from the Project "testing."</para>
     ///   <para><code>PS C:\> Promote-GcSqlReplica -Project "testing" -Replica "testRepl1"</code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns nothing.)</para>
+    ///   <para>If successful, the command returns nothing.</para>
     /// </example>
     /// </summary>
     [Cmdlet("Promote", "GcSqlReplica")]
@@ -890,7 +1050,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Restore-GcSqlInstanceBackup -Project "testing" -BackupRunId 1243244 -Instance "testRepl1"
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns nothing.)</para>
+    ///   <para>If successful, the command returns nothing.</para>
     /// </example>
     /// <example>
     ///   <para>
@@ -902,7 +1062,7 @@ namespace Google.PowerShell.Sql
     ///     -BackupInstance "testRepl2"
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns nothing.)</para>
+    ///   <para>If successful, the command returns nothing.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsData.Restore, "GcSqlInstanceBackup", SupportsShouldProcess = true)]
@@ -1021,7 +1181,7 @@ namespace Google.PowerShell.Sql
     ///         15 -MaintenanceWindowDay 1 -MaintenanceWindowHour "22:00" -Project "testing" 
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns the resource for the updated instance.)</para>
+    ///   <para>If successful, the command returns the resource for the updated instance.</para>
     /// </example>
     /// <example>
     ///   <para>
@@ -1032,7 +1192,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Update-GcSqlInstance "myInstance" 18 -Update
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns the resource for the updated instance.)</para>
+    ///   <para>If successful, the command returns the resource for the updated instance.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsData.Update, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.ByName)]
@@ -1403,7 +1563,7 @@ namespace Google.PowerShell.Sql
     ///   <para>Failover the SQL Instance "test1" in the Project "testing."</para>
     ///   <para><code>PS C:\> Failover-GcSqlReplica -Project "testing" -Instance "test1"</code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns nothing.)</para>
+    ///   <para>If successful, the command returns nothing.</para>
     /// </example>
     /// <example>
     ///   <para>Failover the SQL Instance "test1" with current settings version 3 in the Project "testing."</para>
@@ -1411,7 +1571,7 @@ namespace Google.PowerShell.Sql
     ///     <code>PS C:\> Failover-GcSqlReplica -Project "testing" -Instance "test1" - SettingsVersion 3</code>
     ///   </para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns nothing.)</para>
+    ///   <para>If successful, the command returns nothing.</para>
     /// </example>
     /// </summary>
     [Cmdlet("Failover", "GcSqlInstance")]

@@ -32,7 +32,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> New-GcSqlInstanceConfig "myInstance" $mySettings
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns the populated Instance resource with the name "myInstance")</para>
+    ///   <para>If successful, the command returns the populated Instance resource with the name "myInstance".</para>
     /// </example>
     /// <example>
     ///   <para>
@@ -42,7 +42,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> New-GcSqlInstanceConfig "myInstance" $mySettings -ReplicaConfig $myRepl
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns the populated Instance resource with the name "myInstance")</para>
+    ///   <para>If successful, the command returns the populated Instance resource with the name "myInstance".</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GcSqlInstanceConfig")]

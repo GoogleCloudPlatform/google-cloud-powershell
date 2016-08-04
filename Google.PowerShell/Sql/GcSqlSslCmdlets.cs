@@ -27,7 +27,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Get-GcSqlSslCert "myInstance"
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns a list of SSL Certificates "myInstance" has.)</para>
+    ///   <para>If successful, the command returns a list of SSL Certificates "myInstance" has.</para>
     /// </example>
     /// <example>
     ///   <para>
@@ -37,7 +37,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Get-GcSqlSslCert $myInstance
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns a list of SSL Certificates the instance has.)</para>
+    ///   <para>If successful, the command returns a list of SSL Certificates the instance has.</para>
     /// </example>
     /// <example>
     ///   <para>
@@ -47,7 +47,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Get-GcSqlSslCert "myInstance" "myFinger"
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command return a single SSL Certificate.)</para>
+    ///   <para>If successful, the command return a single SSL Certificate.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlSslCert")]
@@ -142,7 +142,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Add-GcSqlSslCert "myInstance" "myCert"
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns a detail of the SSL Certificate and its private key.)</para>
+    ///   <para>If successful, the command returns a detail of the SSL Certificate and its private key.</para>
     /// </example>
     /// <example>
     ///   <para>
@@ -152,7 +152,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Add-GcSqlSslCert $myInstance "myCert"
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns a detail of the SSL Certificate and its private key.)</para>
+    ///   <para>If successful, the command returns a detail of the SSL Certificate and its private key.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GcSqlSslCert", DefaultParameterSetName = ParameterSetNames.ByName)]
@@ -243,7 +243,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Remove-GcSqlSslCert "myInstance" "myFinger"
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command doesn't return anything.)</para>
+    ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
     /// <example>
     ///   <para>
@@ -253,7 +253,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Remove-GcSqlSslCert $toRemove
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command doesn't return anything.)</para>
+    ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GcSqlSslCert", SupportsShouldProcess = true,
@@ -353,7 +353,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Add-GcSqlSslEphemeral "myInstance" "-----BEGIN PUBLIC KEY-----..."
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns the ephemeral SSL Certificate.)</para>
+    ///   <para>If successful, the command returns the ephemeral SSL Certificate.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GcSqlSslEphemeral")]
@@ -414,7 +414,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Reset-GcSqlSslConfig "myInstance"
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns the resource for the updated instance.)</para>
+    ///   <para>If successful, the command returns the resource for the updated instance.</para>
     /// </example>
     /// <example>
     ///   <para>
@@ -424,7 +424,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Reset-GcSqlSslConfig $instance
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns the resource for the updated instance.)</para>
+    ///   <para>If successful, the command returns the resource for the updated instance.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Reset, "GcSqlSslConfig", SupportsShouldProcess = true,
