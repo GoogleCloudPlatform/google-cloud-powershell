@@ -500,9 +500,7 @@ namespace Google.PowerShell.Sql
         /// <summary>
         /// <para type="description">
         ///  The path to the file where the import file is stored.
-        ///  If "UploadLocalFile" is specified, this is a path to a file on your local machine.
-        ///  If "UploadLocalFile" is not specified, this is a URI to an object in a Google Cloud Storage bucket.
-        ///  The URI is in the form "gs://bucketName/fileName".
+        ///  A Google Cloud Storage path is in the form "gs://bucketName/fileName".
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 1)]
