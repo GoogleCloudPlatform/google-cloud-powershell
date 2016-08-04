@@ -23,6 +23,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Debug\Google.PowerShell.XML</DocumentationFile>
+    <!-- Don't create warnings for uncommented public members. -->
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -130,6 +132,7 @@
     <Compile Include="Common\GcloudAttributes.cs" />
     <Compile Include="Compute\GceAttachedDiskConfigCmdlets.cs" />
     <Compile Include="Compute\GceFirewallCmdlets.cs" />
+    <Compile Include="Compute\GceHealthCheckCmdlets.cs" />
     <Compile Include="Compute\GceImageCmdlets.cs" />
     <Compile Include="Compute\GceInstanceCmdlets.cs" />
     <Compile Include="Compute\GceDisk.cs" />
@@ -173,6 +176,7 @@
     <None Include="README.md" />
     <None Include="ReleaseFiles\BootstrapGoogleCloudPowerShell.ps1" />
     <None Include="ReleaseFiles\GoogleCloudPowerShell.psd1" />
+    <None Include="ReleaseFiles\PatchFromGcs.ps1" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

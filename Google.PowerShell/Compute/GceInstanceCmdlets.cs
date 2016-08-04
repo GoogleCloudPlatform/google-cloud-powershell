@@ -332,13 +332,13 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The machine type of this instance. Can be a name, a URL or a MachineType object from
-        /// Get-GceMachineType.
+        /// Get-GceMachineType. Defaults to "n1-standard-1".
         /// </para>
         /// </summary>
-        [Parameter(Position = 1, Mandatory = true, ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(Position = 1, ParameterSetName = ParameterSetNames.ByValues)]
         [PropertyByTypeTransformation(TypeToTransform = typeof(MachineType),
             Property = nameof(Apis.Compute.v1.Data.MachineType.SelfLink))]
-        public override string MachineType { get; set; }
+        public override string MachineType { get; set; } = "n1-standard-1";
 
         /// <summary>
         /// <para type="description">
@@ -918,9 +918,9 @@ namespace Google.PowerShell.ComputeEngine
         private string _name;
 
         /// <summary>
-        /// <paratype="description">
+        /// <para type="description">
         /// The instance object to update.
-        /// </paratype>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.AccessConfigByObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]

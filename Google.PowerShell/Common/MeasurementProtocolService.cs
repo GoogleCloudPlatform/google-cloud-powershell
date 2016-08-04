@@ -155,6 +155,8 @@ namespace Google.PowerShell.Common
         /// Report a cmdlet failing. Failure is defined as any abnormal termination, such as
         /// a runtime exception, user-cancelation, etc.
         /// </summary>
+        /// <param name="cmdletName">Name of the cmdlet that failed.</param>
+        /// <param name="parameterSet">Name of the prameter set the cmdlet was running.</param>
         /// <param name="errorCode">Return the HTTP error code as applicable, otherwise use non-zero.</param>
         void ReportFailure(string cmdletName, string parameterSet, int errorCode);
     }
