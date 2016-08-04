@@ -29,7 +29,7 @@ Describe "Get-GcdChange" {
     Add-GcdChange -Project $project -Zone $testZone1 -Remove $testRrsetA
 
     It "should work and retrieve 3 changes (including A-type record addition & deletion)" {
-        $changes = Get-GcdChange -Project $project -Zone $testZone1
+        $changes = Get-GcdChange -Project $project $testZone1
 
         $changes.Count | Should Be 3
 
@@ -48,7 +48,7 @@ Describe "Get-GcdChange" {
     }
 
     It "should work and retrieve the first change from creation by Id" {
-        $changes = Get-GcdChange -Project $project -Zone $testZone1 -ChangeId "0"
+        $changes = Get-GcdChange -Project $project $testZone1 "0"
         $changes.Count | Should Be 1
         $changes.GetType().FullName | Should Match $changeType
         $changes.Id | Should Be 0
@@ -84,27 +84,27 @@ Describe "Add-GcdChange" {
     $copyChange.Deletions = $null
 
     It "should fail to add a Change to a non-existent project" {
-        { Add-GcdChange -Project $nonExistProject -Zone $testZone1 -ChangeRequest $copyChange } | Should Throw "400"
+        { Add-GcdChange -Project $nonExistProject $testZone1 $copyChange } | Should Throw "400"
     }
 
     It "should give access errors as appropriate" {
         # Don't know who created the "asdf" project.
-        { Add-GcdChange -Project $accessErrProject -Zone $testZone1 -ChangeRequest $copyChange } | Should Throw "403"
+        { Add-GcdChange -Project $accessErrProject $testZone1 $copyChange } | Should Throw "403"
     }
 
     It "should fail to add a Change to a non-existent ManagedZone of an existing project" {
-        { Add-GcdChange -Project $project -Zone $nonExistManagedZone -ChangeRequest $copyChange } | Should Throw "404"
+        { Add-GcdChange -Project $project $nonExistManagedZone $copyChange } | Should Throw "404"
     }
 
     It "should fail to add a Change with only null/empty values for Add/Remove" {
-        { Add-GcdChange -Project $project -Zone $testZone1 -Add $null -Remove $null } | Should Throw $Err_NeedChangeContent
-        { Add-GcdChange -Project $project -Zone $testZone1 -Add $null -Remove @() } | Should Throw $Err_NeedChangeContent
-        { Add-GcdChange -Project $project -Zone $testZone1 -Add @() -Remove @() } | Should Throw $Err_NeedChangeContent
+        { Add-GcdChange -Project $project $testZone1 -Add $null -Remove $null } | Should Throw $Err_NeedChangeContent
+        { Add-GcdChange -Project $project $testZone1 -Add $null -Remove @() } | Should Throw $Err_NeedChangeContent
+        { Add-GcdChange -Project $project $testZone1 -Add @() -Remove @() } | Should Throw $Err_NeedChangeContent
     }
 
     It "should work and add 1 Change from Change Request (CNAME-type record addition)" {
         $initChanges = Get-GcdChange -Project $project -Zone $testZone1
-        $newChange = Add-GcdChange -Project $project -Zone $testZone1 -ChangeRequest $copyChange
+        $newChange = Add-GcdChange -Project $project $testZone1 $copyChange
         $allChanges = Get-GcdChange -Project $project -Zone $testZone1
 
         Compare-Object $newChange $allChanges[0] -Property Additions,Deletions,Id,Kind,StartTime | Should Match $null
@@ -130,7 +130,7 @@ Describe "Add-GcdChange" {
     It "should support Add/Remove arguments in same call" {
         $initChanges = Get-GcdChange -Project $project -Zone $testZone1
         
-        $newChange = Add-GcdChange -Project $project -Zone $testZone1 -Add $addRrset1,$addRrset2 -Remove $rmRrset1,$rmRrset2
+        $newChange = Add-GcdChange -Project $project $testZone1 -Add $addRrset1,$addRrset2 -Remove $rmRrset1,$rmRrset2
         $allChanges = Get-GcdChange -Project $project -Zone $testZone1
 
         Compare-Object $newChange $allChanges[0] -Property Additions,Deletions,Id,Kind,StartTime | Should Match $null
@@ -152,6 +152,6 @@ Describe "Add-GcdChange" {
     Add-GcdChange -Project $project -Zone $testZone2 -Remove $copyChange.Additions
 
     It "should fail to add Change that tries to remove a non-existent ResourceRecord" {
-        { Add-GcdChange -Project $project -Zone $testZone1 -Remove $rmRrset1 } | Should Throw "404"
+        { Add-GcdChange -Project $project $testZone1 -Remove $rmRrset1 } | Should Throw "404"
     }
 }
