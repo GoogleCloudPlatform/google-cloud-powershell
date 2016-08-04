@@ -20,8 +20,14 @@ namespace Google.PowerShell.CloudStorage
     /// <para type="description">
     /// Removes the website associated with a Cloud Storage Bucket.
     /// </para>
+    /// <example>
+    ///   <para>Remove the website data for $bucket.</para>
+    ///   <para><code>PS C:\> Remove-GcsBucketWebsite $bucket</code></para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/hosting-static-website)">[Static Website Hosting]</para>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/static-website)">[Static Website Troubleshooting]</para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Remove, "GcsBucketWebsite")]
+    [Cmdlet(VerbsCommon.Remove, "GcsBucketWebsite"), OutputType(typeof(Bucket))]
     public class RemoveGcsBucketWebsiteCmdlet : GcsCmdlet
     {
         /// <summary>
@@ -60,8 +66,15 @@ namespace Google.PowerShell.CloudStorage
     /// <para type="description">
     /// Updates the website associated with a Cloud Storage Bucket.
     /// </para>
+    /// <example>
+    ///   <para>Host http://example.com from the contents of $bucket.</para>
+    ///   <para><code>PS C:\> Write-GcsBucketWebsite $bucket -MainPageSuffix "main.html" -NotFoundPage "error.html"</code></para>
+    ///   <para>Next, set the domains DNS records to point to Cloud Storage. See the "Static WebsiteHosting" help topic for more information.</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/hosting-static-website)">[Static Website Hosting]</para>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/static-website)">[Static Website Troubleshooting]</para>
     /// </summary>
-    [Cmdlet(VerbsCommunications.Write, "GcsBucketWebsite")]
+    [Cmdlet(VerbsCommunications.Write, "GcsBucketWebsite"), OutputType(typeof(Bucket))]
     public class WriteGcsBucketWebsiteCmdlet : GcsCmdlet
     {
         /// <summary>
@@ -73,11 +86,23 @@ namespace Google.PowerShell.CloudStorage
         [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Name { get; set; }
 
+        /// <summary>
+        /// <para typedef="description">
+        /// Storage object for the "main page" of the website, e.g. what is served from "http://example.com/".
+        /// Defaults to "index.html".
+        /// </para>
+        /// </summary>
         [Parameter(Position = 1)]
-        public string MainPageSuffix { get; set; }
+        public string MainPageSuffix { get; set; } = "index.html";
 
+        /// <summary>
+        /// <para typedef="description">
+        /// Storage object to render when no appropriate file is found, e.g. what is served from "http://example.com/sadjkffasugmd".
+        /// Defaults to "404.html".
+        /// </para>
+        /// </summary>
         [Parameter(Position = 2)]
-        public string NotFoundPage { get; set; }
+        public string NotFoundPage { get; set; } = "404.html";
 
         protected override void ProcessRecord()
         {

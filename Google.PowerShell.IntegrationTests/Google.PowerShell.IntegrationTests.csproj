@@ -50,6 +50,7 @@
     <None Include="Compute\Compute.GceAttachedDiskConfig.Tests.ps1" />
     <None Include="Compute\Compute.GceDisk.Tests.ps1" />
     <None Include="Compute\Compute.GceFirewall.Tests.ps1" />
+    <None Include="Compute\Compute.GceHealthCheck.Tests.ps1" />
     <None Include="Compute\Compute.GceImage.Tests.ps1" />
     <None Include="Compute\Compute.GceInstance.Tests.ps1" />
     <None Include="Compute\Compute.GceInstanceTemplate.Tests.ps1" />

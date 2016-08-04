@@ -7,6 +7,7 @@ $r = Get-Random
 $routeName = "test-route-$r"
 $allIps = "0.0.0.0/0"
 $defaultNetwork = Get-GceNetwork default
+$defaultRouteCount = (gcloud compute regions list).Count
 
 Describe "Add-GceRoute" {
     It "should fail for wrong project" {
@@ -123,9 +124,8 @@ Describe "Get-GceRoute" {
 
     It "should list for project" {
         $routes = Get-GceRoute
-
-        # the one we created, plus the default internet gateway route plus four subnetwork routes.
-        $routes.Count | Should Be 6
+        # The one we created, plus the default internet gateway route plus subnetwork (region) routes.
+        $routes.Count | Should Be ($defaultRouteCount + 1)
         ($routes | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Route
     }
 
@@ -167,21 +167,21 @@ Describe "Remove-GceRoute" {
         It "should work with name" {
             Remove-GceRoute $routeName
             { Get-GceRoute $routeName } | Should Throw 404
-            (Get-GceRoute).Count | Should Be 5
+            (Get-GceRoute).Count | Should Be $defaultRouteCount
         }
 
         It "should work with object" {
             $route = Get-GceRoute $routeName
             Remove-GceRoute $route
             { Get-GceRoute $routeName } | Should Throw 404
-            (Get-GceRoute).Count | Should Be 5
+            (Get-GceRoute).Count | Should Be $defaultRouteCount
         }
 
         It "should work with object on pipeline" {
             $route = Get-GceRoute $routeName
             $route | Remove-GceRoute 
             { Get-GceRoute $routeName } | Should Throw 404
-            (Get-GceRoute).Count | Should Be 5
+            (Get-GceRoute).Count | Should Be $defaultRouteCount
         }
     }
 }
