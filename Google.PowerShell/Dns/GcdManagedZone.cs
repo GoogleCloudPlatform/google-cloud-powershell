@@ -268,7 +268,7 @@ namespace Google.PowerShell.Dns
         /// Force removal of even non-empty ManagedZones (e.g., zones with non-NS/SOA type records).
         /// </para>
         /// </summary>
-        [Parameter(Position = 1, Mandatory = false)]
+        [Parameter(Mandatory = false)]
         public SwitchParameter Force { get; set; }
 
         protected override void ProcessRecord()

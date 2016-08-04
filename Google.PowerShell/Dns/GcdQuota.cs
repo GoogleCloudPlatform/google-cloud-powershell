@@ -43,7 +43,7 @@ namespace Google.PowerShell.Dns
         /// Get the Project to return the DNS quota of.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(Position = 0, Mandatory = false)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 

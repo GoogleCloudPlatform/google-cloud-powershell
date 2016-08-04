@@ -9,16 +9,16 @@ Describe "Get-GcdResourceRecordSet" {
     }
 
     It "should fail to return ResourceRecordSets of non-existent project" {
-        { Get-GcdResourceRecordSet -Project $nonExistProject -Zone $testZone1 } | Should Throw "400"
+        { Get-GcdResourceRecordSet -Project $nonExistProject $testZone1 } | Should Throw "400"
     }
 
     It "should give access errors as appropriate" {
         # Don't know who created the "asdf" project.
-        { Get-GcdResourceRecordSet -Project $accessErrProject -Zone $testZone1 } | Should Throw "403"
+        { Get-GcdResourceRecordSet -Project $accessErrProject $testZone1 } | Should Throw "403"
     }
 
     It "should fail to return ResourceRecordSets of non-existent ManagedZone of existing project" {
-        { Get-GcdResourceRecordSet -Project $project -Zone $nonExistManagedZone } | Should Throw "404"
+        { Get-GcdResourceRecordSet -Project $project $nonExistManagedZone } | Should Throw "404"
     }
 
     # Create zone for testing 
@@ -28,7 +28,7 @@ Describe "Get-GcdResourceRecordSet" {
     Add-GcdChange -Project $project -Zone $testZone1 -Add $testRrsetA,$testRrsetAAAA
 
     It "should work and retrieve 4 ResourceRecordSets (2 from creation, 2 added)" {
-        $rrsets = Get-GcdResourceRecordSet -Project $project -Zone $testZone1
+        $rrsets = Get-GcdResourceRecordSet -Project $project $testZone1
         $rrsets.Count | Should Be 4
 
         # The object type, Kind, and Name should be the same for all ResourceRecordSets
@@ -45,7 +45,7 @@ Describe "Get-GcdResourceRecordSet" {
     }
 
     It "should work and retrieve only the NS and AAAA type records" {
-        $rrsets = Get-GcdResourceRecordSet -Project $project -Zone $testZone1 -Filter "NS","AAAA"
+        $rrsets = Get-GcdResourceRecordSet -Project $project $testZone1 "NS","AAAA"
         $rrsets.Count | Should Be 2
 
         ($rrsets | Get-Member).TypeName | Should Match $rrsetType
@@ -62,11 +62,11 @@ Describe "Get-GcdResourceRecordSet" {
 Describe "New-GcdResourceRecordSet" {
     
     It "should fail to create a new ResourceRecordSet with an invalid record type" {
-        { New-GcdResourceRecordSet -Name $dnsName1 -Rrdata $rrdataA1 -Type "Invalid" } | Should Throw "ValidateSet"
+        { New-GcdResourceRecordSet $dnsName1 $rrdataA1 "Invalid" } | Should Throw "ValidateSet"
     }
 
     It "should work and create a new ResourceRecordSet with the specified properties and default ttl (A type record)" {
-        $rrset = New-GcdResourceRecordSet -Name $dnsName1 -Rrdata $rrdataA1,$rrdataA2 -Type "A"
+        $rrset = New-GcdResourceRecordSet $dnsName1 $rrdataA1,$rrdataA2 "A"
         $rrset.Count | Should Be 1
 
         $rrset.GetType().FullName | Should Match $rrsetType
@@ -80,7 +80,7 @@ Describe "New-GcdResourceRecordSet" {
     }
 
     It "should work and create a new ResourceRecordSet with the specified properties and custom ttl (AAAA type record)" {
-        $rrset = New-GcdResourceRecordSet -Name $dnsName1_1 -Rrdata $rrdataAAAA -Type "AAAA" -Ttl $ttl1
+        $rrset = New-GcdResourceRecordSet $dnsName1_1 $rrdataAAAA "AAAA" $ttl1
         $rrset.Count | Should Be 1
 
         $rrset.GetType().FullName | Should Match $rrsetType
@@ -92,8 +92,8 @@ Describe "New-GcdResourceRecordSet" {
     }
 
     It "should work and create ResourceRecordSets of other types (CNAME and TXT)" {
-        $rrsetCNAME = New-GcdResourceRecordSet -Name $dnsName1_2 -Rrdata $rrdataCNAME1_2 -Type "CNAME" -Ttl $ttl1
-        $rrsetTXT = New-GcdResourceRecordSet -Name $dnsName1 -Rrdata $rrdataTXT1 -Type "TXT" -Ttl $ttl1
+        $rrsetCNAME = New-GcdResourceRecordSet $dnsName1_2 $rrdataCNAME1_2 "CNAME" $ttl1
+        $rrsetTXT = New-GcdResourceRecordSet $dnsName1 $rrdataTXT1 "TXT" $ttl1
 
         $rrsetCNAME.Type | Should Match "CNAME"
         $rrsetTXT.Type | Should Match "TXT"
