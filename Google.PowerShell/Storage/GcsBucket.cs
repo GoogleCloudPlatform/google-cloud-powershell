@@ -92,8 +92,13 @@ namespace Google.PowerShell.CloudStorage
     /// Creates a new Google Cloud Storage bucket.
     /// </para>
     /// <para type="description">
-    /// Creates a new Google Cloud Storage bucket.
+    /// Creates a new Google Cloud Storage bucket. Bucket names must be globally unique. No two projects may
+    /// have buckets with the same name.
     /// </para>
+    /// <example>
+    /// <code>PS C:\> New-Gcsbucket "unique-bucket-name"</code>
+    /// <para>Creates a new bucket named "unique-bucket-name". </para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GcsBucket")]
     public class NewGcsBucketCmdlet : GcsCmdlet
@@ -145,7 +150,7 @@ namespace Google.PowerShell.CloudStorage
         /// </para>
         /// </summary>
         [Parameter]
-        public BucketsResource.InsertRequest.PredefinedAclEnum? DefaultBucketAcl {get; set;}
+        public BucketsResource.InsertRequest.PredefinedAclEnum? DefaultBucketAcl { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -186,6 +191,14 @@ namespace Google.PowerShell.CloudStorage
     /// <para type="description">
     /// Deletes a Google Cloud Storage Bucket.
     /// </para>
+    /// <example>
+    /// <code>PS C:\> Remove-GcsBucket "unique-bucket-name"</code>
+    /// <para> Deletes the bucket "unique-bucket-name"</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Get-GcsBucket "bucket-with-files" | Remove-GcsBucket -Force</code>
+    /// <para>Forces the deletion of "bucket-with-files, despite the bucket containing objects.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GcsBucket", SupportsShouldProcess = true)]
     public class RemoveGcsBucketCmdlet : GcsCmdlet
@@ -307,8 +320,16 @@ namespace Google.PowerShell.CloudStorage
     /// Tests if a bucket with the given name already exists.
     /// </para>
     /// <para type="description">
-    /// Tests if a bucket with the given name already exists.
+    /// Tests if a bucket with the given name already exists. Returns true if such a bucket already exists.
     /// </para>
+    /// <example>
+    /// <code>
+    /// PS C:\> Test-GcsBucket "bucket-name"
+    /// True
+    /// </code>
+    /// <para>Tests that a bucket named "bucket-name" does exist. A new bucket with this name may not be
+    /// created.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsDiagnostic.Test, "GcsBucket")]
     public class TestGcsBucketCmdlet : GcsCmdlet
