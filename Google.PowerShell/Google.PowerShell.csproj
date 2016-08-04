@@ -132,6 +132,7 @@
     <Compile Include="Common\GcloudAttributes.cs" />
     <Compile Include="Compute\GceAttachedDiskConfigCmdlets.cs" />
     <Compile Include="Compute\GceFirewallCmdlets.cs" />
+    <Compile Include="Compute\GceHealthCheckCmdlets.cs" />
     <Compile Include="Compute\GceImageCmdlets.cs" />
     <Compile Include="Compute\GceInstanceCmdlets.cs" />
     <Compile Include="Compute\GceDisk.cs" />
