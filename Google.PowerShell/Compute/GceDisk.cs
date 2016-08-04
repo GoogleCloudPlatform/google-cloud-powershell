@@ -22,8 +22,8 @@ namespace Google.PowerShell.ComputeEngine
     /// such as Zone or Name, can be provided to restrict the objects returned.
     /// </para>
     /// <example>
+    ///   <code>PS C:\> Get-GceDisk -Project "ppiper-prod" "ppiper-frontend"</code>
     ///   <para>Get the disk named "ppiper-frontend".</para>
-    ///   <para><code>Get-GceDisk -Project "ppiper-prod" "ppiper-frontend"</code></para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceDisk")]
@@ -133,6 +133,21 @@ namespace Google.PowerShell.ComputeEngine
     /// <para type="description">
     /// Creates a new Google Compute Engine disk object.
     /// </para>
+    /// <example>
+    ///   <code>PS C:\> New-GceDisk "disk-name" -SizeGb 10 -DiskType pd-ssd</code>
+    ///   <para>
+    ///     Creates a new empty 10GB persistant solid state disk named "disk-name" in the default project and
+    ///     zone.
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Get-GceImage -Family "windows-2012-r2 | New-GceDisk "disk-from-image"</code>
+    ///   <para>Creates a new persistant disk from the latest windows-2012-r2 image.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Get-GceSnapshot "snapshot-name" | New-GceDisk "disk-from-snapshot" </code>
+    ///   <para>Creates a new persistant disk from the snapshot named "snapshot-name".</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GceDisk", DefaultParameterSetName = ParameterSetNames.EmptyDisk)]
     public class NewGceDiskCmdlet : GceConcurrentCmdlet
@@ -266,6 +281,10 @@ namespace Google.PowerShell.ComputeEngine
     /// <para type="description">
     /// Resize a Compute Engine disk object.
     /// </para>
+    /// <example>
+    ///   <code>PS C:\> Resize-GceDisk "my-disk" 15</code>
+    ///   <para>Changes the size of the persistant disk "my-disk" to 15GB.</para>
+    /// </example>
     /// </summary>
     [Cmdlet("Resize", "GceDisk")]
     public class ResizeGceDiskCmdlet : GceCmdlet
@@ -328,6 +347,14 @@ namespace Google.PowerShell.ComputeEngine
     /// <para type="synopsis">
     /// Deletes a Compute Engine disk.
     /// </para>
+    /// <example>
+    /// <code> PS C:\> Remove-GceDisk "my-disk"</code>
+    /// <para>Removes the disk in the default project and zone named "my-disk".</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Get-GceDisk "my-disk" | Remove-GceDisk</code>
+    /// <para>Removes the disk in the default project and zone named "my-disk".</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceDisk", SupportsShouldProcess = true,
         DefaultParameterSetName = ParameterSetNames.ByName)]

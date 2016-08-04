@@ -16,6 +16,14 @@ namespace Google.PowerShell.ComputeEngine
     /// <para type="description">
     /// Gets firewall rules for a project.
     /// </para>
+    /// <example>
+    /// <code>PS C:\> Get-GceFirewall</code>
+    /// <para>Lists all firewall rules in the default project.</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Get-GceFirewall "my-firewall"</code>
+    /// <para>Gets the information of the firewall rule in the default project named "my-firewall".</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceFirewall")]
     public class GetGceFirewallCmdlet : GceCmdlet
@@ -32,7 +40,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The name of the firewall rule to get.
+        /// The name of the firewall rule to get. -Name and -Firewall are aliases of this parameter.
         /// </para>
         /// </summary>
         [Parameter(Position = 1, ValueFromPipeline = true)]
@@ -81,11 +89,16 @@ namespace Google.PowerShell.ComputeEngine
     /// Adds a new firewall rule. When given a pipeline of many Firewall.AllowedData, will collect them all and
     /// create a single new firewall rule.
     /// </para>
-    /// <para type="example">
-    /// New-GceFirewallProtocol tcp -Ports 80, 443 |
-    /// New-GceFirewallProtocol esp |
-    /// Add-GceFirewall -Project "your-project" -Name "firewall-name" -SourceTag mySource -TargetTag myTarget
-    /// </para>
+    /// <example>
+    /// <code>
+    /// <para> PS C:\> New-GceFirewallProtocol tcp -Ports 80, 443 |</para>
+    /// <para>         New-GceFirewallProtocol esp |</para>
+    /// <para>         Add-GceFirewall -Name "my-firewall" -SourceTag my-source -TargetTag my-target</para>
+    /// </code>
+    /// <para>Creates a new firewall rule in the default project named "my-firewall". The firewall allows
+    /// traffic using tcp on ports 80 and 443 as well as the esp protocol from servers tagged my-source to
+    /// servers tagged my-target.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceFirewall")]
     public class AddGceFirewallCmdlet : GceCmdlet
@@ -204,6 +217,10 @@ namespace Google.PowerShell.ComputeEngine
     /// <para type="description">
     /// Removes a firewall rule from a project.
     /// </para>
+    /// <example>
+    /// <code>PS C:\> Remove-GceFirewall "my-firewall"</code>
+    /// <para>Removes the firewall named "my-firewall" in the default project.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceFirewall", SupportsShouldProcess = true)]
     public class RemoveGceFirewallCmdlet : GceCmdlet

@@ -325,8 +325,9 @@ namespace Google.PowerShell.ComputeEngine
     /// <example>
     ///     <code> PS C:\> Add-GceInstance -Name "new-instance" -BootDisk $disk `
     ///                     -MachineType "n1-standard-4" `
-    ///                     -Metadata @{"windows-startup-script-ps1" = "Read-GcsObject bucket object -OutFile temp.txt} `
-    ///                     -Tag http, https
+    ///                     -Tag http, https `
+    ///                     -Metadata @{"windows-startup-script-ps1" =
+    ///                                 "Read-GcsObject bucket object -OutFile temp.txt"}
     ///     </code>
     ///     <para> Creates a new instance in the default project and zone. The boot disk is the prexisting disk
     ///     stored in $disk, the machine type has 4 cores, it runs a script on startup, and it is tagged as an

@@ -15,11 +15,14 @@ namespace Google.PowerShell.ComputeEngine
     /// Creates a new AllowedData object which can be passed through the pipeline too the Allowed parameter of
     /// the Add-GceFirewall cmdlet.
     /// </para>
-    /// <para type="example">
-    /// New-GceFirewallProtocol tcp -Ports 80, 443 |
-    /// New-GceFirewallProtocol esp |
-    /// Add-GceFirewall -Project "your-project" -Name "firewall-name"
-    /// </para>
+    /// <example>
+    /// <code>
+    /// <para> PS C:\> New-GceFirewallProtocol tcp -Ports 80, 443 |</para>
+    /// <para>         New-GceFirewallProtocol esp |</para>
+    /// <para>         Add-GceFirewall -Project "your-project" -Name "firewall-name"</para>
+    /// </code>
+    /// <para>Creates two GceFirewallProtocol objects, and sends them to the Add-GceFirewall cmdlet.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GceFirewallProtocol", DefaultParameterSetName = ParameterSetNames.Default)]
     public class NewFirewallProtocolCmdlet : GceCmdlet

@@ -14,14 +14,18 @@ namespace Google.PowerShell.ComputeEngine
     /// <para type="description">
     /// Get an object that has information about an address.
     /// </para>
-    /// <para type="example">
-    /// List all global and region addresses:
+    /// <example>
     /// <code>Get-GceAddress</code>
+    /// <para>
+    /// List all global and region addresses:
     /// </para>
-    /// <para type="example">
-    /// Get a named addresses of the region of the current gcloud config.
+    /// </example>
+    /// <example>
     /// <code>Get-GceAddress $addressName</code>
+    /// <para>
+    /// Get a named addresses of the region of the current gcloud config.
     /// </para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceAddress", DefaultParameterSetName = ParameterSetNames.OfProject)]
     public class GetGceAddressCmdlet : GceCmdlet
@@ -174,14 +178,16 @@ namespace Google.PowerShell.ComputeEngine
     /// <para type="description">
     /// Adds a new static external IP address to Google Compute Engine.
     /// </para>
-    /// <para type="example">
-    /// Adds an address to the default project and region:
+    /// <example>
     /// <code>Add-GceAddress $addressName</code>
+    /// <para>
+    /// Adds an address to the default project and region:
     /// </para>
-    /// <para type="example">
-    /// Adds a global address to the default project:
+    /// </example>
+    /// <example>
     /// <code>Add-GceAddress $addressName -Global</code>
-    /// </para>
+    /// <para>Adds a global address to the default project:</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceAddress", DefaultParameterSetName = ParameterSetNames.ByValues)]
     public class AddGceAddressCmdlet : GceConcurrentCmdlet
@@ -293,18 +299,22 @@ namespace Google.PowerShell.ComputeEngine
     /// <para type="description">
     /// Removes a Google Compute Engine static external IP address.
     /// </para>
-    /// <para type="example">
-    /// Removes an address of the default project and region:
+    /// <example>
     /// <code>Remove-GceAddress $addressName</code>
-    /// </para>
-    /// <para type="example">
-    /// Removes a global address of the default project:
+    /// <para>Removes an address of the default project and region:</para>
+    /// </example>
+    /// <example>
     /// <code>Remove-GceAddress $addressName -Global</code>
+    /// <para>
+    /// Removes a global address of the default project:
     /// </para>
-    /// <para type="example">
-    /// Removes all global and region specific addresses of the default project:
+    /// </example>
+    /// <example>
     /// <code>Get-GceAddress | Remove-GceAddress</code>
+    /// <para>
+    /// Removes all global and region specific addresses of the default project:
     /// </para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceAddress", SupportsShouldProcess = true,
         DefaultParameterSetName = ParameterSetNames.Default)]

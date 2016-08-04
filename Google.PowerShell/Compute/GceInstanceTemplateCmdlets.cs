@@ -17,6 +17,14 @@ namespace Google.PowerShell.ComputeEngine
     /// <para type="description"> 
     /// Gets Google Compute Engine instance templates.
     /// </para>
+    /// <example>
+    /// <code>PS C:\> Get-GceInstanceTemplate</code>
+    /// <para>Lists all instance templates in the default project.</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Get-GceInstanceTemplate "my-template"</code>
+    /// <para>Gets the instance template naemd "my-template" in the default project.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceInstanceTemplate", DefaultParameterSetName = ParameterSetNames.Default)]
     public class GetGceInstanceTemplateCmdlet : GceCmdlet
@@ -127,8 +135,25 @@ namespace Google.PowerShell.ComputeEngine
     /// Adds an instance template to Google Compute Engine.
     /// </para>
     /// <para type="description"> 
-    /// Adds an instance template to Google Compute Engine.
+    /// Adds an instance template to Google Compute Engine. These templates can be used to create managed
+    /// instance groups.
     /// </para>
+    /// <example>
+    /// <code>
+    /// PS C:\> $image = Get-GceImage -Family "window-2012-r2"
+    /// PS C:\> Add-GceInstanceTemplate "my-template" -BootDiskImage $image
+    /// </code>
+    /// <para>Creates a new windows 2012 instance template with default settings.</para>
+    /// </example>
+    /// <example>
+    /// <code>
+    /// PS C:\> $image = Get-GceImage -Family "window-2012-r2"
+    /// PS C:\> $serviceAccount = New-GceServiceAccountConfig default -BigQuery
+    /// PS C:\> Add-GceInstanceTemplate $name "n1-standard-4" -BootDiskImage $image `
+    ///             -ServiceAccount $serviceAccount
+    /// </code>
+    /// </example>
+    /// <para>Creates a new instance template for a 4 core machine that has access to BigQuery.</para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceInstanceTemplate", DefaultParameterSetName = ParameterSetNames.ByValues)]
     public class AddGceInstanceTemplateCmdlet : GceTemplateDescriptionCmdlet
@@ -308,8 +333,17 @@ namespace Google.PowerShell.ComputeEngine
     /// Deletes a Google Compute Engine instance templates.
     /// </para>
     /// <para type="description"> 
-    /// Deletes a Google Compute Engine instance templates.
+    /// Deletes a Google Compute Engine instance templates. Templates referenced by managed instance groups can
+    /// not be deleted.
     /// </para>
+    /// <example>
+    /// <code>PS C:\> Remove-GceInstanceTemplate "my-template"</code>
+    /// <para>Removes the instance template named "my-template" in the default project.</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Get-GceInstanceTemplate | Remove-GceInstanceTemplate</code>
+    /// <para>Removes all instance templates in the default project.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceInstanceTemplate", SupportsShouldProcess = true,
         DefaultParameterSetName = ParamterSetNames.ByName)]
