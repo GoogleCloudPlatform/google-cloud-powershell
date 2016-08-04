@@ -146,11 +146,13 @@ namespace Google.PowerShell.CloudStorage
         [Parameter(Mandatory = false)]
         public string ContentType { get; set; }
 
-        // See: https://cloud.google.com/storage/docs/json_api/v1/objects/insert
         /// <summary>
         /// <para type="description">
         /// Provide a predefined ACL to the object. e.g. "publicRead" where the project owner gets
         /// OWNER access, and allUsers get READER access.
+        /// </para>
+        /// <para type="description">
+        /// See: https://cloud.google.com/storage/docs/json_api/v1/objects/insert
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
