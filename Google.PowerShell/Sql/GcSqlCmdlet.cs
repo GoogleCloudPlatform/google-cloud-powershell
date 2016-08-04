@@ -46,11 +46,13 @@ namespace Google.PowerShell.Sql
                 case "RECREATE_REPLICA":
                 case "RESTORE_VOLUME":
                     {
-                        delay = 10000;
+                        delay = 30000;
                         break;
                     }
                 case "UPDATE":
-                case "REMOVE":
+                case "DELETE":
+                case "IMPORT":
+                case "EXPORT":
                     {
                         delay = 5000;
                         break;
