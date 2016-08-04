@@ -141,6 +141,9 @@ function Check-CmdletDoc() {
             $wroteWarnings = ((DoDeepExampleCheck $docObj) -or $wroteWarnings)
         }
 
+        # Check that all parameters have a valid (non-null, non-whitespace) description. 
+        $wroteWarnings = ((WriteParameterDescriptionWarnings $docObj) -or $wroteWarnings)
+
         if (-not ($wroteWarnings)) {
             Write-Host "PASSED" -ForegroundColor "Green" -BackgroundColor "Black"
         }
@@ -282,6 +285,20 @@ function DoDeepExampleCheck($docObj) {
 
         if ($noOutput.Count -gt 0) {
             "Example number(s) " + ($noOutput -join ", ") + " has(have) no outputs." | Write-Warning
+            $wroteWarnings = $true
+        }
+    }
+
+    return $wroteWarnings
+}
+
+# Check that all parameters for the cmdlet have a valid (non-null, non-whitespace) description. 
+function WriteParameterDescriptionWarnings ($docObj) {
+    $wroteWarnings = $false
+
+    foreach ($parameter in $docObj.parameters.parameter) {
+        if ([String]::IsNullOrWhiteSpace($parameter.description.Text)) {
+            "Parameter `"" + $parameter.name + "`" does not have a valid description." | Write-Warning
             $wroteWarnings = $true
         }
     }
