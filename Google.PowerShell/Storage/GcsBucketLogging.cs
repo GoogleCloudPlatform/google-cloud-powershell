@@ -20,8 +20,13 @@ namespace Google.PowerShell.CloudStorage
     /// <para type="description">
     /// Removes the logging data associated with a Cloud Storage Bucket.
     /// </para>
+    /// <example>
+    ///   <para>Stop generating logs data for access to bucket "widgetco".</para>
+    ///   <para><code>PS C:\> Remove-GcsBucketLogging "widgetco"</code></para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/access-logs)">[Access Logs]</para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Remove, "GcsBucketLogging")]
+    [Cmdlet(VerbsCommon.Remove, "GcsBucketLogging"), OutputType(typeof(Bucket))]
     public class RemoveGcsBucketLoggingCmdlet : GcsCmdlet
     {
         /// <summary>
@@ -62,8 +67,14 @@ namespace Google.PowerShell.CloudStorage
     /// <para type="description">
     /// Updates the logging data associated with a Cloud Storage Bucket.
     /// </para>
+    /// <example>
+    ///   <para>Start generating logs data for access to bucket "widgetco".</para>
+    ///   <para><code>PS C:\> Write-GcsBucketLogging "widgetco" -LogBucket "widgetco-logs" -LogObjectPrefix "log-output/bucket"</code></para>
+    ///   <para>Logs should be accessible afterwards via, at gs://widgetco-logs/log-output/bucket_usage_&lt;timestamp&gt;_&lt;id&gt;_v0.</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/access-logs)">[Access Logs]</para>
     /// </summary>
-    [Cmdlet(VerbsCommunications.Write, "GcsBucketLogging")]
+    [Cmdlet(VerbsCommunications.Write, "GcsBucketLogging"), OutputType(typeof(Bucket))]
     public class WriteGcsBucketLoggingCmdlet : GcsCmdlet
     {
         /// <summary>

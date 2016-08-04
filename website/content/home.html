@@ -62,7 +62,7 @@
       <p><code>Cloud Tools for PowerShell</code> is a set of PowerShell
       cmdlets for accessing and manipulating Google Cloud Platform
       resources. With them you will be able to automate tasks by writing
-      programs in PowerShell. And ultimately get more down on the
+      programs in PowerShell. And ultimately get more done on the
       Google Cloud Platform.</p>
 
       <p><code>Cloud Tools for PowerShell</code> uses the same configuration
@@ -98,7 +98,7 @@ Find-GcsObject $bucket.Name -Prefix "images/" |
       <div hljs hlsj-language="powershell" ng-show="selected == 'compute engine'">
 $config = New-GceInstanceConfig $vmName `
     -MachineType "n1-standard-4" `
-    -DiskImage "projects/windows-cloud/global/images/family/windows-2012-r2"
+    -DiskImage (Get-GceImage -Family "windows-2012-r2")
 
 $config | Add-GceInstance -Project $project -Zone "us-central1-b"
 

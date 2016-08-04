@@ -380,6 +380,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// Adds the scope uri of the parameter, if it has one.
         /// </summary>
+        /// <param name="scopes">List of scope uri strings to append to.</param>
         /// <param name="parameter">A KeyValuePair containing the name of the parameter as the key and the 
         /// value of the parameter as the value</param>
         private static void AddScope(List<string> scopes, KeyValuePair<string, object> parameter)
