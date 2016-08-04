@@ -26,7 +26,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Get-GcSqlBackupRun "myInstance"
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns a list of backupruns the instance has.)</para>
+    ///   <para>If successful, the command returns a list of backupruns the instance has.</para>
     /// </example>
     /// <example>
     ///   <para>
@@ -36,7 +36,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Get-GcSqlBackupRun "myInstance" "1234"
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns the relevant backup run.)</para>
+    ///   <para>If successful, the command returns the relevant backup run.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlBackupRun", DefaultParameterSetName = ParameterSetNames.GetList)]
@@ -124,7 +124,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Remove-GcSqlBackupRun "myInstance" "1234"
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command doesn't return anything.)</para>
+    ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
     /// <example>
     ///   <para>
@@ -134,7 +134,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Remove-GcSqlBackupRun $myBackup
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command doesn't return anything.)</para>
+    ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GcSqlBackupRun", SupportsShouldProcess = true,

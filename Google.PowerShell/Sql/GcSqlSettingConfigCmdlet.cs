@@ -50,10 +50,11 @@ namespace Google.PowerShell.Sql
         /// The tier of service for this instance, for example "db-n1-standard-1".
         /// Pricing information is available at https://cloud.google.com/sql/pricing.
         /// Get-GcSqlTiers will also tell you what tiers are available for your project.
+        /// Defaults to "db-n1-standard-1"
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
-        public string TierConfig { get; set; }
+        [Parameter(Position = 0, Mandatory = false)]
+        public string TierConfig { get; set; } = "db-n1-standard-1";
 
 
         public enum ActivationPolicy
@@ -173,7 +174,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public int MaintenanceWindowDay { get; set; }
+        public int MaintenanceWindowDay { get; set; } = 5;
 
         /// <summary>
         /// <para type="description">
@@ -183,7 +184,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public int MaintenanceWindowHour { get; set; }
+        public int MaintenanceWindowHour { get; set; } = 22;
 
         /// <summary>
         /// <para type="description">

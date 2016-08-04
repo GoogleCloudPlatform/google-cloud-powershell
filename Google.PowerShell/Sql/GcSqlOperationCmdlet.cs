@@ -27,7 +27,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Get-GcSqlOperation -Instance "myInstance"
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns a list of operations done on "myInstance".)</para>
+    ///   <para>If successful, the command returns a list of operations done on "myInstance".</para>
     /// </example>
     /// <example>
     ///   <para>
@@ -37,7 +37,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Get-GcSqlOperation -Name "1d402..."
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns an Operation resource for the specified operation.)</para>
+    ///   <para>If successful, the command returns an Operation resource for the specified operation.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlOperation")]

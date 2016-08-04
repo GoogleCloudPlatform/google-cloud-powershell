@@ -29,7 +29,7 @@ namespace Google.PowerShell.Sql
     ///     PS C:\> Get-GcSqlTiers
     ///   </code></para>
     ///   <br></br>
-    ///   <para>(If successful, the command returns a list of tiers available for your project.)</para>
+    ///   <para>If successful, the command returns a list of tiers available for your project.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlTiers")]
