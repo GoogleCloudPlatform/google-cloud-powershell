@@ -54,6 +54,7 @@
     <None Include="Compute\Compute.GceTargetProxy.Tests.ps1" />
     <None Include="Compute\Compute.GceTargetPool.Tests.ps1" />
     <None Include="Compute\Compute.GceForwardingRule.Tests.ps1" />
+    <None Include="Compute\Compute.GceHealthCheck.Tests.ps1" />
     <None Include="Compute\Compute.GceImage.Tests.ps1" />
     <None Include="Compute\Compute.GceInstance.Tests.ps1" />
     <None Include="Compute\Compute.GceInstanceTemplate.Tests.ps1" />

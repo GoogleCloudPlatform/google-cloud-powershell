@@ -134,6 +134,7 @@
     <Compile Include="Compute\GceAttachedDiskConfigCmdlets.cs" />
     <Compile Include="Compute\GceFirewallCmdlets.cs" />
     <Compile Include="Compute\GceForwardingRuleCmdlets.cs" />
+    <Compile Include="Compute\GceHealthCheckCmdlets.cs" />
     <Compile Include="Compute\GceImageCmdlets.cs" />
     <Compile Include="Compute\GceInstanceCmdlets.cs" />
     <Compile Include="Compute\GceDisk.cs" />
@@ -170,6 +171,7 @@
     <None Include="README.md" />
     <None Include="ReleaseFiles\BootstrapGoogleCloudPowerShell.ps1" />
     <None Include="ReleaseFiles\GoogleCloudPowerShell.psd1" />
+    <None Include="ReleaseFiles\PatchFromGcs.ps1" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
