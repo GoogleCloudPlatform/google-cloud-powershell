@@ -18,17 +18,17 @@ Describe "Get-GceForwardingRule"{
 
     Context "with data" {
         BeforeAll {
-            gcloud compute http-health-checks create "health-check-$r"
-            gcloud compute backend-services create "backend-$r" --http-health-check "health-check-$r"
-            gcloud compute url-maps create "url-map-$r" --default-service "backend-$r"
-            gcloud compute target-http-proxies create "proxy-$r" --url-map "url-map-$r"
-            gcloud compute forwarding-rules create $globalRuleName --target-http-proxy "proxy-$r" --global --ports 8080
+            gcloud compute http-health-checks create "health-check-$r" 2>$null
+            gcloud compute backend-services create "backend-$r" --http-health-check "health-check-$r" 2>$null
+            gcloud compute url-maps create "url-map-$r" --default-service "backend-$r" 2>$null
+            gcloud compute target-http-proxies create "proxy-$r" --url-map "url-map-$r" 2>$null
+            gcloud compute forwarding-rules create $globalRuleName --target-http-proxy "proxy-$r" --global --ports 8080 2>$null
 
-            gcloud compute target-pools create "pool-$r"
-            gcloud compute forwarding-rules create $regionRuleName1 --target-pool "pool-$r"
+            gcloud compute target-pools create "pool-$r" 2>$null
+            gcloud compute forwarding-rules create $regionRuleName1 --target-pool "pool-$r" 2>$null
 
-            gcloud compute target-pools create "pool-$r" --region asia-east1
-            gcloud compute forwarding-rules create $regionRuleName2 --target-pool "pool-$r" --region asia-east1
+            gcloud compute target-pools create "pool-$r" --region asia-east1 2>$null
+            gcloud compute forwarding-rules create $regionRuleName2 --target-pool "pool-$r" --region asia-east1 2>$null
         }
 
         It "should get all rules" {
@@ -66,17 +66,17 @@ Describe "Get-GceForwardingRule"{
         }
 
         AfterAll {
-            gcloud compute forwarding-rules delete $regionRuleName1 -q
-            gcloud compute target-pools delete "pool-$r" -q
+            gcloud compute forwarding-rules delete $regionRuleName1 -q 2>$null
+            gcloud compute target-pools delete "pool-$r" -q 2>$null
 
-            gcloud compute forwarding-rules delete $regionRuleName2 --region asia-east1 -q
-            gcloud compute target-pools delete "pool-$r" --region asia-east1 -q
+            gcloud compute forwarding-rules delete $regionRuleName2 --region asia-east1 -q 2>$null
+            gcloud compute target-pools delete "pool-$r" --region asia-east1 -q 2>$null
 
-            gcloud compute forwarding-rules delete $globalRuleName --global -q
-            gcloud compute target-http-proxies delete "proxy-$r" -q
-            gcloud compute url-maps delete "url-map-$r" -q
-            gcloud compute backend-services delete "backend-$r" -q
-            gcloud compute http-health-checks delete "health-check-$r" -q
+            gcloud compute forwarding-rules delete $globalRuleName --global -q 2>$null
+            gcloud compute target-http-proxies delete "proxy-$r" -q 2>$null
+            gcloud compute url-maps delete "url-map-$r" -q 2>$null
+            gcloud compute backend-services delete "backend-$r" -q 2>$null
+            gcloud compute http-health-checks delete "health-check-$r" -q 2>$null
         }
 
 

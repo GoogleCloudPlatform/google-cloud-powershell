@@ -17,9 +17,9 @@ Describe "Get-GceTargetPool"{
 
     Context "with data" {
         BeforeAll {
-            gcloud compute target-pools create $poolName1
+            gcloud compute target-pools create $poolName1 2>$null
 
-            gcloud compute target-pools create $poolName2 --region asia-east1
+            gcloud compute target-pools create $poolName2 --region asia-east1 2>$null
         }
 
         It "should get all rules" {
@@ -43,8 +43,8 @@ Describe "Get-GceTargetPool"{
         }
 
         AfterAll {
-            gcloud compute target-pools delete $poolName1 -q
-            gcloud compute target-pools delete $poolName2 --region asia-east1 -q
+            gcloud compute target-pools delete $poolName1 -q 2>$null
+            gcloud compute target-pools delete $poolName2 --region asia-east1 -q 2>$null
         }
     }
 }
@@ -52,7 +52,7 @@ Describe "Get-GceTargetPool"{
 Describe "Set-GceTargetPool" {
     $instance = Add-GceInstance "instance-$r" -BootDiskImage (Get-GceImage -Family "coreos-stable")
     $poolName = "pool-$r"
-    gcloud compute target-pools create $poolName
+    gcloud compute target-pools create $poolName 2>$null
     $poolObj = Get-GceTargetPool $poolName
     It "should add instance with object" {
         $pool = $poolObj | Set-GceTargetPool -AddInstance $instance
@@ -75,7 +75,7 @@ Describe "Set-GceTargetPool" {
         $pool.Instances.Count | Should Be 0
     }
 
-    gcloud compute target-pools delete $poolName -q
+    gcloud compute target-pools delete $poolName -q 2>$null
     $instance | Remove-GceInstance
 }
 
