@@ -48,7 +48,7 @@
   <ItemGroup>
     <None Include="Compute\Compute.GceAddress.Tests.ps1" />
     <None Include="Compute\Compute.GceAttachedDiskConfig.Tests.ps1" />
-    <None Include="Compute\Compute.GceBackend.Tests.ps1" />
+    <None Include="Compute\Compute.GceBackendService.Tests.ps1" />
     <None Include="Compute\Compute.GceDisk.Tests.ps1" />
     <None Include="Compute\Compute.GceFirewall.Tests.ps1" />
     <None Include="Compute\Compute.GceTargetProxy.Tests.ps1" />
