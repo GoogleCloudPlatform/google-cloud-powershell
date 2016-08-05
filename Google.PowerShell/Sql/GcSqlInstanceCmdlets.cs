@@ -57,8 +57,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// Project name of the project that contains instance(s).
-        /// Defaults to the Cloud SDK configuration for properties if not specified.
+        /// Name of the project. Defaults to the Cloud SDK configuration for properties if not specified.
         /// </para>
         /// </summary>
         [Parameter]
@@ -153,6 +152,7 @@ namespace Google.PowerShell.Sql
         protected override void ProcessRecord()
         {
             InstancesResource.InsertRequest request = Service.Instances.Insert(InstanceConfig, Project);
+            WriteVerbose(string.Format("Adding instance '{0}' to Project '{1}'.", InstanceConfig.Name, Project));
             Operation result = request.Execute();
             WaitForSqlOperation(result);
             /// We get the instance that was just added
@@ -168,8 +168,9 @@ namespace Google.PowerShell.Sql
     /// </para>
     /// <para type="description">
     /// Deletes the specified Cloud SQL instance.
-    /// 
+    /// <para>
     /// Warning: This deletes all data inside of it as well.
+    /// </para>
     /// </para>
     /// <example>
     ///   <para>
@@ -246,13 +247,13 @@ namespace Google.PowerShell.Sql
                 default:
                     throw UnknownParameterSetException;
             }
-            if (!ShouldProcess($"{project}/{instance}", "Delete Instance"))
+            if (ShouldProcess($"{project}/{instance}", "Delete Instance"))
             {
-                return;
+                InstancesResource.DeleteRequest request = Service.Instances.Delete(project, instance);
+                WriteVerbose(string.Format("Removing instance '{0}' from Project '{1}'.", instance, project));
+                Operation result = request.Execute();
+                WaitForSqlOperation(result);
             }
-            InstancesResource.DeleteRequest request = Service.Instances.Delete(project, instance);
-            Operation result = request.Execute();
-            WaitForSqlOperation(result);
         }
     }
 
@@ -408,6 +409,7 @@ namespace Google.PowerShell.Sql
                     throw UnknownParameterSetException;
             }
             InstancesResource.ExportRequest request = Service.Instances.Export(body, Project, Instance);
+            WriteVerbose(string.Format("Exporting to '{0}' from Instance '{1}'.", CloudStorageDestination, Instance));
             Operation result = request.Execute();
             result = WaitForSqlOperation(result);
             if (result.Error != null)
@@ -650,9 +652,13 @@ namespace Google.PowerShell.Sql
                     Random rnd = new Random();
                     int bucketRnd = rnd.Next(1000000);
                     string bucketName = "import" + bucketRnd.ToString();
+                    WriteVerbose(string.Format("Creating a Google Cloud Storage Bucket for the file at {0}.",
+                        ImportFilePath));
                     tempGcsBucket = tempUploader.CreateBucket(bucketName);
                     try
                     {
+                        WriteVerbose(string.Format("Uploading the file at {0} to the new Google Cloud Storage Bucket.",
+                            ImportFilePath));
                         tempGcsObject = tempUploader.UploadLocalFile(ImportFilePath, bucketName);
                     }
                     catch (Exception e)
@@ -661,6 +667,7 @@ namespace Google.PowerShell.Sql
                         throw e;
                     }
                     DatabaseInstance myInstance = Service.Instances.Get(Project, Instance).Execute();
+                    WriteVerbose(string.Format("Updating the permissions for the uploaded file.", ImportFilePath));
                     tempUploader.AdjustAcl(tempGcsObject, myInstance.ServiceAccountEmailAddress);
                     ImportFilePath = string.Format("gs://{0}/{1}", bucketName, "toImport");
                 }
@@ -687,10 +694,12 @@ namespace Google.PowerShell.Sql
                 };
             }
             InstancesResource.ImportRequest request = Service.Instances.Import(body, Project, Instance);
+            WriteVerbose(string.Format("Importing the file at '{0}' to Instance '{1}'.", ImportFilePath, Instance));
             Operation result = request.Execute();
             result = WaitForSqlOperation(result);
             if (tempUploader != null)
             {
+                WriteVerbose("Deleting the Google Cloud Storage Bucket that was created, along with uploaded file.");
                 tempUploader.DeleteObject(tempGcsObject);
                 tempUploader.DeleteBucket(tempGcsBucket);
             }
@@ -779,6 +788,7 @@ namespace Google.PowerShell.Sql
             }
 
             InstancesResource.RestartRequest instRestartRequest = Service.Instances.Restart(projectName, instanceName);
+            WriteVerbose(string.Format("Restarting the Instance '{0}' in Project '{1}'.", instanceName, projectName));
             Operation instRestartResponse = instRestartRequest.Execute();
             WaitForSqlOperation(instRestartResponse);
         }
@@ -858,6 +868,8 @@ namespace Google.PowerShell.Sql
 
             InstancesResource.StartReplicaRequest replStartRequest = 
                 Service.Instances.StartReplica(projectName, replicaName);
+            WriteVerbose(string.Format("Starting the Read-Replica Instance '{0}' in Project '{1}'.",
+                replicaName, projectName));
             Operation replStartResponse = replStartRequest.Execute();
             WaitForSqlOperation(replStartResponse);
         }
@@ -935,15 +947,15 @@ namespace Google.PowerShell.Sql
                     throw UnknownParameterSetException;
             }
 
-            if (!ShouldProcess($"{projectName}/{replicaName}", "Stop Replica"))
+            if (ShouldProcess($"{projectName}/{replicaName}", "Stop Replica"))
             {
-                return;
+                InstancesResource.StopReplicaRequest replStopRequest =
+                    Service.Instances.StopReplica(projectName, replicaName);
+                WriteVerbose(string.Format("Stopping the Read-Replica Instance '{0}' in Project '{1}'.",
+                    replicaName, projectName));
+                Operation replStopResponse = replStopRequest.Execute();
+                WaitForSqlOperation(replStopResponse);
             }
-
-            InstancesResource.StopReplicaRequest replStopRequest = 
-                Service.Instances.StopReplica(projectName, replicaName);
-            Operation replStopResponse = replStopRequest.Execute();
-            WaitForSqlOperation(replStopResponse);
         }
     }
 
@@ -1021,6 +1033,8 @@ namespace Google.PowerShell.Sql
 
             InstancesResource.PromoteReplicaRequest replPromoteRequest = 
                 Service.Instances.PromoteReplica(projectName, replicaName);
+            WriteVerbose(string.Format("Promoting the Read-Replica Instance '{0}' in Project '{1}'.",
+                replicaName, projectName));
             Operation replPromoteResponse = replPromoteRequest.Execute();
             WaitForSqlOperation(replPromoteResponse);
         }
@@ -1138,25 +1152,25 @@ namespace Google.PowerShell.Sql
 
             string backupInstanceName = BackupInstance ?? instanceName;
 
-            if (!ShouldProcess($"{projectName}/{instanceName}, {projectName}/{backupInstanceName}/Backup#{BackupRunId}",
+            if (ShouldProcess($"{projectName}/{instanceName}, {projectName}/{backupInstanceName}/Backup#{BackupRunId}",
                 "Restore Backup"))
             {
-                return;
-            }
-
-            InstancesRestoreBackupRequest backupRequestBody = new InstancesRestoreBackupRequest
-            {
-                RestoreBackupContext = new RestoreBackupContext
+                InstancesRestoreBackupRequest backupRequestBody = new InstancesRestoreBackupRequest
                 {
-                    BackupRunId = BackupRunId,
-                    InstanceId = backupInstanceName
-                }
-            };
+                    RestoreBackupContext = new RestoreBackupContext
+                    {
+                        BackupRunId = BackupRunId,
+                        InstanceId = backupInstanceName
+                    }
+                };
 
-            InstancesResource.RestoreBackupRequest instRestoreBackupRequest = 
-                Service.Instances.RestoreBackup(backupRequestBody, projectName, instanceName);
-            Operation instRestoreBackupResponse = instRestoreBackupRequest.Execute();
-            WaitForSqlOperation(instRestoreBackupResponse);
+                InstancesResource.RestoreBackupRequest instRestoreBackupRequest =
+                    Service.Instances.RestoreBackup(backupRequestBody, projectName, instanceName);
+                WriteVerbose(string.Format("Restoring the Instance '{0}' in Project '{1}' to its Backup '{3}'.",
+                    instanceName, projectName, BackupRunId));
+                Operation instRestoreBackupResponse = instRestoreBackupRequest.Execute();
+                WaitForSqlOperation(instRestoreBackupResponse);
+            }
         }
     }
 
@@ -1449,6 +1463,7 @@ namespace Google.PowerShell.Sql
                     LocationPreference = new LocationPreference(),
                     MaintenanceWindow = new MaintenanceWindow(),
                 };
+                WriteVerbose(string.Format("Setting up the updated settings for the instance '{0}'.", instance));
                 newSettings = PopulateSetting(newSettings);
                 if (newSettings.Tier == null)
                 {
@@ -1461,12 +1476,14 @@ namespace Google.PowerShell.Sql
             }
             else
             {
+                WriteVerbose(string.Format("Setting up the updated settings for the instance '{0}'.", instance));
                 newSettings = PopulateSetting(body.Settings);
                 body.Settings = newSettings;
                 InstancesResource.PatchRequest request = Service.Instances.Patch(body, project, instance);
                 Operation result = request.Execute();
                 WaitForSqlOperation(result);
             }
+            WriteVerbose(string.Format("Updating the Instance '{0}' in Project '{1}'.", instance, project));
             DatabaseInstance updated = Service.Instances.Get(project, instance).Execute();
             WriteObject(updated);
         }
@@ -1656,6 +1673,7 @@ namespace Google.PowerShell.Sql
             InstancesResource.FailoverRequest failoverRequest =
                 Service.Instances.Failover(failoverRequestBody, projectName, instanceName);
             Operation failoverResponse;
+            WriteVerbose(string.Format("Activating the Failover for the Instance '{0}'.", instanceName));
             try
             {
                 failoverResponse = failoverRequest.Execute();
@@ -1675,6 +1693,7 @@ namespace Google.PowerShell.Sql
             // Wait for recreate operation in failover replica.
             OperationsResource.ListRequest opListRequest =
                 Service.Operations.List(projectName, instanceObject.FailoverReplica.Name);
+            WriteVerbose("Waiting for the Failover to be re-created.");
             do
             {
                 OperationsListResponse opListResponse = opListRequest.Execute();

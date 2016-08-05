@@ -18,21 +18,14 @@ Describe "Get-GcSqlBackupRun" {
         $backups.Length | Should BeGreaterThan 0
     }
 
-    It "should get a reasonable response from a given query" {
-        # A specific Id has to be used because backup Id's are unique to backupRuns. 
-        # See the next test for if a name exclusive to test-back is used.
-        $backup = Get-GcSqlBackupRun $instance "1468342800704"
-        $backup.Status | Should Be "SUCCESSFUL"
+    It "should get a reasonable response for a specific backupRun" {
+        # An existing backupRun is used to prevent having to update this test every
+        # time the specified backup is changed/removed.
+        $existingBackup = Get-GcSqlBackupRun $instance | Select-Object -first 1
+        $backup = Get-GcSqlBackupRun $instance $existingBackup.Id
+        $backup.Status | Should Be $existingBackup.Status
         $backup.Instance | Should Be $instance
-        $backup.Id | Should Be "1468342800704"
-    }
-
-    It "should compound with the list parameter set" {
-        $backups = Get-GcSqlBackupRun $instance
-        $firstBackup = $backups | Select-Object -first 1
-        $backup = Get-GcSqlBackupRun $instance $firstBackup.Id
-        $backup.SelfLink | Should Be $firstBackup.SelfLink
-        $backup.Id | Should Be $firstBackup.Id
+        $backup.Id | Should Be $existingBackup.Id
     }
 }
 

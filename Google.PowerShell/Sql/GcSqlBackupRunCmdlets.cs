@@ -202,13 +202,13 @@ namespace Google.PowerShell.Sql
                     throw UnknownParameterSetException;
             }
 
-            if (!ShouldProcess($"{project}/{instance}/{id}", "Delete Backup Run"))
+            if (ShouldProcess($"{project}/{instance}/{id}", "Delete Backup Run"))
             {
-                return;
+                WriteVerbose(string.Format("Removing Backup Run '{0}' from the Instance '{1}'.", id, instance));
+                BackupRunsResource.DeleteRequest request = Service.BackupRuns.Delete(project, instance, id);
+                Operation result = request.Execute();
+                WaitForSqlOperation(result);
             }
-            BackupRunsResource.DeleteRequest request = Service.BackupRuns.Delete(project, instance, id);
-            Operation result = request.Execute();
-            WaitForSqlOperation(result);
         }
     }
 }
