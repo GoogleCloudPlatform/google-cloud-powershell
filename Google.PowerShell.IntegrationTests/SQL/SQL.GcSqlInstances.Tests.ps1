@@ -200,7 +200,7 @@ Describe "Import-GcSqlInstance" {
 
     
     It "should be able to import a regular SQL file" {
-        { Import-GcSqlInstance "test-db2" "gs://gcsql-csharp-import-testing/testsqlS" "newguestbook" } | Should not Throw
+        { Import-GcSqlInstance "test-db2" "gs://gcsql-csharp-import-testing/testsqlS3" "newguestbook" } | Should not Throw
     }
 
     It "should be able to import a regular CSV file" {
@@ -208,8 +208,8 @@ Describe "Import-GcSqlInstance" {
     }
 
     It "should throw an error if something's wrong" {
-        { Import-GcSqlInstance "test-db2" "gs://gcsql-csharp-import-testing/testsql.gz" "newguestbook" } | Should Throw `
-        "ERROR 1840 (HY000) at line 24: @@GLOBAL.GTID_PURGED can only be set when @@GLOBAL.GTID_EXECUTED is empty."
+        { Import-GcSqlInstance "test-db2" "gs://gcsql-csharp-import-testing/testsqlS" "newguestbook" } | Should Throw `
+        "ERROR 1227 (42000) at line 18: Access denied; you need (at least one of) the SUPER privilege(s) for this operation"
     }
 
     It "should import a local file by uploading it to GCS for a local file upon completion" {
