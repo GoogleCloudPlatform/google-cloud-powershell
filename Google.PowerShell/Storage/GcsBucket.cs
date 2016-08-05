@@ -97,12 +97,8 @@ namespace Google.PowerShell.CloudStorage
     /// have buckets with the same name.
     /// </para>
     /// <example>
-    /// <code>PS C:\> New-Gcsbucket "unique-bucket-name"</code>
-    /// <para>Creates a new bucket named "unique-bucket-name". </para>
-    /// </example>
-    /// <example>
-    ///   <para>Creates a new bucket named "widget-co-logs".</para>
-    ///   <para><code>New-GcsBucket "widget-co-logs"</code></para>
+    /// <code>PS C:\> New-Gcsbucket "widget-co-logs"</code>
+    /// <para>Creates a new bucket named "widget-co-logs". </para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GcsBucket"), OutputType(typeof(Bucket))]
@@ -205,10 +201,10 @@ namespace Google.PowerShell.CloudStorage
     /// <para>Forces the deletion of "bucket-with-files, despite the bucket containing objects.</para>
     /// </example>
     /// <example>
-    ///   <para>Check if bucket "foo" exists.</para>
     ///   <para><code>PS C:\> Remove-GcsBucket prod-database -WhatIf</code></para>
     ///   <para><code>What if: Performing the operation "Delete Bucket" on target "prod-database".</code></para>
     ///   <para>True</para>
+    ///   <para>Check if bucket "foo" exists.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GcsBucket", SupportsShouldProcess = true)]
@@ -342,9 +338,9 @@ namespace Google.PowerShell.CloudStorage
     /// created.</para>
     /// </example>
     /// <example>
-    ///   <para>Check if bucket "foo" exists.</para>
     ///   <para><code>PS C:\> Test-GcsBucket "foo"</code></para>
     ///   <para>True</para>
+    ///   <para>Check if bucket "foo" exists.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsDiagnostic.Test, "GcsBucket"), OutputType(typeof(bool))]
