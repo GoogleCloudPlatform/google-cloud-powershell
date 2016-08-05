@@ -18,6 +18,19 @@ namespace Google.PowerShell.Compute
     /// <para type="description"> 
     /// Gets Google Compute Engine instance group managers.
     /// </para>
+    /// <example>
+    /// <code>PS C:\> Get-GceManagedInstanceGroup</code>
+    /// <para>Lists all managed instance groups for the default project.</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Get-GceManagedInstanceGroup -Zone "us-central1-a"</code>
+    /// <para>Lists all managed instance groups for the default project in the given zone.</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Get-GceManagedInstanceGroup "my-instance-group" -InstanceStatus</code>
+    /// <para>Lists the status of all members of the instance group named "my-instance-group" in the default
+    /// project and zone.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceManagedInstanceGroup", DefaultParameterSetName = ParameterSetNames.ListProject)]
     public class GetManagedInstanceGroupCmdlet : GceCmdlet
@@ -206,6 +219,14 @@ namespace Google.PowerShell.Compute
     /// <para type="description"> 
     /// Creates a new Google Compute Engine instance group manager.
     /// </para>
+    /// <example>
+    /// <code>
+    /// PS C:\> $template = Get-GceInstanceTemplate "my-template"
+    /// PS C:\> Add-GceManagedInstanceGroup "my-instance-group" $template 4
+    /// </code>
+    /// <para>Creates a new managed instance group named "my-instance-group". The instance of the group will
+    /// be created from template "my-template" and the group will create four instances.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceManagedInstanceGroup")]
     public class AddManagedInstanceGroupCmdlet : GceConcurrentCmdlet
@@ -377,6 +398,14 @@ namespace Google.PowerShell.Compute
     /// <para type="description"> 
     /// Removes a Google Compute Engine instance group manager.
     /// </para>
+    /// <example>
+    /// <code>PS C:\> Remove-GceManagedInstanceGroup "my-instance-group"</code>
+    /// <para>Removes the instance group named "my-instance-group" in the default project and zone.</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Get-GceManagedInstanceGroup -Zone "us-central1-a" | Remove-GceManagedInstanceGroup</code>
+    /// <para>Removes all managed instance groups of the default project in zone "us-central1-a".</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceManagedInstanceGroup", SupportsShouldProcess = true,
         DefaultParameterSetName = ParameterSetNames.ByName)]
@@ -470,6 +499,30 @@ namespace Google.PowerShell.Compute
     /// resized, have its template set, or have its target pools set. Member instances can be abandoned,
     /// deleted, or recreated.
     /// </para>
+    /// <example>
+    /// <code>PS C:\> Get-GceInstance "my-instance-1" | Set-ManagedInstanceGroup "my-group" -Abandon</code>
+    /// <para> Abandons the instance named "my-instance-1". The instance will still exist, but will no longer 
+    /// be a member of the instance group "my-group". The size of the instance group will decrease to match.</para>
+    /// </example>
+    /// <example>
+    /// <code>
+    /// PS C:\> $instanceUri = (Get-GceInstance "my-instance-2").SelfLink
+    /// PS C:\> Set-ManagedInstanceGroup "my-group" -Delete -InstanceUri $instanceUri
+    /// </code>
+    /// <para> Deletes the instance "my-instance-2". The size of the instance group will decrease to match.</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Set-GceManagedInstanceGroup "my-group" -Size 5</code>
+    /// <para>Changes the target size of managed instance group "my-group" to be 5.</para>
+    /// </example>
+    /// <example>
+    /// <code>
+    /// PS C:\> $template = Get-GceInstanceTemplate "new-template"
+    /// PS C:\> Set-GceManagedInstanceGroup "my-group" -Template $template
+    /// </code>
+    /// <para>The tempalte "new-template" becomes the template for all new instances created by managed
+    /// instance group "my-group"</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceManagedInstanceGroup", SupportsShouldProcess = true)]
     public class SetGceManagedInstanceGroupCmdelt : GceConcurrentCmdlet
@@ -779,6 +832,15 @@ namespace Google.PowerShell.Compute
     /// <para type="description"> 
     /// Waits for all of the instances of a managed instance group to reach normal running state.
     /// </para>
+    /// <example>
+    /// <code>PS C:\> Wait-GceManagedInstanceGroup "my-group" -Timeout 30</code>
+    /// <para>Waits for the managed instance group "my-group" to reach a noraml running state for up to 30
+    /// seconds.</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Get-GceManagedInstanceGroup -Zone "us-central1-a" | Wait-GceManagedInstanceGroup</code>
+    /// <para>Waits for all maanged instance groups in zone us-central1-a to reach a normal running state.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Wait, "GceManagedInstanceGroup")]
     public class WaitGceManagedInstanceGroupCmdlet : GceCmdlet

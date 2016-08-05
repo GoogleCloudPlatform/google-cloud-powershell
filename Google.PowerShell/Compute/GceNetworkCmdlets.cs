@@ -14,6 +14,14 @@ namespace Google.PowerShell.Compute
     /// <para type="description">
     /// Get data about the networks a project has. This includes its name, id, and subnetworks.
     /// </para>
+    /// <example>
+    /// <code>PS C:\> Get-GceNetwork</code>
+    /// <para>Lists all networks in set up for the default project.</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Get-GceNetwork "default"</code>
+    /// <para>Gets the default network for the default project.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceNetwork")]
     public class GetGceNetworkCmdlet : GceCmdlet

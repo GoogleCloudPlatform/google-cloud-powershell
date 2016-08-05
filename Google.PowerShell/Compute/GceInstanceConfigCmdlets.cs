@@ -16,6 +16,13 @@ namespace Google.PowerShell.ComputeEngine
     /// Makes a new Google Compute Engine VM instance description.
     /// Use Add-GceInstance to instantiate the instance.
     /// </para>
+    /// <example>
+    ///   <para>
+    ///     <code> PS C:\> $config = New-GceInstanceConfig -Name "new-instance" -BootDiskImage $image</code>
+    ///   </para>
+    ///   <para> Creates a new instance description and saves it to $config. The new instance will create a new
+    ///   boot disk from $image.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GceInstanceConfig")]
     public class NewGceInstanceConfigCmdlet : GceInstanceDescriptionCmdlet
@@ -33,7 +40,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The machine type of this instance. Can be a name, a URL or a MachineType object from
-        /// Get-GceMachineType. Defaults to n1-standard-1
+        /// Get-GceMachineType. Defaults to "n1-standard-1".
         /// </para>
         /// </summary>
         [Parameter(Position = 1)]
