@@ -63,6 +63,8 @@ namespace Google.PowerShell.Sql
                         break;
                     }
             }
+            WriteProgress(new System.Management.Automation.ProgressRecord(0, string.Format("Waiting for operation '{0}' to finish.", op.OperationType), "Waiting"));
+            int dots = 1;
             while (op.Status != "DONE")
             {
                 if (op.Error != null) {
@@ -70,6 +72,8 @@ namespace Google.PowerShell.Sql
                     return op;
                 }
                 Thread.Sleep(delay);
+                WriteProgress(new System.Management.Automation.ProgressRecord(0, string.Format("Waiting for operation '{0}' to finish.", op.OperationType), "Waiting" + new String('.',dots)));
+                dots = (dots + 1) % 4;
                 OperationsResource.GetRequest request = Service.Operations.Get(op.TargetProject, op.Name);
                 op = request.Execute();
             }
