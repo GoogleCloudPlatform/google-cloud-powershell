@@ -1,4 +1,6 @@
-﻿// Copyright 2016 Google Inc. All Rights Reserved.
+﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
+
 // Licensed under the Apache License Version 2.0.
 
 using Google.Apis.Compute.v1.Data;
@@ -20,7 +22,6 @@ namespace Google.PowerShell.ComputeEngine
     [Cmdlet(VerbsCommon.New, "GceInstanceConfig")]
     public class NewGceInstanceConfigCmdlet : GceInstanceDescriptionCmdlet
     {
-
         /// <summary>
         /// <para type="description">
         /// The name of the instance. The name must be 1-63 characters long and

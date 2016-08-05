@@ -1,4 +1,6 @@
-﻿// Copyright 2016 Google Inc. All Rights Reserved.
+﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
+
 // Licensed under the Apache License Version 2.0.
 
 using Google.Apis.Dns.v1;
@@ -163,7 +165,7 @@ namespace Google.PowerShell.Dns
 
         private class LocalErrorMessages
         {
-            public const string NeedChangeContent = 
+            public const string NeedChangeContent =
                 "Must specify at least 1 non-null, non-empty value for Add or Remove.";
         }
 
@@ -191,7 +193,7 @@ namespace Google.PowerShell.Dns
         /// </para>
         /// </summary>
         [Alias("Change")]
-        [Parameter(ParameterSetName = ParameterSetNames.ChangeRequest, Position = 1, Mandatory = true, 
+        [Parameter(ParameterSetName = ParameterSetNames.ChangeRequest, Position = 1, Mandatory = true,
             ValueFromPipeline = true)]
         public Change ChangeRequest { get; set; }
 
@@ -243,7 +245,7 @@ namespace Google.PowerShell.Dns
                     throw UnknownParameterSetException;
             }
 
-            ChangesResource.CreateRequest changeCreateRequest = 
+            ChangesResource.CreateRequest changeCreateRequest =
                 Service.Changes.Create(changeContent, Project, Zone);
             Change changeResponse = changeCreateRequest.Execute();
             WriteObject(changeResponse);
