@@ -27,6 +27,7 @@ namespace Google.PowerShell.Compute
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceSnapshot")]
+    [OutputType(typeof(Snapshot))]
     public class AddGceSnapshotCmdlet : GceConcurrentCmdlet
     {
         private class ParamterSetNames
@@ -138,6 +139,7 @@ namespace Google.PowerShell.Compute
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceSnapshot", DefaultParameterSetName = ParameterSetNames.OfProject)]
+    [OutputType(typeof(Snapshot))]
     public class GetGceSnapshot : GceCmdlet
     {
         private class ParameterSetNames

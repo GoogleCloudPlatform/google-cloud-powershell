@@ -27,6 +27,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceInstanceTemplate", DefaultParameterSetName = ParameterSetNames.Default)]
+    [OutputType(typeof(InstanceTemplate))]
     public class GetGceInstanceTemplateCmdlet : GceCmdlet
     {
         private class ParameterSetNames
@@ -156,6 +157,7 @@ namespace Google.PowerShell.ComputeEngine
     /// <para>Creates a new instance template for a 4 core machine that has access to BigQuery.</para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceInstanceTemplate", DefaultParameterSetName = ParameterSetNames.ByValues)]
+    [OutputType(typeof(InstanceTemplate))]
     public class AddGceInstanceTemplateCmdlet : GceTemplateDescriptionCmdlet
     {
         private struct ParameterSetNames
@@ -324,7 +326,11 @@ namespace Google.PowerShell.ComputeEngine
                 default:
                     throw UnknownParameterSetException;
             }
-            AddGlobalOperation(Project, Service.InstanceTemplates.Insert(instanceTemplate, Project).Execute());
+            Operation operation = Service.InstanceTemplates.Insert(instanceTemplate, Project).Execute();
+            AddGlobalOperation(Project, operation, () =>
+            {
+                WriteObject(Service.InstanceTemplates.Get(Project, instanceTemplate.Name));
+            });
         }
     }
 

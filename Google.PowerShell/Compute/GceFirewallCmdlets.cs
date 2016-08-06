@@ -26,6 +26,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceFirewall")]
+    [OutputType(typeof(Firewall))]
     public class GetGceFirewallCmdlet : GceCmdlet
     {
         /// <summary>
@@ -101,6 +102,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceFirewall")]
+    [OutputType(typeof(Firewall))]
     public class AddGceFirewallCmdlet : GceCmdlet
     {
         /// <summary>
@@ -264,7 +266,8 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceFirewall")]
-    public class SetGceFirewallCmdlet : GceCmdlet
+    [OutputType(typeof(Firewall))]
+    public class SetGceFirewallCmdlet : GceConcurrentCmdlet
     {
         /// <summary>
         /// <para type="description">
@@ -287,7 +290,10 @@ namespace Google.PowerShell.ComputeEngine
         protected override void ProcessRecord()
         {
             Operation operation = Service.Firewalls.Update(Firewall, Project, Firewall.Name).Execute();
-            WaitForGlobalOperation(Project, operation);
+            AddGlobalOperation(Project, operation, () =>
+            {
+                WriteObject(Service.Firewalls.Get(Project, Firewall.Name));
+            });
         }
     }
 }

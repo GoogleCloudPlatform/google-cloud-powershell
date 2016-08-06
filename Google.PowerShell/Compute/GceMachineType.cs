@@ -31,6 +31,7 @@ namespace Google.PowerShell.Compute
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceMachineType", DefaultParameterSetName = ParameterSetNames.OfProject)]
+    [OutputType(typeof(MachineType))]
     public class GetGceMachineTypeCmdlet : GceCmdlet
     {
         private class ParameterSetNames

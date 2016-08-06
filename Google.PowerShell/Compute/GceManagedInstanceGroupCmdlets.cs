@@ -33,6 +33,7 @@ namespace Google.PowerShell.Compute
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceManagedInstanceGroup", DefaultParameterSetName = ParameterSetNames.ListProject)]
+    [OutputType(typeof(InstanceGroupManager), typeof(ManagedInstance))]
     public class GetManagedInstanceGroupCmdlet : GceCmdlet
     {
         private class ParameterSetNames
@@ -229,6 +230,7 @@ namespace Google.PowerShell.Compute
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceManagedInstanceGroup")]
+    [OutputType(typeof(InstanceGroupManager))]
     public class AddManagedInstanceGroupCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
@@ -368,8 +370,11 @@ namespace Google.PowerShell.Compute
             }
             InstanceGroupManagersResource.InsertRequest request =
                 Service.InstanceGroupManagers.Insert(manager, Project, Zone);
-            Operation response = request.Execute();
-            AddZoneOperation(Project, Zone, response);
+            Operation operation = request.Execute();
+            AddZoneOperation(Project, Zone, operation, () =>
+            {
+                WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, manager.Name));
+            });
         }
 
         private List<NamedPort> BuildNamedPorts()
@@ -525,6 +530,7 @@ namespace Google.PowerShell.Compute
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceManagedInstanceGroup", SupportsShouldProcess = true)]
+    [OutputType(typeof(InstanceGroupManager))]
     public class SetGceManagedInstanceGroupCmdelt : GceConcurrentCmdlet
     {
         private class ParameterSetNames
@@ -692,7 +698,10 @@ namespace Google.PowerShell.Compute
                 InstanceGroupManagersResource.SetInstanceTemplateRequest request =
                     Service.InstanceGroupManagers.SetInstanceTemplate(body, Project, Zone, Name);
                 Operation operation = request.Execute();
-                AddZoneOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation, () =>
+                {
+                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name));
+                });
             }
         }
 
@@ -708,7 +717,10 @@ namespace Google.PowerShell.Compute
                 InstanceGroupManagersResource.SetTargetPoolsRequest request =
                     Service.InstanceGroupManagers.SetTargetPools(body, Project, Zone, Name);
                 Operation operation = request.Execute();
-                AddZoneOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation, () =>
+                {
+                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name));
+                });
             }
         }
 
@@ -719,7 +731,10 @@ namespace Google.PowerShell.Compute
                 InstanceGroupManagersResource.ResizeRequest request =
                     Service.InstanceGroupManagers.Resize(Project, Zone, Name, Size);
                 Operation operation = request.Execute();
-                AddZoneOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation, () =>
+                {
+                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name));
+                });
             }
         }
 
@@ -735,7 +750,10 @@ namespace Google.PowerShell.Compute
                 InstanceGroupManagersResource.RecreateInstancesRequest request =
                     Service.InstanceGroupManagers.RecreateInstances(body, Project, Zone, Name);
                 Operation operation = request.Execute();
-                AddZoneOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation, () =>
+                {
+                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name));
+                });
             }
         }
 
@@ -751,7 +769,10 @@ namespace Google.PowerShell.Compute
                 InstanceGroupManagersResource.RecreateInstancesRequest request =
                     Service.InstanceGroupManagers.RecreateInstances(body, Project, Zone, Name);
                 Operation operation = request.Execute();
-                AddZoneOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation, () =>
+                {
+                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name));
+                });
             }
         }
 
@@ -767,7 +788,10 @@ namespace Google.PowerShell.Compute
                 InstanceGroupManagersResource.DeleteInstancesRequest request =
                     Service.InstanceGroupManagers.DeleteInstances(body, Project, Zone, Name);
                 Operation operation = request.Execute();
-                AddZoneOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation, () =>
+                {
+                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name));
+                });
             }
         }
 
@@ -783,7 +807,10 @@ namespace Google.PowerShell.Compute
                 InstanceGroupManagersResource.DeleteInstancesRequest request =
                     Service.InstanceGroupManagers.DeleteInstances(body, Project, Zone, Name);
                 Operation operation = request.Execute();
-                AddZoneOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation, () =>
+                {
+                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name));
+                });
             }
         }
 
@@ -799,7 +826,10 @@ namespace Google.PowerShell.Compute
                 InstanceGroupManagersResource.AbandonInstancesRequest request =
                     Service.InstanceGroupManagers.AbandonInstances(body, Project, Zone, Name);
                 Operation operation = request.Execute();
-                AddZoneOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation, () =>
+                {
+                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name));
+                });
             }
         }
 
@@ -815,7 +845,10 @@ namespace Google.PowerShell.Compute
                 InstanceGroupManagersResource.AbandonInstancesRequest request =
                     Service.InstanceGroupManagers.AbandonInstances(body, Project, Zone, Name);
                 Operation operation = request.Execute();
-                AddZoneOperation(Project, Zone, operation);
+                AddZoneOperation(Project, Zone, operation, () =>
+                {
+                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name));
+                });
             }
         }
 

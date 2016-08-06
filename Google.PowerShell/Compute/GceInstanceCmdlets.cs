@@ -336,6 +336,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceInstance")]
+    [OutputType(typeof(Instance))]
     public class AddGceInstanceCmdlet : GceInstanceDescriptionCmdlet
     {
         private class ParameterSetNames
@@ -680,6 +681,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Start, "GceInstance")]
+    [OutputType(typeof(Instance))]
     public class StartGceInstanceCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
@@ -776,6 +778,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Stop, "GceInstance")]
+    [OutputType(typeof(Instance))]
     public class StopGceInstanceCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
@@ -871,6 +874,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Restart, "GceInstance")]
+    [OutputType(typeof(Instance))]
     public class RestartGceInstanceCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
@@ -956,6 +960,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceInstance")]
+    [OutputType(typeof(Instance))]
     public class SetGceInstanceCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
@@ -1173,7 +1178,10 @@ namespace Google.PowerShell.ComputeEngine
                 InstancesResource.DeleteAccessConfigRequest request = Service.Instances.DeleteAccessConfig(
                     _project, _zone, _name, configName, NetworkInterface);
                 Operation operation = request.Execute();
-                AddZoneOperation(_project, _zone, operation);
+                AddZoneOperation(_project, _zone, operation, () =>
+                {
+                    WriteObject(Service.Instances.Get(_project, _zone, _name));
+                });
             }
 
             foreach (AccessConfig accessConfig in AddAccessConfig)
@@ -1181,7 +1189,10 @@ namespace Google.PowerShell.ComputeEngine
                 InstancesResource.AddAccessConfigRequest request = Service.Instances.AddAccessConfig(
                     accessConfig, _project, _zone, _name, NetworkInterface);
                 Operation response = request.Execute();
-                AddZoneOperation(_project, _zone, response);
+                AddZoneOperation(_project, _zone, response, () =>
+                {
+                    WriteObject(Service.Instances.Get(_project, _zone, _name));
+                });
             }
         }
 
@@ -1195,7 +1206,10 @@ namespace Google.PowerShell.ComputeEngine
                 InstancesResource.DetachDiskRequest request = Service.Instances.DetachDisk(
                     _project, _zone, _name, diskName);
                 Operation operation = request.Execute();
-                AddZoneOperation(_project, _zone, operation);
+                AddZoneOperation(_project, _zone, operation, () =>
+                {
+                    WriteObject(Service.Instances.Get(_project, _zone, _name));
+                });
             }
 
             foreach (object diskParam in AddDisk)
@@ -1214,7 +1228,10 @@ namespace Google.PowerShell.ComputeEngine
                 InstancesResource.AttachDiskRequest request =
                     Service.Instances.AttachDisk(newDisk, _project, _zone, _name);
                 Operation operation = request.Execute();
-                AddZoneOperation(_project, _zone, operation);
+                AddZoneOperation(_project, _zone, operation, () =>
+                {
+                    WriteObject(Service.Instances.Get(_project, _zone, _name));
+                });
             }
         }
 
@@ -1238,7 +1255,11 @@ namespace Google.PowerShell.ComputeEngine
             }
             InstancesResource.SetMetadataRequest request =
                 Service.Instances.SetMetadata(metadata, _project, _zone, _name);
-            AddZoneOperation(_project, _zone, request.Execute());
+            Operation operation = request.Execute();
+            AddZoneOperation(_project, _zone, operation, () =>
+            {
+                WriteObject(Service.Instances.Get(_project, _zone, _name));
+            });
         }
 
         /// <summary>
@@ -1254,7 +1275,10 @@ namespace Google.PowerShell.ComputeEngine
             InstancesResource.SetTagsRequest setRequest =
                 Service.Instances.SetTags(tags, _project, _zone, _name);
             Operation operation = setRequest.Execute();
-            AddZoneOperation(_project, _zone, operation);
+            AddZoneOperation(_project, _zone, operation, () =>
+            {
+                WriteObject(Service.Instances.Get(_project, _zone, _name));
+            });
         }
     }
 }

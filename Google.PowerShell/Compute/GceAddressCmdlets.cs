@@ -28,6 +28,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceAddress", DefaultParameterSetName = ParameterSetNames.OfProject)]
+    [OutputType(typeof(Address))]
     public class GetGceAddressCmdlet : GceCmdlet
     {
         private class ParameterSetNames
@@ -190,6 +191,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceAddress", DefaultParameterSetName = ParameterSetNames.ByValues)]
+    [OutputType(typeof(Address))]
     public class AddGceAddressCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
@@ -282,12 +284,18 @@ namespace Google.PowerShell.ComputeEngine
             if (Global)
             {
                 Operation operation = Service.GlobalAddresses.Insert(address, Project).Execute();
-                AddGlobalOperation(Project, operation);
+                AddGlobalOperation(Project, operation, () =>
+                {
+                    WriteObject(Service.GlobalAddresses.Get(Project, Name));
+                });
             }
             else
             {
                 Operation operation = Service.Addresses.Insert(address, Project, Region).Execute();
-                AddRegionOperation(Project, Region, operation);
+                AddRegionOperation(Project, Region, operation, () =>
+                {
+                    WriteObject(Service.Addresses.Get(Project, Region, Name));
+                });
             }
         }
     }

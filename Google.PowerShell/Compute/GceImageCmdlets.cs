@@ -38,6 +38,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceImage", DefaultParameterSetName = ParameterSetNames.OfProject)]
+    [OutputType(typeof(Image))]
     public class GetGceImageCmdlets : GceCmdlet
     {
         private static readonly string[] DefaultProjects = {
@@ -200,6 +201,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceImage")]
+    [OutputType(typeof(Image))]
     public class AddGceImageCmdlet : GceConcurrentCmdlet
     {
         /// <summary>
@@ -372,7 +374,8 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Disable, "GceImage")]
-    public class SetGceImageCmdlet : GceConcurrentCmdlet
+    [OutputType(typeof(Image))]
+    public class DisableGceImageCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
         {
