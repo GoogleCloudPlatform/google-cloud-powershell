@@ -204,7 +204,7 @@ namespace Google.PowerShell.Sql
 
             if (ShouldProcess($"{project}/{instance}/{id}", "Delete Backup Run"))
             {
-                WriteVerbose(string.Format("Removing Backup Run '{0}' from the Instance '{1}'.", id, instance));
+                WriteVerbose($"Removing Backup Run '{id}' from the Instance '{instance}'.");
                 BackupRunsResource.DeleteRequest request = Service.BackupRuns.Delete(project, instance, id);
                 Operation result = request.Execute();
                 WaitForSqlOperation(result);

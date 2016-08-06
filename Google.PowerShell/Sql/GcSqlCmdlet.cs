@@ -11,6 +11,7 @@ using Google.Apis.SQLAdmin.v1beta4;
 using System.Text.RegularExpressions;
 using Google.Apis.SQLAdmin.v1beta4.Data;
 using System.Threading;
+using System.Management.Automation;
 
 namespace Google.PowerShell.Sql
 {
@@ -63,8 +64,13 @@ namespace Google.PowerShell.Sql
                         break;
                     }
             }
-            WriteProgress(new System.Management.Automation.ProgressRecord(0, string.Format("Waiting for operation '{0}' to finish.", op.OperationType), "Waiting"));
-            int dots = 1;
+            Random rnd = new Random();
+            int randProc = rnd.Next();
+            ProgressRecord progress =
+                new ProgressRecord(randProc, $"Waiting for operation '{op.OperationType}' to finish.", "Waiting");
+            progress.PercentComplete = 0;
+            WriteProgress(progress);
+            int percentComplete = 1;
             while (op.Status != "DONE")
             {
                 if (op.Error != null) {
@@ -72,8 +78,9 @@ namespace Google.PowerShell.Sql
                     return op;
                 }
                 Thread.Sleep(delay);
-                WriteProgress(new System.Management.Automation.ProgressRecord(0, string.Format("Waiting for operation '{0}' to finish.", op.OperationType), "Waiting" + new String('.',dots)));
-                dots = (dots + 1) % 4;
+                progress.PercentComplete = percentComplete;
+                WriteProgress(progress);
+                percentComplete = (percentComplete + 1) % 100;
                 OperationsResource.GetRequest request = Service.Operations.Get(op.TargetProject, op.Name);
                 op = request.Execute();
             }
