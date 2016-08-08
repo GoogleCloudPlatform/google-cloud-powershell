@@ -225,12 +225,19 @@ namespace Google.PowerShell.ComputeEngine
     [Cmdlet(VerbsCommon.Remove, "GceFirewall", SupportsShouldProcess = true)]
     public class RemoveGceFirewallCmdlet : GceCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByObject = "ByObject";
+
+        }
+
         /// <summary>
         /// <para type="description">
         /// The name of the project from which to remove the firewall.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
         public string Project { get; set; }
@@ -240,17 +247,35 @@ namespace Google.PowerShell.ComputeEngine
         /// The name of the firewall rule to remove.
         /// </para>
         /// </summary>
-        [Parameter(Position = 1, ValueFromPipeline = true)]
+        [Parameter(Position = 1, ValueFromPipeline = true,
+            Mandatory = true, ParameterSetName = ParameterSetNames.ByName)]
         [Alias("Name", "Firewall")]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Firewall))]
         public string FirewallName { get; set; }
+
+        [Parameter(ValueFromPipeline = true, Mandatory = true, ParameterSetName = ParameterSetNames.ByObject)]
+        public Firewall InputObject { get; set; }
 
         protected override void ProcessRecord()
         {
-            if (ShouldProcess($"{Project}/{FirewallName}", "Remove Firewall"))
+            string project;
+            string firewallName;
+            switch (ParameterSetName)
             {
-                DeleteRequest request = Service.Firewalls.Delete(Project, FirewallName);
-                WaitForGlobalOperation(Project, request.Execute());
+                case ParameterSetNames.ByName:
+                    project = Project;
+                    firewallName = FirewallName;
+                    break;
+                case ParameterSetNames.ByObject:
+                    project = GetProjectNameFromUri(InputObject.SelfLink);
+                    firewallName = InputObject.Name;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+            if (ShouldProcess($"{project}/{firewallName}", "Remove Firewall"))
+            {
+                DeleteRequest request = Service.Firewalls.Delete(project, firewallName);
+                WaitForGlobalOperation(project, request.Execute());
             }
         }
     }

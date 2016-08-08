@@ -89,16 +89,29 @@ Describe "Add-GceFirewall" {
 Describe "Remove-GceFirewall" {
     $r = Get-Random
     $name = "test-remove-firewall-$r"
-    New-GceFirewallProtocol "tcp" -Port 5, 7 |
-        Add-GceFirewall -Project $project $name
 
-    It "should work" {
-        Remove-GceFirewall -Project $project $name
-        {Get-GceFirewall -Project $project $name } | Should throw 404
+    It "should fail for wrong project" {
+        { Remove-GceFirewall $name -Project "asdf" } | Should throw 403
+    }
+    It "should throw on non-existant firewall" {
+        { Remove-GceFirewall $name } | Should throw 404
     }
 
-    It "should throw on non-existant firewall" {
-        { Remove-GceFirewall -Project $project $name } | Should throw 404
+    Context "real remove" {
+        BeforeEach {
+            New-GceFirewallProtocol "tcp" -Port 5, 7 |
+                Add-GceFirewall $name
+        }
+
+        It "should work" {
+            Remove-GceFirewall $name
+            { Get-GceFirewall $name } | Should throw 404
+        }
+
+        It "should take pipeline object" {
+            Get-GceFirewall $name | Remove-GceFirewall
+            { Get-GceFirewall $name } | Should throw 404
+        }
     }
 }
 
