@@ -84,6 +84,9 @@ namespace Google.PowerShell.Sql
                 OperationsResource.GetRequest request = Service.Operations.Get(op.TargetProject, op.Name);
                 op = request.Execute();
             }
+            progress.RecordType = ProgressRecordType.Completed;
+            progress.PercentComplete = 100;
+            WriteProgress(progress);
             return op;
         }
     }
