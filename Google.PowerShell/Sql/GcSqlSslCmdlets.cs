@@ -221,6 +221,7 @@ namespace Google.PowerShell.Sql
                 CommonName = CommonName
             };
             SslCertsResource.InsertRequest request = Service.SslCerts.Insert(RequestBody, project, instance);
+            WriteVerbose($"Adding the SSL Certificate '{CommonName}' to the Instance {instance}.");
             SslCertsInsertResponse result = request.Execute();
             WriteObject(result.ClientCert);
         }
@@ -324,13 +325,14 @@ namespace Google.PowerShell.Sql
                     throw UnknownParameterSetException;
             }
 
-            if (!ShouldProcess($"{project}/{instance}/{name}", "Delete SSL Certificate"))
+            if (ShouldProcess($"{project}/{instance}/{name}", "Delete SSL Certificate"))
             {
-                return;
+                SslCertsResource.DeleteRequest request = Service.SslCerts.Delete(project, instance, finger);
+                WriteVerbose(
+                    $"Removing the SSL Certificate with Sha1Fingerprint '{finger}' from the Instance {instance}.");
+                Operation result = request.Execute();
+                WaitForSqlOperation(result);
             }
-            SslCertsResource.DeleteRequest request = Service.SslCerts.Delete(project, instance, finger);
-            Operation result = request.Execute();
-            WaitForSqlOperation(result);
         }
     }
 
@@ -392,6 +394,7 @@ namespace Google.PowerShell.Sql
                 PublicKey = PublicKey
             };
             SslCertsResource.CreateEphemeralRequest request = Service.SslCerts.CreateEphemeral(body, Project, Instance);
+            WriteVerbose($"Adding an ephemeral SSL Certificate to the Instance {Instance}.");
             SslCert result = request.Execute();
             WriteObject(result);
         }
@@ -483,6 +486,7 @@ namespace Google.PowerShell.Sql
             if (ShouldProcess($"{project}/{instance}", "Reset SSL Certificate Configuration"))
             {
                 InstancesResource.ResetSslConfigRequest request = Service.Instances.ResetSslConfig(project, instance);
+                WriteVerbose($"Resetting the SSL Certificate Configuration for the Instance {instance}.");
                 Operation result = request.Execute();
                 DatabaseInstance updated = Service.Instances.Get(project, instance).Execute();
                 WriteObject(updated);
