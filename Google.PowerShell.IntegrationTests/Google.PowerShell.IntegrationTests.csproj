@@ -67,6 +67,13 @@
     <None Include="Compute\Compute.GceUrlMap.Tests.ps1" />
     <None Include="GcloudCmdlets.ps1" />
     <None Include="README.md" />
+    <None Include="SQL\SQL.GcSqlBackupRuns.Tests.ps1" />
+    <None Include="SQL\SQL.GcSqlConfiguration.Tests.ps1" />
+    <None Include="SQL\SQL.GcSqlFlags.Tests.ps1" />
+    <None Include="SQL\SQL.GcSqlInstances.Tests.ps1" />
+    <None Include="SQL\SQL.GcSqlOperations.Tests.ps1" />
+    <None Include="SQL\SQL.GcSqlSslCerts.Tests.ps1" />
+    <None Include="SQL\SQL.GcSqlTiers.Tests.ps1" />
     <None Include="Storage\Storage.GcsBucket.Tests.ps1" />
     <None Include="Storage\Storage.GcsBucketLogging.Tests.ps1" />
     <None Include="Storage\Storage.GcsBucketWebsite.Tests.ps1" />
