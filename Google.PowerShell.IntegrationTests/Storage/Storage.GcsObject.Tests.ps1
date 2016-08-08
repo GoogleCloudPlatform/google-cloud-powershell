@@ -24,6 +24,9 @@ Describe "New-GcsObject" {
         $obj = Get-GcsObject $bucket $objectName
         $obj.Name | Should Be $objectName
         $obj.Size | Should Be 17
+
+        # Confirm it doesn't have any metadata by default.
+        $obj.Metadata.Size | Should Be 0
     }
 
     It "should fail if the file does not exist" {
@@ -172,6 +175,28 @@ Describe "New-GcsObject" {
         $emptyObj = New-GcsObject $bucket "zero-byte-test"
         $emptyObj.Size | Should Be 0
         Remove-GcsObject $emptyObj
+    }
+
+    It "should write metadata" {
+        $obj = New-GcsObject $bucket "metadata-test" -Metadata @{ "alpha" = 1; "beta" = "two"; "Content-Type" = "image/png" }
+        $obj.Metadata.Count = 3
+        $obj.Metadata[0].Key | Should Be "alpha"
+        $obj.Metadata[0].Key | Should Be "1"
+        $obj.Metadata[1].Key | Should Be "beta"
+        $obj.Metadata[1].Key | Should Be "xxx"
+        $obj.Metadata[2].Key | Should Be "Content-Type"
+        $obj.Metadata[2].Key | Should Be "image/png"
+        # Content-Type can be set from metadata.
+        $obj.ContentType | Should Be "image/png"
+        Remove-GcsObject $obj
+    }
+
+    It "will prefer the -ContentType parameter to -Metadata" {
+        $obj = New-GcsObject $bucket "metadata-test" `
+            -ContentType "image/jpeg" `
+            -Metadata @{ "Content-Type" = "image/png" }
+        $obj.ContentType | Should Be "image/jpeg"
+        Remove-GcsObject $obj
     }
 }
 

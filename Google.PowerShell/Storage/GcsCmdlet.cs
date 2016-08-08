@@ -4,6 +4,7 @@
 using Google.Apis.Storage.v1;
 using Google.PowerShell.Common;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Google.PowerShell.CloudStorage
@@ -38,6 +39,59 @@ namespace Google.PowerShell.CloudStorage
         protected string GetBaseUri(string bucket, string objectName)
         {
             return $"https://www.googleapis.com/download/storage/v1/b/{bucket}/o/{Uri.EscapeDataString(objectName)}?alt=media";
+        }
+
+        /// <summary>
+        /// Convert a PowerShell HashTable object into a string/string Dictionary.
+        /// </summary>
+        protected Dictionary<string, string> ConvertHashTableToDictionary(Hashtable hashtable)
+        {
+            // Convert a PowerShell HashTable object into a Dictionary<string, string>.
+            var metadataDictionary = new Dictionary<string, string>();
+            if (hashtable == null)
+            {
+                return metadataDictionary;
+            }
+
+            foreach (DictionaryEntry kvp in hashtable)
+            {
+                metadataDictionary.Add(kvp.Key.ToString(), kvp.Value.ToString());
+            }
+            return metadataDictionary;
+        }
+
+        /// <summary>
+        /// Infer the MIME type of a non-qualified file path. Returns null if no match is found.
+        /// </summary>
+        protected string InferContentType(string file)
+        {
+            int index = file.LastIndexOf('.');
+            if (index == -1)
+            {
+                return null;
+            }
+            string extension = file.ToLowerInvariant().Substring(index);
+            // http://www.freeformatter.com/mime-types-list.html
+            switch (extension)
+            {
+                case ".htm":
+                case ".html":
+                    return "text/html";
+                case ".jpg":
+                case ".jpeg":
+                    return "image/jpeg";
+                case ".js":
+                    return "application/javascript";
+                case ".json":
+                    return "application/json";
+                case ".png":
+                    return "image/png";
+                case ".txt":
+                    return "text/plain";
+                case ".zip":
+                    return "application/zip";
+            }
+            return null;
         }
     }
 }
