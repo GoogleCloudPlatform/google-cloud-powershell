@@ -7,7 +7,6 @@ using Google.PowerShell.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace Google.PowerShell.ComputeEngine
@@ -123,6 +122,20 @@ namespace Google.PowerShell.ComputeEngine
         public static string GetZoneNameFromUri(string uri)
         {
             return GetUriPart("zones", uri);
+        }
+
+        /// <summary>
+        /// Library method to pull the name of a zone from a uri.
+        /// </summary>
+        /// <param name="uri">
+        /// A uri that includes the zone.
+        /// </param>
+        /// <returns>
+        /// The name of the zone part of the uri.
+        /// </returns>
+        public static string GetRegionNameFromUri(string uri)
+        {
+            return GetUriPart("regions", uri);
         }
     }
 
