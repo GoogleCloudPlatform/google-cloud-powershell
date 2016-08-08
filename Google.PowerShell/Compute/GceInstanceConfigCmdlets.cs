@@ -25,6 +25,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GceInstanceConfig")]
+    [OutputType(typeof(Instance))]
     public class NewGceInstanceConfigCmdlet : GceInstanceDescriptionCmdlet
     {
 

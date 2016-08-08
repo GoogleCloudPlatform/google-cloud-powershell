@@ -24,6 +24,7 @@ namespace Google.PowerShell.Compute
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceNetwork")]
+    [OutputType(typeof(Network))]
     public class GetGceNetworkCmdlet : GceCmdlet
     {
         /// <summary>

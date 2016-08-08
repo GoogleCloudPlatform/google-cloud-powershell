@@ -17,6 +17,7 @@ namespace Google.PowerShell.Compute
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceRoute")]
+    [OutputType(typeof(Route))]
     public class AddGceRouteCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
@@ -181,6 +182,7 @@ namespace Google.PowerShell.Compute
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceRoute")]
+    [OutputType(typeof(Route))]
     public class GetGceRouteCmdlet : GceCmdlet
     {
         /// <summary>

@@ -25,6 +25,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GceFirewallProtocol", DefaultParameterSetName = ParameterSetNames.Default)]
+    [OutputType(typeof(Firewall.AllowedData))]
     public class NewFirewallProtocolCmdlet : GceCmdlet
     {
         private class ParameterSetNames

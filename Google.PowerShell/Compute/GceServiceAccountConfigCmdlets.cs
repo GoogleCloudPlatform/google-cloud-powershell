@@ -24,6 +24,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GceServiceAccountConfig", DefaultParameterSetName = ParameterSetNames.FromFlags)]
+    [OutputType(typeof(ServiceAccount))]
     public class NewGceServiceAccountConfigCmdlet : GCloudCmdlet
     {
         private class ParameterSetNames

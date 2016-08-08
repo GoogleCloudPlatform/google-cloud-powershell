@@ -306,6 +306,7 @@ namespace Google.PowerShell.CloudStorage
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GcsObject")]
+    [OutputType(typeof(Object))]
     public class SetGcsObjectCmdlet : GcsCmdlet
     {
         private class ParameterSetNames
