@@ -216,7 +216,7 @@ namespace Google.PowerShell.CloudStorage
         private static readonly Random ActivityIdGenerator = new Random();
 
         /// <summary>
-        /// <para typedef="description">
+        /// <para type="description">
         /// The name of the bucket to remove. This parameter will also accept a Bucket object.
         /// </para>
         /// </summary>
@@ -225,7 +225,7 @@ namespace Google.PowerShell.CloudStorage
         public string Name { get; set; }
 
         /// <summary>
-        /// <para typedef="description">
+        /// <para type="description">
         /// When deleting a bucket with objects still inside, use Force to proceed with the deletion without
         /// a prompt.
         /// </para>
@@ -347,7 +347,7 @@ namespace Google.PowerShell.CloudStorage
     public class TestGcsBucketCmdlet : GcsCmdlet
     {
         /// <summary>
-        /// <para typedef="description">
+        /// <para type="description">
         /// The name of the bucket to test for. This parameter will also accept a Bucket object.
         /// </para>
         /// </summary>

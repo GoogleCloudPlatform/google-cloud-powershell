@@ -156,9 +156,7 @@ namespace Google.PowerShell.CloudStorage
         /// Provide a predefined ACL to the object. e.g. "publicRead" where the project owner gets
         /// OWNER access, and allUsers get READER access.
         /// </para>
-        /// <para type="description">
-        /// See: https://cloud.google.com/storage/docs/json_api/v1/objects/insert
-        /// </para>
+        /// <para type="link" uri="(https://cloud.google.com/storage/docs/json_api/v1/objects/insert)">[API Documentation]</para>
         /// </summary>
         [Parameter(Mandatory = false)]
         public PredefinedAclEnum? PredefinedAcl { get; set; }
