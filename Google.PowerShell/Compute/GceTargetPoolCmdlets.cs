@@ -15,19 +15,19 @@ namespace Google.PowerShell.ComputeEngine
     /// Gets Google Compute Engine target pools.
     /// </para>
     /// <para type="description">
-    /// Lists target pools of a project, or gets a specific one.
+    /// This command lists target pools of a project, or gets a specific one.
     /// </para>
     /// <example>
     /// <code>PS C:\> Get-GceTargetPool</code>
-    /// <para>Lists all target pools for the default project.</para>
+    /// <para>This command lists all target pools for the default project.</para>
     /// </example>
     /// <example>
     /// <code>PS C:\> Get-GceTargetPool -Region us-central1</code>
-    /// <para>Lists all target pools in region "us-central1" for the default project.</para>
+    /// <para>This command lists all target pools in region "us-central1" for the default project.</para>
     /// </example>
     /// <example>
     /// <code>PS C:\> Get-GceTargetPool "my-target-pool"</code>
-    /// <para>Gets the target pool named "my-target-pool" in the default project and zone</para>
+    /// <para>This command gets the target pool named "my-target-pool" in the default project and zone</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceTargetPool", DefaultParameterSetName = ParameterSetNames.OfProject)]
@@ -70,9 +70,7 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 0)]
         public string Name { get; set; }
 
-        // TODO(jimwp) Understand what this health status is an uncomment this parameter.
-        //[Parameter]
-        public SwitchParameter CheckHealth { get; set; }
+        // TODO(jimwp): Understand and add health status check.
 
         protected override void ProcessRecord()
         {
@@ -80,10 +78,10 @@ namespace Google.PowerShell.ComputeEngine
             switch (ParameterSetName)
             {
                 case ParameterSetNames.OfProject:
-                    pools = GetAllProjectTargetPools();
+                    pools = GetAllProjectTargetPools(Project);
                     break;
                 case ParameterSetNames.OfRegion:
-                    pools = GetRegionTargetPools();
+                    pools = GetRegionTargetPools(Project, Region);
                     break;
                 case ParameterSetNames.ByName:
                     pools = new[] { Service.TargetPools.Get(Project, Region, Name).Execute() };
@@ -91,14 +89,7 @@ namespace Google.PowerShell.ComputeEngine
                 default:
                     throw UnknownParameterSetException;
             }
-            if (CheckHealth)
-            {
-                WriteObject(GetPoolHealth(pools), true);
-            }
-            else
-            {
-                WriteObject(pools, true);
-            }
+            WriteObject(pools, true);
         }
 
         private IEnumerable<HealthStatus> GetPoolHealth(IEnumerable<TargetPool> pools)
@@ -122,9 +113,9 @@ namespace Google.PowerShell.ComputeEngine
             }
         }
 
-        private IEnumerable<TargetPool> GetRegionTargetPools()
+        private IEnumerable<TargetPool> GetRegionTargetPools(string project, string region)
         {
-            TargetPoolsResource.ListRequest request = Service.TargetPools.List(Project, Region);
+            TargetPoolsResource.ListRequest request = Service.TargetPools.List(project, region);
             do
             {
                 TargetPoolList response = request.Execute();
@@ -140,10 +131,10 @@ namespace Google.PowerShell.ComputeEngine
         }
 
 
-        private IEnumerable<TargetPool> GetAllProjectTargetPools()
+        private IEnumerable<TargetPool> GetAllProjectTargetPools(string project)
         {
             TargetPoolsResource.AggregatedListRequest request =
-                Service.TargetPools.AggregatedList(Project);
+                Service.TargetPools.AggregatedList(project);
             do
             {
                 TargetPoolAggregatedList response = request.Execute();
@@ -177,13 +168,13 @@ namespace Google.PowerShell.ComputeEngine
     ///     PS C:\> $instance = Get-GceInstance "my-instance"
     ///     PS C:\> Get-GceTargetPool "my-pool" | Set-GceTargetPool -AddInstance $instance
     /// </code>
-    /// <para>Adds instance "my-instance" to the target pool "my-pool"</para>
+    /// <para>This command adds instance "my-instance" to the target pool "my-pool"</para>
     /// </example>
     /// <example>
     /// <code>
     ///     PS C:\> Set-GceTargetPool "my-pool" -RemoveInstance $instanceUrl
     /// </code>
-    /// <para> Removes the instance pointed to by $instanceUrl from target pool "my-pool".</para>
+    /// <para>This command removes the instance pointed to by $instanceUrl from target pool "my-pool".</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceTargetPool")]
