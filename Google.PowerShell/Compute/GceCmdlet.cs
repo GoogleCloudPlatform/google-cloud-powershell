@@ -7,6 +7,7 @@ using Google.PowerShell.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Management.Automation;
 using System.Threading;
 
 namespace Google.PowerShell.ComputeEngine
@@ -18,6 +19,9 @@ namespace Google.PowerShell.ComputeEngine
     {
         // The Servcie for the Google Compute API
         public ComputeService Service { get; }
+
+        // The value of the progress bar when being used as a spinner.
+        private int _spinnerValue;
 
         protected GceCmdlet() : this(null)
         {
@@ -34,7 +38,7 @@ namespace Google.PowerShell.ComputeEngine
         /// 
         /// Will throw an exception if the operation fails for any reason.
         /// </summary>
-        protected void WaitForZoneOperation(string project, string zone, Operation op)
+        protected void WaitForZoneOperation(string project, string zone, Operation op, string progressMessage = null)
         {
             WriteWarnings(op);
 
@@ -44,7 +48,9 @@ namespace Google.PowerShell.ComputeEngine
                 ZoneOperationsResource.GetRequest getReq = Service.ZoneOperations.Get(project, zone, op.Name);
                 op = getReq.Execute();
                 WriteWarnings(op);
+                WriteProgress(op, progressMessage);
             }
+            EndProgress(op);
 
             if (op.Error != null)
             {
@@ -58,7 +64,7 @@ namespace Google.PowerShell.ComputeEngine
         /// 
         /// Will throw an exception if the operation fails for any reason.
         /// </summary>
-        protected void WaitForRegionOperation(string project, string region, Operation op)
+        protected void WaitForRegionOperation(string project, string region, Operation op, string progressMessage = null)
         {
             WriteWarnings(op);
 
@@ -69,7 +75,10 @@ namespace Google.PowerShell.ComputeEngine
                     Service.RegionOperations.Get(project, region, op.Name);
                 op = getReq.Execute();
                 WriteWarnings(op);
+                WriteProgress(op, progressMessage);
             }
+
+            EndProgress(op);
 
             if (op.Error != null)
             {
@@ -83,7 +92,7 @@ namespace Google.PowerShell.ComputeEngine
         /// 
         /// Will throw an exception if the operation fails for any reason.
         /// </summary>
-        protected void WaitForGlobalOperation(string project, Operation operation)
+        protected void WaitForGlobalOperation(string project, Operation operation, string progressMessage = null)
         {
             WriteWarnings(operation);
             while (operation.Status != "DONE" && !Stopping)
@@ -91,7 +100,10 @@ namespace Google.PowerShell.ComputeEngine
                 Thread.Sleep(150);
                 operation = Service.GlobalOperations.Get(project, operation.Name).Execute();
                 WriteWarnings(operation);
+                WriteProgress(operation, progressMessage);
             }
+
+            EndProgress(operation);
 
             if (operation.Error != null)
             {
@@ -108,6 +120,51 @@ namespace Google.PowerShell.ComputeEngine
                     WriteWarning(warning.Message);
                 }
             }
+        }
+
+        private void WriteProgress(Operation op, string progressMessage)
+        {
+            int activityId = (int)(op.Id % int.MaxValue ?? 0);
+            string activity = progressMessage ?? op.Description;
+            if (activity == null)
+            {
+                string operationType = op.OperationType;
+                operationType = operationType.First().ToString().ToUpper() + operationType.Substring(1);
+                int startIndex = op.TargetLink.IndexOf("projects", StringComparison.Ordinal);
+                if (startIndex < 0 || startIndex >= op.TargetLink.Length)
+                {
+                    startIndex = 0;
+                }
+                activity = operationType + " " + op.TargetLink.Substring(startIndex);
+            }
+            string statusDescription = op.StatusMessage ?? op.Status;
+            int percentComplete;
+            if (op.Progress == null || op.Progress == 0)
+            {
+                percentComplete = _spinnerValue = (_spinnerValue + 1) % 100;
+            }
+            else
+            {
+                percentComplete = (int)op.Progress;
+            }
+            ProgressRecord record = new ProgressRecord(activityId, activity, statusDescription)
+            {
+                RecordType = ProgressRecordType.Processing,
+                PercentComplete = percentComplete,
+            };
+            WriteProgress(record);
+        }
+
+        private void EndProgress(Operation op)
+        {
+            int activityId = (int)(op.Id % int.MaxValue ?? 0);
+            string activity = op.Description ?? op.OperationType;
+            string statusDescription = op.StatusMessage ?? op.Status;
+            ProgressRecord record = new ProgressRecord(activityId, activity, statusDescription)
+            {
+                RecordType = ProgressRecordType.Completed,
+            };
+            WriteProgress(record);
         }
 
         /// <summary>
