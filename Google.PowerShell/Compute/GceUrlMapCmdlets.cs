@@ -17,11 +17,11 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// <example>
     /// <code>PS C:\> Get-GceUrlMap</code>
-    /// <para>Lists all url maps for the default project.</para>
+    /// <para>This command lists all url maps for the default project.</para>
     /// </example>
     /// <example>
     /// <code>PS C:\> Get-GceUrlMap "my-url-map"</code>
-    /// <para>Gets the url map named "my-url-map"</para>
+    /// <para>This command gets the url map named "my-url-map"</para>
     /// </example>
     [Cmdlet(VerbsCommon.Get, "GceUrlMap", DefaultParameterSetName = ParameterSetNames.OfProject)]
     [OutputType(typeof(UrlMap))]
@@ -56,7 +56,7 @@ namespace Google.PowerShell.ComputeEngine
             switch (ParameterSetName)
             {
                 case ParameterSetNames.OfProject:
-                    WriteObject(GetAllProjectUrlMaps(), true);
+                    WriteObject(GetAllProjectUrlMaps(Project), true);
                     break;
                 case ParameterSetNames.ByName:
                     WriteObject(Service.UrlMaps.Get(Project, Name).Execute());
@@ -66,9 +66,9 @@ namespace Google.PowerShell.ComputeEngine
             }
         }
 
-        private IEnumerable<UrlMap> GetAllProjectUrlMaps()
+        private IEnumerable<UrlMap> GetAllProjectUrlMaps(string project)
         {
-            UrlMapsResource.ListRequest request = Service.UrlMaps.List(Project);
+            UrlMapsResource.ListRequest request = Service.UrlMaps.List(project);
             do
             {
                 UrlMapList response = request.Execute();

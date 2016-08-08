@@ -17,11 +17,11 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// <example>
     /// <code>PS C:\> Get-GceBackendService</code>
-    /// <para>Lists all backend services for the default project.</para>
+    /// <para>This command lists all backend services for the default project.</para>
     /// </example>
     /// <example>
     /// <code>PS C:\> Get-GceBackendService "my-backendservice"</code>
-    /// <para>Gets the backend service named "my-backendservice"</para>
+    /// <para>This command gets the backend service named "my-backendservice".</para>
     /// </example>
     [Cmdlet(VerbsCommon.Get, "GceBackendService", DefaultParameterSetName = ParameterSetNames.OfProject)]
     [OutputType(typeof(BackendService))]
@@ -59,16 +59,16 @@ namespace Google.PowerShell.ComputeEngine
                     WriteObject(Service.BackendServices.Get(Project, Name).Execute());
                     break;
                 case ParameterSetNames.OfProject:
-                    WriteObject(GetAllProjectBackendServices(), true);
+                    WriteObject(GetAllProjectBackendServices(Project), true);
                     break;
                 default:
                     throw UnknownParameterSetException;
             }
         }
 
-        private IEnumerable<BackendService> GetAllProjectBackendServices()
+        private IEnumerable<BackendService> GetAllProjectBackendServices(string project)
         {
-            BackendServicesResource.ListRequest request = Service.BackendServices.List(Project);
+            BackendServicesResource.ListRequest request = Service.BackendServices.List(project);
             do
             {
                 BackendServiceList response = request.Execute();

@@ -7,6 +7,7 @@ Describe "Get-GceForwardingRule"{
     $regionRuleName1 = "region-rule1-$r"
     $regionRuleName2 = "region-rule2-$r"
     $globalRuleName = "global-rule-$r"
+
     It "should fail for wrong project" {
         { Get-GceForwardingRule -Project "asdf" } | Should Throw 403
     }
@@ -78,10 +79,7 @@ Describe "Get-GceForwardingRule"{
             gcloud compute backend-services delete "backend-$r" -q 2>$null
             gcloud compute http-health-checks delete "health-check-$r" -q 2>$null
         }
-
-
     }
 }
-
 
 Reset-GCloudConfig $oldActiveConfig $configName
