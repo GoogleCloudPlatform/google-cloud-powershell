@@ -285,16 +285,26 @@ namespace Google.PowerShell.ComputeEngine
     ///   <code>PS C:\> Resize-GceDisk "my-disk" 15</code>
     ///   <para>Changes the size of the persistant disk "my-disk" to 15GB.</para>
     /// </example>
+    /// <example>
+    ///   <code>PS C:\> Get-GceDisk "my-disk" | Resize-GceDisk 15</code>
+    ///   <para>Changes the size of the persistant disk "my-disk" to 15GB.</para>
+    /// </example>
     /// </summary>
-    [Cmdlet("Resize", "GceDisk")]
-    public class ResizeGceDiskCmdlet : GceCmdlet
+    [Cmdlet("Resize", "GceDisk", DefaultParameterSetName = ParameterSetNames.ByObject)]
+    public class ResizeGceDiskCmdlet : GceConcurrentCmdlet
     {
+
+        private class ParameterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByObject = "ByObject";
+        }
         /// <summary>
         /// <para type="description">
         /// The project to associate the new Compute Engine disk.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
@@ -303,7 +313,7 @@ namespace Google.PowerShell.ComputeEngine
         /// Specific zone to create the disk in, e.g. "us-central1-a".
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         public string Zone { get; set; }
 
@@ -312,34 +322,60 @@ namespace Google.PowerShell.ComputeEngine
         /// Name of the disk.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = true), ValidatePattern("[a-z]([-a-z0-9]*[a-z0-9])?")]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Position = 0, Mandatory = true)]
+        [ValidatePattern("[a-z]([-a-z0-9]*[a-z0-9])?")]
         public string DiskName { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The Disk object that describes the disk to resize.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true, ValueFromPipeline = true)]
+        public Disk InputObject { get; set; }
 
         /// <summary>
         /// <para type="description">
         /// Specify the new size of the disk in GiB. Must be larger than the current disk size.
         /// </para>
         /// </summary>
-        [Parameter(Position = 3, Mandatory = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 1)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true, Position = 0)]
         public long NewSizeGb { get; set; }
 
         protected override void ProcessRecord()
         {
-            base.ProcessRecord();
+            string project;
+            string zone;
+            string name;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.ByName:
+                    project = Project;
+                    zone = Zone;
+                    name = DiskName;
+                    break;
+                case ParameterSetNames.ByObject:
+                    project = GetProjectNameFromUri(InputObject.SelfLink);
+                    zone = GetZoneNameFromUri(InputObject.Zone);
+                    name = InputObject.Name;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
 
-            DisksResizeRequest diskResizeReq = new DisksResizeRequest();
-            diskResizeReq.SizeGb = NewSizeGb;
-
-            DisksResource.ResizeRequest resizeReq = Service.Disks.Resize(diskResizeReq, Project, Zone, DiskName);
+            var diskResizeReq = new DisksResizeRequest { SizeGb = NewSizeGb };
+            DisksResource.ResizeRequest resizeReq =
+                Service.Disks.Resize(diskResizeReq, project, zone, name);
 
             Operation op = resizeReq.Execute();
-            WaitForZoneOperation(Project, Zone, op);
-
-            // Return the updated disk.
-            DisksResource.GetRequest getReq = Service.Disks.Get(Project, Zone, DiskName);
-            Disk disk = getReq.Execute();
-
-            WriteObject(disk);
+            AddZoneOperation(project, zone, op, () =>
+            {
+                // Return the updated disk.
+                DisksResource.GetRequest getReq = Service.Disks.Get(project, zone, name);
+                Disk disk = getReq.Execute();
+                WriteObject(disk);
+            });
         }
     }
 
