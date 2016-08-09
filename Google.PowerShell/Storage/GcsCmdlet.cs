@@ -46,7 +46,6 @@ namespace Google.PowerShell.CloudStorage
         /// </summary>
         protected Dictionary<string, string> ConvertToDictionary(Hashtable hashtable)
         {
-            // Convert a PowerShell HashTable object into a Dictionary<string, string>.
             var metadataDictionary = new Dictionary<string, string>();
             if (hashtable == null)
             {
@@ -61,7 +60,8 @@ namespace Google.PowerShell.CloudStorage
         }
 
         /// <summary>
-        /// Converts an IDictionary into a Dictionary instance. The key value here is properly handling null cases.
+        /// Converts an IDictionary into a Dictionary instance. (This method is preferred over passing it to
+        /// the constructor for Dictionary since this will handle the null case.)
         /// </summary>
         protected Dictionary<string, string> ConvertToDictionary(IDictionary<string, string> idict)
         {
