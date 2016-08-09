@@ -61,6 +61,21 @@ namespace Google.PowerShell.CloudStorage
         }
 
         /// <summary>
+        /// Converts an IDictionary into a Dictionary instance. The key value here is properly handling null cases.
+        /// </summary>
+        protected Dictionary<string, string> ConvertToDictionary(IDictionary<string, string> idict)
+        {
+            if (idict == null)
+            {
+                return new Dictionary<string, string>();
+            }
+            else
+            {
+                return new Dictionary<string, string>(idict);
+            }
+        }
+
+        /// <summary>
         /// Infer the MIME type of a non-qualified file path. Returns null if no match is found.
         /// </summary>
         protected string InferContentType(string file)
@@ -92,6 +107,44 @@ namespace Google.PowerShell.CloudStorage
                     return "application/zip";
             }
             return null;
+        }
+
+        /// <summary>
+        /// Return the content type to use for a Cloud Storage object given existing values, defauts, etc. The order of
+        /// precidence is:
+        /// 1. New content type, e.g. a ContentType parameter.
+        /// 2. New metadata, e.g. Metadata value specified via parameter.
+        /// 3. Existing object, to keep its existing content-type
+        /// 4. Default content type #1 to apply. (e.g. sniffing file content.)
+        /// 5. Default content type #2 to apply. (e.g. a catch-all like octet-stream.)
+        /// </summary>
+        public string GetContentType(
+            string newContentType,
+            Dictionary<string, string> newMetadata,
+            Google.Apis.Storage.v1.Data.Object existingObject,
+            string defaultContentType1 = null,
+            string defaultContentType2 = null)
+        {
+            if (!String.IsNullOrEmpty(newContentType))
+            {
+                return newContentType;
+            }
+
+            if (newMetadata != null && newMetadata.ContainsKey("Content-Type"))
+            {
+                return newMetadata["Content-Type"];
+            }
+
+            if (existingObject != null && !String.IsNullOrEmpty(existingObject.ContentType)) {
+                return existingObject.ContentType;
+            }
+
+            if (!String.IsNullOrEmpty(defaultContentType1))
+            {
+                return defaultContentType1;
+            }
+
+            return defaultContentType2;
         }
     }
 }

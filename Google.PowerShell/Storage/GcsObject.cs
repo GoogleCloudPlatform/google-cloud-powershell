@@ -54,7 +54,7 @@ namespace Google.PowerShell.CloudStorage
         protected Object UploadGcsObject(
             StorageService service, string bucket, string objectName,
             Stream contentStream, string contentType,
-            PredefinedAclEnum? predefinedAcl, Dictionary<string, string> metadata, IList<ObjectAccessControl> acls)
+            PredefinedAclEnum? predefinedAcl, Dictionary<string, string> metadata)
         {
             // Work around an API wart. It is possible to specify content type via the API and also by
             // metadata.
@@ -65,7 +65,6 @@ namespace Google.PowerShell.CloudStorage
 
             Object newGcsObject = new Object
             {
-                Acl = acls,
                 Bucket = bucket,
                 Name = objectName,
                 ContentType = contentType,
@@ -213,11 +212,16 @@ namespace Google.PowerShell.CloudStorage
             base.ProcessRecord();
             var service = GetStorageService();
 
+            Dictionary<string, string> metadataDict = ConvertHashTableToDictionary(Metadata);
+
+            // Content type to use for the new object.
             string objContentType = null;
+
             Stream contentStream = null;
             if (!string.IsNullOrEmpty(File))
             {
-                objContentType = ContentType ?? InferContentType(File) ?? OctetStreamMimeType;
+                objContentType = GetContentType(
+                    ContentType, metadataDict, null, InferContentType(File), OctetStreamMimeType);
                 string qualifiedPath = GetFullPath(File);
                 if (!System.IO.File.Exists(qualifiedPath))
                 {
@@ -229,7 +233,7 @@ namespace Google.PowerShell.CloudStorage
             {
                 // We store string data as UTF-8, which is different from .NET's default encoding
                 // (UTF-16). But this simplifies several other issues.
-                objContentType = ContentType ?? UTF8TextMimeType;
+                objContentType = GetContentType(ContentType, metadataDict, null, UTF8TextMimeType);
                 byte[] contentBuffer = Encoding.UTF8.GetBytes(Contents);
                 contentStream = new MemoryStream(contentBuffer);
             }
@@ -249,8 +253,7 @@ namespace Google.PowerShell.CloudStorage
                 Object newGcsObject = UploadGcsObject(
                     service, Bucket, ObjectName, contentStream,
                     objContentType, PredefinedAcl,
-                    ConvertHashTableToDictionary(Metadata),
-                    null /* Specific ACLs, not supported. Only PredefinedACLs. */);
+                    metadataDict);
 
                 WriteObject(newGcsObject);
             }
@@ -713,7 +716,7 @@ namespace Google.PowerShell.CloudStorage
     ///   <para><code>PS C:\> "OK" | Write-GcsObject -Bucket "widget-co-logs" -ObjectName "status.txt"</code></para>
     /// </example>
     /// </summary>
-    [Cmdlet(VerbsCommunications.Write, "GcsObject")]
+    [Cmdlet(VerbsCommunications.Write, "GcsObject"), OutputType(typeof(Object))]
     public class WriteGcsObjectCmdlet : GcsObjectCmdlet
     {
         private class ParameterSetNames
@@ -773,16 +776,8 @@ namespace Google.PowerShell.CloudStorage
         [Parameter(Mandatory = false)]
         public string ContentType { get; set; }
 
-        /// <summary>
-        /// <para type="description">
-        /// Provide a predefined ACL to the object. e.g. "publicRead" where the project owner gets
-        /// OWNER access, and allUsers get READER access. Will overwrite the object's existing ACLs.
-        /// If not specified, the object's existing ACLs will be used.
-        /// </para>
-        /// <para type="link" uri="(https://cloud.google.com/storage/docs/json_api/v1/objects/insert)">[API Documentation]</para>
-        /// </summary>
-        [Parameter(Mandatory = false)]
-        public PredefinedAclEnum? PredefinedAcl { get; set; }
+        // TODO(chrsmith): Support updating an existing object's ACLs. Currently we don't do this because we only
+        // support setting canned, default ACLs; which is only allowed by the API when creating new objects.
 
         /// <summary>
         /// <para type="description">
@@ -828,10 +823,7 @@ namespace Google.PowerShell.CloudStorage
             // Get the existing storage object so we can use its metadata. (If it does not exist, we will fall back to
             // default values.)
             Object existingGcsObject = null;
-
-            string existingObjectContentType = ContentType ?? InferContentType(File) ?? OctetStreamMimeType;
             Dictionary<string, string> existingObjectMetadata = null;
-            IList<ObjectAccessControl> existingObjectAcls = null;
 
             using (contentStream)
             {
@@ -841,12 +833,12 @@ namespace Google.PowerShell.CloudStorage
                     getReq.Projection = ObjectsResource.GetRequest.ProjectionEnum.Full;
 
                     existingGcsObject = getReq.Execute();
-                    existingObjectAcls = existingGcsObject.Acl;
 
                     // If the object already has metadata associated with it, we first PATCH the new metadata into the
                     // existing object. Otherwise we would reimplement "metadata merging" logic, and probably get it wrong.
-                    Object existingGcsObjectUpdatedMetadata = UpdateObjectMetadata(service, existingGcsObject, ConvertHashTableToDictionary(Metadata));
-                    existingObjectMetadata = new Dictionary<string, string>(existingGcsObjectUpdatedMetadata.Metadata);
+                    Object existingGcsObjectUpdatedMetadata = UpdateObjectMetadata(
+                        service, existingGcsObject, ConvertToDictionary(existingGcsObject.Metadata));
+                    existingObjectMetadata = ConvertToDictionary(existingGcsObjectUpdatedMetadata.Metadata);
                 }
                 catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
                 {
@@ -856,6 +848,8 @@ namespace Google.PowerShell.CloudStorage
                     }
                 }
 
+                string contentType = GetContentType(ContentType, existingObjectMetadata, existingGcsObject);
+
                 // Rewriting GCS objects is done by simply creating a new object with the
                 // same name. (i.e. this is functionally identical to New-GcsObject.)
                 //
@@ -864,8 +858,10 @@ namespace Google.PowerShell.CloudStorage
                 // See: https://cloud.google.com/storage/docs/consistency
                 Object updatedGcsObject = UploadGcsObject(
                     service, Bucket, ObjectName, contentStream,
-                    existingGcsObject.ContentType, PredefinedAcl,
-                    existingObjectMetadata, existingObjectAcls);
+                    contentType, null /* predefinedAcl */,
+                    existingObjectMetadata);
+
+                WriteObject(updatedGcsObject);
             }
         }
     }
