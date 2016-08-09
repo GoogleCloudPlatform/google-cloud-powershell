@@ -44,7 +44,7 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// Convert a PowerShell HashTable object into a string/string Dictionary.
         /// </summary>
-        protected Dictionary<string, string> ConvertHashTableToDictionary(Hashtable hashtable)
+        protected Dictionary<string, string> ConvertToDictionary(Hashtable hashtable)
         {
             // Convert a PowerShell HashTable object into a Dictionary<string, string>.
             var metadataDictionary = new Dictionary<string, string>();
@@ -55,7 +55,7 @@ namespace Google.PowerShell.CloudStorage
 
             foreach (DictionaryEntry kvp in hashtable)
             {
-                metadataDictionary.Add(kvp.Key.ToString(), kvp.Value.ToString());
+                metadataDictionary.Add(kvp.Key.ToString(), kvp.Value?.ToString());
             }
             return metadataDictionary;
         }

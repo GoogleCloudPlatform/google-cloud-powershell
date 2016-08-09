@@ -178,13 +178,23 @@ Describe "New-GcsObject" {
     }
 
     It "should write metadata" {
-        $obj = New-GcsObject $bucket "metadata-test" -Metadata @{ "alpha" = 1; "beta" = "two"; "Content-Type" = "image/png" }
+        $obj = New-GcsObject $bucket "metadata-test" `
+            -Metadata @{ "alpha" = 1; "beta" = "two"; "Content-Type" = "image/png" }
         $obj.Metadata.Count = 3
         $obj.Metadata["alpha"] | Should Be 1
         $obj.Metadata["beta"] | Should Be "two"
         $obj.Metadata["Content-Type"] | Should Be "image/png"
         # Content-Type can be set from metadata.
         $obj.ContentType | Should Be "image/png"
+        Remove-GcsObject $obj
+    }
+
+    # Regression for a bug found while unit testing other scenarios.
+    It "should write metadata when accepting content from pipeline" {
+        $obj = "XXX" | New-GcsObject $bucket "metadata-test-2" `
+            -Metadata @{ "alpha" = 1; "beta" = 2; "gamma" = 3}
+        $obj.Metadata.Count | Should Be 3
+
         Remove-GcsObject $obj
     }
 
@@ -509,14 +519,15 @@ Describe "Write-GcsObject" {
     It "should not rewrite ACLs" {
         $orgObj = "original contents" | New-GcsObject $bucket "acl-test" `
             -PredefinedAcl bucketOwnerRead
+
         # The exact project or user IDs don't matter. As long as the ACL kind is correct.
-        $orgObj.Acl[0].Id | Should BeLike "*/user-*"
-        $orgObj.Acl[1].Id | Should BeLike "*/project-owners-*"
+        $orgObj.Acl.Id -like "*/project-owners-*" | Should Be $true
+        $orgObj.Acl.Id -like "*/user-*"           | Should Be $true
 
         # Updating the object leaves the existing ACLs in place.
         $updatedObj = "new contents" | Write-GcsObject $bucket "acl-test"
-        $updatedObj.Acl[0].Id | Should BeLike "*/user-*"
-        $updatedObj.Acl[1].Id | Should BeLike "*/project-owners-*"
+        $updatedObj.Acl.Id -like "*/project-owners-*" | Should Be $true
+        $updatedObj.Acl.Id -like "*/user-*"           | Should Be $true
 
         Remove-GcsObject $bucket "acl-test"
     }
@@ -524,32 +535,33 @@ Describe "Write-GcsObject" {
     It "should not clobber existing metadata" {
         $orgObj = "original contents" | New-GcsObject $bucket "metadata-test" `
             -Metadata @{ "one" = 1; "two" = 2}
-        $orgObj.Metadata.Size | Should Be 2
+        $orgObj.Metadata.Count | Should Be 2
         
         $updatedObj = "new contents" | Write-GcsObject $bucket "metadata-test"
-        $updatedObj.Metadata.Size | Should Be 2
+        $updatedObj.Metadata.Count | Should Be 2
 
         Remove-GcsObject $bucket "metadata-test"
     }
 
     It "should merge Metadata updates" {
-        $step1 = "XXX" | New-GcsObject $bucket "metadata-test" `
-            -Metadata @{ "alpha" = 1; "beta" = 2; "gamma" = 3}
-        $step1.Metadata.Size | Should Be 3
+        $step1 = "XXX" | New-GcsObject $bucket "metadata-test2" `
+            -Metadata @{ "alpha" = 1; "beta" = 2; "gamma" = 3 }
+        $step1.Metadata.Count | Should Be 3
         $step1.Metadata["alpha"] | Should Be 1
-        $step1.Metadata["beta"] | Should Be 2
+        $step1.Metadata["beta"]  | Should Be 2
         $step1.Metadata["gamma"] | Should Be 3
 
         # Remove a value ("beta"), update a value ("gamma"), add a new value ("delta").
-        $step2 = "XXX" | Write-GcsObject $bucket "metadata-test" `
-            -Metadata @{ "beta" = null; "gamma" = 33; "delta" = 4 }
-        $step2.Metadata.Size | Should Be 3
+        $step2 = "XXX" | Write-GcsObject $bucket "metadata-test2" `
+            -Metadata @{ "beta" = $null; "gamma" = 33; "delta" = 4 }
+
+        $step2.Metadata.Count | Should Be 3
         $step2.Metadata["alpha"] | Should Be 1
         $step2.Metadata.ContainsKey("beta") | Should Be $false
         $step2.Metadata["gamma"] | Should Be 33
         $step2.Metadata["delta"] | Should Be 4
 
-        Remove-GcsObject $bucket "metadata-test"
+        Remove-GcsObject $bucket "metadata-test2"
     }
 
     It "should give precidence to the ContentType parameter" {
@@ -561,8 +573,10 @@ Describe "Write-GcsObject" {
 
         # Where Write-Gcs has both ContentType and a Metadata value.
         $both = "XXX" | Write-GcsObject $bucket "content-type-test" `
-            -ContentType "alpha" -Metadata @{ "Content-Type" = "beta" }
-        $both.ContentType | Should Be "alpha"
+            -ContentType "test/alpha" -Metadata @{ "Content-Type" = "test/beta" }
+        $both.ContentType | Should Be "test/alpha"
+
+        Remove-GcsObject $bucket "content-type-test"
     }
 }
 

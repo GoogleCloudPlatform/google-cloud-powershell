@@ -212,7 +212,7 @@ namespace Google.PowerShell.CloudStorage
             base.ProcessRecord();
             var service = GetStorageService();
 
-            Dictionary<string, string> metadataDict = ConvertHashTableToDictionary(Metadata);
+            Dictionary<string, string> metadataDict = ConvertToDictionary(Metadata);
 
             // Content type to use for the new object.
             string objContentType = null;
@@ -833,12 +833,15 @@ namespace Google.PowerShell.CloudStorage
                     getReq.Projection = ObjectsResource.GetRequest.ProjectionEnum.Full;
 
                     existingGcsObject = getReq.Execute();
-
+                    existingObjectMetadata = ConvertToDictionary(existingGcsObject.Metadata);
                     // If the object already has metadata associated with it, we first PATCH the new metadata into the
                     // existing object. Otherwise we would reimplement "metadata merging" logic, and probably get it wrong.
-                    Object existingGcsObjectUpdatedMetadata = UpdateObjectMetadata(
-                        service, existingGcsObject, ConvertToDictionary(existingGcsObject.Metadata));
-                    existingObjectMetadata = ConvertToDictionary(existingGcsObjectUpdatedMetadata.Metadata);
+                    if (Metadata != null)
+                    {
+                        Object existingGcsObjectUpdatedMetadata = UpdateObjectMetadata(
+                            service, existingGcsObject, ConvertToDictionary(Metadata));
+                        existingObjectMetadata = ConvertToDictionary(existingGcsObjectUpdatedMetadata.Metadata);
+                    }
                 }
                 catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
                 {
