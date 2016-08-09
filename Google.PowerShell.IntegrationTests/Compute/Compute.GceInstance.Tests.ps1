@@ -106,7 +106,11 @@ Describe "New-GceInstanceConfig" {
     $instance = "gcps-instance-1-$r"
     $instance2 = "gcps-instance-2-$r"
     $defaultNetwork = Get-GceNetwork "default"
-    $attachedDisk = New-GceAttachedDiskConfig $image -Boot
+    $attachedDisk = New-Object Google.Apis.Compute.v1.Data.AttachedDisk
+    $attachedDisk.Boot = $true
+    $attachedDisk.AutoDelete = $true
+    $attachedDisk.InitializeParams = New-Object Google.Apis.Compute.v1.Data.AttachedDiskInitializeParams
+    $attachedDisk.InitializeParams.SourceImage = $image.SelfLink
 
     It "should work" {
         $instanceConfig = New-GceInstanceConfig -Name $instance `
@@ -418,7 +422,9 @@ Describe "Set-GceInstance" {
             $newDisk = New-GceDisk -Project $project -Zone $zone2 -DiskName $newDiskName -Size 1
             $newDisk2 = New-GceDisk -Project $project -Zone $zone2 -DiskName $newDiskName2 -Size 1
             $newDisk3 = New-GceDisk -Project $project -Zone $zone2 -DiskName $newDiskName3 -Size 1
-            $attachedDisk3 = New-GceAttachedDiskConfig $newDisk3 -DeviceName $newDiskName3
+            $attachedDisk3 = New-Object Google.Apis.Compute.v1.Data.AttachedDisk
+            $attachedDisk3.Source = $newDisk3.SelfLink
+            $attachedDisk3.DeviceName = $newDiskName3
         }
 
         It "should change Disk" {

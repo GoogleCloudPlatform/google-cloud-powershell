@@ -89,7 +89,11 @@ Describe "Add-GceInstanceTemplate" {
     }
 
     It "should work with attached disk configs" {
-        $diskConfigs = New-GceAttachedDiskConfig -SourceImage $image -Boot
+        $diskConfigs = New-Object Google.Apis.Compute.v1.Data.AttachedDisk
+        $diskConfigs.Boot = $true
+        $diskConfigs.AutoDelete = $true
+        $diskConfigs.InitializeParams = New-Object Google.Apis.Compute.v1.Data.AttachedDiskInitializeParams
+        $diskConfigs.InitializeParams.SourceImage = $image.SelfLink
         Add-GceInstanceTemplate $name3 -Disk $diskConfigs
         $template = Get-GceInstanceTemplate $name3
         $template.Name | Should Be $name3

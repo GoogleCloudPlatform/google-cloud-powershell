@@ -131,7 +131,6 @@
     <Compile Include="Compute\GceBackendServiceCmdlets.cs" />
     <Compile Include="Compute\GceCmdlet.cs" />
     <Compile Include="Common\GcloudAttributes.cs" />
-    <Compile Include="Compute\GceAttachedDiskConfigCmdlets.cs" />
     <Compile Include="Compute\GceFirewallCmdlets.cs" />
     <Compile Include="Compute\GceForwardingRuleCmdlets.cs" />
     <Compile Include="Compute\GceHealthCheckCmdlets.cs" />
