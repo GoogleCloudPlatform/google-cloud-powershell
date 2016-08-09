@@ -239,7 +239,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// An AttachedDisk object specifying a disk to attach. Do not specify `-BootDiskImage` or
-        /// `-BootDiskSnapshot` if this is a boot disk. You can build one using New-GceAttachedDiskConfig.
+        /// `-BootDiskSnapshot` if this is a boot disk.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]

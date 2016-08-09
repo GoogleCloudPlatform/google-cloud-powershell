@@ -47,7 +47,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// An AttachedDisk object specifying a disk to attach. Do not specify `-BootDiskImage` or
-        /// `-BootDiskSnapshot` if this is a boot disk. You can build one using New-GceAttachedDiskConfig.
+        /// `-BootDiskSnapshot` if this is a boot disk.
         /// </summary>
         public abstract AttachedDisk[] Disk { get; set; }
 
