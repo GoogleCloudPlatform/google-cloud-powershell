@@ -20,8 +20,9 @@ namespace Google.PowerShell.ComputeEngine
         // The Servcie for the Google Compute API
         public ComputeService Service { get; }
 
-        // The value of the progress bar when being used as a spinner.
-        private int _spinnerValue;
+        // The value of the progress bar when being used as a spinner. If the operation does not give valid
+        // percent complete feedback, this spinner will move from 0 to 99 and then repeat.
+        private int _spinnerValue = 0;
 
         protected GceCmdlet() : this(null)
         {
@@ -50,7 +51,7 @@ namespace Google.PowerShell.ComputeEngine
                 WriteWarnings(op);
                 WriteProgress(op, progressMessage);
             }
-            EndProgress(op);
+            WriteProgressComplete(op);
 
             if (op.Error != null)
             {
@@ -78,7 +79,7 @@ namespace Google.PowerShell.ComputeEngine
                 WriteProgress(op, progressMessage);
             }
 
-            EndProgress(op);
+            WriteProgressComplete(op);
 
             if (op.Error != null)
             {
@@ -103,7 +104,7 @@ namespace Google.PowerShell.ComputeEngine
                 WriteProgress(operation, progressMessage);
             }
 
-            EndProgress(operation);
+            WriteProgressComplete(operation);
 
             if (operation.Error != null)
             {
@@ -122,20 +123,30 @@ namespace Google.PowerShell.ComputeEngine
             }
         }
 
+        /// <summary>
+        /// Writes a progress record to give feedback to the user.
+        /// </summary>
+        /// <param name="op">The operation we are waiting on.</param>
+        /// <param name="progressMessage">The custom message to write to the progress bar. If null, this
+        ///  method will generate a message from the operation.</param>
         private void WriteProgress(Operation op, string progressMessage)
         {
-            int activityId = (int)(op.Id % int.MaxValue ?? 0);
+
+            int activityId = op.Id.GetHashCode();
             string activity = progressMessage ?? op.Description;
             if (activity == null)
             {
-                string operationType = op.OperationType;
-                operationType = operationType.First().ToString().ToUpper() + operationType.Substring(1);
-                int startIndex = op.TargetLink.IndexOf("projects", StringComparison.Ordinal);
-                if (startIndex < 0 || startIndex >= op.TargetLink.Length)
+                string operationType = op.OperationType.Substring(0, 1).ToUpper()
+                    + op.OperationType.Substring(1);
+
+                string target = op.TargetLink;
+                const string baseUri = "https://www.googleapis.com/compute/v1/";
+                if (target.StartsWith(baseUri))
                 {
-                    startIndex = 0;
+                    target = target.Substring(baseUri.Length);
                 }
-                activity = operationType + " " + op.TargetLink.Substring(startIndex);
+
+                activity = operationType + " " + target;
             }
             string statusDescription = op.StatusMessage ?? op.Status;
             int percentComplete;
@@ -155,9 +166,13 @@ namespace Google.PowerShell.ComputeEngine
             WriteProgress(record);
         }
 
-        private void EndProgress(Operation op)
+        /// <summary>
+        /// Closes the progress bar of the operation.
+        /// </summary>
+        /// <param name="op">The operation the progress bar was created for.</param>
+        private void WriteProgressComplete(Operation op)
         {
-            int activityId = (int)(op.Id % int.MaxValue ?? 0);
+            int activityId = op.Id.GetHashCode();
             string activity = op.Description ?? op.OperationType;
             string statusDescription = op.StatusMessage ?? op.Status;
             ProgressRecord record = new ProgressRecord(activityId, activity, statusDescription)
@@ -165,6 +180,7 @@ namespace Google.PowerShell.ComputeEngine
                 RecordType = ProgressRecordType.Completed,
             };
             WriteProgress(record);
+            _spinnerValue = 0;
         }
 
         /// <summary>
