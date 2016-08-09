@@ -143,6 +143,7 @@
     <Compile Include="Compute\GceMachineType.cs" />
     <Compile Include="Compute\GceManagedInstanceGroupCmdlets.cs" />
     <Compile Include="Compute\GceInstanceTemplateCmdlets.cs" />
+    <Compile Include="Compute\GceMetadataCmdlet.cs" />
     <Compile Include="Compute\GceNetworkCmdlets.cs" />
     <Compile Include="Compute\GceRouteCmdlets.cs" />
     <Compile Include="Compute\GceServiceAccountConfigCmdlets.cs" />
