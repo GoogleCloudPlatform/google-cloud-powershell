@@ -114,14 +114,12 @@ namespace Google.PowerShell.CloudStorage
         /// precidence is:
         /// 1. New content type, e.g. a ContentType parameter.
         /// 2. New metadata, e.g. Metadata value specified via parameter.
-        /// 3. Existing object, to keep its existing content-type
-        /// 4. Default content type #1 to apply. (e.g. sniffing file content.)
-        /// 5. Default content type #2 to apply. (e.g. a catch-all like octet-stream.)
+        /// 3. Default content type to apply (potentially null), e.g. sniffing file content.
+        /// 4. Default content type to apply. e.g. a catch-all like octet-stream.
         /// </summary>
         public string GetContentType(
             string newContentType,
             Dictionary<string, string> newMetadata,
-            Google.Apis.Storage.v1.Data.Object existingObject,
             string defaultContentType1 = null,
             string defaultContentType2 = null)
         {
@@ -133,10 +131,6 @@ namespace Google.PowerShell.CloudStorage
             if (newMetadata != null && newMetadata.ContainsKey("Content-Type"))
             {
                 return newMetadata["Content-Type"];
-            }
-
-            if (existingObject != null && !String.IsNullOrEmpty(existingObject.ContentType)) {
-                return existingObject.ContentType;
             }
 
             if (!String.IsNullOrEmpty(defaultContentType1))

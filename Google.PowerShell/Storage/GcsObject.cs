@@ -221,7 +221,7 @@ namespace Google.PowerShell.CloudStorage
             if (!string.IsNullOrEmpty(File))
             {
                 objContentType = GetContentType(
-                    ContentType, metadataDict, null, InferContentType(File), OctetStreamMimeType);
+                    ContentType, metadataDict, InferContentType(File), OctetStreamMimeType);
                 string qualifiedPath = GetFullPath(File);
                 if (!System.IO.File.Exists(qualifiedPath))
                 {
@@ -851,7 +851,8 @@ namespace Google.PowerShell.CloudStorage
                     }
                 }
 
-                string contentType = GetContentType(ContentType, existingObjectMetadata, existingGcsObject);
+                string contentType = GetContentType(
+                    ContentType, existingObjectMetadata, existingGcsObject?.ContentType, OctetStreamMimeType);
 
                 // Rewriting GCS objects is done by simply creating a new object with the
                 // same name. (i.e. this is functionally identical to New-GcsObject.)
