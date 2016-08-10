@@ -18,13 +18,20 @@ namespace Google.PowerShell.ComputeEngine
     /// Gets the current metadata from the metadata server. Get-GceMetadata can only be called from a Google
     /// Compute Engine VM instance. Calls from any other machine will fail.
     /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/storing-retrieving-metadata)">
+    /// [Metadata Documentation]
+    /// </para>
     /// <example>
-    /// <code>PS C:\> $allMetadata = Get-GceMetadata | ConvertFrom-Json</code>
-    /// <para>Gets all of the metadata and converts it from the given json to a PSCustomObject.</para>
+    /// <code>PS C:\> $allMetadata = Get-GceMetadata -Recursive | ConvertFrom-Json</code>
+    /// <para>Gets all of the metadata and converts it from the given JSON to a PSCustomObject.</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> $hostName = Get-GceMetadata -Path "instance/hostname" -NotRecursive</code>
+    /// <code>PS C:\> $hostName = Get-GceMetadata -Path "instance/hostname" </code>
     /// <para>Gets the hostname of the instance.</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> $customProjectMetadata = Get-GceMetadata -Path "project/attributes/customKey" </code>
+    /// <para>Gets the value of the custom metadata with key "customKey" placed in the project .</para>
     /// </example>
     /// <example>
     /// <code>
@@ -44,20 +51,25 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        public string Path { get; set; } = "";
+        public string Path { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// If set, will only get the direct children of the current path.
+        /// If set, will get the metadata subtree as a JSON string. If -Path is not set, will get the entire
+        /// metadata tree as a JSON string.
         /// </para>
         /// </summary>
         [Parameter]
-        public SwitchParameter NotRecursive { get; set; }
+        public SwitchParameter Recursive { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// When set, the value of the respone etag will be appended to the output pipeline after the content.
+        /// When set, the value of the respone ETag will be appended to the output pipeline after the content.
         /// </para>
+        /// <example>
+        /// <code>PS C:\> $metadata, $etag = Get-GceMetadata -AppendEtag -Recursive</code>
+        /// <para>Gets the entire metadata tree, and the ETag of the version retrieved.</para>
+        /// </example>
         /// </summary>
         [Parameter]
         public SwitchParameter AppendETag { get; set; }
@@ -72,8 +84,8 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The last etag known. Used in conjunction with -WaitUpdate. If the last etag does not match the
-        /// current etag of the metadata server, it will return immediatly.
+        /// The last ETag known. Used in conjunction with -WaitUpdate. If the last ETag does not match the
+        /// current ETag of the metadata server, it will return immediatly.
         /// </para>
         /// </summary>
         [Parameter]
@@ -81,7 +93,8 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// Used in conjunction with -WaitUpdate. The amout of time to wait before returning.
+        /// Used in conjunction with -WaitUpdate. The amout of time to wait. If the timeout expires, the 
+        /// current metadata will be returned.
         /// </para>
         /// </summary>
         [Parameter]
@@ -91,7 +104,7 @@ namespace Google.PowerShell.ComputeEngine
         {
             const string basePath = "http://metadata.google.internal/computeMetadata/v1/";
             var queryParameters = new List<string>();
-            if (!NotRecursive)
+            if (Recursive)
             {
                 queryParameters.Add("recursive=true");
             }
@@ -115,15 +128,29 @@ namespace Google.PowerShell.ComputeEngine
             {
                 request.Timeout = -1;
             }
-
-            using (WebResponse response = request.GetResponse())
-            using (Stream responseStream = response.GetResponseStream())
-            using (StreamReader streamReader = new StreamReader(responseStream))
+            try
             {
-                WriteObject(streamReader.ReadToEnd());
-                if (AppendETag)
+                using (WebResponse response = request.GetResponse())
+                using (Stream responseStream = response.GetResponseStream())
+                using (StreamReader streamReader = new StreamReader(responseStream ?? Stream.Null))
                 {
-                    WriteObject(response.Headers["ETag"]);
+                    WriteObject(streamReader.ReadToEnd());
+                    if (AppendETag)
+                    {
+                        WriteObject(response.Headers["ETag"]);
+                    }
+                }
+            }
+            catch (WebException e)
+            {
+                if (e.Status == WebExceptionStatus.NameResolutionFailure)
+                {
+                    throw new Exception(
+                        "Get-GceMetadata can only be used in a Google Compute VM instance.", e);
+                }
+                else
+                {
+                    throw;
                 }
             }
         }
