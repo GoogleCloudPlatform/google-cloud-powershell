@@ -134,18 +134,22 @@ Describe "New-GceDisk" {
 
 Describe "Resize-GceDisk" {
     $diskName = "resize-test"
-    $zone = "us-central1-b"
     Remove-ProjectDisks($project)
-    gcloud compute disks create --project $project $diskName --zone $zone --size 20 --quiet 2>$null
+    New-GceDisk $diskName -SizeGb 10
  
-    It "should fail with invalid disk names" {
-        $disk = Get-GceDisk -Project $project -Zone $zone $diskName
+    It "should work using object pipeline" {
+        $disk = Get-GceDisk $diskName | Resize-GceDisk 20
         $disk.SizeGb | Should BeExactly 20
+    }
+
+    It "should work using name." {
+        $disk = Get-GceDisk $diskName
+        $disk.SizeGb | Should BeLessThan 1337
         
-        $disk = Resize-GceDisk -Project $project -Zone $zone $diskName 1337
+        $disk = Resize-GceDisk $diskName 1337
         $disk.SizeGb | Should BeExactly 1337
 
-        $disk = Get-GceDisk -Project $project -Zone $zone $diskName
+        $disk = Get-GceDisk $diskName
         $disk.SizeGb | Should BeExactly 1337
     }
 

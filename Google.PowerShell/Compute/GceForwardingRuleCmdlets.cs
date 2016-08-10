@@ -17,23 +17,23 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// <example>
     /// <code>PS C:\> Get-GceForwardingRule</code>
-    /// <para>Lists all forwarding rules for the default project.</para>
+    /// <para>This command lists all forwarding rules for the default project.</para>
     /// </example>
     /// <example>
     /// <code>PS C:\> Get-GceForwardingRule -Region us-central1</code>
-    /// <para>Lists all forwarding rules in region "us-central1" for the default project.</para>
+    /// <para>This command lists all forwarding rules in region "us-central1" for the default project.</para>
     /// </example>
     /// <example>
     /// <code>PS C:\> Get-GceForwardingRule "my-forwarding-rule"</code>
-    /// <para>Gets the forwarding rule named "my-forwarding-rule" in the default project and region</para>
+    /// <para>This command gets the forwarding rule named "my-forwarding-rule" in the default project and region.</para>
     /// </example>
     /// <example>
     /// <code>PS C:\> Get-GceForwardingRule -Project my-project -Global</code>
-    /// <para>Lists all global forwarding rules for the project named "my-project".</para>
+    /// <para>This command lists all global forwarding rules for the project named "my-project".</para>
     /// </example>
     /// <example>
     /// <code>PS C:\> Get-GceForwardingRule "my-forwarding-rule" -Gobal</code>
-    /// <para>Gets the global forwarding rule named "my-forwarding-rule" in the default project</para>
+    /// <para>This command gets the global forwarding rule named "my-forwarding-rule" in the default project.</para>
     /// </example>
     [Cmdlet(VerbsCommon.Get, "GceForwardingRule", DefaultParameterSetName = ParameterSetNames.OfProject)]
     [OutputType(typeof(ForwardingRule))]
@@ -52,10 +52,7 @@ namespace Google.PowerShell.ComputeEngine
         /// The project the forwarding rules belong to. Defaults to the project in the Cloud SDK config.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.OfProject)]
-        [Parameter(ParameterSetName = ParameterSetNames.OfRegion)]
-        [Parameter(ParameterSetName = ParameterSetNames.ByLocalName)]
-        [Parameter(ParameterSetName = ParameterSetNames.ByGlobalName)]
+        [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
@@ -92,10 +89,10 @@ namespace Google.PowerShell.ComputeEngine
             switch (ParameterSetName)
             {
                 case ParameterSetNames.OfProject:
-                    WriteObject(GetAllProjectForwardingRules(), true);
+                    WriteObject(GetAllProjectForwardingRules(Project), true);
                     break;
                 case ParameterSetNames.OfRegion:
-                    WriteObject(GetRegionForwardingRules(), true);
+                    WriteObject(GetRegionForwardingRules(Project, Region), true);
                     break;
                 case ParameterSetNames.ByLocalName:
                     WriteObject(Service.ForwardingRules.Get(Project, Region, Name).Execute());
@@ -108,9 +105,9 @@ namespace Google.PowerShell.ComputeEngine
             }
         }
 
-        private IEnumerable<ForwardingRule> GetRegionForwardingRules()
+        private IEnumerable<ForwardingRule> GetRegionForwardingRules(string project, string region)
         {
-            ForwardingRulesResource.ListRequest request = Service.ForwardingRules.List(Project, Region);
+            ForwardingRulesResource.ListRequest request = Service.ForwardingRules.List(project, region);
             do
             {
                 ForwardingRuleList response = request.Execute();
@@ -126,12 +123,12 @@ namespace Google.PowerShell.ComputeEngine
         }
 
 
-        private IEnumerable<ForwardingRule> GetAllProjectForwardingRules()
+        private IEnumerable<ForwardingRule> GetAllProjectForwardingRules(string project)
         {
             if (Global)
             {
                 GlobalForwardingRulesResource.ListRequest request =
-                    Service.GlobalForwardingRules.List(Project);
+                    Service.GlobalForwardingRules.List(project);
                 do
                 {
                     ForwardingRuleList response = request.Execute();
@@ -149,7 +146,7 @@ namespace Google.PowerShell.ComputeEngine
             else
             {
                 ForwardingRulesResource.AggregatedListRequest request =
-                    Service.ForwardingRules.AggregatedList(Project);
+                    Service.ForwardingRules.AggregatedList(project);
                 do
                 {
                     ForwardingRuleAggregatedList response = request.Execute();

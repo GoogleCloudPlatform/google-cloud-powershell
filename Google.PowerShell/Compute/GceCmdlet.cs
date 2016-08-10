@@ -125,13 +125,13 @@ namespace Google.PowerShell.ComputeEngine
         }
 
         /// <summary>
-        /// Library method to pull the name of a zone from a uri.
+        /// Library method to pull the name of a region from a URI.
         /// </summary>
         /// <param name="uri">
-        /// A uri that includes the zone.
+        /// A URI that includes the region.
         /// </param>
         /// <returns>
-        /// The name of the zone part of the uri.
+        /// The name of the region part of the URI.
         /// </returns>
         public static string GetRegionNameFromUri(string uri)
         {

@@ -18,15 +18,15 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// <example>
     /// <code>PS C:\> Get-GceTargetProxy</code>
-    /// <para>Lists all target proxies for the default project.</para>
+    /// <para>This command lists all target proxies for the default project.</para>
     /// </example>
     /// <example>
     /// <code>PS C:\> Get-GceTargetProxy -Region us-central1</code>
-    /// <para>Lists all target proxies in region "us-central1" for the default project.</para>
+    /// <para>This command lists all target proxies in region "us-central1" for the default project.</para>
     /// </example>
     /// <example>
     /// <code>PS C:\> Get-GceTargetProxy "my-target-proxy"</code>
-    /// <para>Gets the target proxy named "my-target-proxy" in the default project and zone</para>
+    /// <para>This command gets the target proxy named "my-target-proxy" in the default project and zone</para>
     /// </example>
     [Cmdlet(VerbsCommon.Get, "GceTargetProxy", DefaultParameterSetName = ParameterSetNames.OfProject)]
     [OutputType(typeof(TargetHttpProxy), typeof(TargetHttpsProxy))]
@@ -79,17 +79,17 @@ namespace Google.PowerShell.ComputeEngine
             switch (ParameterSetName)
             {
                 case ParameterSetNames.OfProject:
-                    WriteObject(GetAllProjectTargetProxies(), true);
+                    WriteObject(GetAllProjectTargetProxies(Project), true);
                     break;
                 case ParameterSetNames.ByName:
-                    WriteObject(GetTargetProxyByName(), true);
+                    WriteObject(GetTargetProxyByName(Project, Name), true);
                     break;
                 default:
                     throw UnknownParameterSetException;
             }
         }
 
-        private IEnumerable<object> GetTargetProxyByName()
+        private IEnumerable<object> GetTargetProxyByName(string project, string name)
         {
             var exceptions = new List<Exception>();
             var proxies = new List<object>();
@@ -97,7 +97,7 @@ namespace Google.PowerShell.ComputeEngine
             {
                 try
                 {
-                    proxies.Add(Service.TargetHttpProxies.Get(Project, Name).Execute());
+                    proxies.Add(Service.TargetHttpProxies.Get(project, name).Execute());
                 }
                 catch (Exception e)
                 {
@@ -108,7 +108,7 @@ namespace Google.PowerShell.ComputeEngine
             {
                 try
                 {
-                    proxies.Add(Service.TargetHttpsProxies.Get(Project, Name).Execute());
+                    proxies.Add(Service.TargetHttpsProxies.Get(project, name).Execute());
                 }
                 catch (Exception e)
                 {
@@ -127,17 +127,17 @@ namespace Google.PowerShell.ComputeEngine
                 }
                 else
                 {
-                    throw new AggregateException($"Can not find target proxy {Project}/{Name}", exceptions);
+                    throw new AggregateException($"Can not find target proxy {project}/{name}", exceptions);
                 }
             }
         }
 
 
-        private IEnumerable<object> GetAllProjectTargetProxies()
+        private IEnumerable<object> GetAllProjectTargetProxies(string project)
         {
             if (Http || !Https)
             {
-                TargetHttpProxiesResource.ListRequest request = Service.TargetHttpProxies.List(Project);
+                TargetHttpProxiesResource.ListRequest request = Service.TargetHttpProxies.List(project);
                 do
                 {
                     TargetHttpProxyList response = request.Execute();
@@ -153,7 +153,7 @@ namespace Google.PowerShell.ComputeEngine
             }
             if (Https || !Http)
             {
-                TargetHttpsProxiesResource.ListRequest request = Service.TargetHttpsProxies.List(Project);
+                TargetHttpsProxiesResource.ListRequest request = Service.TargetHttpsProxies.List(project);
                 do
                 {
                     TargetHttpsProxyList response = request.Execute();
