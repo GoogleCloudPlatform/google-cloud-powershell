@@ -10,7 +10,7 @@ title: Google Cloud PowerShell Cmdlet Reference
     <ul>
       {% for product_hash in site.data.products %}
         {% assign product = product_hash.productName %}
-        <li><a href="#{{ product | slugify  }}">{{ product }}</a>
+        <li><a href="/google-cloud-powershell/cmdlets/{{ product | slugify  }}">{{ product }}</a>
       {% endfor %}
     </ul>
   </div>
@@ -38,12 +38,12 @@ title: Google Cloud PowerShell Cmdlet Reference
           Google Cloud Storage data is grouped into "buckets".
         </p>
         <pre>
-# Create a new bucket.
-New-GcsBucket -Project $project -Name "my-new-bucket"
-
 # List all buckets associated with a project
-$project = "gcloud-powershell-testing"
-Get-GcsBucket -Project $project | Select -ExpandProperty Name
+$project = "&lt;your-project-name&gt;"
+Get-GcsBucket -Project $project
+
+# Create a new bucket in the project
+New-GcsBucket -Project $project -Name "&lt;your-bucket-name&gt;"
         </pre>
         <p>
           <strong>Objects</strong>
@@ -52,13 +52,18 @@ Get-GcsBucket -Project $project | Select -ExpandProperty Name
           Each bucket contains "objects", which contain arbitrary data.
         </p>
         <pre>
-# Get all objects in a bucket.
-$bucket = "chrsmith-debugging"
-# Get all objects in a GCS bucket.
-Find-GcsObject -Bucket $bucket | Select -ExpandProperty Name
+$bucket = "&lt;your-bucket-name&gt;"
 
-# Write a GCS object to disk.
-Read-GcsObject "bucket-name" "object-name" -OutFile "output-file.png"
+# List all objects in a GCS bucket.
+Find-GcsObject -Bucket $bucket
+
+# Upload a file to the bucket in a "test" folder,
+# renames it in passing from "test-file.png" to "test.png"
+# NOTE: This will fail unless you have permissions to write in the bucket.
+Write-GcsObject -Bucket $bucket -File "test-file.png" -ObjectName "test/test.png"
+
+# Download a GCS object to disk.
+Read-GcsObject $bucket "object-name" -OutFile "output-file.png"
         </pre>
 
         <!-- Google Compute Engine -->
@@ -90,11 +95,19 @@ Read-GcsObject "bucket-name" "object-name" -OutFile "output-file.png"
           project and zone, then those parameters are optional.
         </p>
         <pre>
-$config = New-GceInstanceConfig "instance-name" -MachineType "n1-standard-4" `
-    -DiskImage (Get-GceImage -Family "windows-2012-r2")
+# Define the project name you want to create the instance in
+# NOTE: if this is not defined, the command will attempt to use the default project
+# entered in the gcloud initalization, if any.
+$project = "&lt;your-project-name&gt;"
 
-$config | Add-GceInstance -Project $myProjectName -Zone "us-central1-b"
+# Define the configuration for an instance called "instance-name"
+$config = New-GceInstanceConfig "instance-name" -MachineType "n1-standard-4" `
+          -DiskImage (Get-GceImage -Family "windows-2012-r2")
+
+# Attempt to create the instance based on the configuration
+$config | Add-GceInstance -Project $project -Zone "us-central1-b"
         </pre>
+
         <p>
           <strong>Management</strong>
         </p>
@@ -104,11 +117,17 @@ $config | Add-GceInstance -Project $myProjectName -Zone "us-central1-b"
           your VM with the <code>Set-GceInstance</code> cmdlet.
         </p>
         <pre>
+$instance = "&lt;your-instance-name&gt;"
+
+# Fecth information about the instance
 Get-GceInstance $instance
+
+# Stop, start, restart the instance
 Stop-GceInstance $instance
 Start-GceInstance $instance
 Restart-GceInstance $instance
   
+# Add a new network access configuration to the instance
 [Google.Apis.Compute.v1.Data.AccessConfig] $newConfig = @{}
 $newConfig.Kind = "ONE_TO_ONE_NAT"
 $newConfig.Name = "New NAT"
@@ -118,11 +137,11 @@ Set-GceInstance "instance-name" `
     -DeleteAccessConfig "External NAT"
     -NewAccessConfig $newConfig
 
+# Edit the metadata and tags on the instance
 Set-GceInstance "instance-name" -AddMetadata @{"newKey" = "newValue"}
 Set-GceInstance "instance-name" -RemoveMetadata "newKey"
 Set-GceInstance "instance-name" -RemoveTag "beta" -AddTag "alpha"
-        </pre>
-      </div>
+        </pre>      </div>
     </div>
   </div>
 </div>
