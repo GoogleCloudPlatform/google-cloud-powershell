@@ -107,6 +107,8 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter]
         public TimeSpan? Timeout { get; set; }
 
+        private HttpWebRequest _request;
+
         protected override void ProcessRecord()
         {
             const string basePath = "http://metadata.google.internal/computeMetadata/v1/";
@@ -129,15 +131,15 @@ namespace Google.PowerShell.ComputeEngine
             }
 
             string query = string.Join("&", queryParameters);
-            HttpWebRequest request = WebRequest.CreateHttp($"{basePath}{Path}?{query}");
-            request.Headers.Add("Metadata-Flavor:Google");
+            _request = WebRequest.CreateHttp($"{basePath}{Path}?{query}");
+            _request.Headers.Add("Metadata-Flavor:Google");
             if (WaitUpdate)
             {
-                request.Timeout = -1;
+                _request.Timeout = -1;
             }
             try
             {
-                using (WebResponse response = request.GetResponse())
+                using (WebResponse response = _request.GetResponse())
                 using (Stream responseStream = response.GetResponseStream())
                 using (StreamReader streamReader = new StreamReader(responseStream ?? Stream.Null))
                 {
@@ -160,6 +162,12 @@ namespace Google.PowerShell.ComputeEngine
                     throw;
                 }
             }
+        }
+
+        protected override void StopProcessing()
+        {
+            _request.Abort();
+            base.StopProcessing();
         }
     }
 }
