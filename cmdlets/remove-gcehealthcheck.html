@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html class="google" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script>
+        (function(H){H.className=H.className.replace(/\bgoogle\b/,'google-js')})(document.documentElement)
+    </script>
+    <meta content="initial-scale=1, minimum-scale=1, width=device-width" name="viewport">
+    <meta name="description" content="">
+
+    <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
+
+    <title>Remove-GceHealthCheck</title>
+    <script src="//www.google.com/js/google.js"></script>
+    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/remove-gcehealthcheck.html">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
+    <link rel="stylesheet" href="//www.google.com/css/maia.css">
+</head>
+
+  <body>
+    <header>
+    <div class="maia-header" id="maia-header" role="banner">
+        <div class="maia-aux">
+            <a href="/google-cloud-powershell/">
+                <h1>
+                    <img alt="Google" src="//www.google.com/images/branding/googlelogo/1x/googlelogo_color_116x41dp.png">&nbsp;Cloud Platform
+                </h1>
+                <h2>
+                    PowerShell
+                </h2>
+            </a>
+        </div>
+    </div>
+</header>
+
+    
+    <div class="maia-nav" id="maia-nav-x" role="navigation">
+      <div class="maia-aux">
+        <ul>
+          <li>
+            <a href="/google-cloud-powershell/">Home</a>
+          </li>
+
+          <li
+              >
+            <a href="/google-cloud-powershell/cmdlets/">Reference</a>
+          </li>
+
+          <!-- cmdlet-specific pages include the parent product. -->
+          
+          <li class="active">
+            <a href="/google-cloud-powershell/cmdlets/google-compute-engine">Google Compute Engine</a>
+          </li>
+          
+
+          <!-- product-specific pages. -->
+          
+        </ul>
+      </div>
+    </div>
+    
+    <div id="maia-main" role="main">
+      <div class="maia-teleport" id="content">
+      <style>
+pre {
+    white-space: pre-wrap;
+}
+</style>
+
+<h1>Remove-GceHealthCheck</h1>
+<pre>
+NAME
+    Remove-GceHealthCheck
+    
+SYNOPSIS
+    Removes a Google Compute Engine health check.
+    
+SYNTAX
+    Remove-GceHealthCheck [-Project &lt;string&gt;] [-Name] &lt;string&gt; -Http &lt;SwitchParameter&gt; [&lt;CommonParameters&gt;]
+    
+    Remove-GceHealthCheck [-Project &lt;string&gt;] [-Name] &lt;string&gt; -Https &lt;SwitchParameter&gt; [&lt;CommonParameters&gt;]
+    
+    Remove-GceHealthCheck [-Http &lt;SwitchParameter&gt;] [-HttpObject] &lt;HttpHealthCheck&gt; [&lt;CommonParameters&gt;]
+    
+    Remove-GceHealthCheck [-Https &lt;SwitchParameter&gt;] [-HttpsObject] &lt;HttpsHealthCheck&gt; [&lt;CommonParameters&gt;]
+    
+    
+DESCRIPTION
+    Removes a Google Compute Engine Health check. Use this cmdlet to remove both HTTP and HTTPS health checks.
+    
+
+PARAMETERS
+    -Project &lt;string&gt;
+        The name of the project to remove the health check from. Defaults to the project in the Cloud SDK config.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Name &lt;string&gt;
+        The name of the health check to remove.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Http &lt;SwitchParameter&gt;
+        If set, will remove a health check that uses HTTP.
+        
+        Required?                    true
+        Position?                    named
+        Default value                False
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Https &lt;SwitchParameter&gt;
+        If set, will remove a health check that uses HTTPS.
+        
+        Required?                    true
+        Position?                    named
+        Default value                False
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -HttpObject &lt;HttpHealthCheck&gt;
+        An object defining the HTTP health check to remove.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -HttpsObject &lt;HttpsHealthCheck&gt;
+        An object defining the HTTPS health check to remove.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    &lt;CommonParameters&gt;
+        This cmdlet supports the common parameters: Verbose, Debug,
+        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
+        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
+        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
+    
+INPUTS
+    Google.Apis.Compute.v1.Data.HttpHealthCheck
+        
+    
+        An object defining the HTTP health check to remove.
+    
+    Google.Apis.Compute.v1.Data.HttpsHealthCheck
+        
+    
+        An object defining the HTTPS health check to remove.
+    
+    
+OUTPUTS
+    
+    ----------  EXAMPLE 1  ----------
+    
+    PS C:&gt; Remove-GceHealthCheck &quot;my-health-check&quot; -Project &quot;my-project&quot; -Http
+    
+    
+    Remove HTTP health check &quot;my-health-check&quot; from project &quot;my-project&quot;.
+    
+    ----------  EXAMPLE 2  ----------
+    
+    PS C:&gt; Remove-GceHealthCheck &quot;my-health-check&quot; -Https
+    
+    
+    Remove HTTPS health check &quot;my-health-check&quot; from the project in the Cloud SDK config.
+    
+    ----------  EXAMPLE 3  ----------
+    
+    PS C:&gt; Get-GceHealthCheck -Project &quot;my-project | Remove-GceHealthCheck
+    
+    
+    Remove all health checks from project &quot;my-project&quot;.
+    
+    
+RELATED LINKS
+
+
+
+</pre>
+
+      </div>
+    </div>
+    <footer>
+    <div id="maia-signature"></div>
+        <div class="maia-footer" id="maia-footer">
+            <div id="maia-footer-global">
+                <div class="maia-aux">
+                <ul>
+                    <li>
+                        <a href="//www.google.com/">Google</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/about/">About Google</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/policies/privacy/">Privacy</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/policies/terms/">Terms</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+
+    <script src="//www.google.com/js/maia.js">
+    </script>
+</body>
+</html>
