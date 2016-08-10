@@ -34,10 +34,15 @@ namespace Google.PowerShell.ComputeEngine
     /// <para>Gets the value of the custom metadata with key "customKey" placed in the project .</para>
     /// </example>
     /// <example>
+    /// <code>PS C:\> $metadata, $etag = Get-GceMetadata -AppendETag -Recursive</code>
+    /// <para>Gets the entire metadata tree, and the ETag of the version retrieved.</para>
+    /// </example>
+    /// <example>
     /// <code>
-    ///     PS C:\> $newTags, $newEtag = Get-GceMetadata -Path "instance/tags" -AppendEtag -WaitUpdate `
-    ///         -LastETag $oldETag
+    ///     PS C:\> $newTags, $newEtag = Get-GceMetadata -Path "instance/tags" -AppendETag -WaitUpdate `
+    ///                                     -LastETag $oldETag
     /// </code>
+    /// <para>Waits for the metadata "instance/tags" to be updated by the server.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceMetadata")]
@@ -64,12 +69,14 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// When set, the value of the respone ETag will be appended to the output pipeline after the content.
+        ///   When set, the value of the respone ETag will be appended to the output pipeline after the content.
         /// </para>
-        /// <example>
-        /// <code>PS C:\> $metadata, $etag = Get-GceMetadata -AppendEtag -Recursive</code>
-        /// <para>Gets the entire metadata tree, and the ETag of the version retrieved.</para>
-        /// </example>
+        /// <para type="description">
+        /// <code>PS C:\> $metadata, $etag = Get-GceMetadata -AppendETag -Recursive</code>
+        /// </para>
+        /// <para type="description">
+        ///   Gets the entire metadata tree, and the ETag of the version retrieved.
+        /// </para>
         /// </summary>
         [Parameter]
         public SwitchParameter AppendETag { get; set; }
