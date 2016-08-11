@@ -133,21 +133,7 @@ namespace Google.PowerShell.ComputeEngine
         {
 
             int activityId = op.Id.GetHashCode();
-            string activity = progressMessage ?? op.Description;
-            if (activity == null)
-            {
-                string operationType = op.OperationType.Substring(0, 1).ToUpper()
-                    + op.OperationType.Substring(1);
-
-                string target = op.TargetLink;
-                const string baseUri = "https://www.googleapis.com/compute/v1/";
-                if (target.StartsWith(baseUri))
-                {
-                    target = target.Substring(baseUri.Length);
-                }
-
-                activity = operationType + " " + target;
-            }
+            string activity = progressMessage ?? op.Description ?? BuildActivity(op);
             string statusDescription = op.StatusMessage ?? op.Status;
             int percentComplete;
             if (op.Progress == null || op.Progress == 0)
@@ -167,13 +153,35 @@ namespace Google.PowerShell.ComputeEngine
         }
 
         /// <summary>
+        /// Builds an activity. This is displayed on the top line of the progress bar.
+        /// </summary>
+        /// <param name="op">The operation to build an activity from.</param>
+        /// <returns>The type and target of the operation </returns>
+        private static string BuildActivity(Operation op)
+        {
+            // Capitalize the operation type.
+            string operationType = op.OperationType.Substring(0, 1).ToUpper()
+                                   + op.OperationType.Substring(1);
+
+            // Cut the target uri down to the interesting data.
+            string target = op.TargetLink;
+            const string baseUri = "https://www.googleapis.com/compute/v1/";
+            if (target.StartsWith(baseUri))
+            {
+                target = target.Substring(baseUri.Length);
+            }
+
+            return $"{operationType} {target}";
+        }
+
+        /// <summary>
         /// Closes the progress bar of the operation.
         /// </summary>
         /// <param name="op">The operation the progress bar was created for.</param>
         private void WriteProgressComplete(Operation op)
         {
             int activityId = op.Id.GetHashCode();
-            string activity = op.Description ?? op.OperationType;
+            string activity = op.Description ?? op.OperationType ?? BuildActivity(op);
             string statusDescription = op.StatusMessage ?? op.Status;
             ProgressRecord record = new ProgressRecord(activityId, activity, statusDescription)
             {
