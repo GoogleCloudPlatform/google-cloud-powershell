@@ -220,8 +220,7 @@ namespace Google.PowerShell.CloudStorage
             Stream contentStream = null;
             if (!string.IsNullOrEmpty(File))
             {
-                objContentType = GetContentType(
-                    ContentType, metadataDict, InferContentType(File), OctetStreamMimeType);
+                objContentType = GetContentType(ContentType, metadataDict, InferContentType(File));
                 string qualifiedPath = GetFullPath(File);
                 if (!System.IO.File.Exists(qualifiedPath))
                 {
@@ -233,7 +232,7 @@ namespace Google.PowerShell.CloudStorage
             {
                 // We store string data as UTF-8, which is different from .NET's default encoding
                 // (UTF-16). But this simplifies several other issues.
-                objContentType = GetContentType(ContentType, metadataDict, null, UTF8TextMimeType);
+                objContentType = GetContentType(ContentType, metadataDict, UTF8TextMimeType);
                 byte[] contentBuffer = Encoding.UTF8.GetBytes(Contents);
                 contentStream = new MemoryStream(contentBuffer);
             }
@@ -851,8 +850,7 @@ namespace Google.PowerShell.CloudStorage
                     }
                 }
 
-                string contentType = GetContentType(
-                    ContentType, existingObjectMetadata, existingGcsObject?.ContentType, OctetStreamMimeType);
+                string contentType = GetContentType(ContentType, existingObjectMetadata, existingGcsObject?.ContentType);
 
                 // Rewriting GCS objects is done by simply creating a new object with the
                 // same name. (i.e. this is functionally identical to New-GcsObject.)

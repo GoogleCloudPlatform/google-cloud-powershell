@@ -115,13 +115,12 @@ namespace Google.PowerShell.CloudStorage
         /// 1. New content type, e.g. a ContentType parameter.
         /// 2. New metadata, e.g. Metadata value specified via parameter.
         /// 3. Default content type to apply (potentially null), e.g. sniffing file content.
-        /// 4. Default content type to apply. e.g. a catch-all like octet-stream.
+        /// If no match is found, will return OctetStreamMimeType.
         /// </summary>
         public string GetContentType(
             string newContentType,
             Dictionary<string, string> newMetadata,
-            string defaultContentType1 = null,
-            string defaultContentType2 = null)
+            string defaultContentType = null)
         {
             if (!String.IsNullOrEmpty(newContentType))
             {
@@ -133,12 +132,12 @@ namespace Google.PowerShell.CloudStorage
                 return newMetadata["Content-Type"];
             }
 
-            if (!String.IsNullOrEmpty(defaultContentType1))
+            if (!String.IsNullOrEmpty(defaultContentType))
             {
-                return defaultContentType1;
+                return defaultContentType;
             }
 
-            return defaultContentType2;
+            return OctetStreamMimeType;
         }
     }
 }
