@@ -120,7 +120,7 @@ namespace Google.PowerShell.Common
         }
     }
     /// <summary>
-    /// This attribute allows an arry parameter to accept multiple types by replacing a target type with the 
+    /// This attribute allows an array parameter to accept multiple types by replacing a target type with the 
     /// value of a specified property. If the array element is not of the target type, it will not be changed.
     /// </summary>
     /// <example>
