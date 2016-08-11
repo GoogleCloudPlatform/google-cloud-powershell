@@ -22,7 +22,7 @@ namespace Google.PowerShell.ComputeEngine
     /// [Metadata Documentation]
     /// </para>
     /// <example>
-    /// <code>PS C:\> $allMetadata = Get-GceMetadata -Recursive | ConvertFrom-Json</code>
+    /// <code>PS C:\> $allMetadata = Get-GceMetadata -Recurse | ConvertFrom-Json</code>
     /// <para>Gets all of the metadata and converts it from the given JSON to a PSCustomObject.</para>
     /// </example>
     /// <example>
@@ -34,7 +34,7 @@ namespace Google.PowerShell.ComputeEngine
     /// <para>Gets the value of the custom metadata with key "customKey" placed in the project .</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> $metadata, $etag = Get-GceMetadata -AppendETag -Recursive</code>
+    /// <code>PS C:\> $metadata, $etag = Get-GceMetadata -AppendETag -Recurse</code>
     /// <para>Gets the entire metadata tree, and the ETag of the version retrieved.</para>
     /// </example>
     /// <example>
@@ -65,14 +65,14 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter]
-        public SwitchParameter Recursive { get; set; }
+        public SwitchParameter Recurse { get; set; }
 
         /// <summary>
         /// <para type="description">
         ///   When set, the value of the respone ETag will be appended to the output pipeline after the content.
         /// </para>
         /// <para type="description">
-        /// <code>PS C:\> $metadata, $etag = Get-GceMetadata -AppendETag -Recursive</code>
+        /// <code>PS C:\> $metadata, $etag = Get-GceMetadata -AppendETag -Recurse</code>
         /// </para>
         /// <para type="description">
         ///   Gets the entire metadata tree, and the ETag of the version retrieved.
@@ -92,7 +92,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The last ETag known. Used in conjunction with -WaitUpdate. If the last ETag does not match the
-        /// current ETag of the metadata server, it will return immediatly.
+        /// current ETag of the metadata server, it will return the updated value immediatly.
         /// </para>
         /// </summary>
         [Parameter]
@@ -103,17 +103,23 @@ namespace Google.PowerShell.ComputeEngine
         /// Used in conjunction with -WaitUpdate. The amout of time to wait. If the timeout expires, the 
         /// current metadata will be returned.
         /// </para>
+        /// <para type="description">
+        /// Check the ETag using AppendEtag to see if the data was updated within the timeout period.
+        /// </para>
         /// </summary>
         [Parameter]
         public TimeSpan? Timeout { get; set; }
 
+        /// <summary>
+        /// Make this a field, so it can be aborted if cmdlet stops e.g. the user hits Ctrl-C.
+        /// </summary>
         private HttpWebRequest _request;
 
         protected override void ProcessRecord()
         {
             const string basePath = "http://metadata.google.internal/computeMetadata/v1/";
             var queryParameters = new List<string>();
-            if (Recursive)
+            if (Recurse)
             {
                 queryParameters.Add("recursive=true");
             }
@@ -166,7 +172,7 @@ namespace Google.PowerShell.ComputeEngine
 
         protected override void StopProcessing()
         {
-            _request.Abort();
+            _request?.Abort();
             base.StopProcessing();
         }
     }
