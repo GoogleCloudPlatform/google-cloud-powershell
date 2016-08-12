@@ -1,0 +1,20 @@
+.TOC {
+    background-color: #FAFAFA;
+    height: 800px;
+    width: 400px;
+    float:left;
+    margin-top: 10px;
+    position: static;
+}
+.Info {
+    position: static;
+    margin-left: 20px;
+    float:left;
+}
+.Link {
+    color: #4285F6;
+    cursor: pointer;
+}
+* {
+    font-family: 'Comic Sans MS';
+}

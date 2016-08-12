@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html>
+<html class="google-js" lang="en" ng-app="powershellSite">
+<head>
+   <meta charset="utf-8">
+    <script>
+        (function(H){H.className=H.className.replace(/\bgoogle\b/,'google-js')})(document.documentElement)
+    </script>
+    <meta content="initial-scale=1, minimum-scale=1, width=device-width" name="viewport">
+    <meta name="description" content="">
+
+    <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
+
+    <title>Google Cloud PowerShell Cmdlet Reference</title>
+   <!-- <script src="//www.google.com/js/google.js"></script>--->
+    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/">
+    <!--<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">-->
+    <link rel="stylesheet" href="C:\Users\marceloyuela\Documents\google-cloud-powershell-rebase\new-website\maia.css"/> 
+    <link type="text/css" rel="stylesheet" href="toc.css" />
+    <script type="text/javascript" src="C:\Users\marceloyuela\Downloads\angular-1.5.8\angular-1.5.8\angular.min.js"></script>
+    <script type="text/javascript" src="C:\Users\marceloyuela\Documents\google-cloud-powershell-rebase\new-website\app.js"></script>
+</head>
+<body ng-app="powershellSite">
+    <header>
+        <div class="maia-header" id="maia-header" role="banner">
+            <div class="maia-aux">
+                <a href="/google-cloud-powershell/">
+                    <h1>
+                        <img alt="Google" src="C:\Users\marceloyuela\Pictures\google.png">&nbsp;Cloud Platform
+                    </h1>
+                    <h2>
+                        PowerShell
+                    </h2>
+                </a>
+            </div>
+        </div>
+    </header>
+    <div class="maia-nav" id="maia-nav-x" role="navigation">
+        <div class="maia-aux">
+            <ul>
+                <li>
+                    <a href="/google-cloud-powershell/">Home</a>
+                </li>
+
+                <li class="active">
+                    <a href="/google-cloud-powershell/cmdlets/">Reference</a>
+                </li>
+
+                <!-- cmdlet-specific pages include the parent product. -->
+                <!-- product-specific pages. -->
+
+            </ul>
+        </div>
+    </div>
+    <div class="Reference" ng-controller="ReferenceController as ref">
+        <!-- The TOC body. --->
+        <div ng-controller="TableController as table" class="TOC">
+            <strong>GCP Powershell Products</strong>
+            <p ng-click="table.clickProduct(ref)" class="Link">GCP DNS</p>
+            <div ng-show="table.expanded">
+                <ul>
+                    <p ng-click="table.clickCmdlet(ref)" class="Link">Get-GcdChange</p>
+                </ul>
+            </div>
+        </div>
+        <!--<content-table></content-table>-->
+
+        <!-- The Information body. -->
+        <div ng-controller="InfoController as info" class="Info">
+            <div ng-show="ref.checkFrame(1)">
+                <h1>Google Cloud Powershell</h1>
+                <p>Blurb about powershell</p>
+            </div>
+            <div ng-show="ref.checkFrame(2)">
+                <h1>Google Cloud Platform DNS</h1>
+                <table>
+                    <tr>
+                        <td>Get-GcdChange</td>
+                        <td>Lists the ManagedZone's Change resources.</td>
+                    </tr>
+                </table>
+            </div>
+            <div ng-show="ref.checkFrame(3)">
+                <h1>Get-GcdChange</h1>
+                <h2>
+                    SYNTAX
+                </h2>
+                <p>
+                    Get-GcdChange [-Project <string>] [-Zone] <string> [[-ChangeId] <string>] [<CommonParameters>]
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
