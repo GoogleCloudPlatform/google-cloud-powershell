@@ -7,25 +7,23 @@
             templateUrl: "Templates/content-table.html",
             controller: function($scope) {
                 this.expanded = false;
-                this.cmdlet = false;
-                this.clickProduct = function () {
-                    if (this.cmdlet) {
-                        $scope.setFrame(2);
-                        this.cmdlet = false;
+                this.activeProduct = "";
+                this.clickProduct = function (name) {
+                    if (this.activeProduct === name) {
+                        $scope.setFrame(1);
+                        this.activeProduct = "";
                     }
                     else {
-                        this.expanded = !this.expanded;
-                        if (this.expanded) {
-                            $scope.setFrame(2);
-                        } else {
-                            $scope.setFrame(1);
-                        }
+                        $scope.setFrame(2);
+                        this.activeProduct = name;
                     }
                 };
-                this.clickCmdlet = function () {
-                    this.cmdlet = true;
+                this.clickCmdlet = function (name) {
                     $scope.setFrame(3);
                 };
+                this.isExpanded = function (name) {
+                    return (this.activeProduct === name);
+                }
             },
             controllerAs: 'table'
         };
@@ -46,7 +44,7 @@
         };
     });
 
-    app.controller('ReferenceController', ['$scope', function ($scope) {
+    app.controller('ReferenceController', ['$scope','$http', function ($scope, $http) {
         $scope.frame = 1;
         $scope.checkFrame = function (check) {
             return this.frame === check;
@@ -54,5 +52,9 @@
         $scope.setFrame = function (newFrame) {
             this.frame = newFrame;
         };
+        $http.get('cmdlets.json')
+            .then(function (res) {
+                $scope.cmdlets = res.data;
+            });
     }]);
 })();

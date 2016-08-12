@@ -1,0 +1,26 @@
+﻿{
+
+  "GCP DNS": {
+    "name": "GCP DNS",
+    "cmdlet": {
+      "Get-GcdChange": {
+        "name":  "Get-GcdChange",
+        "Syntax": "Get-GcdChange [-Project <string>] [-Zone] <string> [[-ChangeId] <string>] [<CommonParameters>]"
+      },
+      "Get-GcdResource": {
+        "name":  "Get-GcdResource",
+        "Syntax": "no"
+      }
+    }
+  },
+  "GCP SQL": {
+    "name": "GCP SQL",
+    "cmdlet": {
+      "Get-GcSQL": {
+        "name": "Get-GcSQL",
+        "Syntax": "no"
+      }
+    }
+  }
+  
+}

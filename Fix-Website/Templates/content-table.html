@@ -1,9 +1,9 @@
 ﻿<section class="TOC">
     <strong>GCP Powershell Products</strong>
-    <p ng-click="table.clickProduct()" class="Link">GCP DNS</p>
-    <div ng-show="table.expanded">
-        <ul>
-            <p ng-click="table.clickCmdlet()" class="Link">Get-GcdChange</p>
-        </ul>
+    <div ng-repeat="product in cmdlets">
+        <p ng-click="table.clickProduct(product.name)" class="Link">{{product.name}}</p>
+        <div ng-show="table.isExpanded(product.name)" ng-repeat="cmdlet in product.cmdlet">
+            <p ng-click="table.clickCmdlet()" class="Cmdlet">{{cmdlet.name}}</p>
+        </div>
     </div>
 </section>
