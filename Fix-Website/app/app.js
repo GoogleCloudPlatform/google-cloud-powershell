@@ -54,6 +54,5 @@
         $scope.setFrame = function (newFrame) {
             this.frame = newFrame;
         };
-
     }]);
 })();
