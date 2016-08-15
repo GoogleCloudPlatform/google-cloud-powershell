@@ -4,21 +4,24 @@
         <p>Blurb about powershell</p>
     </div>
     <div ng-show="checkFrame(2)">
-        <h1>Google Cloud Platform DNS</h1>
+        <h1>{{active}}</h1>
         <table>
-            <tr>
-                <td>Get-GcdChange</td>
-                <td>Lists the ManagedZone's Change resources.</td>
+            <tr ng-repeat="cmdlet in cmdlets[active].cmdlet">
+                <td>{{cmdlet.name}}</td>
+                <td>{{cmdlet.Description}}</td>
             </tr>
         </table>
     </div>
     <div ng-show="checkFrame(3)">
-        <h1>Get-GcdChange</h1>
-        <h2>
-            SYNTAX
-        </h2>
-        <p>
-            Get-GcdChange [-Project <string>] [-Zone] <string> [[-ChangeId] <string>] [<CommonParameters>]
-        </p>
+        <h1>{{active}}</h1>
+        <div ng-repeat="(key,value) in cmdlets[activeProduct].cmdlet[active]" 
+             ng-if="key != 'name'">
+            <h2>
+                {{key}}
+            </h2>
+            <p>
+                {{value}}
+            </p>
+        </div>
     </div>
 </section>

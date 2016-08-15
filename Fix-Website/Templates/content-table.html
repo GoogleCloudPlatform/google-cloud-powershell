@@ -3,7 +3,7 @@
     <div ng-repeat="product in cmdlets">
         <p ng-click="table.clickProduct(product.name)" class="Link">{{product.name}}</p>
         <div ng-show="table.isExpanded(product.name)" ng-repeat="cmdlet in product.cmdlet">
-            <p ng-click="table.clickCmdlet()" class="Cmdlet">{{cmdlet.name}}</p>
+            <p ng-click="table.clickCmdlet(cmdlet.name)" class="Cmdlet">{{cmdlet.name}}</p>
         </div>
     </div>
 </section>

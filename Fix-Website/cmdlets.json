@@ -5,20 +5,23 @@
     "cmdlet": {
       "Get-GcdChange": {
         "name":  "Get-GcdChange",
-        "Syntax": "Get-GcdChange [-Project <string>] [-Zone] <string> [[-ChangeId] <string>] [<CommonParameters>]"
+        "Syntax": "Get-GcdChange [-Project <string>] [-Zone] <string> [[-ChangeId] <string>] [<CommonParameters>]",
+        "Description":  "Lists the ManagedZone's Change resources."
       },
-      "Get-GcdResource": {
-        "name":  "Get-GcdResource",
-        "Syntax": "no"
+      "Get-GcdResourceRecordSet": {
+        "name":  "Get-GcdResourceRecordSet",
+        "Syntax": "lorem ipsum",
+        "Description": "Lists the ManagedZone's ResourceRecordSets."
       }
     }
   },
   "GCP SQL": {
     "name": "GCP SQL",
     "cmdlet": {
-      "Get-GcSQL": {
-        "name": "Get-GcSQL",
-        "Syntax": "no"
+      "Get-GcSqlInstance": {
+        "name": "Get-GcSqlInstance",
+        "Syntax": "lorem ipsum",
+        "Description": "Retrieves a resource containing the information for the specified Cloud SQL instance, or lists all instances in a project."
       }
     }
   }

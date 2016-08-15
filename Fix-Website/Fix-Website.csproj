@@ -95,9 +95,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
-    <Content Include="ApplicationInsights.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="scripts\angular.min.js.map" />
     <Content Include="cmdlets.json" />
     <None Include="Properties\PublishProfiles\Test-WebServer.pubxml" />
@@ -120,11 +117,7 @@
     <Content Include="Stylesheets\toc.css" />
     <Content Include="Templates\content-table.html" />
     <Content Include="Templates\info.html" />
-    <Content Include="Templates\TOC.html" />
     <Content Include="Web.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

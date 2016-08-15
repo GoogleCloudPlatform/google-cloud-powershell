@@ -10,16 +10,16 @@
                 this.activeProduct = "";
                 this.clickProduct = function (name) {
                     if (this.activeProduct === name) {
-                        $scope.setFrame(1);
+                        $scope.setFrame(1,"basic");
                         this.activeProduct = "";
                     }
                     else {
-                        $scope.setFrame(2);
+                        $scope.setFrame(2,name);
                         this.activeProduct = name;
                     }
                 };
                 this.clickCmdlet = function (name) {
-                    $scope.setFrame(3);
+                    $scope.setFrame(3,name);
                 };
                 this.isExpanded = function (name) {
                     return (this.activeProduct === name);
@@ -46,11 +46,17 @@
 
     app.controller('ReferenceController', ['$scope','$http', function ($scope, $http) {
         $scope.frame = 1;
+        $scope.active = "basic";
+        $scope.activeProduct = "";
         $scope.checkFrame = function (check) {
-            return this.frame === check;
+            return $scope.frame === check;
         };
-        $scope.setFrame = function (newFrame) {
-            this.frame = newFrame;
+        $scope.setFrame = function (newFrame, newActive) {
+            if (newFrame === 3 & $scope.frame != 3) {
+                $scope.activeProduct = $scope.active;
+            }
+            $scope.frame = newFrame;
+            $scope.active = newActive;
         };
         $http.get('cmdlets.json')
             .then(function (res) {
