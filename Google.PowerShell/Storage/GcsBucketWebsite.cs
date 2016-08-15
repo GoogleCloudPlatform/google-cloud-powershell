@@ -31,7 +31,7 @@ namespace Google.PowerShell.CloudStorage
     public class RemoveGcsBucketWebsiteCmdlet : GcsCmdlet
     {
         /// <summary>
-        /// <para typedef="description">
+        /// <para type="description">
         /// The name of the bucket to remove logging for. This parameter will also accept a Bucket
         /// object.
         /// </para>
@@ -78,7 +78,7 @@ namespace Google.PowerShell.CloudStorage
     public class WriteGcsBucketWebsiteCmdlet : GcsCmdlet
     {
         /// <summary>
-        /// <para typedef="description">
+        /// <para type="description">
         /// The name of the bucket to configure. This parameter will also accept a Bucket object.
         /// </para>
         /// </summary>
@@ -87,7 +87,7 @@ namespace Google.PowerShell.CloudStorage
         public string Name { get; set; }
 
         /// <summary>
-        /// <para typedef="description">
+        /// <para type="description">
         /// Storage object for the "main page" of the website, e.g. what is served from "http://example.com/".
         /// Defaults to "index.html".
         /// </para>
@@ -96,7 +96,7 @@ namespace Google.PowerShell.CloudStorage
         public string MainPageSuffix { get; set; } = "index.html";
 
         /// <summary>
-        /// <para typedef="description">
+        /// <para type="description">
         /// Storage object to render when no appropriate file is found, e.g. what is served from "http://example.com/sadjkffasugmd".
         /// Defaults to "404.html".
         /// </para>
