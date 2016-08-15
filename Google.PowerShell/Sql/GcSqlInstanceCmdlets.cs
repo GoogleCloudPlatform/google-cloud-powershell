@@ -1114,7 +1114,7 @@ namespace Google.PowerShell.Sql
         /// The DatabaseInstance that describes the Instance we are restoring the backup to. 
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true, Position = 1,
+        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true, 
                    ValueFromPipeline = true)]
         public DatabaseInstance InstanceObject { get; set; }
 
