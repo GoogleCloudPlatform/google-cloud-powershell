@@ -1083,6 +1083,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Disk)]
         [Parameter(ParameterSetName = ParameterSetNames.DiskByObject)]
+        [ArrayPropertyTransform(typeof(Disk), nameof(Disk.Name))]
         public string[] RemoveDisk { get; set; } = { };
 
         /// <summary>
