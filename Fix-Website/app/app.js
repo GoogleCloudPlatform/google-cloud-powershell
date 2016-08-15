@@ -32,18 +32,13 @@
     app.directive("infoZone", function () {
         return {
             restrict: 'E',
-            templateUrl: "Templates/info.html",
-            controller: function () {
-                this.form = false;
-                this.clickProduct = function () {
-
-                    this.form = !this.form;
-                };
-            },
-            controllerAs: 'info'
+            templateUrl: "Templates/info.html"
         };
     });
 
+    /**
+     * Controller for setting up the scope.
+     */
     app.controller('ReferenceController', ['$scope','$http', function ($scope, $http) {
         $scope.frame = 1;
         $scope.active = "basic";

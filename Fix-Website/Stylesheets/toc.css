@@ -1,23 +1,23 @@
 .TOC {
-    background-color: #FAFAFA;
-    height: 800px;
-    width: 400px;
+    background-color: #fafafa;
     float:left;
+    height: 800px;
     margin-top: 10px;
     position: static;
+    width: 400px;
 }
 .Info {
-    position: static;
-    margin-left: 20px;
     float:left;
+    margin-left: 20px;
+    position: static;
 }
 .Link {
-    color: #4285F6;
+    color: #4285f6;
     cursor: pointer;
 }
 
 .Cmdlet {
-    color: #4285F6;
+    color: #4285f6;
     cursor: pointer;
     margin-left: 20px;
 }
