@@ -6,7 +6,11 @@
     <div ng-show="checkFrame(2)">
         <h1>{{active}}</h1>
         <table>
-            <tr ng-repeat="cmdlet in products[active]">
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+            </tr>
+            <tr ng-repeat="(order,cmdlet) in products[active] | orderByCmdletProp: 'name'">
                 <td ng-click="setFrame(3,cmdlet.name)" class="Cmdlet">{{cmdlet.name}}</td>
                 <td>{{cmdlet.description}}</td>
             </tr>
@@ -15,13 +19,13 @@
     <div ng-show="checkFrame(3)">
         <h1>{{active}}</h1>
         <div ng-repeat="(key,value) in products[activeProduct][active]" 
-             ng-if="key != 'Name'">
+             ng-if="key != 'name'">
             <h2>
                 {{key.toUpperCase()}}
             </h2>
-            <p>
+            <pre>
                 {{value}}
-            </p>
+            </pre>
         </div>
     </div>
 </section>

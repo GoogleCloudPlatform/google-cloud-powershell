@@ -56,6 +56,21 @@
         $http.get('cmdletsfull.json')
             .then(function (res) {
                 $scope.products = res.data;
+
             });
     }]);
+    /*Angular doesn't sort objects, only arrays, so I had to make my own filter.*/
+    app.filter('orderByCmdletProp', function () {
+        return function (cmdlets, cmdletField, reverse) {
+            var filtered = [];
+            angular.forEach(cmdlets, function (cmdlet) {
+                filtered.push(cmdlet);
+            });
+            filtered.sort(function (a, b) {
+                return (a[cmdletField] > b[cmdletField] ? 1 : -1);
+            });
+            if (reverse) filtered.reverse();
+            return filtered;
+        };
+    });
 })();
