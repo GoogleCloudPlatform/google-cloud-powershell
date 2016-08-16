@@ -149,7 +149,7 @@ namespace Google.PowerShell.Sql
     ///   Adds the SSL Certificate called "myCert" to the instance stored in $myInstance.
     ///   </para>
     ///   <para><code>
-    ///     PS C:\> Add-GcSqlSslCert "myCert" -InstanceObject $myInstance
+    ///     PS C:\> $myInstance | Add-GcSqlSslCert "myCert" 
     ///   </code></para>
     ///   <br></br>
     ///   <para>If successful, the command returns a detail of the SSL Certificate and its private key.</para>
