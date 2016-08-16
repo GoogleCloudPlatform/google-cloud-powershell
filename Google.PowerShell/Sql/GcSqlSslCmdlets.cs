@@ -149,7 +149,7 @@ namespace Google.PowerShell.Sql
     ///   Adds the SSL Certificate called "myCert" to the instance stored in $myInstance.
     ///   </para>
     ///   <para><code>
-    ///     PS C:\> Add-GcSqlSslCert $myInstance "myCert"
+    ///     PS C:\> $myInstance | Add-GcSqlSslCert "myCert" 
     ///   </code></para>
     ///   <br></br>
     ///   <para>If successful, the command returns a detail of the SSL Certificate and its private key.</para>
@@ -187,7 +187,8 @@ namespace Google.PowerShell.Sql
         /// Distinct name for the certificate being added to the instance.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 1)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 1)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true, Position = 0)]
         public string CommonName { get; set; }
 
         /// <summary>
@@ -195,8 +196,7 @@ namespace Google.PowerShell.Sql
         /// The Instance we want to add an SSL Certificate to.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true,
-            Position = 0, ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true, ValueFromPipeline = true)]
         public DatabaseInstance InstanceObject { get; set; }
 
         protected override void ProcessRecord()

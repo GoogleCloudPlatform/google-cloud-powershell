@@ -46,6 +46,7 @@ namespace Google.PowerShell.Sql
                 case "FAILOVER":
                 case "RECREATE_REPLICA":
                 case "RESTORE_VOLUME":
+                case "CREATE_REPLICA":
                     {
                         delay = 30000;
                         break;
