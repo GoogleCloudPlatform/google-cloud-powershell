@@ -53,9 +53,9 @@
             $scope.frame = newFrame;
             $scope.active = newActive;
         };
-        $http.get('cmdlets.json')
+        $http.get('cmdletsfull.json')
             .then(function (res) {
-                $scope.cmdlets = res.data;
+                $scope.products = res.data;
             });
     }]);
 })();

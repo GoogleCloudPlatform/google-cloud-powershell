@@ -6,18 +6,18 @@
     <div ng-show="checkFrame(2)">
         <h1>{{active}}</h1>
         <table>
-            <tr ng-repeat="cmdlet in cmdlets[active].cmdlet">
-                <td>{{cmdlet.name}}</td>
-                <td>{{cmdlet.Description}}</td>
+            <tr ng-repeat="cmdlet in products[active]">
+                <td ng-click="setFrame(3,cmdlet.name)" class="Cmdlet">{{cmdlet.name}}</td>
+                <td>{{cmdlet.description}}</td>
             </tr>
         </table>
     </div>
     <div ng-show="checkFrame(3)">
         <h1>{{active}}</h1>
-        <div ng-repeat="(key,value) in cmdlets[activeProduct].cmdlet[active]" 
-             ng-if="key != 'name'">
+        <div ng-repeat="(key,value) in products[activeProduct][active]" 
+             ng-if="key != 'Name'">
             <h2>
-                {{key}}
+                {{key.toUpperCase()}}
             </h2>
             <p>
                 {{value}}

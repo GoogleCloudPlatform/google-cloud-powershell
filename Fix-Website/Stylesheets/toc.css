@@ -3,13 +3,15 @@
     float:left;
     height: 800px;
     margin-top: 10px;
-    position: static;
+    overflow-y: auto;
+    position: fixed;
     width: 400px;
 }
 .Info {
-    float:left;
-    margin-left: 20px;
+    margin-left: 420px;
     position: static;
+    width: 1200px;
+    word-wrap: break-word;
 }
 .Link {
     color: #4285f6;
