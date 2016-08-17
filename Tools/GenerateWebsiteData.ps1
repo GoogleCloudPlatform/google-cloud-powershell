@@ -14,6 +14,11 @@ $apiMappings = @{
     "Gce" = "Google Compute Engine"
 }
 
+function convertToString ($obj)
+{
+    ($obj | Out-String).Trim()
+}
+
 # Generate a single JSON file containing all the documentation for all the
 # cmdlets. Unfortunately we can't split these into multiple files because of
 # the way we generating web pages in Jekyll/angular..
@@ -70,11 +75,11 @@ foreach ($cmdlet in $cmdlets) {
     # Contains more information than above.
     $cmdletDocObjFull = @{
         "name" = $name
-        "synopsis" = ($docObj.Synopsis | Out-String).Trim()
-        "description" = ($docObj.Description | Out-String).Trim()
+        "synopsis" = convertToString($docObj.Synopsis)
+        "description" = convertToString($docObj.Description)
         "parameters" = ($docObj.Parameters | Out-String).replace("`r`n","`n")
-        "inputs" = ($docObj.Inputs | Out-String).Trim()
-        "outputs" = ($docObj.Outputs | Out-String).Trim()
+        "inputs" = convertToString($docObj.Inputs)
+        "outputs" = convertToString($docObj.Outputs)
         "examples" = ($docObj.Examples | Out-String).replace("`r`n","`n")
         }
 
