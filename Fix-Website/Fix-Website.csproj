@@ -116,8 +116,10 @@
     <Content Include="app\app.js" />
     <Content Include="Stylesheets\maia.css" />
     <Content Include="Stylesheets\toc.css" />
-    <Content Include="Templates\content-table.html" />
-    <Content Include="Templates\info.html" />
+    <Content Include="Templates\content-table.txt">
+      <BrowseToURL>~/Templates/content-table.ng</BrowseToURL>
+    </Content>
+    <Content Include="Templates\info.txt" />
     <Content Include="Web.config" />
   </ItemGroup>
   <PropertyGroup>

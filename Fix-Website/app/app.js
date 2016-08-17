@@ -4,7 +4,7 @@
     app.directive("contentTable", function(){
         return {
             restrict: 'E',
-            templateUrl: "Templates/content-table.html",
+            templateUrl: "Templates/content-table.txt",
             controller: function($scope) {
                 this.expanded = false;
                 this.activeProduct = "";
@@ -32,7 +32,7 @@
     app.directive("infoZone", function () {
         return {
             restrict: 'E',
-            templateUrl: "Templates/info.html"
+            templateUrl: "Templates/info.txt"
         };
     });
 
@@ -56,7 +56,6 @@
         $http.get('cmdletsfull.json')
             .then(function (res) {
                 $scope.products = res.data;
-
             });
     }]);
     /*Angular doesn't sort objects, only arrays, so I had to make my own filter.*/
