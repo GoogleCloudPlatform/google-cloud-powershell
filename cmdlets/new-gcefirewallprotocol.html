@@ -135,6 +135,17 @@ INPUTS
     
     
 OUTPUTS
+    Google.Apis.Compute.v1.Data.Firewall+AllowedData
+    
+    
+    ----------  EXAMPLE 1  ----------
+    
+    PS C:\&gt; New-GceFirewallProtocol tcp -Ports 80, 443 |
+            New-GceFirewallProtocol esp |
+            Add-GceFirewall -Project &quot;your-project&quot; -Name &quot;firewall-name&quot;
+    
+    
+    Creates two GceFirewallProtocol objects, and sends them to the Add-GceFirewall cmdlet.
     
     
 RELATED LINKS

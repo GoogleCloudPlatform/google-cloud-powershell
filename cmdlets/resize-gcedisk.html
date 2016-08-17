@@ -78,6 +78,8 @@ SYNOPSIS
 SYNTAX
     Resize-GceDisk [-Project &lt;string&gt;] [-Zone &lt;string&gt;] [-DiskName] &lt;string&gt; [-NewSizeGb] &lt;long&gt; [&lt;CommonParameters&gt;]
     
+    Resize-GceDisk -InputObject &lt;Disk&gt; [-NewSizeGb] &lt;long&gt; [&lt;CommonParameters&gt;]
+    
     
 DESCRIPTION
     Resize a Compute Engine disk object.
@@ -106,15 +108,25 @@ PARAMETERS
         Name of the disk.
         
         Required?                    true
-        Position?                    2
+        Position?                    0
         Default value                
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -NewSizeGb &lt;long&gt;
+    -InputObject &lt;Disk&gt;
+        The Disk object that describes the disk to resize.
         
         Required?                    true
-        Position?                    3
+        Position?                    named
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -NewSizeGb &lt;long&gt;
+        Specify the new size of the disk in GiB. Must be larger than the current disk size.
+        
+        Required?                    true
+        Position?                    1
         Default value                0
         Accept pipeline input?       false
         Accept wildcard characters?  false
@@ -126,8 +138,25 @@ PARAMETERS
         about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
     
 INPUTS
+    Google.Apis.Compute.v1.Data.Disk
+        The Disk object that describes the disk to resize.
+    
     
 OUTPUTS
+    
+    ----------  EXAMPLE 1  ----------
+    
+    PS C:\&gt; Resize-GceDisk &quot;my-disk&quot; 15
+    
+    
+    Changes the size of the persistant disk &quot;my-disk&quot; to 15GB.
+    
+    ----------  EXAMPLE 2  ----------
+    
+    PS C:\&gt; Get-GceDisk &quot;my-disk&quot; | Resize-GceDisk 15
+    
+    
+    Changes the size of the persistant disk &quot;my-disk&quot; to 15GB.
     
     
 RELATED LINKS

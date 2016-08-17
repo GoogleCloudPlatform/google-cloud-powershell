@@ -10,9 +10,9 @@
 
     <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
 
-    <title>New-GcsBucket</title>
+    <title>Get-GceMetadata</title>
     <script src="//www.google.com/js/google.js"></script>
-    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/new-gcsbucket.html">
+    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/get-gcemetadata.html">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
     <link rel="stylesheet" href="//www.google.com/css/maia.css">
 </head>
@@ -49,7 +49,7 @@
           <!-- cmdlet-specific pages include the parent product. -->
           
           <li class="active">
-            <a href="/google-cloud-powershell/cmdlets/google-cloud-storage">Google Cloud Storage</a>
+            <a href="/google-cloud-powershell/cmdlets/google-compute-engine">Google Compute Engine</a>
           </li>
           
 
@@ -67,35 +67,25 @@ pre {
 }
 </style>
 
-<h1>New-GcsBucket</h1>
+<h1>Get-GceMetadata</h1>
 <pre>
 NAME
-    New-GcsBucket
+    Get-GceMetadata
     
 SYNOPSIS
-    Creates a new Google Cloud Storage bucket.
+    Gets the current metadata from the metadata server.
     
 SYNTAX
-    New-GcsBucket [-Name] &lt;string&gt; [-Project &lt;string&gt;] [-StorageClass &lt;string&gt;] [-Location &lt;string&gt;] [-DefaultBucketAcl &lt;PredefinedAclEnum&gt; {AuthenticatedRead | Private__ | ProjectPrivate | PublicRead | PublicReadWrite}] [-DefaultObjectAcl 
-    &lt;PredefinedDefaultObjectAclEnum&gt; {AuthenticatedRead | BucketOwnerFullControl | BucketOwnerRead | Private__ | ProjectPrivate | PublicRead}] [&lt;CommonParameters&gt;]
+    Get-GceMetadata [-Path &lt;string&gt;] [-Recurse &lt;SwitchParameter&gt;] [-AppendETag &lt;SwitchParameter&gt;] [-WaitUpdate &lt;SwitchParameter&gt;] [-LastETag &lt;string&gt;] [-Timeout &lt;TimeSpan&gt;] [&lt;CommonParameters&gt;]
     
     
 DESCRIPTION
-    Creates a new Google Cloud Storage bucket. Bucket names must be globally unique. No two projects may have buckets with the same name.
+    Gets the current metadata from the metadata server. Get-GceMetadata can only be called from a Google Compute Engine VM instance. Calls from any other machine will fail.
     
 
 PARAMETERS
-    -Name &lt;string&gt;
-        Name of the bucket.
-        
-        Required?                    true
-        Position?                    0
-        Default value                
-        Accept pipeline input?       false
-        Accept wildcard characters?  false
-        
-    -Project &lt;string&gt;
-        The name of the project associated with the command. If not set via PowerShell parameter processing, will default to the Cloud SDK&#39;s DefaultProject property.
+    -Path &lt;string&gt;
+        The path to the specific metadata you wish to get e.g. &quot;instance/tags&quot;, &quot;instance/attributes&quot;, &quot;project/attributes/sshKeys&quot;.
         
         Required?                    false
         Position?                    named
@@ -103,8 +93,39 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -StorageClass &lt;string&gt;
-        Storage class for the bucket. STANDARD, NEARLINE, or DURABLE_REDUCED_AVAILABILITY. See https://cloud.google.com/storage/docs/storage-classes for more information.
+    -Recurse &lt;SwitchParameter&gt;
+        If set, will get the metadata subtree as a JSON string. If -Path is not set, will get the entire metadata tree as a JSON string.
+        
+        Required?                    false
+        Position?                    named
+        Default value                False
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -AppendETag &lt;SwitchParameter&gt;
+        When set, the value of the respone ETag will be appended to the output pipeline after the content.
+        
+        PS C:\&gt; $metadata, $etag = Get-GceMetadata -AppendETag -Recurse
+        
+        Gets the entire metadata tree, and the ETag of the version retrieved.
+        
+        Required?                    false
+        Position?                    named
+        Default value                False
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -WaitUpdate &lt;SwitchParameter&gt;
+        If true, the query will wait for the metadata to update.
+        
+        Required?                    false
+        Position?                    named
+        Default value                False
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -LastETag &lt;string&gt;
+        The last ETag known. Used in conjunction with -WaitUpdate. If the last ETag does not match the current ETag of the metadata server, it will return the updated value immediatly.
         
         Required?                    false
         Position?                    named
@@ -112,34 +133,10 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
-    -Location &lt;string&gt;
-        Location for the bucket. e.g. ASIA, EU, US.
+    -Timeout &lt;TimeSpan&gt;
+        Used in conjunction with -WaitUpdate. The amout of time to wait. If the timeout expires, the current metadata will be returned.
         
-        Required?                    false
-        Position?                    named
-        Default value                
-        Accept pipeline input?       false
-        Accept wildcard characters?  false
-        
-    -DefaultBucketAcl &lt;PredefinedAclEnum&gt;
-        Default ACL for the bucket. e.g. &quot;publicRead&quot;, &quot;private&quot;, etc.
-        
-        You cannot set fine-grained (e.g. individual users or domains) ACLs using PowerShell. Instead please use `gsutil`.
-        
-        Possible values: AuthenticatedRead, Private__, ProjectPrivate, PublicRead, PublicReadWrite
-        
-        Required?                    false
-        Position?                    named
-        Default value                
-        Accept pipeline input?       false
-        Accept wildcard characters?  false
-        
-    -DefaultObjectAcl &lt;PredefinedDefaultObjectAclEnum&gt;
-        Default ACL for objects added to the bucket. e.g. &quot;publicReadWrite&quot;, &quot;authenticatedRead&quot;, etc.
-        
-        You cannot set fine-grained (e.g. individual users or domains) ACLs using PowerShell. Instead please use `gsutil`.
-        
-        Possible values: AuthenticatedRead, BucketOwnerFullControl, BucketOwnerRead, Private__, ProjectPrivate, PublicRead
+        Check the ETag using AppendEtag to see if the data was updated within the timeout period.
         
         Required?                    false
         Position?                    named
@@ -156,18 +153,48 @@ PARAMETERS
 INPUTS
     
 OUTPUTS
-    Google.Apis.Storage.v1.Data.Bucket
+    System.String
     
     
     ----------  EXAMPLE 1  ----------
     
-    PS C:\&gt; New-Gcsbucket &quot;widget-co-logs&quot;
+    PS C:\&gt; $allMetadata = Get-GceMetadata -Recurse | ConvertFrom-Json
     
     
-    Creates a new bucket named &quot;widget-co-logs&quot;.
+    Gets all of the metadata and converts it from the given JSON to a PSCustomObject.
+    
+    ----------  EXAMPLE 2  ----------
+    
+    PS C:\&gt; $hostName = Get-GceMetadata -Path &quot;instance/hostname&quot;
+    
+    
+    Gets the hostname of the instance.
+    
+    ----------  EXAMPLE 3  ----------
+    
+    PS C:\&gt; $customProjectMetadata = Get-GceMetadata -Path &quot;project/attributes/customKey&quot;
+    
+    
+    Gets the value of the custom metadata with key &quot;customKey&quot; placed in the project .
+    
+    ----------  EXAMPLE 4  ----------
+    
+    PS C:\&gt; $metadata, $etag = Get-GceMetadata -AppendETag -Recurse
+    
+    
+    Gets the entire metadata tree, and the ETag of the version retrieved.
+    
+    ----------  EXAMPLE 5  ----------
+    
+    PS C:\&gt; $newTags, $newEtag = Get-GceMetadata -Path &quot;instance/tags&quot; -AppendETag -WaitUpdate `
+                                    -LastETag $oldETag
+    
+    
+    Waits for the metadata &quot;instance/tags&quot; to be updated by the server.
     
     
 RELATED LINKS
+    [Metadata Documentation] (https://cloud.google.com/compute/docs/storing-retrieving-metadata)
 
 
 

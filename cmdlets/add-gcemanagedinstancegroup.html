@@ -207,6 +207,16 @@ INPUTS
     
     
 OUTPUTS
+    Google.Apis.Compute.v1.Data.InstanceGroupManager
+    
+    
+    ----------  EXAMPLE 1  ----------
+    
+    PS C:\&gt; $template = Get-GceInstanceTemplate &quot;my-template&quot;
+    PS C:\&gt; Add-GceManagedInstanceGroup &quot;my-instance-group&quot; $template 4
+    
+    
+    Creates a new managed instance group named &quot;my-instance-group&quot;. The instance of the group will be created from template &quot;my-template&quot; and the group will create four instances.
     
     
 RELATED LINKS

@@ -85,6 +85,7 @@ DESCRIPTION
 
 PARAMETERS
     -Name &lt;string&gt;
+        The name of the bucket to remove. This parameter will also accept a Bucket object.
         
         Required?                    true
         Position?                    0
@@ -93,6 +94,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -Force &lt;SwitchParameter&gt;
+        When deleting a bucket with objects still inside, use Force to proceed with the deletion without a prompt.
         
         Required?                    false
         Position?                    named
@@ -108,16 +110,31 @@ PARAMETERS
     
 INPUTS
     System.String
+        The name of the bucket to remove. This parameter will also accept a Bucket object.
     
     
 OUTPUTS
     
     ----------  EXAMPLE 1  ----------
     
-    Check if bucket &quot;foo&quot; exists.
+    PS C:\&gt; Remove-GcsBucket &quot;unique-bucket-name&quot;
+    
+    
+    Deletes the bucket &quot;unique-bucket-name&quot;
+    
+    ----------  EXAMPLE 2  ----------
+    
+    PS C:\&gt; Get-GcsBucket &quot;bucket-with-files&quot; | Remove-GcsBucket -Force
+    
+    
+    Forces the deletion of &quot;bucket-with-files, despite the bucket containing objects.
+    
+    ----------  EXAMPLE 3  ----------
+    
     PS C:\&gt; Remove-GcsBucket prod-database -WhatIf
     What if: Performing the operation &quot;Delete Bucket&quot; on target &quot;prod-database&quot;.
     True
+    Check if bucket &quot;foo&quot; exists.
     
     
     

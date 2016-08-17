@@ -129,6 +129,20 @@ INPUTS
     
 OUTPUTS
     
+    ----------  EXAMPLE 1  ----------
+    
+    PS C:\&gt; Remove-GceImage &quot;my-image&quot;
+    
+    
+    Removes the image named &quot;my-image&quot; in the default project.
+    
+    ----------  EXAMPLE 2  ----------
+    
+    PS C:\&gt; Get-GceImage -Project &quot;my-project&quot; | Remove-GceImage
+    
+    
+    Removes all images from project &quot;my-project&quot;.
+    
     
 RELATED LINKS
 

@@ -214,6 +214,38 @@ INPUTS
     
     
 OUTPUTS
+    Google.Apis.Compute.v1.Data.InstanceGroupManager
+    
+    
+    ----------  EXAMPLE 1  ----------
+    
+    PS C:\&gt; Get-GceInstance &quot;my-instance-1&quot; | Set-ManagedInstanceGroup &quot;my-group&quot; -Abandon
+    
+    
+    Abandons the instance named &quot;my-instance-1&quot;. The instance will still exist, but will no longer be a member of the instance group &quot;my-group&quot;. The size of the instance group will decrease to match.
+    
+    ----------  EXAMPLE 2  ----------
+    
+    PS C:\&gt; $instanceUri = (Get-GceInstance &quot;my-instance-2&quot;).SelfLink
+    PS C:\&gt; Set-ManagedInstanceGroup &quot;my-group&quot; -Delete -InstanceUri $instanceUri
+    
+    
+    Deletes the instance &quot;my-instance-2&quot;. The size of the instance group will decrease to match.
+    
+    ----------  EXAMPLE 3  ----------
+    
+    PS C:\&gt; Set-GceManagedInstanceGroup &quot;my-group&quot; -Size 5
+    
+    
+    Changes the target size of managed instance group &quot;my-group&quot; to be 5.
+    
+    ----------  EXAMPLE 4  ----------
+    
+    PS C:\&gt; $template = Get-GceInstanceTemplate &quot;new-template&quot;
+    PS C:\&gt; Set-GceManagedInstanceGroup &quot;my-group&quot; -Template $template
+    
+    
+    The tempalte &quot;new-template&quot; becomes the template for all new instances created by managed instance group &quot;my-group&quot;
     
     
 RELATED LINKS

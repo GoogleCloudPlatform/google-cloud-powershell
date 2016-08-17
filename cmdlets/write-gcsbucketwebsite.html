@@ -85,6 +85,7 @@ DESCRIPTION
 
 PARAMETERS
     -Name &lt;string&gt;
+        The name of the bucket to configure. This parameter will also accept a Bucket object.
         
         Required?                    true
         Position?                    0
@@ -93,6 +94,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -MainPageSuffix &lt;string&gt;
+        Storage object for the &quot;main page&quot; of the website, e.g. what is served from &quot;http://example.com/&quot;. Defaults to &quot;index.html&quot;.
         
         Required?                    false
         Position?                    1
@@ -101,6 +103,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -NotFoundPage &lt;string&gt;
+        Storage object to render when no appropriate file is found, e.g. what is served from &quot;http://example.com/sadjkffasugmd&quot;. Defaults to &quot;404.html&quot;.
         
         Required?                    false
         Position?                    2

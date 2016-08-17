@@ -82,7 +82,7 @@ SYNTAX
     
     
 DESCRIPTION
-    Deletes a Google Compute Engine instance templates.
+    Deletes a Google Compute Engine instance templates. Templates referenced by managed instance groups can not be deleted.
     
 
 PARAMETERS
@@ -128,6 +128,20 @@ INPUTS
     
     
 OUTPUTS
+    
+    ----------  EXAMPLE 1  ----------
+    
+    PS C:\&gt; Remove-GceInstanceTemplate &quot;my-template&quot;
+    
+    
+    Removes the instance template named &quot;my-template&quot; in the default project.
+    
+    ----------  EXAMPLE 2  ----------
+    
+    PS C:\&gt; Get-GceInstanceTemplate | Remove-GceInstanceTemplate
+    
+    
+    Removes all instance templates in the default project.
     
     
 RELATED LINKS

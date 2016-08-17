@@ -76,7 +76,9 @@ SYNOPSIS
     Removes a firewall rule from a project.
     
 SYNTAX
-    Remove-GceFirewall [-Project &lt;string&gt;] [[-FirewallName] &lt;string&gt;] [&lt;CommonParameters&gt;]
+    Remove-GceFirewall [-Project &lt;string&gt;] [-FirewallName] &lt;string&gt; [&lt;CommonParameters&gt;]
+    
+    Remove-GceFirewall -InputObject &lt;Firewall&gt; [&lt;CommonParameters&gt;]
     
     
 DESCRIPTION
@@ -96,7 +98,7 @@ PARAMETERS
     -FirewallName &lt;string&gt;
         The name of the firewall rule to remove.
         
-        Required?                    false
+        Required?                    true
         Position?                    1
         Default value                
         Accept pipeline input?       true (ByValue)
@@ -107,7 +109,7 @@ PARAMETERS
         
         This is an alias of the FirewallName parameter.
         
-        Required?                    false
+        Required?                    true
         Position?                    1
         Default value                
         Accept pipeline input?       true (ByValue)
@@ -118,8 +120,16 @@ PARAMETERS
         
         This is an alias of the FirewallName parameter.
         
-        Required?                    false
+        Required?                    true
         Position?                    1
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -InputObject &lt;Firewall&gt;
+        
+        Required?                    true
+        Position?                    named
         Default value                
         Accept pipeline input?       true (ByValue)
         Accept wildcard characters?  false
@@ -134,8 +144,17 @@ INPUTS
     System.String
         The name of the firewall rule to remove.
     
+    Google.Apis.Compute.v1.Data.Firewall
+    
     
 OUTPUTS
+    
+    ----------  EXAMPLE 1  ----------
+    
+    PS C:\&gt; Remove-GceFirewall &quot;my-firewall&quot;
+    
+    
+    Removes the firewall named &quot;my-firewall&quot; in the default project.
     
     
 RELATED LINKS

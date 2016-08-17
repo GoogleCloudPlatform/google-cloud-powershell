@@ -137,6 +137,23 @@ INPUTS
     
     
 OUTPUTS
+    Google.Apis.Compute.v1.Data.Instance
+    
+    
+    ----------  EXAMPLE 1  ----------
+    
+    PS C:\&gt; Reset-GceInstance &quot;my-instance&quot;
+    
+    
+    Resets the instance named &quot;my-instance&quot; in the default project and zone.
+    
+    ----------  EXAMPLE 2  ----------
+    
+    PS C:\&gt; Get-GceInstance -Project &quot;my-project&quot;|
+                Reset-GceInstance
+    
+    
+    Removes all instances in project &quot;my-project&quot;.
     
     
 RELATED LINKS

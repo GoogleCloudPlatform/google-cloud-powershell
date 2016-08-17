@@ -141,6 +141,15 @@ INPUTS
     
     
 OUTPUTS
+    Google.Apis.Compute.v1.Data.Image
+    
+    
+    ----------  EXAMPLE 1  ----------
+    
+    PS C:\&gt; Get-GceDisk &quot;my-disk&quot; | Add-GceImage -Name &quot;my-image&quot; -Family &quot;my-family&quot;
+    
+    
+    Creates a new image named &quot;my-image&quot; of the family &quot;my-family&quot; in the default project.
     
     
 RELATED LINKS

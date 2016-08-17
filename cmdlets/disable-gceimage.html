@@ -186,6 +186,25 @@ INPUTS
     
     
 OUTPUTS
+    Google.Apis.Compute.v1.Data.Image
+    
+    
+    ----------  EXAMPLE 1  ----------
+    
+    PS C:\&gt; $image2 = Get-GceImage &quot;my-new-image&quot; -Project &quot;my-project&quot;
+    PS C:\&gt; Disable-GceImage &quot;my-old-image&quot; -State DEPRECATED -Replacement $image2
+    
+    
+    Marks the image named &quot;my-old-image&quot; as deprecated, and sets &quot;my-new-image&quot; as its replacement.
+    
+    ----------  EXAMPLE 2  ----------
+    
+    PS C:\&gt; $image1 = Get-GceImage &quot;my-old-image&quot; -Project &quot;my-project&quot;
+    PS C:\&gt; $image2 = Get-GceImage &quot;my-new-image&quot; -Project &quot;my-project&quot;
+    PS C:\&gt; Disable-GceImage $image1 -State OBSOLETE -Replacement $image2
+    
+    
+    Marks the image named &quot;my-old-image&quot; as obsolete, and sets &quot;my-new-image&quot; as its replacement.
     
     
 RELATED LINKS

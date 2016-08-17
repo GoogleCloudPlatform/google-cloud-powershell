@@ -152,6 +152,22 @@ INPUTS
     
     
 OUTPUTS
+    Google.Apis.Compute.v1.Data.Snapshot
+    
+    
+    ----------  EXAMPLE 1  ----------
+    
+    PS C:\&gt; Add-GceSnapshot &quot;my-disk&quot; -Name &quot;my-snapshot&quot;
+    
+    
+    Creates a new disk snapshot from the disk named &quot;my-disk&quot; in the default project and zone. The name of the snapshot will be &quot;my-snapshot&quot;
+    
+    ----------  EXAMPLE 2  ----------
+    
+    PS C:\&gt; Get-GceDisk &quot;my-disk&quot; | Add-GceSnapshot
+    
+    
+    Creates a new disk snapshot from the disk named &quot;my-disk&quot;. The name of the snapshot will start with &quot;my-disk&quot; and end with the utc date and time the snapshot was taken.
     
     
 RELATED LINKS

@@ -147,6 +147,20 @@ INPUTS
     
 OUTPUTS
     
+    ----------  EXAMPLE 1  ----------
+    
+    PS C:\&gt; Wait-GceManagedInstanceGroup &quot;my-group&quot; -Timeout 30
+    
+    
+    Waits for the managed instance group &quot;my-group&quot; to reach a noraml running state for up to 30 seconds.
+    
+    ----------  EXAMPLE 2  ----------
+    
+    PS C:\&gt; Get-GceManagedInstanceGroup -Zone &quot;us-central1-a&quot; | Wait-GceManagedInstanceGroup
+    
+    
+    Waits for all maanged instance groups in zone us-central1-a to reach a normal running state.
+    
     
 RELATED LINKS
 

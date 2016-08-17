@@ -80,11 +80,12 @@ SYNTAX
     
     
 DESCRIPTION
-    Tests if a bucket with the given name already exists.
+    Tests if a bucket with the given name already exists. Returns true if such a bucket already exists.
     
 
 PARAMETERS
     -Name &lt;string&gt;
+        The name of the bucket to test for. This parameter will also accept a Bucket object.
         
         Required?                    true
         Position?                    0
@@ -106,9 +107,17 @@ OUTPUTS
     
     ----------  EXAMPLE 1  ----------
     
-    Check if bucket &quot;foo&quot; exists.
+    PS C:\&gt; Test-GcsBucket &quot;bucket-name&quot;
+    True
+    
+    
+    Tests that a bucket named &quot;bucket-name&quot; does exist. A new bucket with this name may not be created.
+    
+    ----------  EXAMPLE 2  ----------
+    
     PS C:\&gt; Test-GcsBucket &quot;foo&quot;
     True
+    Check if bucket &quot;foo&quot; exists.
     
     
     

@@ -83,7 +83,7 @@ SYNTAX
     
     
 DESCRIPTION
-    Creates a single new AttachedDisk object. These objects are used by New-GceInstanceConfig, Add-GceInstance, and Add-GceInstanceTemplate.
+    Creates a single new AttachedDisk object. These objects are used by New-GceInstanceConfig, Add-GceInstance, Add-GceInstanceTemplate, and Set-GceInstance.
     
 
 PARAMETERS
@@ -195,9 +195,12 @@ OUTPUTS
     
     ----------  EXAMPLE 1  ----------
     
-    $disks = (New-GceAttachedDisk (Get-GceImage &quot;debian-cloud&quot; -Family &quot;debian-8&quot;) -Boot -AutoDelete), (New-GceAttachedDis (Get-GceDisk &quot;persistant-disk-name&quot;) -ReadOnly) Add-GceInstanceTemplate -Name &quot;template-name&quot; -MachineType n1-standard-1 -Disk $disks
+    PS C:\&gt; $disks = (New-GceAttachedDiskConfig (Get-GceImage &quot;debian-cloud&quot; -Family &quot;debian-8&quot;) -Boot -AutoDelete),
+                     (New-GceAttachedDiskConfig (Get-GceDisk &quot;persistant-disk-name&quot;) -ReadOnly)
+    PS C:\&gt; Add-GceInstanceTemplate -Name &quot;template-name&quot; -Disk $disks
     
     
+    Creates two attached disk objects, and creates a new template using them.
     
     
 RELATED LINKS

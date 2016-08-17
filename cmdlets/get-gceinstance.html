@@ -73,24 +73,24 @@ NAME
     Get-GceInstance
     
 SYNOPSIS
-    Gets information about Google Compute Engine VM Instances.
+    Gets information about one or more Google Compute Engine VM instances.
     
 SYNTAX
-    Get-GceInstance [-Project &lt;string&gt;] [-SerialPortOutput &lt;SwitchParameter&gt;] [&lt;CommonParameters&gt;]
+    Get-GceInstance [-Project &lt;string&gt;] [-SerialPortOutput &lt;SwitchParameter&gt;] [-PortNumber &lt;int&gt;] [&lt;CommonParameters&gt;]
     
-    Get-GceInstance [-Project &lt;string&gt;] -Zone &lt;string&gt; [-SerialPortOutput &lt;SwitchParameter&gt;] [&lt;CommonParameters&gt;]
+    Get-GceInstance [-Project &lt;string&gt;] -Zone &lt;string&gt; [-SerialPortOutput &lt;SwitchParameter&gt;] [-PortNumber &lt;int&gt;] [&lt;CommonParameters&gt;]
     
-    Get-GceInstance [-Project &lt;string&gt;] [-Zone &lt;string&gt;] [-Name] &lt;string&gt; [-SerialPortOutput &lt;SwitchParameter&gt;] [&lt;CommonParameters&gt;]
+    Get-GceInstance [-Project &lt;string&gt;] [-Zone &lt;string&gt;] [-Name] &lt;string&gt; [-SerialPortOutput &lt;SwitchParameter&gt;] [-PortNumber &lt;int&gt;] [&lt;CommonParameters&gt;]
     
-    Get-GceInstance [-Project &lt;string&gt;] [-Zone &lt;string&gt;] -ManagedGroupName &lt;string&gt; [-SerialPortOutput &lt;SwitchParameter&gt;] [&lt;CommonParameters&gt;]
+    Get-GceInstance [-Project &lt;string&gt;] [-Zone &lt;string&gt;] -ManagedGroupName &lt;string&gt; [-SerialPortOutput &lt;SwitchParameter&gt;] [-PortNumber &lt;int&gt;] [&lt;CommonParameters&gt;]
     
-    Get-GceInstance [-Object] &lt;Instance&gt; [-SerialPortOutput &lt;SwitchParameter&gt;] [&lt;CommonParameters&gt;]
+    Get-GceInstance [-Object] &lt;Instance&gt; [-SerialPortOutput &lt;SwitchParameter&gt;] [-PortNumber &lt;int&gt;] [&lt;CommonParameters&gt;]
     
-    Get-GceInstance [-ManagedGroupObject] &lt;InstanceGroupManager&gt; [-SerialPortOutput &lt;SwitchParameter&gt;] [&lt;CommonParameters&gt;]
+    Get-GceInstance [-ManagedGroupObject] &lt;InstanceGroupManager&gt; [-SerialPortOutput &lt;SwitchParameter&gt;] [-PortNumber &lt;int&gt;] [&lt;CommonParameters&gt;]
     
     
 DESCRIPTION
-    Gets information about VM instances.
+    Gets information about all Google Compute Engine VM instances. Can get all instances of a project, or all instances in a zone, or a specific instance by name. Can also get all instances of a managed instance group.
     
 
 PARAMETERS
@@ -157,6 +157,15 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
+    -PortNumber &lt;int&gt;
+        The number of the serial port to read from. Defaults to 1. Has no effect if -SerialPortOutput is not set. Must be between 1 and 4, inclusive.
+        
+        Required?                    false
+        Position?                    named
+        Default value                1
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
     &lt;CommonParameters&gt;
         This cmdlet supports the common parameters: Verbose, Debug,
         ErrorAction, ErrorVariable, WarningAction, WarningVariable,
@@ -175,6 +184,45 @@ INPUTS
     
     
 OUTPUTS
+    Google.Apis.Compute.v1.Data.Instance
+    
+    System.String
+    
+    
+    ----------  EXAMPLE 1  ----------
+    
+    PS C:\&gt; Get-GceInstance -Project &quot;my-project&quot;
+    
+    
+    Gets all instances of the project &quot;my-project&quot;.
+    
+    ----------  EXAMPLE 2  ----------
+    
+    PS C:\&gt; Get-GceInstance -Zone &quot;us-west1-a&quot;
+    
+    
+    Gets all instances in the zone &quot;us-west1-a&quot; in the default project.
+    
+    ----------  EXAMPLE 3  ----------
+    
+    PS C:\&gt; Get-GceInstance &quot;my-instance&quot;
+    
+    
+    Gets the instance named &quot;my-instance&quot; in the default project and zone
+    
+    ----------  EXAMPLE 4  ----------
+    
+    PS C:\&gt; Get-GceInstance -ManagedGroupName &quot;my-group&quot;
+    
+    
+    Gets all instances that are members of the managed instance group named &quot;my-group&quot;.
+    
+    ----------  EXAMPLE 5  ----------
+    
+    PS C:\&gt; Get-GceInstance &quot;my-instance&quot; -SerialPortOutput -Port 4.
+    
+    
+    Returns the data from serial port 4 of &quot;my-instance&quot;.
     
     
 RELATED LINKS

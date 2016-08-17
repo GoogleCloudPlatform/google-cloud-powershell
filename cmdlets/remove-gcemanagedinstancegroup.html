@@ -138,6 +138,20 @@ INPUTS
     
 OUTPUTS
     
+    ----------  EXAMPLE 1  ----------
+    
+    PS C:\&gt; Remove-GceManagedInstanceGroup &quot;my-instance-group&quot;
+    
+    
+    Removes the instance group named &quot;my-instance-group&quot; in the default project and zone.
+    
+    ----------  EXAMPLE 2  ----------
+    
+    PS C:\&gt; Get-GceManagedInstanceGroup -Zone &quot;us-central1-a&quot; | Remove-GceManagedInstanceGroup
+    
+    
+    Removes all managed instance groups of the default project in zone &quot;us-central1-a&quot;.
+    
     
 RELATED LINKS
 

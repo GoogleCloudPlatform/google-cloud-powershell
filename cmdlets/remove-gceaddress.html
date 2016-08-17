@@ -149,6 +149,27 @@ INPUTS
     
 OUTPUTS
     
+    ----------  EXAMPLE 1  ----------
+    
+    Remove-GceAddress $addressName
+    
+    
+    Removes an address of the default project and region:
+    
+    ----------  EXAMPLE 2  ----------
+    
+    Remove-GceAddress $addressName -Global
+    
+    
+    Removes a global address of the default project:
+    
+    ----------  EXAMPLE 3  ----------
+    
+    Get-GceAddress | Remove-GceAddress
+    
+    
+    Removes all global and region specific addresses of the default project:
+    
     
 RELATED LINKS
 

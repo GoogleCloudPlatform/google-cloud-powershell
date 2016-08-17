@@ -76,11 +76,11 @@ SYNOPSIS
     Uploads a local file into a Google Cloud Storage bucket.
     
 SYNTAX
-    New-GcsObject [-Bucket] &lt;string&gt; [-ObjectName] &lt;string&gt; [[-Contents] &lt;string&gt;] [-ContentType &lt;string&gt;] [-PredefinedAcl &lt;PredefinedAclEnum&gt; {AuthenticatedRead | BucketOwnerFullControl | BucketOwnerRead | Private__ | ProjectPrivate | PublicRead}] [-Force 
-    &lt;SwitchParameter&gt;] [&lt;CommonParameters&gt;]
+    New-GcsObject [-Bucket] &lt;string&gt; [-ObjectName] &lt;string&gt; [[-Contents] &lt;string&gt;] [-ContentType &lt;string&gt;] [-PredefinedAcl &lt;PredefinedAclEnum&gt; {AuthenticatedRead | BucketOwnerFullControl | BucketOwnerRead | Private__ | ProjectPrivate | PublicRead}] 
+    [-Metadata &lt;Hashtable&gt;] [-Force &lt;SwitchParameter&gt;] [&lt;CommonParameters&gt;]
     
-    New-GcsObject [-Bucket] &lt;string&gt; [-ObjectName] &lt;string&gt; [-File] &lt;string&gt; [-ContentType &lt;string&gt;] [-PredefinedAcl &lt;PredefinedAclEnum&gt; {AuthenticatedRead | BucketOwnerFullControl | BucketOwnerRead | Private__ | ProjectPrivate | PublicRead}] [-Force 
-    &lt;SwitchParameter&gt;] [&lt;CommonParameters&gt;]
+    New-GcsObject [-Bucket] &lt;string&gt; [-ObjectName] &lt;string&gt; [-File] &lt;string&gt; [-ContentType &lt;string&gt;] [-PredefinedAcl &lt;PredefinedAclEnum&gt; {AuthenticatedRead | BucketOwnerFullControl | BucketOwnerRead | Private__ | ProjectPrivate | PublicRead}] [-Metadata 
+    &lt;Hashtable&gt;] [-Force &lt;SwitchParameter&gt;] [&lt;CommonParameters&gt;]
     
     
 DESCRIPTION
@@ -146,6 +146,15 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
+    -Metadata &lt;Hashtable&gt;
+        Provide metadata for the Cloud Storage object. Some values, such as Content-Type, Content-MD5, ETag have a special meaning. You can also specify custom values that have application-specific meaning.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
     -Force &lt;SwitchParameter&gt;
         Force the operation to succeed, overwriting existing Storage objects if needed.
         
@@ -180,8 +189,9 @@ OUTPUTS
     
     ----------  EXAMPLE 2  ----------
     
-    Pipe a string to a a file on GCS.
-    PS C:\&gt; &quot;Hello, World!&quot; | New-GcsObject -Bucket &quot;widget-co-logs&quot; -ObjectName &quot;log-000.txt&quot;
+    Pipe a string to a a file on GCS. Sets a custom metadata value.
+    PS C:\&gt; &quot;Hello, World!&quot; | New-GcsObject -Bucket &quot;widget-co-logs&quot; -ObjectName &quot;log-000.txt&quot; `
+    -Metadata @{ &quot;logsource&quot; = $env:computername }
     
     
     

@@ -116,6 +116,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -Description &lt;string&gt;
+        Optional description of the disk.
         
         Required?                    false
         Position?                    named
@@ -124,6 +125,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -SizeGb &lt;long&gt;
+        Specify the size of the disk in GiB.
         
         Required?                    false
         Position?                    named
@@ -132,6 +134,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -DiskType &lt;string&gt;
+        Type of disk, e.g. pd-ssd or pd-standard.
         
         Required?                    false
         Position?                    named
@@ -180,6 +183,27 @@ INPUTS
     
     
 OUTPUTS
+    
+    ----------  EXAMPLE 1  ----------
+    
+    PS C:\&gt; New-GceDisk &quot;disk-name&quot; -SizeGb 10 -DiskType pd-ssd
+    
+    
+    Creates a new empty 10GB persistant solid state disk named &quot;disk-name&quot; in the default project and zone.
+    
+    ----------  EXAMPLE 2  ----------
+    
+    PS C:\&gt; Get-GceImage -Family &quot;windows-2012-r2 | New-GceDisk &quot;disk-from-image&quot;
+    
+    
+    Creates a new persistant disk from the latest windows-2012-r2 image.
+    
+    ----------  EXAMPLE 3  ----------
+    
+    PS C:\&gt; Get-GceSnapshot &quot;snapshot-name&quot; | New-GceDisk &quot;disk-from-snapshot&quot;
+    
+    
+    Creates a new persistant disk from the snapshot named &quot;snapshot-name&quot;.
     
     
 RELATED LINKS

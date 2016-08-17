@@ -96,6 +96,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -Zone &lt;string&gt;
+        Specific zone to lookup disks in, e.g. &quot;us-central1-a&quot;. Partial names like &quot;us-&quot; or &quot;us-central1&quot; will also work.
         
         Required?                    false
         Position?                    named
@@ -124,10 +125,10 @@ OUTPUTS
     
     ----------  EXAMPLE 1  ----------
     
+    PS C:\&gt; Get-GceDisk -Project &quot;ppiper-prod&quot; &quot;ppiper-frontend&quot;
+    
+    
     Get the disk named &quot;ppiper-frontend&quot;.
-    Get-GceDisk -Project &quot;ppiper-prod&quot; &quot;ppiper-frontend&quot;
-    
-    
     
     
 RELATED LINKS

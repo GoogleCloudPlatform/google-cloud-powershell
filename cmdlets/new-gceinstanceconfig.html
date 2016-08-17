@@ -95,7 +95,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -MachineType &lt;string&gt;
-        The machine type of this instance. Can be a name, a URL or a MachineType object from Get-GceMachineType. Defaults to n1-standard-1
+        The machine type of this instance. Can be a name, a URL or a MachineType object from Get-GceMachineType. Defaults to &quot;n1-standard-1&quot;.
         
         Required?                    false
         Position?                    1
@@ -252,6 +252,15 @@ INPUTS
     
     
 OUTPUTS
+    Google.Apis.Compute.v1.Data.Instance
+    
+    
+    ----------  EXAMPLE 1  ----------
+    
+    PS C:\&gt; $config = New-GceInstanceConfig -Name &quot;new-instance&quot; -BootDiskImage $image
+    Creates a new instance description and saves it to $config. The new instance will create a new boot disk from $image.
+    
+    
     
     
 RELATED LINKS

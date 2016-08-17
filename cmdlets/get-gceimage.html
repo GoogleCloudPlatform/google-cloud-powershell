@@ -136,6 +136,43 @@ INPUTS
     
     
 OUTPUTS
+    Google.Apis.Compute.v1.Data.Image
+    
+    
+    ----------  EXAMPLE 1  ----------
+    
+    PS C:\&gt; Get-GceImage
+    
+    
+    Lists all the standard up to date images.
+    
+    ----------  EXAMPLE 2  ----------
+    
+    PS C:\&gt; Get-GceImage -Family &quot;window-2012-r2&quot;
+    
+    
+    Gets the latest windows 2012 r2 image from the windows-cloud project.
+    
+    ----------  EXAMPLE 3  ----------
+    
+    PS C:\&gt; Get-GceImage &quot;windows-server-2008-r2-dc-v20160719&quot;
+    
+    
+    Gets the image named windows-server-2008-r2-dc-v20160719 from the windows-cloud project.
+    
+    ----------  EXAMPLE 4  ----------
+    
+    PS C:\&gt; Get-GceImage &quot;my-image&quot; -Project &quot;my-project&quot;
+    
+    
+    Gets the custom image named &quot;my-image&quot; from the private project &quot;my-project&quot;.
+    
+    ----------  EXAMPLE 5  ----------
+    
+    PS C:\&gt; Get-GceImage -Project &quot;my-project&quot; -IncludeDeprecated
+    
+    
+    Lists all images in project &quot;my-project&quot;, including images marked as deprecated.
     
     
 RELATED LINKS

@@ -137,6 +137,24 @@ INPUTS
     
     
 OUTPUTS
+    Google.Apis.Compute.v1.Data.Instance
+    
+    
+    ----------  EXAMPLE 1  ----------
+    
+    PS C:\&gt; Start-GceInstance &quot;my-instance&quot;
+    
+    
+    Starts the instance named &quot;my-instance&quot; in the default project and zone.
+    
+    ----------  EXAMPLE 2  ----------
+    
+    PS C:\&gt; Get-GceInstance -Project &quot;my-project&quot;|
+                where Status -eq Stopped |
+                Start-GceInstance
+    
+    
+    Starts all instances in project &quot;my-project&quot; that are currently stopped.
     
     
 RELATED LINKS

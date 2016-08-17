@@ -125,6 +125,29 @@ INPUTS
     
     
 OUTPUTS
+    Google.Apis.Compute.v1.Data.MachineType
+    
+    
+    ----------  EXAMPLE 1  ----------
+    
+    PS C:\&gt; Get-GceMachineType
+    
+    
+    Lists all machine types for the default project.
+    
+    ----------  EXAMPLE 2  ----------
+    
+    PS C:\&gt; Get-GceMachineType -Zone &quot;us-central1-a&quot;
+    
+    
+    Lists all machine types in zone us-central1-a for the default project.
+    
+    ----------  EXAMPLE 3  ----------
+    
+    PS C:\&gt; Get-GceMachineType &quot;f1-micro&quot;
+    
+    
+    Gets the machine type named f1-micro in the default project and zone.
     
     
 RELATED LINKS

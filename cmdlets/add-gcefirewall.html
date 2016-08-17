@@ -186,11 +186,22 @@ PARAMETERS
         about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
     
 INPUTS
-    System.Collections.Generic.List`1[[Google.Apis.Compute.v1.Data.Firewall+AllowedData, Google.Apis.Compute.v1, Version=1.13.1.504, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab]]
+    System.Collections.Generic.List`1[[Google.Apis.Compute.v1.Data.Firewall+AllowedData, Google.Apis.Compute.v1, Version=1.15.0.572, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab]]
         A list of allowed protocols and ports. you can use New-GceFirewallProtocol to create them.
     
     
 OUTPUTS
+    Google.Apis.Compute.v1.Data.Firewall
+    
+    
+    ----------  EXAMPLE 1  ----------
+    
+    PS C:\&gt; New-GceFirewallProtocol tcp -Ports 80, 443 |
+            New-GceFirewallProtocol esp |
+            Add-GceFirewall -Name &quot;my-firewall&quot; -SourceTag my-source -TargetTag my-target
+    
+    
+    Creates a new firewall rule in the default project named &quot;my-firewall&quot;. The firewall allows traffic using tcp on ports 80 and 443 as well as the esp protocol from servers tagged my-source to servers tagged my-target.
     
     
 RELATED LINKS

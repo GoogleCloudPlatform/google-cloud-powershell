@@ -76,9 +76,9 @@ SYNOPSIS
     Replaces the contents of a Cloud Storage object.
     
 SYNTAX
-    Write-GcsObject [-Bucket] &lt;string&gt; [-ObjectName] &lt;string&gt; [[-Contents] &lt;string&gt;] [-Force &lt;SwitchParameter&gt;] [&lt;CommonParameters&gt;]
+    Write-GcsObject [-Bucket] &lt;string&gt; [-ObjectName] &lt;string&gt; [[-Contents] &lt;string&gt;] [-ContentType &lt;string&gt;] [-Metadata &lt;Hashtable&gt;] [-Force &lt;SwitchParameter&gt;] [&lt;CommonParameters&gt;]
     
-    Write-GcsObject [-Bucket] &lt;string&gt; [-ObjectName] &lt;string&gt; -File &lt;string&gt; [-Force &lt;SwitchParameter&gt;] [&lt;CommonParameters&gt;]
+    Write-GcsObject [-Bucket] &lt;string&gt; [-ObjectName] &lt;string&gt; -File &lt;string&gt; [-ContentType &lt;string&gt;] [-Metadata &lt;Hashtable&gt;] [-Force &lt;SwitchParameter&gt;] [&lt;CommonParameters&gt;]
     
     
 DESCRIPTION
@@ -122,6 +122,26 @@ PARAMETERS
         Accept pipeline input?       false
         Accept wildcard characters?  false
         
+    -ContentType &lt;string&gt;
+        Content type of the Cloud Storage object. e.g. &quot;image/png&quot; or &quot;text/plain&quot;.
+        
+        For file uploads, the type will be inferred based on the file extension, defaulting to &quot;application/octet-stream&quot; if no match is found. When passing object content via the -Contents parameter, the type will default to &quot;text/plain; charset=utf-8&quot;.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Metadata &lt;Hashtable&gt;
+        Metadata for the Cloud Storage object. Values will be merged into the existing object. To delete a Metadata value, provide an empty string for its value.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
     -Force &lt;SwitchParameter&gt;
         Force the operation to succeed, ignoring errors if no existing Storage object exists.
         
@@ -143,6 +163,8 @@ INPUTS
     
     
 OUTPUTS
+    Google.Apis.Storage.v1.Data.Object
+    
     
     ----------  EXAMPLE 1  ----------
     

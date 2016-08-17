@@ -161,6 +161,31 @@ INPUTS
     
     
 OUTPUTS
+    Google.Apis.Compute.v1.Data.InstanceGroupManager
+    
+    Google.Apis.Compute.v1.Data.ManagedInstance
+    
+    
+    ----------  EXAMPLE 1  ----------
+    
+    PS C:\&gt; Get-GceManagedInstanceGroup
+    
+    
+    Lists all managed instance groups for the default project.
+    
+    ----------  EXAMPLE 2  ----------
+    
+    PS C:\&gt; Get-GceManagedInstanceGroup -Zone &quot;us-central1-a&quot;
+    
+    
+    Lists all managed instance groups for the default project in the given zone.
+    
+    ----------  EXAMPLE 3  ----------
+    
+    PS C:\&gt; Get-GceManagedInstanceGroup &quot;my-instance-group&quot; -InstanceStatus
+    
+    
+    Lists the status of all members of the instance group named &quot;my-instance-group&quot; in the default project and zone.
     
     
 RELATED LINKS
