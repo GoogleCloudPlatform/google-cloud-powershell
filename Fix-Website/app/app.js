@@ -3,19 +3,19 @@
 
     /* TODO: Change templates from html to .ng */
 
-    app.directive("contentTable", function(){
+    app.directive('contentTable', function() {
         return {
             restrict: 'E',
-            templateUrl: "templates/content-table.html",
-            controller: "TableCtrl",
+            templateUrl: 'templates/content-table.html',
+            controller: 'TableCtrl',
             controllerAs: 'table'
         };
     });
 
-    app.directive("infoZone", function () {
+    app.directive('infoZone', function() {
         return {
             restrict: 'E',
-            templateUrl: "templates/info.html"
+            templateUrl: 'templates/info.html'
         };
     });
 

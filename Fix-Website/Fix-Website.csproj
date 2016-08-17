@@ -99,7 +99,6 @@
     <Content Include="app\tableController.js" />
     <Content Include="packages.config" />
     <Content Include="scripts\angular.min.js.map" />
-    <Content Include="cmdletsfull.json" />
     <None Include="Properties\PublishProfiles\Test-WebServer.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
