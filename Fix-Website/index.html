@@ -18,6 +18,9 @@
   <link type="text/css" rel="stylesheet" href="Stylesheets/toc.css" />
   <script src="scripts/angular.min.js"></script>
   <script src="app/app.js"></script>
+  <script src="app/tableController.js"></script>
+  <script src="app/referenceController.js"></script>
+  <script src="app/cmdletFilter.js"></script>
 </head>
 <body ng-app="powershellSite">
   <header>
@@ -51,7 +54,7 @@
           </ul>
       </div>
   </div>
-  <div class="Reference" ng-controller="ReferenceController as ref">
+  <div class="Reference" ng-controller="ReferenceCtrl as ref">
     <!-- The TOC body. --->
     <content-table></content-table>
     <!-- The Information body. -->

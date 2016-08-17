@@ -1,4 +1,6 @@
+/* TODO: Bootstrap, hit this with the css hammer to make sure it's standard. */
 .TOC {
+    /*light grey color*/
     background-color: #fafafa;
     float:left;
     height: 800px;
@@ -14,11 +16,13 @@
     word-wrap: break-word;
 }
 .Link {
+    /*Darker blue color*/
     color: #4285f6;
     cursor: pointer;
 }
 
 .Cmdlet {
+    /*Darker blue color*/
     color: #4285f6;
     cursor: pointer;
     margin-left: 20px;

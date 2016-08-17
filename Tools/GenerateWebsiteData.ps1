@@ -16,8 +16,12 @@ $apiMappings = @{
 
 # Generate a single JSON file containing all the documentation for all the
 # cmdlets. Unfortunately we can't split these into multiple files because of
-# the way we generating web pages in Jekyll.
+# the way we generating web pages in Jekyll/angular..
 $cmdletDocObjects = @()
+
+#Allows us to separate out cmdlets by product.
+$cmdletDocObjectsGcs = @{}
+$cmdletDocObjectsGce = @{}
 foreach ($cmdlet in $cmdlets) {
     Write-Host "Building $($cmdlet.Name)..."
 
@@ -28,6 +32,7 @@ foreach ($cmdlet in $cmdlets) {
     $docText = Get-Help -Full $cmdlet.Name | Out-String
     $docObj = Get-Help -Full $cmdlet.Name
     $summary = ($docObj.Synopsis | Out-String).Trim()
+    $name = ($cmdlet.Name | Out-String).Trim()
 
     # Determine which product the cmdlet belongs to, "Google Compute Engine".
     $cloudProduct = "";
@@ -62,11 +67,43 @@ foreach ($cmdlet in $cmdlets) {
         "documentation" = $docText
     }
 
+    # Contains more information than above.
+    $cmdletDocObjFull = @{
+        "name" = $name
+        "synopsis" = ($docObj.Synopsis | Out-String).Trim()
+        "description" = ($docObj.Description | Out-String).Trim()
+        "parameters" = ($docObj.Parameters | Out-String).replace("`r`n","`n")
+        "inputs" = ($docObj.Inputs | Out-String).Trim()
+        "outputs" = ($docObj.Outputs | Out-String).Trim()
+        "examples" = ($docObj.Examples | Out-String).replace("`r`n","`n")
+        }
+
     $cmdletDocObjects += $cmdletDocObj
+
+    # Making the JSON a hashtable from cmdlet name to cmdlet information allows us to quickly access info in angular
+    if ($cloudProduct -eq "Google Cloud Storage") {
+        $cmdletDocObjectsGcs.Add($name,$cmdletDocObjFull)
+    }
+    else {
+        $cmdletDocObjectsGce.Add($name,$cmdletDocObjFull)
+    }
 }
 
+# We wrap the project specific cmdlets with their project.
+$cmdletDocObjectsFull = @{
+    "Google Compute Engine" = $cmdletDocObjectsGce
+    "Google Cloud Storage" = $cmdletDocObjectsGcs
+}
+
+# Finally we write the json files.
 Write-Host "Saving cmdlets.json"
 $cmdletsOutputPath = Join-Path $PSScriptRoot "\..\website\_data\cmdlets.json"
 $cmdletDocObjects `
+| ConvertTo-Json -Depth 10 `
+| Out-File -FilePath $cmdletsOutputPath -Encoding "UTF8"
+
+Write-Host "Saving cmdletsFull.json"
+$cmdletsOutputPath = Join-Path $PSScriptRoot "\..\Fix-Website\_data\cmdletsFull.json"
+$cmdletDocObjectsFull `
 | ConvertTo-Json -Depth 10 `
 | Out-File -FilePath $cmdletsOutputPath -Encoding "UTF8"

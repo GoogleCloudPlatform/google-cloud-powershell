@@ -1,0 +1,31 @@
+﻿<div class="Info">
+    <div ng-show="ref.checkFrame(1)">
+        <h1>Google Cloud Powershell</h1>
+        <p>Blurb about powershell</p>
+    </div>
+    <div ng-show="ref.checkFrame(2)">
+        <h1>{{ref.active}}</h1>
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+            </tr>
+            <tr ng-repeat="(order,cmdlet) in products[ref.active] | orderByCmdletProp: 'name'">
+                <td ng-click="ref.setFrame(3,cmdlet.name)" class="Cmdlet">{{cmdlet.name}}</td>
+                <td>{{cmdlet.description}}</td>
+            </tr>
+        </table>
+    </div>
+    <div ng-show="ref.checkFrame(3)">
+        <h1>{{ref.active}}</h1>
+        <div ng-repeat="(key,value) in products[ref.activeProduct][ref.active]" 
+             ng-if="key != 'name'">
+            <h2>
+                {{key.toUpperCase()}}
+            </h2>
+            <pre>
+                {{value}}
+            </pre>
+        </div>
+    </div>
+</div>

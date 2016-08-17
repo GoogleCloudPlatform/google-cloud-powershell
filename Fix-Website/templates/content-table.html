@@ -1,0 +1,9 @@
+﻿<div class="TOC">
+    <strong>GCP Powershell Products</strong>
+    <div ng-repeat="(product,value) in products">
+        <p ng-click="table.clickProduct(product)" class="Link">{{product}}</p>
+        <div ng-show="table.isExpanded(product)" ng-repeat="(order,cmdlet) in value | orderByCmdletProp: 'name'" >
+            <p ng-click="table.clickCmdlet(cmdlet.name)" class="Cmdlet">{{cmdlet.name}}</p>
+        </div>
+    </div>
+</div>

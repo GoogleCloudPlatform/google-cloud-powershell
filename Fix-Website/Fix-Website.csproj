@@ -94,9 +94,11 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="app\cmdletFilter.js" />
+    <Content Include="app\referenceController.js" />
+    <Content Include="app\tableController.js" />
     <Content Include="packages.config" />
     <Content Include="scripts\angular.min.js.map" />
-    <Content Include="cmdlets.json" />
     <Content Include="cmdletsfull.json" />
     <None Include="Properties\PublishProfiles\Test-WebServer.pubxml" />
     <None Include="Web.Debug.config">
@@ -105,6 +107,7 @@
     <None Include="Web.Release.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
+    <Content Include="_data\cmdletsFull.json" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Images\google.png" />
@@ -114,14 +117,15 @@
     <Content Include="scripts\angular-mocks.js" />
     <Content Include="scripts\angular.min.js" />
     <Content Include="app\app.js" />
-    <Content Include="Stylesheets\maia.css" />
-    <Content Include="Stylesheets\toc.css" />
-    <Content Include="Templates\content-table.txt">
-      <BrowseToURL>~/Templates/content-table.ng</BrowseToURL>
+    <Content Include="stylesheets\maia.css" />
+    <Content Include="stylesheets\toc.css" />
+    <Content Include="templates\content-table.html">
+      <BrowseToURL>~/templates/content-table.ng</BrowseToURL>
     </Content>
-    <Content Include="Templates\info.txt" />
+    <Content Include="templates\info.html" />
     <Content Include="Web.config" />
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
