@@ -1,17 +1,29 @@
+/* TODO: Bootstrap, hit this with the css hammer to make sure it's standard. */
 .TOC {
-    background-color: #FAFAFA;
-    height: 800px;
-    width: 400px;
+    /*light grey color*/
+    background-color: #fafafa;
     float:left;
+    height: 800px;
     margin-top: 10px;
-    position: static;
+    overflow-y: auto;
+    position: fixed;
+    width: 400px;
 }
 .Info {
+    margin-left: 420px;
     position: static;
-    margin-left: 20px;
-    float:left;
+    width: 1200px;
+    word-wrap: break-word;
 }
 .Link {
-    color: #4285F6;
+    /*Darker blue color*/
+    color: #4285f6;
     cursor: pointer;
+}
+
+.Cmdlet {
+    /*Darker blue color*/
+    color: #4285f6;
+    cursor: pointer;
+    margin-left: 20px;
 }
