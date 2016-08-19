@@ -1,27 +1,27 @@
 /* TODO: Bootstrap, hit this with the css hammer to make sure it's standard. */
-.TOC {
+.table-of-contents {
     /*light grey color*/
     background-color: #fafafa;
     float:left;
     height: 800px;
     margin-top: 10px;
-    overflow-y: auto;
-    position: fixed;
+    overflow:hidden;
+    height:1%;
     width: 400px;
 }
-.Info {
+.info {
     margin-left: 420px;
     position: static;
     width: 1200px;
     word-wrap: break-word;
 }
-.Link {
+.link {
     /*Darker blue color*/
     color: #4285f6;
     cursor: pointer;
 }
 
-.Cmdlet {
+.cmdlet {
     /*Darker blue color*/
     color: #4285f6;
     cursor: pointer;

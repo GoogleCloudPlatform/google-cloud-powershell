@@ -1,0 +1,70 @@
+﻿<!DOCTYPE html>
+<html class="google-js" lang="en" ng-app="powershellSite">
+<head>
+  <meta charset="utf-8">
+  <script>
+      (function(H){H.className=H.className.replace(/\bgoogle\b/,'google-js')})(document.documentElement)
+  </script>
+  <meta content="initial-scale=1, minimum-scale=1, width=device-width" name="viewport">
+  <meta name="description" content="">
+  <base href="/">
+  <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
+
+  <title>Google Cloud PowerShell Cmdlet Reference</title>
+  <script src="//www.google.com/js/google.js"></script>
+  <link rel="canonical" href="//googlecloudplatform.github.io/google-cloud-powershell/cmdlets/">
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
+  <link rel="stylesheet" href="static/css/maia.css" />
+  <link rel="stylesheet" href="static/css/style.css" />
+  <script src="static/scripts/angular.min.js"></script>
+  <script src="static/scripts/angular-route.js"></script>
+  <script src="static/app/app.js"></script>
+  <script src="static/app/mainController.js"></script>
+  <script src="static/app/tableController.js"></script>
+  <script src="static/app/referenceController.js"></script>
+  <script src="static/app/cmdletFilter.js"></script>
+</head>
+<body ng-app="powershellSite">
+
+  <div class="header">
+    <header>
+      <div class="maia-header" id="maia-header" role="banner">
+        <div class="maia-aux">
+          <a href="">
+           <h1>
+             <img alt="Google" src="static/images/google.png">&nbsp;Cloud Platform
+           </h1>
+           <h2>
+             PowerShell
+           </h2>
+          </a>
+        </div>
+      </div>
+    </header>
+    <div class="maia-nav" id="maia-nav-x" role="navigation">
+      <div class="maia-aux">
+        <ul>
+          <li>
+            <a href="/google-cloud-powershell/">Home</a>
+          </li>
+
+          <li class="active">
+            <a href="/">Reference</a>
+          </li>
+
+          <!-- cmdlet-specific pages include the parent product. -->
+          <!-- product-specific pages. -->
+
+        </ul>
+      </div>
+    </div>
+  </div>
+  
+  <div ng-controller="MainController">
+    <!-- The TOC body. -->
+    <content-table></content-table>
+    <!-- The Information body. -->
+    <ng-view></ng-view>
+  </div>
+</body>
+</html>

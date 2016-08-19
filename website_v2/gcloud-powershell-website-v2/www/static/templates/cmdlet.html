@@ -1,0 +1,13 @@
+﻿<div class="info">
+    <h1>{{ref.params.cmdlet}}</h1>
+    <!-- We should display all cmdlets for a product -->
+    <div ng-repeat="(key,value) in products[ref.params.product][ref.params.cmdlet]"
+         ng-if="key != 'name'">
+        <h2>
+            {{key.toUpperCase()}}
+        </h2>
+        <pre>
+            {{value}}
+        </pre>
+    </div>
+</div>
