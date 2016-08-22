@@ -102,6 +102,7 @@ namespace Google.PowerShell.Dns
         /// </para>
         /// </summary>
         [Parameter(Position = 1, Mandatory = false)]
+        [ValidateSet("A", "AAAA", "CNAME", "MX", "NAPTR", "NS", "PTR", "SOA", "SPF", "SRV", "TXT")]
         public string[] Filter { get; set; }
 
         protected override void ProcessRecord()
