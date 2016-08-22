@@ -95,19 +95,11 @@ function Check-CmdletDoc() {
         [Switch] $DeepExampleCheck 
     )
 
+    # Retrieve all GCloud cmdlets. 
     $binDirectory = Join-Path $PSScriptRoot "\..\Google.PowerShell\bin\"
     Import-Module "$binDirectory\Debug\Google.PowerShell.dll"    
     $allCmdlets = $cmdlets = Get-Command -Module "Google.PowerShell" | Sort Noun
 
-    # Get the cmdlets explicitly named if the CmdletNames parameter is specified.
-    if ($CmdletNames) {
-         $cmdlets = GetCmdletsByName $cmdletNames $allCmdlets
-    }
-
-    # Get the cmdlets that are whitelisted for (don't need a) OutputType
-    $outputWhitelistDirectory = "$PSScriptRoot\OutputTypeWhitelist.txt"
-    $outputWhitelist = GetOutputTypeWhitelist $outputWhitelistDirectory $allCmdlets
- 
     # Create mapping between cmdlet name and the Cloud resource.
     $apiMappings = @{
         "Gcs" = "Google Cloud Storage"
@@ -116,15 +108,33 @@ function Check-CmdletDoc() {
         "GcSql" = "Google Cloud SQL"
     }
 
-    $numPassedCmdlets = 0
+    # If the CmdletNames parameter is specified, get the cmdlets explicitly named.
+    if ($CmdletNames) {
+         $cmdlets = GetCmdletsByName $cmdletNames $cmdlets
+    }
+
+    # If the CloudProducts parameter is specified, get the cmdlets in the named products. 
+    if ($CloudProducts) {
+        $cmdlets = GetCmdletsByProduct $CloudProducts $apiMappings $cmdlets
+    }
+
+    # Get the cmdlets that are whitelisted for (don't need a) OutputType
+    $outputWhitelistDirectory = "$PSScriptRoot\OutputTypeWhitelist.txt"
+    $outputWhitelist = GetOutputTypeWhitelist $outputWhitelistDirectory $allCmdlets
+
+    $oldProductMapping = $null 
     # Check each cmdlet's documentation and output relevant warnings.
     foreach ($cmdlet in $cmdlets) {
         $productMapping = FindAssociatedCloudProduct $cmdlet.Noun $apiMappings
 
-        # If cloud products were specified and the cmdlet is not associated with any of them, abort the check.
-        if ($CloudProducts -and 
-            (-not (InSpecifiedCloudProducts $CloudProducts $productMapping $apiMappings))) {
-                continue
+        # Write footer (number of passing cmdlets) for previous product and header for new product. 
+        if ($productMapping -ne $oldProductMapping) {
+            if ($oldProductMapping -ne $null) {
+                Write-Host "`nNumber of passing cmdlets: $numPassedCmdlets`n" -ForegroundColor Green -BackgroundColor Black
+            }
+            Write-Host "`n---------- Checking `"$($productMapping.Value)`" cmdlets ----------"
+            $numPassedCmdlets = 0
+            $oldProductMapping = $productMapping
         }
         
         # Get the cmdlet's documentation.
@@ -150,15 +160,40 @@ function Check-CmdletDoc() {
         } else {
             $numPassedCmdlets++
         }
-    }
 
-    Write-Host "`nNumber of Passing Cmdlets: $numPassedCmdlets`n" -ForegroundColor Green -BackgroundColor Black
+        # If this is the last cmdlet, write the footer for this last product. 
+        if ($cmdlet -eq $cmdlets[-1]) {
+            Write-Host "`nNumber of passing cmdlets: $numPassedCmdlets`n" -ForegroundColor Green -BackgroundColor Black
+        }
+    }
 }
 
 # Get the cmdlets explicitly named as a subset of all Google Cloud cmdlets.
 function GetCmdletsByName ($cmdletNames, $allCmdlets) {
     PrintElementsNotFound $cmdletNames $allCmdlets.Name "`nThe following cmdlets you named were not found:"
     return @($allCmdlets | where Name -in $cmdletNames)
+}
+
+# Get the cmdlets explicitly named as a subset of all Google Cloud cmdlets.
+function GetCmdletsByProduct ($CloudProducts, $apiMappings, $cmdlets) {
+    return @($cmdlets | where { InSpecifiedCloudProducts $CloudProducts (FindAssociatedCloudProduct $_.Noun $apiMappings) })
+}
+
+# Check if the cmdlet product is one of the specified products.
+function InSpecifiedCloudProducts($specifiedProducts, $productMapping) {
+    return (($specifiedProducts -contains $productMapping.Key) -or 
+            ($specifiedProducts -contains $productMapping.Value))
+}
+
+# Given a cmdlet name and mappings from api name and cloud products, find the cmdlet's associated cloud product.
+function FindAssociatedCloudProduct($cmdletNoun, $apiMappings) {
+    foreach ($apiMapping in $apiMappings.GetEnumerator()) {
+        if ($cmdletNoun.StartsWith($apiMapping.Key)) {
+            return $apiMapping
+        }
+    }
+
+    return ""
 }
 
 # Get the names of the cmdlets in the OuputType whitelist.
@@ -180,23 +215,6 @@ function PrintElementsNotFound ($sublist, $list, $message) {
         Write-Host $message
         $notFound | Write-Host
     }
-}
-
-# Given a cmdlet name and mappings from api name and cloud products, find the cmdlet's associated cloud product.
-function FindAssociatedCloudProduct($cmdletNoun, $apiMappings) {
-    foreach ($apiMapping in $apiMappings.GetEnumerator()) {
-        if ($cmdletNoun.StartsWith($apiMapping.Key)) {
-            return $apiMapping
-        }
-    }
-
-    return ""
-}
-
-# Check if the cmdlet product is one of the specified products.
-function InSpecifiedCloudProducts($specifiedProducts, $productMapping, $apiMappings) {
-    return (($specifiedProducts -contains $productMapping.Key) -or 
-            ($specifiedProducts -contains $productMapping.Value))
 }
 
 # Get warnings for all important fields in a cmdlet's documentation.
