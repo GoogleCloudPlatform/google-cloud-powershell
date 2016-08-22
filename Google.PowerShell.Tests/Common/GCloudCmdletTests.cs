@@ -1,8 +1,6 @@
 ﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
-// Licensed under the Apache License Version 2.0.
-
 using System;
 using System.Management.Automation;
 using System.Collections.Generic;
