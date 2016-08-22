@@ -131,7 +131,11 @@ namespace Google.PowerShell.Dns
     ///     <code>
     ///     PS C:\> $newARecord = New-GcdResourceRecordSet -Name "gcloudexample1.com." -Rrdata "104.1.34.167"
     ///     </code>
+    ///   </para>
+    ///   <para>
     ///     <code> PS C:\> $oldCNAMERecord = (Get-GcdResourceRecordSet -Zone "test1" -Filter "CNAME")[0]</code>
+    ///   </para>
+    ///   <para>
     ///     <code>
     ///     PS C:\> Add-GcdChange -Project "testing" -Zone "test1" -Add $newARecord -Remove $oldCNAMERecord
     ///     </code>
@@ -152,6 +156,8 @@ namespace Google.PowerShell.Dns
     ///   </para>
     ///   <para>
     ///     <code>PS C:\> $change2 = Get-GcdChange -Project "testing" -Zone "test1" -ChangeId 2 </code>
+    ///   </para>
+    ///   <para>
     ///     <code>PS C:\> Add-GcdChange -Project "testing" -Zone "test1" -ChangeRequest $change2</code>
     ///   </para>
     ///   <br></br>
