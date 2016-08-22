@@ -1,14 +1,14 @@
-﻿<div class="info">
-    <h1>{{ref.params.product}}</h1>
+﻿<div class="informationArea">
+    <h1>{{refCtrl.params.product}}</h1>
     <table>
         <tr>
             <th>Name</th>
             <th>Description</th>
         </tr>
         <!-- Display all applicable information for a cmdlet -->
-        <tr ng-repeat="(order,cmdlet) in products[ref.params.product] | orderByCmdletProp: 'name'">
+        <tr ng-repeat="(order,cmdlet) in productInfo[refCtrl.params.product] | orderByCmdletProp: 'name'">
             <td>
-                <a href="/{{ref.params.product}}/{{cmdlet.name}}"class="cmdlet">{{cmdlet.name}}</a>
+                <a href="/{{refCtrl.params.product}}/{{cmdlet.name}}"class="cmdletName">{{cmdlet.name}}</a>
             </td>
             <td>{{cmdlet.description}}</td>
         </tr>

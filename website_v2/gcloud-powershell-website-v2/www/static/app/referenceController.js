@@ -1,7 +1,7 @@
 ﻿var app = angular.module('powershellSite');
 
-/** The controller that controls url parameters. **/
-app.controller('ReferenceCtrl', ['$scope', '$routeParams',
+/** The controller that exposes route parameters to the templates. **/
+app.controller('ReferenceController', ['$scope', '$routeParams',
     function($scope, $routeParams) {
-    this.params = $routeParams;
+        this.params = $routeParams;
 }]);

@@ -2,14 +2,14 @@
 .table-of-contents {
     /*light grey color*/
     background-color: #fafafa;
-    float:left;
+    float: left;
     height: 800px;
     margin-top: 10px;
-    overflow:hidden;
-    height:1%;
+    overflow: hidden;
+    height: 1%;
     width: 400px;
 }
-.info {
+.informationArea {
     margin-left: 420px;
     position: static;
     width: 1200px;
@@ -21,7 +21,7 @@
     cursor: pointer;
 }
 
-.cmdlet {
+.cmdletName {
     /*Darker blue color*/
     color: #4285f6;
     cursor: pointer;

@@ -1,18 +1,24 @@
+# This yaml file is meant for the deployment of the website-v2
+# to the appengine app 'gcloud-powershell-website-v2'
 application: gcloud-powershell-website-v2
 version: 5
 runtime: python
 api_version: 1
 threadsafe: true
 
+# These handlers are in a specific order to ensure correct loading.
 handlers:
 
+  # First we want to load the basic html file.
 - url: /
   static_files: www/index.html
   upload: www/index.html
 
+  # Then the static files must populate it.
 - url: /static/
   static_dir: www/static
 
+  # If a website is requested that isn't valid, we still load the base html.
 - url: /(.*)
   static_files: www/index.html
   upload: www/index.html
