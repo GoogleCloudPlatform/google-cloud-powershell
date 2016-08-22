@@ -71,6 +71,9 @@ namespace Google.PowerShell.Dns
     ///   <para>Type    : AAAA</para>
     ///   <para>ETag    :</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/dns/records/json-record)">
+    /// [Supported Resource Record Formats]
+    /// </para>
     /// <para type="link" uri="(https://cloud.google.com/dns/records/)">[Managing Records]</para>
     /// <para type="link" uri="(https://cloud.google.com/dns/troubleshooting)">[Troubleshooting]</para>
     /// </summary>
@@ -163,6 +166,9 @@ namespace Google.PowerShell.Dns
     ///   <para>Type    : A</para>
     ///   <para>ETag    :</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/dns/records/json-record)">
+    /// [Supported Resource Record Formats]
+    /// </para>
     /// <para type="link" uri="(https://cloud.google.com/dns/records/)">[Managing Records]</para>
     /// <para type="link" uri="(https://cloud.google.com/dns/troubleshooting)">[Troubleshooting]</para>
     /// </summary>
