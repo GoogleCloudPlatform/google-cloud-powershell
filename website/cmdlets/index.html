@@ -122,6 +122,49 @@ Set-GceInstance "instance-name" -AddMetadata @{"newKey" = "newValue"}
 Set-GceInstance "instance-name" -RemoveMetadata "newKey"
 Set-GceInstance "instance-name" -RemoveTag "beta" -AddTag "alpha"
         </pre>
+        <!-- Google Cloud SQL -->
+        <h1 id="google-compute-engine">Google Cloud SQL</h1>
+        <p>
+          <a href="{{site.baseurl}}/cmdlets/google-cloud-sql.html">All Cloud SQL cmdlets</a>
+        </p>
+        <p>
+          Google Cloud SQL lets you set-up, maintain, manage, and administer
+          your relational MySQL databases on Google's Cloud Platform.
+        </p>
+        <p>
+          <strong>Instances</strong>
+        </p>
+        <p>
+          Google Cloud SQL instances hold all of your MySQL databases
+          and their relevant data. To create an instance, you must first
+          create an <em>Cloud SQL instance configuration</em>. This requires, at the
+          minimum, a name for your instance, and a <em>setting configuration</em>,
+          which doesn't require anything.
+        </p>
+        <p>
+          After the configuration object has been made, the <code>Add-GcSqlInstance</code>
+          cmdlet can be called to create that instance in a particular project.
+          If your active gcloud configuration has a project, the parameter is optional.
+        </p>
+        <pre>
+$setting = New-GcSqlSettingConfig 
+$instance = New-GcSqlInstanceConfig `
+    "my-instance-name" -SettingConfig $setting
+
+$instance | Add-GcSqlInstance -Project $myProjectName
+        </pre>
+        <p>
+          <strong>Importing Data</strong>
+        </p>
+        <p>
+          MySQL dump filles and CSV files on either your local machine
+          or on a Google Cloud Storage Bucket can be imported to your instance's
+          databases with the <code>Import-GcSqlInstance</code>.
+        </p>
+        <pre>
+Import-GcSqlInstance "my-instance-name" "C:\Users\User\file.csv" `
+    "destination-database" "destination-table"
+        </pre>
       </div>
     </div>
   </div>
