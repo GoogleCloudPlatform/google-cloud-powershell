@@ -1,0 +1,11 @@
+Remove-GcSqlBackupRun
+Export-GcSqlInstance
+Failover-GcSqlInstance
+Restart-GcSqlInstance
+Import-GcSqlInstance
+Remove-GcSqlInstance
+Restore-GcSqlInstanceBackup
+Stop-GcSqlReplica
+Promote-GcSqlReplica.
+Start-GcSqlReplica
+Remove-GcSqlSslCert
