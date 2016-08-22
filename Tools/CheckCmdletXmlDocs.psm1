@@ -211,16 +211,13 @@ function GetAllFieldWarnings ($docObj, $cloudProduct, $outputWhitelist) {
         "Examples" = ($docObj.examples | Out-String).Trim()
     }
 
-    $fieldWarnings = @()
     # Add warnings for each empty field.
     foreach ($docField in $docFields.GetEnumerator()) {
         if (($docField.Value -eq "") -and 
             (-not (($docField.Key -eq "OutputType") -and ($outputWhitelist -contains $docFields.Get_Item("Name"))))) {
-            $fieldWarnings += (GetMissingFieldWarning $docField.Key)
+            Write-Output (GetMissingFieldWarning $docField.Key)
         }
     }
-
-    return $fieldWarnings
 }
 
 # Given a field name, create and return a warning specifically for the missing field.
@@ -241,8 +238,6 @@ function GetMissingFieldWarning($fieldName) {
 
 # Given a cmdlet's documention, conduct a deep example check and return relevant warnings for its examples.
 function DoDeepExampleCheck($docObj) { 
-    $deepExampleWarnings = @()
-    
     # Only do deep check if the documentation has at least 1 example.
     if (($docObj.examples | Out-String).Trim() -ne "") { 
         $noPSStart = @()
@@ -276,30 +271,25 @@ function DoDeepExampleCheck($docObj) {
         }
 
         if ($noPSStart.Count -gt 0) {
-            $deepExampleWarnings += ("Example number(s) " + ($noPSStart -join ", ") + " does(do) not have commands " +
+            Write-Output ("Example number(s) " + ($noPSStart -join ", ") + " does(do) not have commands " +
                 "starting with the expected PS C:\>. (Thus, cannot check for command intro or example output.)")
         }
 
         if ($noIntro.Count -gt 0) {
-            $deepExampleWarnings += ("Example number(s) " + ($noIntro -join ", ") + " has(have) no introduction.")
+            Write-Output ("Example number(s) " + ($noIntro -join ", ") + " has(have) no introduction.")
         }
 
         if ($noOutput.Count -gt 0) {
-            $deepExampleWarnings += ("Example number(s) " + ($noOutput -join ", ") + " has(have) no outputs.")
+            Write-Output ("Example number(s) " + ($noOutput -join ", ") + " has(have) no outputs.")
         }
     }
-
-    return $deepExampleWarnings
 }
 
 # Check that all cmdlet parameters have a valid (non-null, non-whitespace) description, returning warnings otherwise.
 function GetParameterDescriptionWarnings ($docObj) {
-    $paramDesripWarnings = @()
     foreach ($parameter in $docObj.parameters.parameter) {
         if ([String]::IsNullOrWhiteSpace($parameter.description.Text)) {
-            $paramDesripWarnings += ("Parameter `"" + $parameter.name + "`" does not have a valid description.")
+            Write-Output ("Parameter `"" + $parameter.name + "`" does not have a valid description.")
         }
     }
-
-    return $paramDesripWarnings
 }
