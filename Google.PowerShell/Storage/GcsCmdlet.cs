@@ -4,7 +4,6 @@
 using Google.Apis.Storage.v1;
 using Google.PowerShell.Common;
 using System;
-using System.Collections.Generic;
 
 namespace Google.PowerShell.CloudStorage
 {
@@ -21,7 +20,7 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// MIME attachment for UTF-8 encoding text.
         /// </summary>
-        protected const string UTF8TextMimeType = "text/plain; charset=utf-8";
+        public const string UTF8TextMimeType = "text/plain; charset=utf-8";
 
         // TODO(chrsmith): Cache the storage service? Create it in OnProcessRecord every time? (So it does so once?)
 

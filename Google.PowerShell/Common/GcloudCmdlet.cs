@@ -43,7 +43,7 @@ namespace Google.PowerShell.Common
         /// <summary>
         /// Returns an instance of the Google Client API initializer, using the machine's default credentials.
         /// </summary>
-        protected BaseClientService.Initializer GetBaseClientServiceInitializer()
+        public static BaseClientService.Initializer GetBaseClientServiceInitializer()
         {
             // TODO(chrsmith): How does the AppDefaultCredentials work with Cloud SDK profiles?
             Task<GoogleCredential> getCredsTask = GoogleCredential.GetApplicationDefaultAsync();

@@ -220,7 +220,7 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// Infer the MIME type of a non-qualified file path. Returns null if no match is found.
         /// </summary>
-        private string InferContentType(string file)
+        public static string InferContentType(string file)
         {
             int index = file.LastIndexOf('.');
             if (index == -1)

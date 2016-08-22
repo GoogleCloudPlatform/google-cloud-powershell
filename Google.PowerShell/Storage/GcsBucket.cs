@@ -171,10 +171,12 @@ namespace Google.PowerShell.CloudStorage
             base.ProcessRecord();
             var service = GetStorageService();
 
-            var bucket = new Google.Apis.Storage.v1.Data.Bucket();
-            bucket.Name = Name;
-            bucket.Location = Location;
-            bucket.StorageClass = StorageClass;
+            var bucket = new Bucket
+            {
+                Name = Name,
+                Location = Location,
+                StorageClass = StorageClass
+            };
 
             BucketsResource.InsertRequest insertReq = service.Buckets.Insert(bucket, Project);
             insertReq.PredefinedAcl = DefaultBucketAcl;

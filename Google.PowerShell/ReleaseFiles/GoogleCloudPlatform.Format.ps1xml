@@ -1,0 +1,57 @@
+﻿<Configuration>
+  <SelectionSets>
+    <SelectionSet>
+      <Name>GoogleCloudStorageTypes</Name>
+      <Types>
+        <TypeName>Google.Apis.Storage.v1.Data.Bucket</TypeName>
+        <TypeName>Google.Apis.Storage.v1.Data.Object</TypeName>
+      </Types>
+    </SelectionSet>
+  </SelectionSets>
+  <ViewDefinitions>
+    <View>
+      <Name>Google Cloud Storage Table</Name>
+      <ViewSelectedBy>
+        <SelectionSetName>GoogleCloudStorageTypes</SelectionSetName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>ParentPath</Label>
+        <ScriptBlock>
+          $_.PSParentPath.Replace("Google.PowerShell\GoogleCloudStorage::", "").Replace("\", "/")
+        </ScriptBlock>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Name</Label>
+          </TableColumnHeader>
+          <TableColumnHeader/>
+          <TableColumnHeader/>
+          <TableColumnHeader/>
+          <TableColumnHeader/>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <ScriptBlock>($_.PSChildName, $_.Name -ne $null)[0]</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Size</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>ContentType</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>TimeCreated</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Updated</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+  </ViewDefinitions>
+</Configuration>
