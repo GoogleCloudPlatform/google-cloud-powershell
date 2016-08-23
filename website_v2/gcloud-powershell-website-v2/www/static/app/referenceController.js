@@ -4,6 +4,7 @@
 app.controller('ReferenceController', ['$scope', '$routeParams',
     function($scope, $routeParams) {
         var prodInfo = $scope.productInfo;
+        if (prodInfo === null) return;
         /** We have to make sure no invalid routes were passed in **/
         if (Object.keys($routeParams).length === 2) {
             if (!($routeParams.product in prodInfo)
