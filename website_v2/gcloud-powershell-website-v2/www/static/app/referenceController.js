@@ -11,8 +11,7 @@ app.controller('ReferenceController', ['$scope', '$routeParams',
         
             /** We have to make sure no invalid routes were passed in **/
             if (Object.keys($routeParams).length === 2) {
-                if (!($routeParams.product in prodInfo)
-                    || 
+                if (!($routeParams.product in prodInfo) || 
                     !($routeParams.cmdlet in prodInfo[$routeParams.product])) {
                         console.error("Invalid Product or Cmdlet");
                         $routeParams.product = undefined;
