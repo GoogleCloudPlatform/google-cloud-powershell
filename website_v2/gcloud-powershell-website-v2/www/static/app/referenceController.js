@@ -6,8 +6,6 @@ app.controller('ReferenceController', ['$scope', '$routeParams',
         $scope.res.then(function (ret) {
             var prodInfo = $scope.productInfo;
             if (prodInfo === undefined) {
-            document.getElementById('reference').innerHTML = 
-                '<strong>Could not load reference document. Please try again.</strong>';
             return;
         }
         

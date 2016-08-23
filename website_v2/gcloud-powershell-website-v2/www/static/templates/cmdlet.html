@@ -1,4 +1,4 @@
-﻿<div class="information-area">
+﻿<div ng-show="productInfo != undefined" class="information-area">
     <h1>{{refCtrl.params.cmdlet}}</h1>
     <!-- We should display all cmdlets for a product -->
     <div ng-repeat="(key,value) in productInfo[refCtrl.params.product][refCtrl.params.cmdlet]"
@@ -11,3 +11,4 @@
         </pre>
     </div>
 </div>
+<p ng-show="productInfo === undefined">Invalid Product</p>
