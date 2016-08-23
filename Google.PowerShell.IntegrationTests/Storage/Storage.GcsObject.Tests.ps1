@@ -24,6 +24,9 @@ Describe "New-GcsObject" {
         $obj = Get-GcsObject $bucket $objectName
         $obj.Name | Should Be $objectName
         $obj.Size | Should Be 17
+
+        # Confirm it doesn't have any metadata by default.
+        $obj.Metadata | Should Be $null
     }
 
     It "should fail if the file does not exist" {
@@ -172,6 +175,37 @@ Describe "New-GcsObject" {
         $emptyObj = New-GcsObject $bucket "zero-byte-test"
         $emptyObj.Size | Should Be 0
         Remove-GcsObject $emptyObj
+    }
+
+    It "should write metadata" {
+        $obj = New-GcsObject $bucket "metadata-test" `
+            -Metadata @{ "alpha" = 1; "beta" = "two"; "Content-Type" = "image/png" }
+        $obj.Metadata.Count = 3
+        $obj.Metadata["alpha"] | Should Be 1
+        $obj.Metadata["beta"] | Should Be "two"
+        $obj.Metadata["Content-Type"] | Should Be "image/png"
+        # Content-Type can be set from metadata.
+        $obj.ContentType | Should Be "image/png"
+        Remove-GcsObject $obj
+    }
+
+    # Regression for a bug found while unit testing other scenarios.
+    It "should write metadata when accepting content from pipeline" {
+        $obj = "XXX" | New-GcsObject $bucket "metadata-test-2" `
+            -Metadata @{ "alpha" = 1; "beta" = 2; "gamma" = 3}
+        $obj.Metadata.Count | Should Be 3
+
+        Remove-GcsObject $obj
+    }
+
+    It "will prefer the -ContentType parameter to -Metadata" {
+        $obj = New-GcsObject $bucket "metadata-test" `
+            -ContentType "image/jpeg" `
+            -Metadata @{ "Content-Type" = "image/png" }
+        $obj.ContentType | Should Be "image/jpeg"
+        # It will also apply to the Metadata too.
+        $obj.Metadata["Content-Type"] | Should Be "image/jpeg"
+        Remove-GcsObject $obj
     }
 }
 
@@ -442,7 +476,7 @@ Describe "Write-GcsObject" {
         Read-GcsObject $bucket $objectName | Should BeExactly $objectContents
 
         # Exercise the explicit -Content parameter too.
-        Write-GcsObject $bucket ($objectName + "2") -Content $objectContents -Force
+        Write-GcsObject $bucket ($objectName + "2") -Contents $objectContents -Force
         Read-GcsObject $bucket ($objectName + "2") | Should BeExactly $objectContents
     }
 
@@ -482,8 +516,68 @@ Describe "Write-GcsObject" {
         Remove-GcsObject $emptyObj
     }
 
-    # TODO(chrsmith): Confirm Write-GcsObject doesn't remove object metadata, such
-    # as its existing ACLs. (Since we are uploading a new object in-place.)
+    It "should not rewrite ACLs" {
+        $orgObj = "original contents" | New-GcsObject $bucket "acl-test" `
+            -PredefinedAcl bucketOwnerRead
+
+        # The exact project or user IDs don't matter. As long as the ACL kind is correct.
+        $orgObj.Acl.Id -like "*/project-owners-*" | Should Be $true
+        $orgObj.Acl.Id -like "*/user-*"           | Should Be $true
+
+        # Updating the object leaves the existing ACLs in place.
+        $updatedObj = "new contents" | Write-GcsObject $bucket "acl-test"
+        $updatedObj.Acl.Id -like "*/project-owners-*" | Should Be $true
+        $updatedObj.Acl.Id -like "*/user-*"           | Should Be $true
+
+        Remove-GcsObject $bucket "acl-test"
+    }
+
+    It "should not clobber existing metadata" {
+        $orgObj = "original contents" | New-GcsObject $bucket "metadata-test" `
+            -Metadata @{ "one" = 1; "two" = 2}
+        $orgObj.Metadata.Count | Should Be 2
+        
+        $updatedObj = "new contents" | Write-GcsObject $bucket "metadata-test"
+        $updatedObj.Metadata.Count | Should Be 2
+
+        Remove-GcsObject $bucket "metadata-test"
+    }
+
+    It "should merge Metadata updates" {
+        $step1 = "XXX" | New-GcsObject $bucket "metadata-test2" `
+            -Metadata @{ "alpha" = 1; "beta" = 2; "gamma" = 3 }
+        $step1.Metadata.Count | Should Be 3
+        $step1.Metadata["alpha"] | Should Be 1
+        $step1.Metadata["beta"]  | Should Be 2
+        $step1.Metadata["gamma"] | Should Be 3
+
+        # Remove a value ("beta"), update a value ("gamma"), add a new value ("delta").
+        $step2 = "XXX" | Write-GcsObject $bucket "metadata-test2" `
+            -Metadata @{ "beta" = $null; "gamma" = 33; "delta" = 4 }
+
+        $step2.Metadata.Count | Should Be 3
+        $step2.Metadata["alpha"] | Should Be 1
+        $step2.Metadata.ContainsKey("beta") | Should Be $false
+        $step2.Metadata["gamma"] | Should Be 33
+        $step2.Metadata["delta"] | Should Be 4
+
+        Remove-GcsObject $bucket "metadata-test2"
+    }
+
+    It "should give precidence to the ContentType parameter" {
+        # Where Write-Gcs object creates a new object (-Force)
+        $newObjectCase = "XXX" | Write-GcsObject $bucket "content-type-test" `
+            -ContentType "image/png" -Metadata @{ "Content-Type" = "image/jpeg" } `
+            -Force
+        $newObjectCase.ContentType | Should Be "image/png"
+
+        # Where Write-Gcs has both ContentType and a Metadata value.
+        $both = "XXX" | Write-GcsObject $bucket "content-type-test" `
+            -ContentType "test/alpha" -Metadata @{ "Content-Type" = "test/beta" }
+        $both.ContentType | Should Be "test/alpha"
+
+        Remove-GcsObject $bucket "content-type-test"
+    }
 }
 
 Describe "Test-GcsObject" {

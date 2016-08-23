@@ -14,10 +14,17 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// <para type="description">
     /// Creates a new ServiceAccount object. These objects are used by New-GceInstanceConfig and 
-    /// Add-GceInstanceTemplate cmdlets to link to service accounts and define scopes.
+    /// Add-GceInstanceTemplate cmdlets to link to service accounts and define scopes. These scopes in turn let
+    /// your instances access Google Cloud Platform resources.
     /// </para>
+    /// <example>
+    /// <code>PS C:\> New-GceServiceAccountConfig default -BigQuery -BigtableData Read</code>
+    /// <para>Creates a scope on the default service account that can make BigQuery queries and read bigtable
+    /// data.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GceServiceAccountConfig", DefaultParameterSetName = ParameterSetNames.FromFlags)]
+    [OutputType(typeof(ServiceAccount))]
     public class NewGceServiceAccountConfigCmdlet : GCloudCmdlet
     {
         private class ParameterSetNames
