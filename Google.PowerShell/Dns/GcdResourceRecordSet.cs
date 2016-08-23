@@ -1,4 +1,4 @@
-﻿// Copyright 2016 Google Inc. All Rights Reserved.
+﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
 using Google.Apis.Dns.v1;
@@ -69,6 +69,9 @@ namespace Google.PowerShell.Dns
     ///   <para>Type    : AAAA</para>
     ///   <para>ETag    :</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/dns/records/json-record)">
+    /// [Supported Resource Record Formats]
+    /// </para>
     /// <para type="link" uri="(https://cloud.google.com/dns/records/)">[Managing Records]</para>
     /// <para type="link" uri="(https://cloud.google.com/dns/troubleshooting)">[Troubleshooting]</para>
     /// </summary>
@@ -100,13 +103,14 @@ namespace Google.PowerShell.Dns
         /// </para>
         /// </summary>
         [Parameter(Position = 1, Mandatory = false)]
+        [ValidateSet("A", "AAAA", "CNAME", "MX", "NAPTR", "NS", "PTR", "SOA", "SPF", "SRV", "TXT")]
         public string[] Filter { get; set; }
 
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
 
-            ResourceRecordSetsResource.ListRequest rrsetListRequest = 
+            ResourceRecordSetsResource.ListRequest rrsetListRequest =
                 Service.ResourceRecordSets.List(Project, Zone);
             ResourceRecordSetsListResponse rrsetListResponse = rrsetListRequest.Execute();
             IList<ResourceRecordSet> rrsetList = rrsetListResponse.Rrsets;
@@ -160,6 +164,9 @@ namespace Google.PowerShell.Dns
     ///   <para>Type    : A</para>
     ///   <para>ETag    :</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/dns/records/json-record)">
+    /// [Supported Resource Record Formats]
+    /// </para>
     /// <para type="link" uri="(https://cloud.google.com/dns/records/)">[Managing Records]</para>
     /// <para type="link" uri="(https://cloud.google.com/dns/troubleshooting)">[Troubleshooting]</para>
     /// </summary>

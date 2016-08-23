@@ -1,4 +1,4 @@
-﻿// Copyright 2016 Google Inc. All Rights Reserved.
+﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
 using Google.Apis.Dns.v1;
@@ -213,9 +213,9 @@ namespace Google.PowerShell.Dns
             }
 
             zoneContent.Description = Description ?? "";
-      
 
-            ManagedZonesResource.CreateRequest zoneCreateRequest = 
+
+            ManagedZonesResource.CreateRequest zoneCreateRequest =
                 Service.ManagedZones.Create(zoneContent, Project);
             ManagedZone newZone = zoneCreateRequest.Execute();
             WriteObject(newZone);

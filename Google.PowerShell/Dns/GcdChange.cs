@@ -1,4 +1,4 @@
-﻿// Copyright 2016 Google Inc. All Rights Reserved.
+﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
 using Google.Apis.Dns.v1;
@@ -112,7 +112,7 @@ namespace Google.PowerShell.Dns
     /// Add a new Change to a ManagedZone of a Project.
     /// </para>
     /// <para type="description">
-    /// Create, execute, and return a new Change within a specified ManagedZone of a Project.
+    /// Create, execute, and return a new Change request within a specified ManagedZone of a Project.
     /// </para>
     /// <para type="description">
     /// If a Project is specified, will instead create the Change in the specified ManagedZone governed by that 
@@ -120,31 +120,50 @@ namespace Google.PowerShell.Dns
     /// Either a Change request or ResourceRecordSet[] to add/remove can be given as input.
     /// </para>
     /// <example>
-    ///   <para>Add the Change request $change1 to the ManagedZone "test1" in the Project "testing."</para>
-    ///   <para><code>PS C:\> Add-GcdChange -Project "testing" -Zone "test1" -ChangeRequest $change1</code></para>
+    ///   <para> 
+    ///   Add a new Change that adds a new A-type ResourceRecordSet, $newARecord, and removes an existing CNAME-type 
+    ///   record, $oldCNAMERecord, from the ManagedZone "test1" (governing "gcloudexample1.com.") in the Project 
+    ///   "testing."
+    ///   </para>
+    ///   <para>
+    ///     <code>
+    ///     PS C:\> $newARecord = New-GcdResourceRecordSet -Name "gcloudexample1.com." -Rrdata "104.1.34.167"
+    ///     </code>
+    ///   </para>
+    ///   <para>
+    ///     <code> PS C:\> $oldCNAMERecord = (Get-GcdResourceRecordSet -Zone "test1" -Filter "CNAME")[0]</code>
+    ///   </para>
+    ///   <para>
+    ///     <code>
+    ///     PS C:\> Add-GcdChange -Project "testing" -Zone "test1" -Add $newARecord -Remove $oldCNAMERecord
+    ///     </code>
+    ///   </para>
     ///   <br></br>
-    ///   <para>Additions :</para>
-    ///   <para>Deletions : {gcloudexample1.com.}</para>
-    ///   <para>Id        : 1</para>
+    ///   <para>Additions : {gcloudexample1.com.}</para>
+    ///   <para>Deletions : {www.gcloudexample1.com.}</para>
+    ///   <para>Id        : 3</para>
     ///   <para>Kind      : dns#change</para>
     ///   <para>StartTime : 2016-06-29T16:30:50.670Z</para> 
     ///   <para>Status    : done</para> 
     ///   <para>ETag      :</para>
     /// </example>
     /// <example>
-    ///   <para> 
-    ///   Add a new Change that adds the ResourceRecordSets $addRrsets and removes the ResourceRecordSets $rmRrsets
-    ///   from the ManagedZone "test1" in the Project "testing."
+    ///   <para>
+    ///   Add the Change request $change2 to the ManagedZone "test1" in the Project "testing," where $change2 is a 
+    ///   previously executed Change request in ManagedZone "test1" that we want to apply again.
     ///   </para>
     ///   <para>
-    ///     <code>PS C:\> Add-GcdChange -Project "testing" -Zone "test1" -Add $addRrsets -Remove $rmRrsets</code>
+    ///     <code>PS C:\> $change2 = Get-GcdChange -Project "testing" -Zone "test1" -ChangeId 2 </code>
+    ///   </para>
+    ///   <para>
+    ///     <code>PS C:\> Add-GcdChange -Project "testing" -Zone "test1" -ChangeRequest $change2</code>
     ///   </para>
     ///   <br></br>
-    ///   <para>Additions : {gcloudexample1.com.}</para>
-    ///   <para>Deletions : {a.gcloudexample1.com.}</para>
-    ///   <para>Id        : 1</para>
+    ///   <para>Additions :</para>
+    ///   <para>Deletions : {gcloudexample1.com.}</para>
+    ///   <para>Id        : 4</para>
     ///   <para>Kind      : dns#change</para>
-    ///   <para>StartTime : 2016-06-29T16:30:50.670Z</para> 
+    ///   <para>StartTime : 2016-06-29T18:30:50.670Z</para> 
     ///   <para>Status    : done</para> 
     ///   <para>ETag      :</para>
     /// </example>
@@ -163,7 +182,7 @@ namespace Google.PowerShell.Dns
 
         private class LocalErrorMessages
         {
-            public const string NeedChangeContent = 
+            public const string NeedChangeContent =
                 "Must specify at least 1 non-null, non-empty value for Add or Remove.";
         }
 
@@ -191,13 +210,13 @@ namespace Google.PowerShell.Dns
         /// </para>
         /// </summary>
         [Alias("Change")]
-        [Parameter(ParameterSetName = ParameterSetNames.ChangeRequest, Position = 1, Mandatory = true, 
+        [Parameter(ParameterSetName = ParameterSetNames.ChangeRequest, Position = 1, Mandatory = true,
             ValueFromPipeline = true)]
         public Change ChangeRequest { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// Get the ResourceRecordSets to add for this Change.
+        /// Get the ResourceRecordSet(s) to add for this Change.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.AddRm, Mandatory = false)]
@@ -205,7 +224,7 @@ namespace Google.PowerShell.Dns
 
         /// <summary>
         /// <para type="description">
-        /// Get the ResourceRecordSets to remove (must exactly match existing ones) for this Change.
+        /// Get the ResourceRecordSet(s) to remove (must exactly match existing ones) for this Change.
         /// </para>
         /// </summary>
         [Alias("Rm")]
@@ -243,7 +262,7 @@ namespace Google.PowerShell.Dns
                     throw UnknownParameterSetException;
             }
 
-            ChangesResource.CreateRequest changeCreateRequest = 
+            ChangesResource.CreateRequest changeCreateRequest =
                 Service.Changes.Create(changeContent, Project, Zone);
             Change changeResponse = changeCreateRequest.Execute();
             WriteObject(changeResponse);
