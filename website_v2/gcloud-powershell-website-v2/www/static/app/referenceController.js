@@ -3,12 +3,14 @@
 /** The controller that exposes route parameters to the templates. **/
 app.controller('ReferenceController', ['$scope', '$routeParams',
     function($scope, $routeParams) {
-        var prodInfo = $scope.productInfo;
-        if (prodInfo === undefined) {
+        $scope.res.then(function (ret) {
+            var prodInfo = $scope.productInfo;
+            if (prodInfo === undefined) {
             document.getElementById('reference').innerHTML = 
                 '<strong>Could not load reference document. Please try again.</strong>';
             return;
         }
+        
         /** We have to make sure no invalid routes were passed in **/
         if (Object.keys($routeParams).length === 2) {
             if (!($routeParams.product in prodInfo)
@@ -27,5 +29,7 @@ app.controller('ReferenceController', ['$scope', '$routeParams',
                 return;
             }
         }
+        });
+        
         this.params = $routeParams;
 }]);
