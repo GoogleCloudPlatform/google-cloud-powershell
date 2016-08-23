@@ -390,7 +390,8 @@ namespace Google.PowerShell.Sql
 
         protected override void ProcessRecord()
         {
-            SslCertsCreateEphemeralRequest body = new SslCertsCreateEphemeralRequest {
+            SslCertsCreateEphemeralRequest body = new SslCertsCreateEphemeralRequest
+            {
                 PublicKey = PublicKey
             };
             SslCertsResource.CreateEphemeralRequest request = Service.SslCerts.CreateEphemeral(body, Project, Instance);

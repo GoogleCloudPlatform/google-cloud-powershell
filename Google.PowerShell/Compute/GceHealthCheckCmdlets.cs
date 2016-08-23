@@ -1,4 +1,7 @@
-﻿using Google.Apis.Compute.v1;
+﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
+
+using Google.Apis.Compute.v1;
 using Google.Apis.Compute.v1.Data;
 using Google.PowerShell.Common;
 using System;
@@ -568,7 +571,6 @@ namespace Google.PowerShell.ComputeEngine
                         AddGlobalOperation(project, operation, () =>
                         {
                             WriteObject(Service.HttpHealthChecks.Get(project, name).Execute());
-
                         });
                     }
                     break;
@@ -583,7 +585,6 @@ namespace Google.PowerShell.ComputeEngine
                         AddGlobalOperation(project, operation, () =>
                         {
                             WriteObject(Service.HttpsHealthChecks.Get(project, name).Execute());
-
                         });
                     }
                     break;

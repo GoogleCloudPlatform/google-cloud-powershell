@@ -119,7 +119,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter]
-        public DatabaseFlags[] DatabaseFlag{ get; set; }
+        public DatabaseFlags[] DatabaseFlag { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -196,7 +196,8 @@ namespace Google.PowerShell.Sql
         [Parameter]
         public SwitchParameter StorageAutoResize { get; set; } = false;
 
-        public enum DataDiskType {
+        public enum DataDiskType
+        {
             PD_SSD,
             PD_HDD
         }

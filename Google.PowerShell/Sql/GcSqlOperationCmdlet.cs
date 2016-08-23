@@ -9,7 +9,6 @@ using Google.PowerShell.Common;
 
 namespace Google.PowerShell.Sql
 {
-
     /// <summary>
     /// <para type="synopsis">
     /// Retrieves an instance operation that has been performed on an instance,

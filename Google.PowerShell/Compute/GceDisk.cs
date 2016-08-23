@@ -1,4 +1,4 @@
-﻿// Copyright 2016 Google Inc. All Rights Reserved.
+﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
 using Google.Apis.Compute.v1;
@@ -255,7 +255,6 @@ namespace Google.PowerShell.ComputeEngine
                 Disk disk = getReq.Execute();
                 WriteObject(disk);
             });
-
         }
     }
 

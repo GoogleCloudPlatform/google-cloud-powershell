@@ -541,14 +541,13 @@ namespace Google.PowerShell.Sql
         /// </summary>
         private class GcsFileUploader
         {
-
-            private StorageService BucketService;
-            private string Project;
+            private StorageService _bucketService;
+            private string _project;
 
             public GcsFileUploader(BaseClientService.Initializer serviceInitializer, string project)
             {
-                BucketService = new StorageService(serviceInitializer);
-                Project = project;
+                _bucketService = new StorageService(serviceInitializer);
+                _project = project;
             }
 
             /// <summary>
@@ -560,7 +559,7 @@ namespace Google.PowerShell.Sql
             {
                 Bucket bucket = new Google.Apis.Storage.v1.Data.Bucket();
                 bucket.Name = bucketName;
-                return BucketService.Buckets.Insert(bucket, Project).Execute();
+                return _bucketService.Buckets.Insert(bucket, _project).Execute();
             }
 
             /// <summary>
@@ -579,7 +578,7 @@ namespace Google.PowerShell.Sql
                     Name = fileName,
                     ContentType = "application/octet-stream"
                 };
-                ObjectsResource.InsertMediaUpload insertReq = BucketService.Objects.Insert(
+                ObjectsResource.InsertMediaUpload insertReq = _bucketService.Objects.Insert(
                     newGcsObject, bucketName, contentStream, "application/octet-stream");
                 var finalProgress = insertReq.Upload();
                 if (finalProgress.Exception != null)
@@ -588,7 +587,7 @@ namespace Google.PowerShell.Sql
                 }
                 contentStream.Close();
 
-                return BucketService.Objects.Get(bucketName, fileName).Execute();
+                return _bucketService.Objects.Get(bucketName, fileName).Execute();
             }
 
             /// <summary>
@@ -603,8 +602,8 @@ namespace Google.PowerShell.Sql
                 body.Entity = "user-" + instanceEmail;
                 body.Role = "OWNER";
                 body.Object__ = bucketObject.Name;
-                ObjectAccessControlsResource.InsertRequest aclRequest = 
-                    BucketService.ObjectAccessControls.Insert(body, bucketObject.Bucket, bucketObject.Name);
+                ObjectAccessControlsResource.InsertRequest aclRequest =
+                    _bucketService.ObjectAccessControls.Insert(body, bucketObject.Bucket, bucketObject.Name);
                 try
                 {
                     aclRequest.Execute();
@@ -612,7 +611,7 @@ namespace Google.PowerShell.Sql
                 catch (Exception e)
                 {
                     DeleteObject(bucketObject);
-                    BucketService.Buckets.Delete(bucketObject.Bucket).Execute();
+                    _bucketService.Buckets.Delete(bucketObject.Bucket).Execute();
                     throw e;
                 }
             }
@@ -623,50 +622,50 @@ namespace Google.PowerShell.Sql
             /// <param name="bucketObject"></param>
             public void DeleteObject(Apis.Storage.v1.Data.Object bucketObject)
             {
-                BucketService.Objects.Delete(bucketObject.Bucket, bucketObject.Name).Execute();
+                _bucketService.Objects.Delete(bucketObject.Bucket, bucketObject.Name).Execute();
             }
-            
+
             /// <summary>
             /// Deletes a Google Cloud Storage bucket.
             /// </summary>
             /// <param name="bucket"></param>
             public void DeleteBucket(Bucket bucket)
             {
-                BucketService.Buckets.Delete(bucket.Name).Execute();
+                _bucketService.Buckets.Delete(bucket.Name).Execute();
             }
         }
 
-        private Bucket tempGcsBucket = null;
-        private Apis.Storage.v1.Data.Object tempGcsObject = null;
-        private GcsFileUploader tempUploader = null;
+        private Bucket _tempGcsBucket = null;
+        private Apis.Storage.v1.Data.Object _tempGcsObject = null;
+        private GcsFileUploader _tempUploader = null;
 
         protected override void ProcessRecord()
         {
             if (!ImportFilePath.StartsWith("gs://"))
             {
                 if (ShouldProcess($"{Project}/{Instance}/{ImportFilePath}",
-                    "Create a new Google Cloud Storage bucket and upload the file to it for import.", 
+                    "Create a new Google Cloud Storage bucket and upload the file to it for import.",
                     "Will be deleted after the import completes"))
                 {
-                    tempUploader = new GcsFileUploader(GetBaseClientServiceInitializer(), Project);
+                    _tempUploader = new GcsFileUploader(GetBaseClientServiceInitializer(), Project);
                     Random rnd = new Random();
                     int bucketRnd = rnd.Next(1000000);
                     string bucketName = "import" + bucketRnd.ToString();
                     WriteVerbose($"Creating a Google Cloud Storage Bucket for the file at {ImportFilePath}.");
-                    tempGcsBucket = tempUploader.CreateBucket(bucketName);
+                    _tempGcsBucket = _tempUploader.CreateBucket(bucketName);
                     try
                     {
                         WriteVerbose($"Uploading the file at {ImportFilePath} to the new Google Cloud Storage Bucket.");
-                        tempGcsObject = tempUploader.UploadLocalFile(ImportFilePath, bucketName);
+                        _tempGcsObject = _tempUploader.UploadLocalFile(ImportFilePath, bucketName);
                     }
                     catch (Exception e)
                     {
-                        tempUploader.DeleteBucket(tempGcsBucket);
+                        _tempUploader.DeleteBucket(_tempGcsBucket);
                         throw e;
                     }
                     DatabaseInstance myInstance = Service.Instances.Get(Project, Instance).Execute();
                     WriteVerbose("Updating the permissions for the uploaded file.");
-                    tempUploader.AdjustAcl(tempGcsObject, myInstance.ServiceAccountEmailAddress);
+                    _tempUploader.AdjustAcl(_tempGcsObject, myInstance.ServiceAccountEmailAddress);
                     ImportFilePath = string.Format("gs://{0}/{1}", bucketName, "toImport");
                 }
                 else return;
@@ -695,17 +694,16 @@ namespace Google.PowerShell.Sql
             WriteVerbose($"Importing the file at '{ImportFilePath}' to Instance '{Instance}'.");
             Operation result = request.Execute();
             result = WaitForSqlOperation(result);
-            if (tempUploader != null)
+            if (_tempUploader != null)
             {
                 WriteVerbose("Deleting the Google Cloud Storage Bucket that was created, along with uploaded file.");
-                tempUploader.DeleteObject(tempGcsObject);
-                tempUploader.DeleteBucket(tempGcsBucket);
+                _tempUploader.DeleteObject(_tempGcsObject);
+                _tempUploader.DeleteBucket(_tempGcsBucket);
             }
             if (result.Error != null)
             {
                 foreach (OperationError error in result.Error.Errors)
                 {
-
                     throw new GoogleApiException("Google Cloud SQL API", error.Message + error.Code);
                 }
             }
@@ -755,7 +753,7 @@ namespace Google.PowerShell.Sql
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true, Position = 0)]
-        [Alias("Name","Id")]
+        [Alias("Name", "Id")]
         public string Instance { get; set; }
 
         /// <summary>
@@ -763,7 +761,7 @@ namespace Google.PowerShell.Sql
         /// The DatabaseInstance that describes the Instance we want to restart.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true, Position = 0, 
+        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true, Position = 0,
                    ValueFromPipeline = true)]
         public DatabaseInstance InstanceObject { get; set; }
 
@@ -864,7 +862,7 @@ namespace Google.PowerShell.Sql
                     throw UnknownParameterSetException;
             }
 
-            InstancesResource.StartReplicaRequest replStartRequest = 
+            InstancesResource.StartReplicaRequest replStartRequest =
                 Service.Instances.StartReplica(projectName, replicaName);
             WriteVerbose($"Starting the Read-Replica Instance '{replicaName}' in Project '{projectName}'.");
             Operation replStartResponse = replStartRequest.Execute();
@@ -1027,7 +1025,7 @@ namespace Google.PowerShell.Sql
                     throw UnknownParameterSetException;
             }
 
-            InstancesResource.PromoteReplicaRequest replPromoteRequest = 
+            InstancesResource.PromoteReplicaRequest replPromoteRequest =
                 Service.Instances.PromoteReplica(projectName, replicaName);
             WriteVerbose($"Promoting the Read-Replica Instance '{replicaName}' in Project '{projectName}'.");
             Operation replPromoteResponse = replPromoteRequest.Execute();
@@ -1114,7 +1112,7 @@ namespace Google.PowerShell.Sql
         /// The DatabaseInstance that describes the Instance we are restoring the backup to. 
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true, 
+        [Parameter(ParameterSetName = ParameterSetNames.ByInstance, Mandatory = true,
                    ValueFromPipeline = true)]
         public DatabaseInstance InstanceObject { get; set; }
 
@@ -1554,7 +1552,6 @@ namespace Google.PowerShell.Sql
                         prop.SetValue(newSettings, entry.Value);
                     }
                 }
-
             };
             return newSettings;
         }
@@ -1651,7 +1648,7 @@ namespace Google.PowerShell.Sql
                     projectName = InstanceObject.Project;
                     instanceName = InstanceObject.Name;
                     SettingsVersion = InstanceObject.Settings.SettingsVersion;
-                    instanceObject = InstanceObject; 
+                    instanceObject = InstanceObject;
                     break;
                 default:
                     throw UnknownParameterSetException;
