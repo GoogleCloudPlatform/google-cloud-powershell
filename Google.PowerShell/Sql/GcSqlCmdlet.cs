@@ -37,7 +37,7 @@ namespace Google.PowerShell.Sql
         /// <returns>
         /// The finished operation resource.
         /// </returns>
-        public Operation WaitForSqlOperation(Operation op) 
+        public Operation WaitForSqlOperation(Operation op)
         {
             int delay;
             switch (op.OperationType)
@@ -74,7 +74,8 @@ namespace Google.PowerShell.Sql
             int percentComplete = 1;
             while (op.Status != "DONE")
             {
-                if (op.Error != null) {
+                if (op.Error != null)
+                {
                     WriteWarning(op.Error.ToString());
                     return op;
                 }

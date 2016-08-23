@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
+
+using System.Collections.Generic;
 using System.Management.Automation;
 using Google.Apis.SQLAdmin.v1beta4.Data;
 

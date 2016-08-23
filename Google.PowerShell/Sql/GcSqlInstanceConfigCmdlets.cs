@@ -144,7 +144,8 @@ namespace Google.PowerShell.Sql
                 Kind = "sql#instance",
                 State = "RUNNABLE"
             };
-            if (FailoverReplica != null) {
+            if (FailoverReplica != null)
+            {
                 instance.FailoverReplica = new DatabaseInstance.FailoverReplicaData
                 {
                     Name = FailoverReplica
@@ -157,7 +158,7 @@ namespace Google.PowerShell.Sql
                 instance.Settings.BackupConfiguration.Enabled = false;
                 instance.InstanceType = "READ_REPLICA_INSTANCE";
             }
-            
+
             WriteObject(instance);
         }
     }

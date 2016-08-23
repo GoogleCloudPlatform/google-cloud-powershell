@@ -75,7 +75,7 @@ namespace Google.PowerShell.Sql
 
         protected override void ProcessRecord()
         {
-            if (ParameterSetName == ParameterSetNames.GetList) 
+            if (ParameterSetName == ParameterSetNames.GetList)
             {
                 IEnumerable<BackupRun> backups = GetAllBackupRuns();
                 WriteObject(backups, true);
