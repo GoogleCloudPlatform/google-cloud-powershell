@@ -30,7 +30,7 @@ namespace Google.PowerShell.CloudStorage
     public class RemoveGcsBucketLoggingCmdlet : GcsCmdlet
     {
         /// <summary>
-        /// <para typedef="description">
+        /// <para type="description">
         /// The name of the bucket to remove logging for. This parameter will also accept a Bucket
         /// object.
         /// </para>
@@ -78,7 +78,7 @@ namespace Google.PowerShell.CloudStorage
     public class WriteGcsBucketLoggingCmdlet : GcsCmdlet
     {
         /// <summary>
-        /// <para typedef="description">
+        /// <para type="description">
         /// The name of the bucket to configure. This parameter will also accept a Bucket object.
         /// </para>
         /// </summary>

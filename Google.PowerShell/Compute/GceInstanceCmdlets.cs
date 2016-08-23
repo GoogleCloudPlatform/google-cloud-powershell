@@ -15,13 +15,36 @@ namespace Google.PowerShell.ComputeEngine
 {
     /// <summary>
     /// <para type="synopsis">
-    /// Gets information about Google Compute Engine VM Instances.
+    /// Gets information about one or more Google Compute Engine VM instances.
     /// </para>
     /// <para type="description">
-    /// Gets information about VM instances.
+    /// Gets information about all Google Compute Engine VM instances. Can get all instances of a project, or 
+    /// all instances in a zone, or a specific instance by name. Can also get all instances of a managed
+    /// instance group.
     /// </para>
+    /// <example>
+    ///     <code> PS C:\> Get-GceInstance -Project "my-project" </code>
+    ///     <para> Gets all instances of the project "my-project".</para>
+    /// </example>
+    /// <example>
+    ///     <code> PS C:\> Get-GceInstance -Zone "us-west1-a" </code>
+    ///     <para> Gets all instances in the zone "us-west1-a" in the default project.</para>
+    /// </example>
+    /// <example>
+    ///     <code> PS C:\> Get-GceInstance "my-instance" </code>
+    ///     <para> Gets the instance named "my-instance" in the default project and zone </para>
+    /// </example>
+    /// <example>
+    ///     <code> PS C:\> Get-GceInstance -ManagedGroupName "my-group" </code>
+    ///     <para> Gets all instances that are members of the managed instance group named "my-group".</para>
+    /// </example>
+    /// <example>
+    ///     <code> PS C:\> Get-GceInstance "my-instance" -SerialPortOutput -Port 4.</code>
+    ///     <para> Returns the data from serial port 4 of "my-instance".</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceInstance", DefaultParameterSetName = ParameterSetNames.OfProject)]
+    [OutputType(typeof(Instance), typeof(string))]
     public class GetGceInstanceCmdlet : GceCmdlet
     {
         private class ParameterSetNames
@@ -102,6 +125,15 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter]
         public SwitchParameter SerialPortOutput { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The number of the serial port to read from. Defaults to 1. Has no effect if -SerialPortOutput is
+        /// not set. Must be between 1 and 4, inclusive.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        public int? PortNumber { get; set; } = 1;
 
         protected override void ProcessRecord()
         {
@@ -268,6 +300,7 @@ namespace Google.PowerShell.ComputeEngine
             string zone = GetZoneNameFromUri(instance.Zone);
             InstancesResource.GetSerialPortOutputRequest request =
                 Service.Instances.GetSerialPortOutput(Project, zone, instance.Name);
+            request.Port = PortNumber;
             SerialPortOutput output = await request.ExecuteAsync();
             return output.Contents;
         }
@@ -278,11 +311,32 @@ namespace Google.PowerShell.ComputeEngine
     /// Creates and starts a Google Compute Engine VM instance.
     /// </para>
     /// <para type="description">
-    /// Creates and starts a Google Compute Engine VM instance. Use New-GceInstanceConfig to create an instance
-    /// description.
+    /// Creates and starts a Google Compute Engine VM instance. You create a new instance by either using an 
+    /// instance config created by New-GceInstanceConfig, or by specifying the parameters you want on this
+    /// cmdlet.
     /// </para>
+    /// <example>
+    ///     <code>
+    ///     PS C:\> New-GceInstanceConfig -Name "new-instance" -BootDiskImage $image |
+    ///             Add-GceInstance -Project "my-project" -Zone "us-central1-a"
+    ///   </code>
+    ///   <para> Creates a new instance from an instance config.</para>
+    /// </example>
+    /// <example>
+    ///     <code> PS C:\> Add-GceInstance -Name "new-instance" -BootDisk $disk `
+    ///                     -MachineType "n1-standard-4" `
+    ///                     -Tag http, https `
+    ///                     -Metadata @{"windows-startup-script-ps1" =
+    ///                                 "Read-GcsObject bucket object -OutFile temp.txt"}
+    ///     </code>
+    ///     <para> Creates a new instance in the default project and zone. The boot disk is the prexisting disk
+    ///     stored in $disk, the machine type has 4 cores, it runs a script on startup, and it is tagged as an
+    ///     http and https server.
+    ///   </para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceInstance")]
+    [OutputType(typeof(Instance))]
     public class AddGceInstanceCmdlet : GceInstanceDescriptionCmdlet
     {
         private class ParameterSetNames
@@ -519,6 +573,18 @@ namespace Google.PowerShell.ComputeEngine
     /// <para type="description">
     /// Deletes a Google Compute Engine VM instance.
     /// </para>
+    /// <example>
+    ///     <code> PS C:\> Remove-GceInstance "my-instance"</code>
+    ///     <para>Removes the instance named "my-instance" in the default project and zone.</para>
+    /// </example>
+    /// <example>
+    ///     <code>
+    ///     PS C:\> Get-GceInstance -Project "my-project"|
+    ///                 where Status -eq Stopped |
+    ///                 Remove-GceInstance
+    ///     </code>
+    ///     <para>Removes all instances in project "my-project" that are currently stopped.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceInstance", SupportsShouldProcess = true)]
     public class RemoveGceInstanceCmdlet : GceConcurrentCmdlet
@@ -601,8 +667,21 @@ namespace Google.PowerShell.ComputeEngine
     /// <para type="description">
     /// Starts a Google Compute Engine VM instance.
     /// </para>
+    /// <example>
+    ///     <code> PS C:\> Start-GceInstance "my-instance"</code>
+    ///     <para>Starts the instance named "my-instance" in the default project and zone.</para>
+    /// </example>
+    /// <example>
+    ///     <code>
+    ///     PS C:\> Get-GceInstance -Project "my-project"|
+    ///                 where Status -eq Stopped |
+    ///                 Start-GceInstance
+    ///     </code>
+    ///     <para>Starts all instances in project "my-project" that are currently stopped.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Start, "GceInstance")]
+    [OutputType(typeof(Instance))]
     public class StartGceInstanceCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
@@ -685,8 +764,21 @@ namespace Google.PowerShell.ComputeEngine
     /// <para type="description">
     /// Stops a Google Compute Engine VM instance.
     /// </para>
+    /// <example>
+    ///     <code> PS C:\> Stop-GceInstance "my-instance"</code>
+    ///     <para>Stops the instance named "my-instance" in the default project and zone.</para>
+    /// </example>
+    /// <example>
+    ///     <code>
+    ///     PS C:\> Get-GceInstance -Project "my-project"|
+    ///                 where Status -eq Running |
+    ///                 Stop-GceInstance
+    ///     </code>
+    ///     <para>Stops all instances in project "my-project" that are currently running.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Stop, "GceInstance")]
+    [OutputType(typeof(Instance))]
     public class StopGceInstanceCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
@@ -769,8 +861,20 @@ namespace Google.PowerShell.ComputeEngine
     /// <para type="description">
     /// Resets a Google Compute Engine VM instance.
     /// </para>
+    /// <example>
+    ///     <code> PS C:\> Reset-GceInstance "my-instance"</code>
+    ///     <para>Resets the instance named "my-instance" in the default project and zone.</para>
+    /// </example>
+    /// <example>
+    ///     <code>
+    ///     PS C:\> Get-GceInstance -Project "my-project"|
+    ///                 Reset-GceInstance
+    ///     </code>
+    ///     <para>Removes all instances in project "my-project".</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Restart, "GceInstance")]
+    [OutputType(typeof(Instance))]
     public class RestartGceInstanceCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
@@ -856,6 +960,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceInstance")]
+    [OutputType(typeof(Instance))]
     public class SetGceInstanceCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
@@ -978,6 +1083,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Disk)]
         [Parameter(ParameterSetName = ParameterSetNames.DiskByObject)]
+        [ArrayPropertyTransform(typeof(Disk), nameof(Disk.Name))]
         public string[] RemoveDisk { get; set; } = { };
 
         /// <summary>
@@ -1073,7 +1179,10 @@ namespace Google.PowerShell.ComputeEngine
                 InstancesResource.DeleteAccessConfigRequest request = Service.Instances.DeleteAccessConfig(
                     _project, _zone, _name, configName, NetworkInterface);
                 Operation operation = request.Execute();
-                AddZoneOperation(_project, _zone, operation);
+                AddZoneOperation(_project, _zone, operation, () =>
+                {
+                    WriteObject(Service.Instances.Get(_project, _zone, _name));
+                });
             }
 
             foreach (AccessConfig accessConfig in AddAccessConfig)
@@ -1081,7 +1190,10 @@ namespace Google.PowerShell.ComputeEngine
                 InstancesResource.AddAccessConfigRequest request = Service.Instances.AddAccessConfig(
                     accessConfig, _project, _zone, _name, NetworkInterface);
                 Operation response = request.Execute();
-                AddZoneOperation(_project, _zone, response);
+                AddZoneOperation(_project, _zone, response, () =>
+                {
+                    WriteObject(Service.Instances.Get(_project, _zone, _name));
+                });
             }
         }
 
@@ -1095,20 +1207,19 @@ namespace Google.PowerShell.ComputeEngine
                 InstancesResource.DetachDiskRequest request = Service.Instances.DetachDisk(
                     _project, _zone, _name, diskName);
                 Operation operation = request.Execute();
-                AddZoneOperation(_project, _zone, operation);
+                AddZoneOperation(_project, _zone, operation, () =>
+                {
+                    WriteObject(Service.Instances.Get(_project, _zone, _name));
+                });
             }
 
             foreach (object diskParam in AddDisk)
             {
                 // Allow for taking Disk, AttachedDisk, and string objects.
-                AttachedDisk newDisk;
-                if (diskParam is AttachedDisk || (diskParam as PSObject)?.BaseObject is AttachedDisk)
+                var newDisk = diskParam as AttachedDisk ?? (diskParam as PSObject)?.BaseObject as AttachedDisk;
+                if (newDisk == null)
                 {
-                    newDisk = diskParam as AttachedDisk ?? (diskParam as PSObject)?.BaseObject as AttachedDisk;
-                }
-                else
-                {
-                    Disk disk = diskParam as Disk ?? (diskParam as PSObject)?.BaseObject as Disk;
+                    var disk = diskParam as Disk ?? (diskParam as PSObject)?.BaseObject as Disk;
                     if (disk == null)
                     {
                         disk = Service.Disks.Get(_project, _zone, diskParam.ToString()).Execute();
@@ -1118,7 +1229,10 @@ namespace Google.PowerShell.ComputeEngine
                 InstancesResource.AttachDiskRequest request =
                     Service.Instances.AttachDisk(newDisk, _project, _zone, _name);
                 Operation operation = request.Execute();
-                AddZoneOperation(_project, _zone, operation);
+                AddZoneOperation(_project, _zone, operation, () =>
+                {
+                    WriteObject(Service.Instances.Get(_project, _zone, _name));
+                });
             }
         }
 
@@ -1142,7 +1256,11 @@ namespace Google.PowerShell.ComputeEngine
             }
             InstancesResource.SetMetadataRequest request =
                 Service.Instances.SetMetadata(metadata, _project, _zone, _name);
-            AddZoneOperation(_project, _zone, request.Execute());
+            Operation operation = request.Execute();
+            AddZoneOperation(_project, _zone, operation, () =>
+            {
+                WriteObject(Service.Instances.Get(_project, _zone, _name));
+            });
         }
 
         /// <summary>
@@ -1158,7 +1276,10 @@ namespace Google.PowerShell.ComputeEngine
             InstancesResource.SetTagsRequest setRequest =
                 Service.Instances.SetTags(tags, _project, _zone, _name);
             Operation operation = setRequest.Execute();
-            AddZoneOperation(_project, _zone, operation);
+            AddZoneOperation(_project, _zone, operation, () =>
+            {
+                WriteObject(Service.Instances.Get(_project, _zone, _name));
+            });
         }
     }
 }

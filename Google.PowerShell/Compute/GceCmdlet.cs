@@ -7,7 +7,7 @@ using Google.PowerShell.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
+using System.Management.Automation;
 using System.Threading;
 
 namespace Google.PowerShell.ComputeEngine
@@ -19,6 +19,10 @@ namespace Google.PowerShell.ComputeEngine
     {
         // The Servcie for the Google Compute API
         public ComputeService Service { get; }
+
+        // The value of the progress bar when being used as a spinner. If the operation does not give valid
+        // percent complete feedback, this spinner will move from 0 to 99 and then repeat.
+        private int _spinnerValue = 0;
 
         protected GceCmdlet() : this(null)
         {
@@ -35,7 +39,7 @@ namespace Google.PowerShell.ComputeEngine
         /// 
         /// Will throw an exception if the operation fails for any reason.
         /// </summary>
-        protected void WaitForZoneOperation(string project, string zone, Operation op)
+        protected void WaitForZoneOperation(string project, string zone, Operation op, string progressMessage = null)
         {
             WriteWarnings(op);
 
@@ -45,7 +49,9 @@ namespace Google.PowerShell.ComputeEngine
                 ZoneOperationsResource.GetRequest getReq = Service.ZoneOperations.Get(project, zone, op.Name);
                 op = getReq.Execute();
                 WriteWarnings(op);
+                WriteProgress(op, progressMessage);
             }
+            WriteProgressComplete(op);
 
             if (op.Error != null)
             {
@@ -59,7 +65,7 @@ namespace Google.PowerShell.ComputeEngine
         /// 
         /// Will throw an exception if the operation fails for any reason.
         /// </summary>
-        protected void WaitForRegionOperation(string project, string region, Operation op)
+        protected void WaitForRegionOperation(string project, string region, Operation op, string progressMessage = null)
         {
             WriteWarnings(op);
 
@@ -70,7 +76,10 @@ namespace Google.PowerShell.ComputeEngine
                     Service.RegionOperations.Get(project, region, op.Name);
                 op = getReq.Execute();
                 WriteWarnings(op);
+                WriteProgress(op, progressMessage);
             }
+
+            WriteProgressComplete(op);
 
             if (op.Error != null)
             {
@@ -84,7 +93,7 @@ namespace Google.PowerShell.ComputeEngine
         /// 
         /// Will throw an exception if the operation fails for any reason.
         /// </summary>
-        protected void WaitForGlobalOperation(string project, Operation operation)
+        protected void WaitForGlobalOperation(string project, Operation operation, string progressMessage = null)
         {
             WriteWarnings(operation);
             while (operation.Status != "DONE" && !Stopping)
@@ -92,7 +101,10 @@ namespace Google.PowerShell.ComputeEngine
                 Thread.Sleep(150);
                 operation = Service.GlobalOperations.Get(project, operation.Name).Execute();
                 WriteWarnings(operation);
+                WriteProgress(operation, progressMessage);
             }
+
+            WriteProgressComplete(operation);
 
             if (operation.Error != null)
             {
@@ -112,6 +124,74 @@ namespace Google.PowerShell.ComputeEngine
         }
 
         /// <summary>
+        /// Writes a progress record to give feedback to the user.
+        /// </summary>
+        /// <param name="op">The operation we are waiting on.</param>
+        /// <param name="progressMessage">The custom message to write to the progress bar. If null, this
+        ///  method will generate a message from the operation.</param>
+        private void WriteProgress(Operation op, string progressMessage)
+        {
+
+            int activityId = op.Id.GetHashCode();
+            string activity = progressMessage ?? op.Description ?? BuildActivity(op);
+            string statusDescription = op.StatusMessage ?? op.Status;
+            int percentComplete;
+            if (op.Progress == null || op.Progress == 0)
+            {
+                percentComplete = _spinnerValue = (_spinnerValue + 1) % 100;
+            }
+            else
+            {
+                percentComplete = (int)op.Progress;
+            }
+            ProgressRecord record = new ProgressRecord(activityId, activity, statusDescription)
+            {
+                RecordType = ProgressRecordType.Processing,
+                PercentComplete = percentComplete,
+            };
+            WriteProgress(record);
+        }
+
+        /// <summary>
+        /// Builds an activity. This is displayed on the top line of the progress bar.
+        /// </summary>
+        /// <param name="op">The operation to build an activity from.</param>
+        /// <returns>The type and target of the operation </returns>
+        private static string BuildActivity(Operation op)
+        {
+            // Capitalize the operation type.
+            string operationType = op.OperationType.Substring(0, 1).ToUpper()
+                                   + op.OperationType.Substring(1);
+
+            // Cut the target uri down to the interesting data.
+            string target = op.TargetLink;
+            const string baseUri = "https://www.googleapis.com/compute/v1/";
+            if (target.StartsWith(baseUri))
+            {
+                target = target.Substring(baseUri.Length);
+            }
+
+            return $"{operationType} {target}";
+        }
+
+        /// <summary>
+        /// Closes the progress bar of the operation.
+        /// </summary>
+        /// <param name="op">The operation the progress bar was created for.</param>
+        private void WriteProgressComplete(Operation op)
+        {
+            int activityId = op.Id.GetHashCode();
+            string activity = op.Description ?? op.OperationType ?? BuildActivity(op);
+            string statusDescription = op.StatusMessage ?? op.Status;
+            ProgressRecord record = new ProgressRecord(activityId, activity, statusDescription)
+            {
+                RecordType = ProgressRecordType.Completed,
+            };
+            WriteProgress(record);
+            _spinnerValue = 0;
+        }
+
+        /// <summary>
         /// Library method to pull the name of a zone from a uri.
         /// </summary>
         /// <param name="uri">
@@ -123,6 +203,20 @@ namespace Google.PowerShell.ComputeEngine
         public static string GetZoneNameFromUri(string uri)
         {
             return GetUriPart("zones", uri);
+        }
+
+        /// <summary>
+        /// Library method to pull the name of a region from a URI.
+        /// </summary>
+        /// <param name="uri">
+        /// A URI that includes the region.
+        /// </param>
+        /// <returns>
+        /// The name of the region part of the URI.
+        /// </returns>
+        public static string GetRegionNameFromUri(string uri)
+        {
+            return GetUriPart("regions", uri);
         }
     }
 
