@@ -1,0 +1,10 @@
+﻿<div class="table-of-contents">
+    <strong>GCP Powershell Products</strong>
+    <!-- Displays all available products, and their cmdlet if expanded. -->
+    <div ng-repeat="(product,value) in productInfo">
+        <a href="/{{product}}" ng-click="tableCtrl.onProductClick(product)" class="link">{{product}}</a>
+        <div ng-show="tableCtrl.isExpanded(product)" ng-repeat="(order,cmdlet) in value | orderByCmdletProp: 'name'" >
+            <a href="/{{product}}/{{cmdlet.name}}" class="cmdletName">{{cmdlet.name}}</a>
+        </div>
+    </div>
+</div>

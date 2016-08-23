@@ -38,8 +38,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "New website", "New website"
 		new-website\TOC.html = new-website\TOC.html
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fix-Website", "Fix-Website\Fix-Website.csproj", "{6379DFB9-5B6F-47BA-BD5D-4B564F75D2BF}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -58,10 +56,6 @@ Global
 		{57F97FF1-C33E-49DC-9759-12468FCC8D16}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{57F97FF1-C33E-49DC-9759-12468FCC8D16}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{57F97FF1-C33E-49DC-9759-12468FCC8D16}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6379DFB9-5B6F-47BA-BD5D-4B564F75D2BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6379DFB9-5B6F-47BA-BD5D-4B564F75D2BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6379DFB9-5B6F-47BA-BD5D-4B564F75D2BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6379DFB9-5B6F-47BA-BD5D-4B564F75D2BF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
