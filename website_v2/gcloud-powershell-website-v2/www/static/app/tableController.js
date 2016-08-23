@@ -9,7 +9,7 @@ app.controller('TableController', function($scope, $attrs) {
     this.activeProduct = '';
 
     /**
-     * clickProduct is used when a product is clicked.
+     * onProductClick is used when a product is clicked.
      * 'productName' is the product clicked.
      **/
     this.onProductClick = function(productName) {

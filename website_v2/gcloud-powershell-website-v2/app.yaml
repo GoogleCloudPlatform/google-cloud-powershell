@@ -7,6 +7,9 @@ api_version: 1
 threadsafe: true
 
 # These handlers are in a specific order to ensure correct loading.
+# The index file and static files must be caught before the third handler,
+# as the third handler handles if the url is something invalid or
+# if the index hasn't loaded yet.
 handlers:
 
   # First we want to load the basic html file.
