@@ -60,8 +60,8 @@
       <HintPath>..\packages\Google.Apis.Core.1.15.0\lib\net45\Google.Apis.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Google.Apis.Dns.v1, Version=1.13.1.517, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Apis.Dns.v1.1.13.1.517\lib\portable-net45+netcore45+wpa81+wp8\Google.Apis.Dns.v1.dll</HintPath>
+    <Reference Include="Google.Apis.Dns.v1, Version=1.15.0.517, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.Dns.v1.1.15.0.517\lib\portable-net45+netcore45+wpa81+wp8\Google.Apis.Dns.v1.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Google.Apis.PlatformServices, Version=1.15.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
