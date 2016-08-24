@@ -118,7 +118,8 @@ function Check-CmdletDoc() {
         $cmdlets = GetCmdletsByProduct $CloudProducts $apiMappings $cmdlets
     }
 
-    # Get the cmdlets that are whitelisted for (don't need a) OutputType
+    # Cmdlets can be whitelisted for valid cases. For example, if they intentionally don't
+    # produce any output we should not warn because they do not have an OutputType specified.
     $outputWhitelistDirectory = "$PSScriptRoot\OutputTypeWhitelist.txt"
     $outputWhitelist = GetOutputTypeWhitelist $outputWhitelistDirectory $allCmdlets
 
