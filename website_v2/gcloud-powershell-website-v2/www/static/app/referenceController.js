@@ -28,5 +28,7 @@ app.controller('ReferenceController', ['$scope', '$routeParams',
         });
         
         this.params = $routeParams;
-        this.order = ['synopsis', 'syntax', 'description', 'examples', 'inputs', 'outputs', 'parameters'];
+        /** The order we want cmdlet information to be displayed in. Can be changed **/
+        this.order = ['synopsis', 'syntax', 'description',
+            'examples', 'inputs', 'outputs', 'parameters'];
 }]);
