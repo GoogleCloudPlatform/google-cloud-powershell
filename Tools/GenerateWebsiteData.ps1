@@ -16,7 +16,7 @@ $apiMappings = @{
 
 function convertToString ($obj)
 {
-    ($obj | Out-String).Trim()
+    ($obj | Out-String).replace("`r`n","`n")
 }
 
 # Generate a single JSON file containing all the documentation for all the
@@ -78,11 +78,11 @@ foreach ($cmdlet in $cmdlets) {
         "name" = $name
         "synopsis" = convertToString($docObj.Synopsis)
         
-        "description" = convertToString($docObj.Description)
-        "parameters" = ($docObj.Parameters | Out-String).replace("`r`n","`n")
-        "inputs" = convertToString($docObj.Inputs)
-        "outputs" = convertToString($docObj.Outputs)
-        "examples" = ($docObj.Examples | Out-String).replace("`r`n","`n")
+        "description" = ($docObj.Description | Out-String).Trim()
+        "parameters" = convertToString($docObj.Parameters)
+        "inputs" = convertToString($docObj.inputTypes)
+        "outputs" = convertToString($docObj.returnValues)
+        "examples" = convertToString($docObj.Examples)
         }
 
     $cmdletDocObjects += $cmdletDocObj
