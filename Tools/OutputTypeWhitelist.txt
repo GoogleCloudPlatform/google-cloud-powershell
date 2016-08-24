@@ -9,3 +9,4 @@ Stop-GcSqlReplica
 Promote-GcSqlReplica.
 Start-GcSqlReplica
 Remove-GcSqlSslCert
+Remove-GcdManagedZone

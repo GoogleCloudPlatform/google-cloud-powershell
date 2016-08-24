@@ -18,8 +18,19 @@ namespace Google.PowerShell.Compute
     /// <para type="description">
     /// Creates a new disk snapshot to backup the data of the disk.
     /// </para>
+    /// <example>
+    /// <code>PS C:\> Add-GceSnapshot "my-disk" -Name "my-snapshot" </code>
+    /// <para>Creates a new disk snapshot from the disk named "my-disk" in the default project and zone. The
+    /// name of the snapshot will be "my-snapshot"</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Get-GceDisk "my-disk" | Add-GceSnapshot</code>
+    /// <para>Creates a new disk snapshot from the disk named "my-disk". The name of the snapshot will start
+    /// with "my-disk" and end with the utc date and time the snapshot was taken.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceSnapshot")]
+    [OutputType(typeof(Snapshot))]
     public class AddGceSnapshotCmdlet : GceConcurrentCmdlet
     {
         private class ParamterSetNames
@@ -121,8 +132,17 @@ namespace Google.PowerShell.Compute
     /// <para type="description">
     /// Gets information about a Google Compute Engine disk snapshots.
     /// </para>
+    /// <example>
+    /// <code>PS C:\> Get-GceSnapshot</code>
+    /// <para>Lists all snapshot in the default project.</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Get-GceSnapshot "my-snapshot"</code>
+    /// <para>Gets the snapshot in the default project named "my-snapshot".</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceSnapshot", DefaultParameterSetName = ParameterSetNames.OfProject)]
+    [OutputType(typeof(Snapshot))]
     public class GetGceSnapshot : GceCmdlet
     {
         private class ParameterSetNames
@@ -189,6 +209,14 @@ namespace Google.PowerShell.Compute
     /// <para type="description">
     /// Deletes Google Compute Engine disk snapshots.
     /// </para>
+    /// <example>
+    /// <code>PS C:\> Remove-GceSnapshot "my-snapshot"</code>
+    /// <para>Deletes the snapshot named "my-snapshot" in the default project.</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Get-GceSnapshot "my-snapshot" | Remove-GceSnapshot</code>
+    /// <para>Deletes the snapshot named "my-snapshot" in the default project.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceSnapshot", SupportsShouldProcess = true)]
     public class RemoveGceSnapshotCmdlet : GceConcurrentCmdlet

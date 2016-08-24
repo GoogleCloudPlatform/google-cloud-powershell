@@ -20,8 +20,21 @@ namespace Google.PowerShell.Compute
     /// Gets all machine types of a project, or all machine types of a project in a zone, or a single machine
     /// type of a project in a zone with a name.
     /// </para>
+    /// <example>
+    /// <code>PS C:\> Get-GceMachineType</code>
+    /// <para>Lists all machine types for the default project.</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Get-GceMachineType -Zone "us-central1-a"</code>
+    /// <para>Lists all machine types in zone us-central1-a for the default project.</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Get-GceMachineType "f1-micro"</code>
+    /// <para>Gets the machine type named f1-micro in the default project and zone.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceMachineType", DefaultParameterSetName = ParameterSetNames.OfProject)]
+    [OutputType(typeof(MachineType))]
     public class GetGceMachineTypeCmdlet : GceCmdlet
     {
         private class ParameterSetNames

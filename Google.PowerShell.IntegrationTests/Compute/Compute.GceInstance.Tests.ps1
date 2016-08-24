@@ -429,7 +429,7 @@ Describe "Set-GceInstance" {
             ($instanceObj.Disks | Where {$_.DeviceName -eq $newDiskName}).Count | Should Be 1
 
             Set-GceInstance -Project $project -Zone $zone2 $instance -RemoveDisk $newDiskName,
-                $newDiskName2, $newDiskName3
+                $newDisk2, $newDiskName3
             (Get-GceInstance -Project $project -Zone $zone2 $instance).Disks.Count | Should Be 1
         }
 

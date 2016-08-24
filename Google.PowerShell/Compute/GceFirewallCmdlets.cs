@@ -16,8 +16,17 @@ namespace Google.PowerShell.ComputeEngine
     /// <para type="description">
     /// Gets firewall rules for a project.
     /// </para>
+    /// <example>
+    /// <code>PS C:\> Get-GceFirewall</code>
+    /// <para>Lists all firewall rules in the default project.</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Get-GceFirewall "my-firewall"</code>
+    /// <para>Gets the information of the firewall rule in the default project named "my-firewall".</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceFirewall")]
+    [OutputType(typeof(Firewall))]
     public class GetGceFirewallCmdlet : GceCmdlet
     {
         /// <summary>
@@ -32,7 +41,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The name of the firewall rule to get.
+        /// The name of the firewall rule to get. -Name and -Firewall are aliases of this parameter.
         /// </para>
         /// </summary>
         [Parameter(Position = 1, ValueFromPipeline = true)]
@@ -81,13 +90,19 @@ namespace Google.PowerShell.ComputeEngine
     /// Adds a new firewall rule. When given a pipeline of many Firewall.AllowedData, will collect them all and
     /// create a single new firewall rule.
     /// </para>
-    /// <para type="example">
-    /// New-GceFirewallProtocol tcp -Ports 80, 443 |
-    /// New-GceFirewallProtocol esp |
-    /// Add-GceFirewall -Project "your-project" -Name "firewall-name" -SourceTag mySource -TargetTag myTarget
-    /// </para>
+    /// <example>
+    /// <code>
+    /// <para> PS C:\> New-GceFirewallProtocol tcp -Ports 80, 443 |</para>
+    /// <para>         New-GceFirewallProtocol esp |</para>
+    /// <para>         Add-GceFirewall -Name "my-firewall" -SourceTag my-source -TargetTag my-target</para>
+    /// </code>
+    /// <para>Creates a new firewall rule in the default project named "my-firewall". The firewall allows
+    /// traffic using tcp on ports 80 and 443 as well as the esp protocol from servers tagged my-source to
+    /// servers tagged my-target.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceFirewall")]
+    [OutputType(typeof(Firewall))]
     public class AddGceFirewallCmdlet : GceCmdlet
     {
         /// <summary>
@@ -204,16 +219,27 @@ namespace Google.PowerShell.ComputeEngine
     /// <para type="description">
     /// Removes a firewall rule from a project.
     /// </para>
+    /// <example>
+    /// <code>PS C:\> Remove-GceFirewall "my-firewall"</code>
+    /// <para>Removes the firewall named "my-firewall" in the default project.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceFirewall", SupportsShouldProcess = true)]
     public class RemoveGceFirewallCmdlet : GceCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByObject = "ByObject";
+
+        }
+
         /// <summary>
         /// <para type="description">
         /// The name of the project from which to remove the firewall.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
         public string Project { get; set; }
@@ -223,17 +249,35 @@ namespace Google.PowerShell.ComputeEngine
         /// The name of the firewall rule to remove.
         /// </para>
         /// </summary>
-        [Parameter(Position = 1, ValueFromPipeline = true)]
+        [Parameter(Position = 1, ValueFromPipeline = true,
+            Mandatory = true, ParameterSetName = ParameterSetNames.ByName)]
         [Alias("Name", "Firewall")]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Firewall))]
         public string FirewallName { get; set; }
+
+        [Parameter(ValueFromPipeline = true, Mandatory = true, ParameterSetName = ParameterSetNames.ByObject)]
+        public Firewall InputObject { get; set; }
 
         protected override void ProcessRecord()
         {
-            if (ShouldProcess($"{Project}/{FirewallName}", "Remove Firewall"))
+            string project;
+            string firewallName;
+            switch (ParameterSetName)
             {
-                DeleteRequest request = Service.Firewalls.Delete(Project, FirewallName);
-                WaitForGlobalOperation(Project, request.Execute());
+                case ParameterSetNames.ByName:
+                    project = Project;
+                    firewallName = FirewallName;
+                    break;
+                case ParameterSetNames.ByObject:
+                    project = GetProjectNameFromUri(InputObject.SelfLink);
+                    firewallName = InputObject.Name;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+            if (ShouldProcess($"{project}/{firewallName}", "Remove Firewall"))
+            {
+                DeleteRequest request = Service.Firewalls.Delete(project, firewallName);
+                WaitForGlobalOperation(project, request.Execute());
             }
         }
     }
@@ -247,7 +291,8 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceFirewall")]
-    public class SetGceFirewallCmdlet : GceCmdlet
+    [OutputType(typeof(Firewall))]
+    public class SetGceFirewallCmdlet : GceConcurrentCmdlet
     {
         /// <summary>
         /// <para type="description">
@@ -270,7 +315,10 @@ namespace Google.PowerShell.ComputeEngine
         protected override void ProcessRecord()
         {
             Operation operation = Service.Firewalls.Update(Firewall, Project, Firewall.Name).Execute();
-            WaitForGlobalOperation(Project, operation);
+            AddGlobalOperation(Project, operation, () =>
+            {
+                WriteObject(Service.Firewalls.Get(Project, Firewall.Name));
+            });
         }
     }
 }
