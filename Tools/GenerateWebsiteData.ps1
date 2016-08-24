@@ -16,7 +16,7 @@ $apiMappings = @{
 
 function convertToString ($obj)
 {
-    ($obj | Out-String).Trim()
+    ($obj | Out-String).replace("`r`n","`n")
 }
 
 # Generate a single JSON file containing all the documentation for all the
@@ -74,13 +74,15 @@ foreach ($cmdlet in $cmdlets) {
 
     # Contains more information than above.
     $cmdletDocObjFull = @{
+        "syntax" = convertToString($docObj.Syntax)
         "name" = $name
         "synopsis" = convertToString($docObj.Synopsis)
-        "description" = convertToString($docObj.Description)
-        "parameters" = ($docObj.Parameters | Out-String).replace("`r`n","`n")
-        "inputs" = convertToString($docObj.Inputs)
-        "outputs" = convertToString($docObj.Outputs)
-        "examples" = ($docObj.Examples | Out-String).replace("`r`n","`n")
+        
+        "description" = ($docObj.Description | Out-String).Trim()
+        "parameters" = convertToString($docObj.Parameters)
+        "inputs" = convertToString($docObj.inputTypes)
+        "outputs" = convertToString($docObj.returnValues)
+        "examples" = convertToString($docObj.Examples)
         }
 
     $cmdletDocObjects += $cmdletDocObj
@@ -108,7 +110,8 @@ $cmdletDocObjects `
 | Out-File -FilePath $cmdletsOutputPath -Encoding "UTF8"
 
 Write-Host "Saving cmdletsFull.json"
-$cmdletsOutputPath = Join-Path $PSScriptRoot "\..\Fix-Website\_data\cmdletsFull.json"
+$cmdletsOutputPath = Join-Path $PSScriptRoot `
+    "\..\website_v2\gcloud-powershell-website-v2\www\static\_data\cmdletsFull.json"
 $cmdletDocObjectsFull `
 | ConvertTo-Json -Depth 10 `
 | Out-File -FilePath $cmdletsOutputPath -Encoding "UTF8"

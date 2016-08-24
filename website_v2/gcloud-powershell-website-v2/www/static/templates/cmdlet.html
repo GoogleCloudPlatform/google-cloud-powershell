@@ -1,16 +1,16 @@
 ﻿<div ng-show="productInfo != undefined && refCtrl.params.product != undefined" 
-    class="information-area">
-    <h1>{{refCtrl.params.cmdlet}}</h1>
-    <!-- We should display all cmdlets for a product -->
-    <div ng-repeat="(key,value) in productInfo[refCtrl.params.product][refCtrl.params.cmdlet]"
-         ng-if="key != 'name'">
-        <h2>
-            {{key.toUpperCase()}}
-        </h2>
-        <pre>
-            {{value}}
-        </pre>
-    </div>
+  class="information-area">
+  <h1>{{refCtrl.params.cmdlet}}</h1>
+  <!-- Display all applicable information for a cmdlet. 
+    An order has to be imposed, as JSON Objects are unordered. -->
+  <div ng-repeat="property in refCtrl.order">
+    <h2>
+      {{property.toUpperCase()}}
+    </h2>
+    <pre>
+      {{productInfo[refCtrl.params.product][refCtrl.params.cmdlet][property]}}
+    </pre>
+  </div>
 </div>
 <p ng-show="productInfo === undefined || 
-    refCtrl.params.product === undefined">Invalid Product or Cmdlet</p>
+  refCtrl.params.product === undefined">Invalid Product or Cmdlet</p>
