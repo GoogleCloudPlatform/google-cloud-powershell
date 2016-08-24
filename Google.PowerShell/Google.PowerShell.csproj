@@ -154,6 +154,11 @@
     <Compile Include="Compute\GoogleComputeOperationException.cs" />
     <Compile Include="Compute\GceFirewallProtocolCmdlet.cs" />
     <Compile Include="Compute\InstanceMetadataConverter.cs" />
+    <Compile Include="Dns\GcdCmdlet.cs" />
+    <Compile Include="Dns\GcdChange.cs" />
+    <Compile Include="Dns\GcdManagedZone.cs" />
+    <Compile Include="Dns\GcdQuota.cs" />
+    <Compile Include="Dns\GcdResourceRecordSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Storage\GcsBucket.cs" />
     <Compile Include="Storage\GcsBucketLogging.cs" />

@@ -1,4 +1,4 @@
-﻿// Copyright 2015 Google Inc. All Rights Reserved.
+﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
 using Google.Apis.Storage.v1;
@@ -213,7 +213,7 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// Used for generating activity ids used by WriteProgress.
         /// </summary>
-        private static readonly Random ActivityIdGenerator = new Random();
+        private static readonly Random s_activityIdGenerator = new Random();
 
         /// <summary>
         /// <para type="description">
@@ -299,7 +299,7 @@ namespace Google.PowerShell.CloudStorage
         {
             int totalTasks = deleteTasks.Count;
             int finishedTasks = 0;
-            int activityId = ActivityIdGenerator.Next();
+            int activityId = s_activityIdGenerator.Next();
 
             foreach (var deleteTask in deleteTasks)
             {

@@ -1,4 +1,4 @@
-﻿// Copyright 2016 Google Inc. All Rights Reserved.
+﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
 using Google.Apis.Compute.v1;
@@ -243,7 +243,8 @@ namespace Google.PowerShell.ComputeEngine
             public Action Callback { get; }
 
             public LocalOperation(string project, string local, Operation operation)
-                : this(project, local, operation, () => { }) { }
+                : this(project, local, operation, () => { })
+            { }
 
             public LocalOperation(string project, string local, Operation operation, Action callback)
             {
@@ -268,7 +269,8 @@ namespace Google.PowerShell.ComputeEngine
             public Action Callback { get; }
 
             public GlobalOperation(string project, Operation operation)
-                : this(project, operation, () => { }) { }
+                : this(project, operation, () => { })
+            { }
 
             public GlobalOperation(string project, Operation operation, Action callback)
             {
