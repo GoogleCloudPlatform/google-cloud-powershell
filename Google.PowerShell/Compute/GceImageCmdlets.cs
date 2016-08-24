@@ -19,8 +19,29 @@ namespace Google.PowerShell.ComputeEngine
     /// Gets information about Google Compute Engine disk images. These images can be used to as the inital
     /// state of a disk, whether created manually, as part of a new instance, or from an instance tempalte.
     /// </para>
+    /// <example>
+    /// <code>PS C:\> Get-GceImage</code>
+    /// <para>Lists all the standard up to date images.</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Get-GceImage -Family "window-2012-r2"</code>
+    /// <para>Gets the latest windows 2012 r2 image from the windows-cloud project.</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Get-GceImage "windows-server-2008-r2-dc-v20160719"</code>
+    /// <para>Gets the image named windows-server-2008-r2-dc-v20160719 from the windows-cloud project.</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Get-GceImage "my-image" -Project "my-project"</code>
+    /// <para>Gets the custom image named "my-image" from the private project "my-project".</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Get-GceImage -Project "my-project" -IncludeDeprecated</code>
+    /// <para>Lists all images in project "my-project", including images marked as deprecated.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceImage", DefaultParameterSetName = ParameterSetNames.OfProject)]
+    [OutputType(typeof(Image))]
     public class GetGceImageCmdlets : GceCmdlet
     {
         private static readonly string[] s_defaultProjects = {
@@ -177,8 +198,13 @@ namespace Google.PowerShell.ComputeEngine
     /// <para type="description">
     /// Creates a Google Compute Engine image from the given disk.
     /// </para>
+    /// <example>
+    /// <code>PS C:\> Get-GceDisk "my-disk" | Add-GceImage -Name "my-image" -Family "my-family"</code>
+    /// <para>Creates a new image named "my-image" of the family "my-family" in the default project.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceImage")]
+    [OutputType(typeof(Image))]
     public class AddGceImageCmdlet : GceConcurrentCmdlet
     {
         /// <summary>
@@ -253,6 +279,14 @@ namespace Google.PowerShell.ComputeEngine
     /// <para type="description">
     /// Removes a Google Compute Engine disk image.
     /// </para>
+    /// <example>
+    /// <code>PS C:\> Remove-GceImage "my-image"</code>
+    /// <para>Removes the image named "my-image" in the default project.</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Get-GceImage -Project "my-project" | Remove-GceImage</code>
+    /// <para>Removes all images from project "my-project".</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceImage", SupportsShouldProcess = true,
         DefaultParameterSetName = ParameterSetNames.ByName)]
@@ -326,9 +360,25 @@ namespace Google.PowerShell.ComputeEngine
     /// <para type="description">
     /// Marks an image or schedules an image to be marked as DEPRECATED, OBSOLETE, or DELETED.
     /// </para>
+    /// <example>
+    /// <code>
+    /// <para>PS C:\> $image2 = Get-GceImage "my-new-image" -Project "my-project"</para>
+    /// <para>PS C:\> Disable-GceImage "my-old-image" -State DEPRECATED -Replacement $image2</para>
+    /// </code>
+    /// <para>Marks the image named "my-old-image" as deprecated, and sets "my-new-image" as its replacement.</para>
+    /// </example>
+    /// <example>
+    /// <code>
+    /// <para>PS C:\> $image1 = Get-GceImage "my-old-image" -Project "my-project"</para>
+    /// <para>PS C:\> $image2 = Get-GceImage "my-new-image" -Project "my-project"</para>
+    /// <para>PS C:\> Disable-GceImage $image1 -State OBSOLETE -Replacement $image2</para>
+    /// </code>
+    /// <para>Marks the image named "my-old-image" as obsolete, and sets "my-new-image" as its replacement.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Disable, "GceImage")]
-    public class SetGceImageCmdlet : GceConcurrentCmdlet
+    [OutputType(typeof(Image))]
+    public class DisableGceImageCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
         {

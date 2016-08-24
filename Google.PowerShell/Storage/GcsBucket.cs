@@ -93,11 +93,12 @@ namespace Google.PowerShell.CloudStorage
     /// Creates a new Google Cloud Storage bucket.
     /// </para>
     /// <para type="description">
-    /// Creates a new Google Cloud Storage bucket.
+    /// Creates a new Google Cloud Storage bucket. Bucket names must be globally unique. No two projects may
+    /// have buckets with the same name.
     /// </para>
     /// <example>
-    ///   <para>Creates a new bucket named "widget-co-logs".</para>
-    ///   <para><code>New-GcsBucket "widget-co-logs"</code></para>
+    /// <code>PS C:\> New-Gcsbucket "widget-co-logs"</code>
+    /// <para>Creates a new bucket named "widget-co-logs". </para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GcsBucket"), OutputType(typeof(Bucket))]
@@ -192,10 +193,18 @@ namespace Google.PowerShell.CloudStorage
     /// Deletes a Google Cloud Storage Bucket.
     /// </para>
     /// <example>
-    ///   <para>Check if bucket "foo" exists.</para>
+    /// <code>PS C:\> Remove-GcsBucket "unique-bucket-name"</code>
+    /// <para> Deletes the bucket "unique-bucket-name"</para>
+    /// </example>
+    /// <example>
+    /// <code>PS C:\> Get-GcsBucket "bucket-with-files" | Remove-GcsBucket -Force</code>
+    /// <para>Forces the deletion of "bucket-with-files, despite the bucket containing objects.</para>
+    /// </example>
+    /// <example>
     ///   <para><code>PS C:\> Remove-GcsBucket prod-database -WhatIf</code></para>
     ///   <para><code>What if: Performing the operation "Delete Bucket" on target "prod-database".</code></para>
     ///   <para>True</para>
+    ///   <para>Check if bucket "foo" exists.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GcsBucket", SupportsShouldProcess = true)]
@@ -207,7 +216,7 @@ namespace Google.PowerShell.CloudStorage
         private static readonly Random s_activityIdGenerator = new Random();
 
         /// <summary>
-        /// <para typedef="description">
+        /// <para type="description">
         /// The name of the bucket to remove. This parameter will also accept a Bucket object.
         /// </para>
         /// </summary>
@@ -216,7 +225,7 @@ namespace Google.PowerShell.CloudStorage
         public string Name { get; set; }
 
         /// <summary>
-        /// <para typedef="description">
+        /// <para type="description">
         /// When deleting a bucket with objects still inside, use Force to proceed with the deletion without
         /// a prompt.
         /// </para>
@@ -318,19 +327,27 @@ namespace Google.PowerShell.CloudStorage
     /// Tests if a bucket with the given name already exists.
     /// </para>
     /// <para type="description">
-    /// Tests if a bucket with the given name already exists.
+    /// Tests if a bucket with the given name already exists. Returns true if such a bucket already exists.
     /// </para>
     /// <example>
-    ///   <para>Check if bucket "foo" exists.</para>
+    /// <code>
+    /// PS C:\> Test-GcsBucket "bucket-name"
+    /// True
+    /// </code>
+    /// <para>Tests that a bucket named "bucket-name" does exist. A new bucket with this name may not be
+    /// created.</para>
+    /// </example>
+    /// <example>
     ///   <para><code>PS C:\> Test-GcsBucket "foo"</code></para>
     ///   <para>True</para>
+    ///   <para>Check if bucket "foo" exists.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsDiagnostic.Test, "GcsBucket"), OutputType(typeof(bool))]
     public class TestGcsBucketCmdlet : GcsCmdlet
     {
         /// <summary>
-        /// <para typedef="description">
+        /// <para type="description">
         /// The name of the bucket to test for. This parameter will also accept a Bucket object.
         /// </para>
         /// </summary>

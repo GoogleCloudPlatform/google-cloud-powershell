@@ -48,8 +48,12 @@
   <ItemGroup>
     <None Include="Compute\Compute.GceAddress.Tests.ps1" />
     <None Include="Compute\Compute.GceAttachedDiskConfig.Tests.ps1" />
+    <None Include="Compute\Compute.GceBackendService.Tests.ps1" />
     <None Include="Compute\Compute.GceDisk.Tests.ps1" />
     <None Include="Compute\Compute.GceFirewall.Tests.ps1" />
+    <None Include="Compute\Compute.GceTargetProxy.Tests.ps1" />
+    <None Include="Compute\Compute.GceTargetPool.Tests.ps1" />
+    <None Include="Compute\Compute.GceForwardingRule.Tests.ps1" />
     <None Include="Compute\Compute.GceHealthCheck.Tests.ps1" />
     <None Include="Compute\Compute.GceImage.Tests.ps1" />
     <None Include="Compute\Compute.GceInstance.Tests.ps1" />
@@ -60,6 +64,12 @@
     <None Include="Compute\Compute.GceRoute.Tests.ps1" />
     <None Include="Compute\Compute.GceServiceAccount.Tests.ps1" />
     <None Include="Compute\Compute.GceSnapshot.Tests.ps1" />
+    <None Include="Dns\Dns.GcdChange.Tests.ps1" />
+    <None Include="Dns\Dns.GcdManagedZone.Tests.ps1" />
+    <None Include="Dns\Dns.GcdQuota.Tests.ps1" />
+    <None Include="Dns\Dns.GcdResourceRecordSet.Tests.ps1" />
+    <None Include="Dns\GcdCmdlets.ps1" />
+    <None Include="Compute\Compute.GceUrlMap.Tests.ps1" />
     <None Include="GcloudCmdlets.ps1" />
     <None Include="README.md" />
     <None Include="SQL\SQL.GcSqlBackupRuns.Tests.ps1" />

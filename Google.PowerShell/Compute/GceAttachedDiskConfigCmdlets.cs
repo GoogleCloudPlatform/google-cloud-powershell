@@ -12,18 +12,17 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// <para type="description">
     /// Creates a single new AttachedDisk object. These objects are used by New-GceInstanceConfig,
-    /// Add-GceInstance, and Add-GceInstanceTemplate.
+    /// Add-GceInstance, Add-GceInstanceTemplate, and Set-GceInstance.
     /// </para>
     /// </summary>
     /// <example>
-    /// <para>
     /// <code>
-    /// $disks = (New-GceAttachedDisk (Get-GceImage "debian-cloud" -Family "debian-8") -Boot -AutoDelete),
-    ///          (New-GceAttachedDis (Get-GceDisk "persistant-disk-name") -ReadOnly)
-    /// 
-    /// Add-GceInstanceTemplate -Name "template-name" -MachineType n1-standard-1 -Disk $disks 
+    /// <para>PS C:\> $disks = (New-GceAttachedDiskConfig (Get-GceImage "debian-cloud" -Family "debian-8") -Boot -AutoDelete),</para>
+    /// <para>                 (New-GceAttachedDiskConfig (Get-GceDisk "persistant-disk-name") -ReadOnly)</para>
+    /// <para>PS C:\> Add-GceInstanceTemplate -Name "template-name" -Disk $disks</para>
     /// </code>
-    /// </para> </example>
+    /// <para>Creates two attached disk objects, and creates a new template using them.</para>
+    ///  </example>
     [Cmdlet(VerbsCommon.New, "GceAttachedDiskConfig", DefaultParameterSetName = ParameterSetNames.Persistant)]
     public class NewGceAttachedDiskConfigCmdlet : GceCmdlet
     {
