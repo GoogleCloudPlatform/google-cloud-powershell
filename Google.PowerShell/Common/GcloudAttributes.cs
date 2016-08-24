@@ -1,7 +1,9 @@
-﻿// Copyright 2016 Google Inc. All Rights Reserved.
+﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Management.Automation;
 using System.Reflection;
 
@@ -115,6 +117,39 @@ namespace Google.PowerShell.Common
 
                 field.SetValue(instance, settingsValue);
             }
+        }
+    }
+    /// <summary>
+    /// This attribute allows an array parameter to accept multiple types by replacing a target type with the 
+    /// value of a specified property. If the array element is not of the target type, it will not be changed.
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// [ArrayPropertyTransform(typeof(Zone), nameof(Zone.Name))]
+    /// public string[] ZoneName { get; set; }
+    /// </code>
+    /// Transforms any Zone objects given to the ZoneName Parameter into zoneObject.Name
+    /// </example>
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
+    public class ArrayPropertyTransformAttribute : ArgumentTransformationAttribute
+    {
+        private PropertyByTypeTransformationAttribute typeTransformationAttribute;
+
+        public ArrayPropertyTransformAttribute(Type typeToTransform, string property)
+        {
+            typeTransformationAttribute = new PropertyByTypeTransformationAttribute
+            {
+                Property = property,
+                TypeToTransform = typeToTransform
+            };
+        }
+
+        public override object Transform(EngineIntrinsics engineIntrinsics, object inputData)
+        {
+            var enumerable = inputData as IEnumerable<object> ?? new[] { inputData };
+            return enumerable.Select(
+                    inputElement => typeTransformationAttribute.Transform(engineIntrinsics, inputElement)
+                    ).ToArray();
         }
     }
 }
