@@ -1,4 +1,7 @@
-﻿using Google.Apis.Compute.v1.Data;
+﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
+
+using Google.Apis.Compute.v1.Data;
 using Google.PowerShell.ComputeEngine;
 using NUnit.Framework;
 using System.Collections;

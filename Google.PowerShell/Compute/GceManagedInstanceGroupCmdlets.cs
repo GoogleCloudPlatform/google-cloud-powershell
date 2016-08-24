@@ -1,4 +1,7 @@
-﻿using Google.Apis.Compute.v1;
+﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
+
+using Google.Apis.Compute.v1;
 using Google.Apis.Compute.v1.Data;
 using Google.PowerShell.Common;
 using Google.PowerShell.ComputeEngine;
@@ -192,7 +195,6 @@ namespace Google.PowerShell.Compute
                 }
                 request.PageToken = response.NextPageToken;
             } while (!Stopping && request.PageToken != null);
-
         }
 
         private IEnumerable<InstanceGroupManager> GetProjectGroups()
@@ -359,7 +361,6 @@ namespace Google.PowerShell.Compute
                         TargetPools = TargetPool,
                         NamedPorts = BuildNamedPorts(),
                         TargetSize = TargetSize
-
                     };
                     break;
                 case ParameterSetNames.ByObject:
