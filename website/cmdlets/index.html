@@ -142,30 +142,72 @@ Set-GceInstance "instance-name" -AddMetadata @{"newKey" = "newValue"}
 Set-GceInstance "instance-name" -RemoveMetadata "newKey"
 Set-GceInstance "instance-name" -RemoveTag "beta" -AddTag "alpha"
         </pre>
+        <!-- Google Cloud SQL -->
+        <h1 id="google-compute-engine">Google Cloud SQL</h1>
+        <p>
+          <a href="{{site.baseurl}}/cmdlets/google-cloud-sql.html">All Cloud SQL cmdlets</a>
+        </p>
+        <p>
+          Google Cloud SQL lets you set-up, maintain, manage, and administer
+          your relational MySQL databases on Google's Cloud Platform.
+        </p>
+        <p>
+          <strong>Instances</strong>
+        </p>
+        <p>
+          Google Cloud SQL instances hold all of your MySQL databases
+          and their relevant data. To create an instance, you must first
+          create an <em>Cloud SQL instance configuration</em>. This requires, at the
+          minimum, a name for your instance, and a <em>setting configuration</em>,
+          which doesn't require anything.
+        </p>
+        <p>
+          After the configuration object has been made, the <code>Add-GcSqlInstance</code>
+          cmdlet can be called to create that instance in a particular project.
+          If your active gcloud configuration has a project, the parameter is optional.
+        </p>
+        <pre>
+$setting = New-GcSqlSettingConfig 
+$instance = New-GcSqlInstanceConfig `
+    "my-instance-name" -SettingConfig $setting
 
-          <!-- Google Cloud DNS -->
-          <h1 id="google-cloud-dns">Google Cloud DNS</h1>
-          <p>
-              <a href="{{site.baseurl}}/cmdlets/google-cloud-dns.html">See all Cloud DNS cmdlets</a>
-          </p>
-          <p>
-              Google Cloud DNS is a high-performance, resilient, global Domain Name 
-              System (DNS) service that publishes your domain names to the global DNS 
-              in a cost-effective way. You can use Google Cloud DNS to publish your 
-              zones and records in the DNS without the burden of managing your own DNS 
-              servers and software.
-          </p>
-          <p>
-              <strong>Managed Zones</strong>
-          </p>
-          <p>
-              In Cloud DNS, a managed zone models a DNS zone and holds DNS records for  
-              the same DNS name suffix (e.g., <code>dnsexample.com.</code>). You can add a zone 
-              to your Google Cloud Console project using the <code>Add-GcdManagedZone</code>
-              cmdlet. Each zone in your project must have a unique name and a unique 
-              DNS name to specify its associated DNS name suffix.  
-          </p>
-          <pre>
+$instance | Add-GcSqlInstance -Project $myProjectName
+        </pre>
+        <p>
+          <strong>Importing Data</strong>
+        </p>
+        <p>
+          MySQL dump filles and CSV files on either your local machine
+          or on a Google Cloud Storage Bucket can be imported to your instance's
+          databases with the <code>Import-GcSqlInstance</code>.
+        </p>
+        <pre>
+Import-GcSqlInstance "my-instance-name" "C:\Users\User\file.csv" `
+    "destination-database" "destination-table"
+        </pre>
+        <!-- Google Cloud DNS -->
+        <h1 id="google-cloud-dns">Google Cloud DNS</h1>
+        <p>
+          <a href="{{site.baseurl}}/cmdlets/google-cloud-dns.html">See all Cloud DNS cmdlets</a>
+        </p>
+        <p>
+          Google Cloud DNS is a high-performance, resilient, global Domain Name 
+          System (DNS) service that publishes your domain names to the global DNS 
+          in a cost-effective way. You can use Google Cloud DNS to publish your 
+          zones and records in the DNS without the burden of managing your own DNS 
+          servers and software.
+        </p>
+        <p>
+          <strong>Managed Zones</strong>
+        </p>
+        <p>
+          In Cloud DNS, a managed zone models a DNS zone and holds DNS records for  
+          the same DNS name suffix (e.g., <code>dnsexample.com.</code>). You can add a zone 
+          to your Google Cloud Console project using the <code>Add-GcdManagedZone</code>
+          cmdlet. Each zone in your project must have a unique name and a unique 
+          DNS name to specify its associated DNS name suffix.  
+        </p>
+        <pre>
 $project = "&lt;your-project-name&gt;"
 
 # Create a managed zone for the DNS suffix dnsexample.com.
@@ -177,17 +219,17 @@ Add-GcdManagedZone -Project $project -Name $zone -DnsName $dnsSuffix
 Get-GcdManagedZone -Project $project
         </pre>
           <p>
-              <strong>Resource Record Sets</strong>
+            <strong>Resource Record Sets</strong>
           </p>
           <p>
-              <a href="https://cloud.google.com/dns/records/json-record">ResourceRecordSets</a> in Cloud  
-              DNS are DNS records that you can create using the <code>New-GcdResourceRecordSet</code> 
-              cmdlet and retrieve from a managed zone using the <code>Get-GcdResourceRecordSet</code> 
-              cmdlet.
+            <a href="https://cloud.google.com/dns/records/json-record">ResourceRecordSets</a> in Cloud  
+            DNS are DNS records that you can create using the <code>New-GcdResourceRecordSet</code> 
+            cmdlet and retrieve from a managed zone using the <code>Get-GcdResourceRecordSet</code> 
+            cmdlet.
           </p>
           <p>
-              However, to actually add or remove records from a managed zone, you must send
-              a change request to the zone using the <code>Add-GcdChange</code> cmdlet. 
+            However, to actually add or remove records from a managed zone, you must send
+            a change request to the zone using the <code>Add-GcdChange</code> cmdlet. 
           </p>
           <pre>
 # Create a new A-type resource record for dnsexample.com.
@@ -204,7 +246,7 @@ $ARecord = Get-GcdResourceRecordSet -Project $project -Zone $zone -Filter "A"
 # Remove the retrieved record from your zone.
 Add-GcdChange -Project $project -Zone $zone -Remove $ARecord
         </pre>
-        </div>
+      </div>
     </div>
   </div>
 </div>
