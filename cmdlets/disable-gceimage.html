@@ -76,11 +76,10 @@ SYNOPSIS
     Marks an image or schedules an image to be marked as DEPRECATED, OBSOLETE, or DELETED.
     
 SYNTAX
-    Disable-GceImage [-Project &lt;string&gt;] [-Name] &lt;string&gt; [-Replacement &lt;Image&gt;] [-ReplacementUrl &lt;string&gt;] [-State] &lt;ImageDisableState&gt; {DEPRECATED | OBSOLETE | DELETED} [-DeprecateOn &lt;DateTimeOffset&gt;] [-ObsoleteOn &lt;DateTimeOffset&gt;] [-DeleteOn 
-    &lt;DateTimeOffset&gt;] [&lt;CommonParameters&gt;]
-    
-    Disable-GceImage [-Object] &lt;Image&gt; [-Replacement &lt;Image&gt;] [-ReplacementUrl &lt;string&gt;] [-State] &lt;ImageDisableState&gt; {DEPRECATED | OBSOLETE | DELETED} [-DeprecateOn &lt;DateTimeOffset&gt;] [-ObsoleteOn &lt;DateTimeOffset&gt;] [-DeleteOn &lt;DateTimeOffset&gt;] 
+    Disable-GceImage [-Project &lt;string&gt;] [-Name] &lt;string&gt; [-Replacement &lt;Image&gt;] [-ReplacementUrl &lt;string&gt;] [-State] &lt;ImageDisableState&gt; {DEPRECATED | OBSOLETE | DELETED} [-DeprecateOn &lt;DateTimeOffset&gt;] [-ObsoleteOn &lt;DateTimeOffset&gt;] [-DeleteOn &lt;DateTimeOffset&gt;] 
     [&lt;CommonParameters&gt;]
+    
+    Disable-GceImage [-Object] &lt;Image&gt; [-Replacement &lt;Image&gt;] [-ReplacementUrl &lt;string&gt;] [-State] &lt;ImageDisableState&gt; {DEPRECATED | OBSOLETE | DELETED} [-DeprecateOn &lt;DateTimeOffset&gt;] [-ObsoleteOn &lt;DateTimeOffset&gt;] [-DeleteOn &lt;DateTimeOffset&gt;] [&lt;CommonParameters&gt;]
     
     
 DESCRIPTION
@@ -179,14 +178,20 @@ PARAMETERS
     
 INPUTS
     System.String
+        
+    
         The name of the image to disable.
     
     Google.Apis.Compute.v1.Data.Image
+        
+    
         The Image object that describes the image to disable.
     
     
 OUTPUTS
     Google.Apis.Compute.v1.Data.Image
+        
+    
     
     
     ----------  EXAMPLE 1  ----------

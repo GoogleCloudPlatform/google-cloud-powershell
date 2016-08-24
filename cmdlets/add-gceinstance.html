@@ -78,9 +78,8 @@ SYNOPSIS
 SYNTAX
     Add-GceInstance [-Project &lt;string&gt;] [-Zone &lt;string&gt;] [-InstanceConfig] &lt;Instance&gt; [&lt;CommonParameters&gt;]
     
-    Add-GceInstance [-Project &lt;string&gt;] [-Zone &lt;string&gt;] [-Name] &lt;string&gt; [[-MachineType] &lt;string&gt;] [-CanIpForward &lt;SwitchParameter&gt;] [-Description &lt;string&gt;] [-BootDisk &lt;Disk&gt;] [-BootDiskImage &lt;Image&gt;] [-ExtraDisk &lt;Disk[]&gt;] [-Disk &lt;AttachedDisk[]&gt;] 
-    [-Metadata &lt;IDictionary&gt;] [-Network &lt;string&gt;] [-NoExternalIp &lt;SwitchParameter&gt;] [-Preemptible &lt;SwitchParameter&gt;] [-AutomaticRestart &lt;bool&gt;] [-TerminateOnMaintenance &lt;SwitchParameter&gt;] [-ServiceAccount &lt;ServiceAccount[]&gt;] [-Tag &lt;string[]&gt;] 
-    [&lt;CommonParameters&gt;]
+    Add-GceInstance [-Project &lt;string&gt;] [-Zone &lt;string&gt;] [-Name] &lt;string&gt; [[-MachineType] &lt;string&gt;] [-CanIpForward &lt;SwitchParameter&gt;] [-Description &lt;string&gt;] [-BootDisk &lt;Disk&gt;] [-BootDiskImage &lt;Image&gt;] [-ExtraDisk &lt;Disk[]&gt;] [-Disk &lt;AttachedDisk[]&gt;] [-Metadata 
+    &lt;IDictionary&gt;] [-Network &lt;string&gt;] [-NoExternalIp &lt;SwitchParameter&gt;] [-Preemptible &lt;SwitchParameter&gt;] [-AutomaticRestart &lt;bool&gt;] [-TerminateOnMaintenance &lt;SwitchParameter&gt;] [-ServiceAccount &lt;ServiceAccount[]&gt;] [-Tag &lt;string[]&gt;] [&lt;CommonParameters&gt;]
     
     
 DESCRIPTION
@@ -278,14 +277,20 @@ PARAMETERS
     
 INPUTS
     Google.Apis.Compute.v1.Data.Instance
+        
+    
         The definition of the instance to create.
     
     System.String
+        
+    
         The name of the instance to add.
     
     
 OUTPUTS
     Google.Apis.Compute.v1.Data.Instance
+        
+    
     
     
     ----------  EXAMPLE 1  ----------

@@ -78,8 +78,8 @@ SYNOPSIS
 SYNTAX
     Add-GceInstanceTemplate [-Project &lt;string&gt;] [-Object] &lt;InstanceTemplate&gt; [&lt;CommonParameters&gt;]
     
-    Add-GceInstanceTemplate [-Project &lt;string&gt;] [-Name] &lt;string&gt; [[-MachineType] &lt;string&gt;] [-CanIpForward &lt;SwitchParameter&gt;] [-Description &lt;string&gt;] [-BootDiskImage &lt;Image&gt;] [-ExtraDisk &lt;Disk[]&gt;] [-Disk &lt;AttachedDisk[]&gt;] [-Metadata &lt;IDictionary&gt;] [-Network 
-    &lt;string&gt;] [-NoExternalIp &lt;SwitchParameter&gt;] [-Preemptible &lt;SwitchParameter&gt;] [-AutomaticRestart &lt;bool&gt;] [-TerminateOnMaintenance &lt;SwitchParameter&gt;] [-ServiceAccount &lt;ServiceAccount[]&gt;] [-Tag &lt;string[]&gt;] [&lt;CommonParameters&gt;]
+    Add-GceInstanceTemplate [-Project &lt;string&gt;] [-Name] &lt;string&gt; [[-MachineType] &lt;string&gt;] [-CanIpForward &lt;SwitchParameter&gt;] [-Description &lt;string&gt;] [-BootDiskImage &lt;Image&gt;] [-ExtraDisk &lt;Disk[]&gt;] [-Disk &lt;AttachedDisk[]&gt;] [-Metadata &lt;IDictionary&gt;] [-Network &lt;string&gt;] 
+    [-NoExternalIp &lt;SwitchParameter&gt;] [-Preemptible &lt;SwitchParameter&gt;] [-AutomaticRestart &lt;bool&gt;] [-TerminateOnMaintenance &lt;SwitchParameter&gt;] [-ServiceAccount &lt;ServiceAccount[]&gt;] [-Tag &lt;string[]&gt;] [&lt;CommonParameters&gt;]
     
     
 DESCRIPTION
@@ -248,11 +248,15 @@ PARAMETERS
     
 INPUTS
     Google.Apis.Compute.v1.Data.InstanceTemplate
+        
+    
         An instance template object to add to Google Compute Engine.
     
     
 OUTPUTS
     Google.Apis.Compute.v1.Data.InstanceTemplate
+        
+    
     
     
     ----------  EXAMPLE 1  ----------

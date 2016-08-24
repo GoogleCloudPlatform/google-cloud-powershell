@@ -82,8 +82,8 @@ SYNTAX
 DESCRIPTION
     Returns all Cloud Storage objects identified by the given prefix string. If no prefix string is provided, all objects in the bucket are returned.
     
-    An optional delimiter may be provided. If used, will return results in a directory-like mode, delimited by the given string. e.g. with objects &quot;1, &quot;2&quot;, &quot;subdir/3&quot; and delimited &quot;/&quot;; &quot;subdir/3&quot; would not be returned. (There is no way to just return 
-    &quot;subdir&quot; in the previous example.)
+    An optional delimiter may be provided. If used, will return results in a directory-like mode, delimited by the given string. e.g. with objects &quot;1, &quot;2&quot;, &quot;subdir/3&quot; and delimited &quot;/&quot;; &quot;subdir/3&quot; would not be returned. (There is no way to just return &quot;subdir&quot; in the 
+    previous example.)
     
 
 PARAMETERS
@@ -122,11 +122,15 @@ PARAMETERS
     
 INPUTS
     System.String
+        
+    
         Name of the bucket to search. Will also accept a Bucket object.
     
     
 OUTPUTS
     Google.Apis.Storage.v1.Data.Object
+        
+    
     
     
     ----------  EXAMPLE 1  ----------

@@ -172,11 +172,15 @@ PARAMETERS
     
 INPUTS
     Google.Apis.Compute.v1.Data.Image
+        
+    
         Source image to apply to the disk.
         
         Use Get-GceImage to get the image to apply. For instance, to get the latest windows instance, use Get-GceImage -Family &quot;windows-2012-r2&quot; -Project &quot;windows-cloud&quot;.
     
     Google.Apis.Compute.v1.Data.Snapshot
+        
+    
         Source snapshot to apply to the disk.
         
         Use Get-GceSnapshot to get a previously made backup snapshot to apply to this disk.

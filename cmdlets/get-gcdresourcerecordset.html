@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html class="google" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script>
+        (function(H){H.className=H.className.replace(/\bgoogle\b/,'google-js')})(document.documentElement)
+    </script>
+    <meta content="initial-scale=1, minimum-scale=1, width=device-width" name="viewport">
+    <meta name="description" content="">
+
+    <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
+
+    <title>Get-GcdResourceRecordSet</title>
+    <script src="//www.google.com/js/google.js"></script>
+    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/get-gcdresourcerecordset.html">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
+    <link rel="stylesheet" href="//www.google.com/css/maia.css">
+</head>
+
+  <body>
+    <header>
+    <div class="maia-header" id="maia-header" role="banner">
+        <div class="maia-aux">
+            <a href="/google-cloud-powershell/">
+                <h1>
+                    <img alt="Google" src="//www.google.com/images/branding/googlelogo/1x/googlelogo_color_116x41dp.png">&nbsp;Cloud Platform
+                </h1>
+                <h2>
+                    PowerShell
+                </h2>
+            </a>
+        </div>
+    </div>
+</header>
+
+    
+    <div class="maia-nav" id="maia-nav-x" role="navigation">
+      <div class="maia-aux">
+        <ul>
+          <li>
+            <a href="/google-cloud-powershell/">Home</a>
+          </li>
+
+          <li
+              >
+            <a href="/google-cloud-powershell/cmdlets/">Reference</a>
+          </li>
+
+          <!-- cmdlet-specific pages include the parent product. -->
+          
+          <li class="active">
+            <a href="/google-cloud-powershell/cmdlets/"></a>
+          </li>
+          
+
+          <!-- product-specific pages. -->
+          
+        </ul>
+      </div>
+    </div>
+    
+    <div id="maia-main" role="main">
+      <div class="maia-teleport" id="content">
+      <style>
+pre {
+    white-space: pre-wrap;
+}
+</style>
+
+<h1>Get-GcdResourceRecordSet</h1>
+<pre>
+NAME
+    Get-GcdResourceRecordSet
+    
+SYNOPSIS
+    Gets the ResourceRecordSet resources within a ManagedZone of a Project.
+    
+SYNTAX
+    Get-GcdResourceRecordSet [-Project &lt;string&gt;] [-Zone] &lt;string&gt; [[-Filter] &lt;string[]&gt;] [&lt;CommonParameters&gt;]
+    
+    
+DESCRIPTION
+    Lists the ManagedZone&#39;s ResourceRecordSets.
+    
+    If a Project is specified, the cmdlet will instead return the ResourceRecordSets in the specified ManagedZone governed by that project. The optional -Filter can be provided to restrict the ResourceRecordSet types returned.
+    
+
+PARAMETERS
+    -Project &lt;string&gt;
+        Get the Project to check.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Zone &lt;string&gt;
+        Get the ManagedZone (name or id permitted) to check for ResourceRecordSets.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -ManagedZone &lt;string&gt;
+        Get the ManagedZone (name or id permitted) to check for ResourceRecordSets.
+        
+        This is an alias of the Zone parameter.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Filter &lt;string[]&gt;
+        Filter the type(s) of ResourceRecordSets to return (e.g., -Filter &quot;CNAME&quot;,&quot;NS&quot;)
+        
+        Required?                    false
+        Position?                    1
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    &lt;CommonParameters&gt;
+        This cmdlet supports the common parameters: Verbose, Debug,
+        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
+        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
+        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
+    
+INPUTS
+    
+OUTPUTS
+    Google.Apis.Dns.v1.Data.ResourceRecordSet
+        
+    
+    
+    
+    ----------  EXAMPLE 1  ----------
+    
+    Get the ResourceRecordSet resources in the ManagedZone &quot;test1&quot; in the Project &quot;testing.&quot;
+    PS C:\&gt; Get-GcdResourceRecordSet -Project &quot;testing&quot; -Zone &quot;test1&quot;
+    Kind : dns#resourceRecordSet
+    Name : gcloudexample1.com.
+    Rrdatas : {ns-cloud-e1.googledomains.com., ns-cloud-e2.googledomains.com., ns-cloud-e3.googledomains.com., ns-cloud-e4.googledomains.com.}
+    Ttl : 21600
+    Type : NS
+    ETag :
+    Kind : dns#resourceRecordSet
+    Name : gcloudexample1.com.
+    Rrdatas : {ns-cloud-e1.googledomains.com.cloud-dns-hostmaster.google.com. 1 21600 3600 259200 300}
+    Ttl : 21600
+    Type : SOA
+    ETag :
+    
+    
+    
+    ----------  EXAMPLE 2  ----------
+    
+    Get the ResourceRecordSets of type &quot;NS&quot; or &quot;AAAA&quot; in the ManagedZone &quot;testZone2&quot; in the Project &quot;testing.&quot;
+    PS C:\&gt; Get-GcdResourceRecordSet -Project &quot;testing&quot; -Zone &quot;testZone2&quot; -Filter &quot;NS&quot;,&quot;AAAA&quot;
+    Kind : dns#resourceRecordSet
+    Name : gcloudexample1.com.
+    Rrdatas : {ns-cloud-e1.googledomains.com., ns-cloud-e2.googledomains.com., ns-cloud-e3.googledomains.com., ns-cloud-e4.googledomains.com.}
+    Ttl : 21600
+    Type : NS
+    ETag :
+    Kind : dns#resourceRecordSet
+    Name : gcloudexample1.com.
+    Rrdatas : {2001:db8:85a3::8a2e:370:7334}
+    Ttl : 300
+    Type : AAAA
+    ETag :
+    
+    
+    
+    
+RELATED LINKS
+    [Supported Resource Record Formats] (https://cloud.google.com/dns/records/json-record)
+    [Managing Records] (https://cloud.google.com/dns/records/)
+    [Troubleshooting] (https://cloud.google.com/dns/troubleshooting)
+
+
+
+</pre>
+
+      </div>
+    </div>
+    <footer>
+    <div id="maia-signature"></div>
+        <div class="maia-footer" id="maia-footer">
+            <div id="maia-footer-global">
+                <div class="maia-aux">
+                <ul>
+                    <li>
+                        <a href="//www.google.com/">Google</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/about/">About Google</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/policies/privacy/">Privacy</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/policies/terms/">Terms</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+
+    <script src="//www.google.com/js/maia.js">
+    </script>
+</body>
+</html>

@@ -78,8 +78,8 @@ SYNOPSIS
 SYNTAX
     Add-GceRoute [-Project &lt;string&gt;] [-Object] &lt;Route&gt; [&lt;CommonParameters&gt;]
     
-    Add-GceRoute [-Project &lt;string&gt;] [-Name] &lt;string&gt; [-DestinationIpRange] &lt;string&gt; [-Network] &lt;string&gt; [-Priority &lt;long&gt;] [-Description &lt;string&gt;] [-Tag &lt;string[]&gt;] [-NextHopInstance &lt;string&gt;] [-NextHopIp &lt;string&gt;] [-NextHopVpnTunnel &lt;string&gt;] 
-    [-NextHopInternetGateway &lt;SwitchParameter&gt;] [&lt;CommonParameters&gt;]
+    Add-GceRoute [-Project &lt;string&gt;] [-Name] &lt;string&gt; [-DestinationIpRange] &lt;string&gt; [-Network] &lt;string&gt; [-Priority &lt;long&gt;] [-Description &lt;string&gt;] [-Tag &lt;string[]&gt;] [-NextHopInstance &lt;string&gt;] [-NextHopIp &lt;string&gt;] [-NextHopVpnTunnel &lt;string&gt;] [-NextHopInternetGateway 
+    &lt;SwitchParameter&gt;] [&lt;CommonParameters&gt;]
     
     
 DESCRIPTION
@@ -133,8 +133,8 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -Priority &lt;long&gt;
-        The priority of this route. Priority is used to break ties in cases where there is more than one matching route of equal prefix length. In the case of two routes with equal prefix length, the one with the lowest-numbered priority value wins. 
-        Default value is 1000. Valid range is 0 through 65535.
+        The priority of this route. Priority is used to break ties in cases where there is more than one matching route of equal prefix length. In the case of two routes with equal prefix length, the one with the lowest-numbered priority value wins. Default value is 
+        1000. Valid range is 0 through 65535.
         
         Required?                    false
         Position?                    named
@@ -204,11 +204,15 @@ PARAMETERS
     
 INPUTS
     Google.Apis.Compute.v1.Data.Route
+        
+    
         An object describing a route to add.
     
     
 OUTPUTS
     Google.Apis.Compute.v1.Data.Route
+        
+    
     
     
     

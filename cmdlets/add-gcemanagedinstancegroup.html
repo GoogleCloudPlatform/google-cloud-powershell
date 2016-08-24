@@ -76,8 +76,8 @@ SYNOPSIS
     Creates a new Google Compute Engine instance group manager.
     
 SYNTAX
-    Add-GceManagedInstanceGroup [-Project &lt;string&gt;] [-Zone &lt;string&gt;] [-Name] &lt;string&gt; [-InstanceTemplate] &lt;string&gt; [-TargetSize] &lt;int&gt; [-BaseInstanceName &lt;string&gt;] [-Description &lt;string&gt;] [-TargetPool &lt;string[]&gt;] [-PortName &lt;string[]&gt;] [-PortNumber 
-    &lt;int[]&gt;] [-NamedPort &lt;NamedPort[]&gt;] [&lt;CommonParameters&gt;]
+    Add-GceManagedInstanceGroup [-Project &lt;string&gt;] [-Zone &lt;string&gt;] [-Name] &lt;string&gt; [-InstanceTemplate] &lt;string&gt; [-TargetSize] &lt;int&gt; [-BaseInstanceName &lt;string&gt;] [-Description &lt;string&gt;] [-TargetPool &lt;string[]&gt;] [-PortName &lt;string[]&gt;] [-PortNumber &lt;int[]&gt;] [-NamedPort 
+    &lt;NamedPort[]&gt;] [&lt;CommonParameters&gt;]
     
     Add-GceManagedInstanceGroup [-Project &lt;string&gt;] [-Zone &lt;string&gt;] [-Object] &lt;InstanceGroupManager&gt; [&lt;CommonParameters&gt;]
     
@@ -203,11 +203,15 @@ PARAMETERS
     
 INPUTS
     Google.Apis.Compute.v1.Data.InstanceGroupManager
+        
+    
         An InstanceGroupManager object used to create a new managed instance group.
     
     
 OUTPUTS
     Google.Apis.Compute.v1.Data.InstanceGroupManager
+        
+    
     
     
     ----------  EXAMPLE 1  ----------

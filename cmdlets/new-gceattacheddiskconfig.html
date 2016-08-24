@@ -78,8 +78,7 @@ SYNOPSIS
 SYNTAX
     New-GceAttachedDiskConfig [-Source] &lt;Disk&gt; [-AutoDelete &lt;SwitchParameter&gt;] [-Boot &lt;SwitchParameter&gt;] [-Nvme &lt;SwitchParameter&gt;] [-DeviceName &lt;string&gt;] [-ReadOnly &lt;SwitchParameter&gt;] [&lt;CommonParameters&gt;]
     
-    New-GceAttachedDiskConfig [-SourceImage] &lt;Image&gt; [-Name &lt;string&gt;] [-DiskType &lt;string&gt;] [-Size &lt;long&gt;] [-AutoDelete &lt;SwitchParameter&gt;] [-Boot &lt;SwitchParameter&gt;] [-Nvme &lt;SwitchParameter&gt;] [-DeviceName &lt;string&gt;] [-ReadOnly &lt;SwitchParameter&gt;] 
-    [&lt;CommonParameters&gt;]
+    New-GceAttachedDiskConfig [-SourceImage] &lt;Image&gt; [-Name &lt;string&gt;] [-DiskType &lt;string&gt;] [-Size &lt;long&gt;] [-AutoDelete &lt;SwitchParameter&gt;] [-Boot &lt;SwitchParameter&gt;] [-Nvme &lt;SwitchParameter&gt;] [-DeviceName &lt;string&gt;] [-ReadOnly &lt;SwitchParameter&gt;] [&lt;CommonParameters&gt;]
     
     
 DESCRIPTION
@@ -185,9 +184,13 @@ PARAMETERS
     
 INPUTS
     Google.Apis.Compute.v1.Data.Disk
+        
+    
         The URI of the preexisting disk to attach to an instance.
     
     Google.Apis.Compute.v1.Data.Image
+        
+    
         The source image of the new disk.
     
     

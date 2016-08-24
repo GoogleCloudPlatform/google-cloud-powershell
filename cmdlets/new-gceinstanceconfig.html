@@ -76,8 +76,8 @@ SYNOPSIS
     Makes a new Google Compute Engine VM instance description.
     
 SYNTAX
-    New-GceInstanceConfig [-Name] &lt;string&gt; [[-MachineType] &lt;string&gt;] [-CanIpForward &lt;SwitchParameter&gt;] [-Description &lt;string&gt;] [-BootDisk &lt;Disk&gt;] [-BootDiskImage &lt;Image&gt;] [-ExtraDisk &lt;Disk[]&gt;] [-Disk &lt;AttachedDisk[]&gt;] [-Metadata &lt;IDictionary&gt;] [-Network 
-    &lt;string&gt;] [-NoExternalIp &lt;SwitchParameter&gt;] [-Preemptible &lt;SwitchParameter&gt;] [-AutomaticRestart &lt;bool&gt;] [-TerminateOnMaintenance &lt;SwitchParameter&gt;] [-ServiceAccount &lt;ServiceAccount[]&gt;] [-Tag &lt;string[]&gt;] [&lt;CommonParameters&gt;]
+    New-GceInstanceConfig [-Name] &lt;string&gt; [[-MachineType] &lt;string&gt;] [-CanIpForward &lt;SwitchParameter&gt;] [-Description &lt;string&gt;] [-BootDisk &lt;Disk&gt;] [-BootDiskImage &lt;Image&gt;] [-ExtraDisk &lt;Disk[]&gt;] [-Disk &lt;AttachedDisk[]&gt;] [-Metadata &lt;IDictionary&gt;] [-Network &lt;string&gt;] 
+    [-NoExternalIp &lt;SwitchParameter&gt;] [-Preemptible &lt;SwitchParameter&gt;] [-AutomaticRestart &lt;bool&gt;] [-TerminateOnMaintenance &lt;SwitchParameter&gt;] [-ServiceAccount &lt;ServiceAccount[]&gt;] [-Tag &lt;string[]&gt;] [&lt;CommonParameters&gt;]
     
     
 DESCRIPTION
@@ -248,11 +248,15 @@ PARAMETERS
     
 INPUTS
     System.String
+        
+    
         The name of the instance. The name must be 1-63 characters long and match [a-z]([-a-z0-9]*[a-z0-9])?
     
     
 OUTPUTS
     Google.Apis.Compute.v1.Data.Instance
+        
+    
     
     
     ----------  EXAMPLE 1  ----------

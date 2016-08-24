@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html class="google" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script>
+        (function(H){H.className=H.className.replace(/\bgoogle\b/,'google-js')})(document.documentElement)
+    </script>
+    <meta content="initial-scale=1, minimum-scale=1, width=device-width" name="viewport">
+    <meta name="description" content="">
+
+    <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
+
+    <title>Add-GcdChange</title>
+    <script src="//www.google.com/js/google.js"></script>
+    <link rel="canonical" href="http://googlecloudplatform.github.io/google-cloud-powershell/cmdlets/add-gcdchange.html">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&amp;lang=en">
+    <link rel="stylesheet" href="//www.google.com/css/maia.css">
+</head>
+
+  <body>
+    <header>
+    <div class="maia-header" id="maia-header" role="banner">
+        <div class="maia-aux">
+            <a href="/google-cloud-powershell/">
+                <h1>
+                    <img alt="Google" src="//www.google.com/images/branding/googlelogo/1x/googlelogo_color_116x41dp.png">&nbsp;Cloud Platform
+                </h1>
+                <h2>
+                    PowerShell
+                </h2>
+            </a>
+        </div>
+    </div>
+</header>
+
+    
+    <div class="maia-nav" id="maia-nav-x" role="navigation">
+      <div class="maia-aux">
+        <ul>
+          <li>
+            <a href="/google-cloud-powershell/">Home</a>
+          </li>
+
+          <li
+              >
+            <a href="/google-cloud-powershell/cmdlets/">Reference</a>
+          </li>
+
+          <!-- cmdlet-specific pages include the parent product. -->
+          
+          <li class="active">
+            <a href="/google-cloud-powershell/cmdlets/"></a>
+          </li>
+          
+
+          <!-- product-specific pages. -->
+          
+        </ul>
+      </div>
+    </div>
+    
+    <div id="maia-main" role="main">
+      <div class="maia-teleport" id="content">
+      <style>
+pre {
+    white-space: pre-wrap;
+}
+</style>
+
+<h1>Add-GcdChange</h1>
+<pre>
+NAME
+    Add-GcdChange
+    
+SYNOPSIS
+    Add a new Change to a ManagedZone of a Project.
+    
+SYNTAX
+    Add-GcdChange [-Project &lt;string&gt;] [-Zone] &lt;string&gt; [-ChangeRequest] &lt;Change&gt; [&lt;CommonParameters&gt;]
+    
+    Add-GcdChange [-Project &lt;string&gt;] [-Zone] &lt;string&gt; [-Add &lt;ResourceRecordSet[]&gt;] [-Remove &lt;ResourceRecordSet[]&gt;] [&lt;CommonParameters&gt;]
+    
+    
+DESCRIPTION
+    Create, execute, and return a new Change request within a specified ManagedZone of a Project.
+    
+    If a Project is specified, will instead create the Change in the specified ManagedZone governed by that project. Either a Change request or ResourceRecordSet[] to add/remove can be given as input.
+    
+
+PARAMETERS
+    -Project &lt;string&gt;
+        Get the Project to change.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Zone &lt;string&gt;
+        Get the ManagedZone (name or id permitted) to change.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -ManagedZone &lt;string&gt;
+        Get the ManagedZone (name or id permitted) to change.
+        
+        This is an alias of the Zone parameter.
+        
+        Required?                    true
+        Position?                    0
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -ChangeRequest &lt;Change&gt;
+        Get the Change request to execute.
+        
+        Required?                    true
+        Position?                    1
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -Change &lt;Change&gt;
+        Get the Change request to execute.
+        
+        This is an alias of the ChangeRequest parameter.
+        
+        Required?                    true
+        Position?                    1
+        Default value                
+        Accept pipeline input?       true (ByValue)
+        Accept wildcard characters?  false
+        
+    -Add &lt;ResourceRecordSet[]&gt;
+        Get the ResourceRecordSet(s) to add for this Change.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Remove &lt;ResourceRecordSet[]&gt;
+        Get the ResourceRecordSet(s) to remove (must exactly match existing ones) for this Change.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    -Rm &lt;ResourceRecordSet[]&gt;
+        Get the ResourceRecordSet(s) to remove (must exactly match existing ones) for this Change.
+        
+        This is an alias of the Remove parameter.
+        
+        Required?                    false
+        Position?                    named
+        Default value                
+        Accept pipeline input?       false
+        Accept wildcard characters?  false
+        
+    &lt;CommonParameters&gt;
+        This cmdlet supports the common parameters: Verbose, Debug,
+        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
+        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
+        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
+    
+INPUTS
+    Google.Apis.Dns.v1.Data.Change
+        
+    
+        Get the Change request to execute.
+    
+    
+OUTPUTS
+    Google.Apis.Dns.v1.Data.Change
+        
+    
+    
+    
+    ----------  EXAMPLE 1  ----------
+    
+    Add a new Change that adds a new A-type ResourceRecordSet, $newARecord, and removes an existing CNAME-type record, $oldCNAMERecord, from the ManagedZone &quot;test1&quot; (governing &quot;gcloudexample1.com.&quot;) in the Project &quot;testing.&quot;
+    PS C:\&gt; $newARecord = New-GcdResourceRecordSet -Name &quot;gcloudexample1.com.&quot; -Rrdata &quot;104.1.34.167&quot;
+    PS C:\&gt; $oldCNAMERecord = (Get-GcdResourceRecordSet -Zone &quot;test1&quot; -Filter &quot;CNAME&quot;)[0]
+    PS C:\&gt; Add-GcdChange -Project &quot;testing&quot; -Zone &quot;test1&quot; -Add $newARecord -Remove $oldCNAMERecord
+    Additions : {gcloudexample1.com.}
+    Deletions : {www.gcloudexample1.com.}
+    Id : 3
+    Kind : dns#change
+    StartTime : 2016-06-29T16:30:50.670Z
+    Status : done
+    ETag :
+    
+    
+    
+    ----------  EXAMPLE 2  ----------
+    
+    Add the Change request $change2 to the ManagedZone &quot;test1&quot; in the Project &quot;testing,&quot; where $change2 is a previously executed Change request in ManagedZone &quot;test1&quot; that we want to apply again.
+    PS C:\&gt; $change2 = Get-GcdChange -Project &quot;testing&quot; -Zone &quot;test1&quot; -ChangeId 2
+    PS C:\&gt; Add-GcdChange -Project &quot;testing&quot; -Zone &quot;test1&quot; -ChangeRequest $change2
+    Additions :
+    Deletions : {gcloudexample1.com.}
+    Id : 4
+    Kind : dns#change
+    StartTime : 2016-06-29T18:30:50.670Z
+    Status : done
+    ETag :
+    
+    
+    
+    
+RELATED LINKS
+    [Monitoring Changes] (https://cloud.google.com/dns/monitoring)
+    [Troubleshooting] (https://cloud.google.com/dns/troubleshooting)
+
+
+
+</pre>
+
+      </div>
+    </div>
+    <footer>
+    <div id="maia-signature"></div>
+        <div class="maia-footer" id="maia-footer">
+            <div id="maia-footer-global">
+                <div class="maia-aux">
+                <ul>
+                    <li>
+                        <a href="//www.google.com/">Google</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/about/">About Google</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/policies/privacy/">Privacy</a>
+                    </li>
+                    <li>
+                        <a href="//www.google.com/intl/en/policies/terms/">Terms</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+
+    <script src="//www.google.com/js/maia.js">
+    </script>
+</body>
+</html>

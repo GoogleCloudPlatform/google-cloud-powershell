@@ -76,11 +76,11 @@ SYNOPSIS
     Uploads a local file into a Google Cloud Storage bucket.
     
 SYNTAX
-    New-GcsObject [-Bucket] &lt;string&gt; [-ObjectName] &lt;string&gt; [[-Contents] &lt;string&gt;] [-ContentType &lt;string&gt;] [-PredefinedAcl &lt;PredefinedAclEnum&gt; {AuthenticatedRead | BucketOwnerFullControl | BucketOwnerRead | Private__ | ProjectPrivate | PublicRead}] 
-    [-Metadata &lt;Hashtable&gt;] [-Force &lt;SwitchParameter&gt;] [&lt;CommonParameters&gt;]
-    
-    New-GcsObject [-Bucket] &lt;string&gt; [-ObjectName] &lt;string&gt; [-File] &lt;string&gt; [-ContentType &lt;string&gt;] [-PredefinedAcl &lt;PredefinedAclEnum&gt; {AuthenticatedRead | BucketOwnerFullControl | BucketOwnerRead | Private__ | ProjectPrivate | PublicRead}] [-Metadata 
+    New-GcsObject [-Bucket] &lt;string&gt; [-ObjectName] &lt;string&gt; [[-Contents] &lt;string&gt;] [-ContentType &lt;string&gt;] [-PredefinedAcl &lt;PredefinedAclEnum&gt; {AuthenticatedRead | BucketOwnerFullControl | BucketOwnerRead | Private__ | ProjectPrivate | PublicRead}] [-Metadata 
     &lt;Hashtable&gt;] [-Force &lt;SwitchParameter&gt;] [&lt;CommonParameters&gt;]
+    
+    New-GcsObject [-Bucket] &lt;string&gt; [-ObjectName] &lt;string&gt; [-File] &lt;string&gt; [-ContentType &lt;string&gt;] [-PredefinedAcl &lt;PredefinedAclEnum&gt; {AuthenticatedRead | BucketOwnerFullControl | BucketOwnerRead | Private__ | ProjectPrivate | PublicRead}] [-Metadata &lt;Hashtable&gt;] 
+    [-Force &lt;SwitchParameter&gt;] [&lt;CommonParameters&gt;]
     
     
 DESCRIPTION
@@ -172,11 +172,15 @@ PARAMETERS
     
 INPUTS
     System.String
+        
+    
         Text content to write to the Storage object. Ignored if File is specified.
     
     
 OUTPUTS
     Google.Apis.Storage.v1.Data.Object
+        
+    
     
     
     ----------  EXAMPLE 1  ----------

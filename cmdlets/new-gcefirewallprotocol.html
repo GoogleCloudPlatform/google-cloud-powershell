@@ -105,8 +105,7 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -Port &lt;List`1&gt;
-        The ports which are allowed. This parameter is only applicable for UDP or TCP protocol. Each entry must be either an integer or a range. If not specified, connections through any port are allowed Example inputs include: &quot;22&quot;, &quot;80&quot;,&quot;443&quot;, and 
-        &quot;12345-12349&quot;.
+        The ports which are allowed. This parameter is only applicable for UDP or TCP protocol. Each entry must be either an integer or a range. If not specified, connections through any port are allowed Example inputs include: &quot;22&quot;, &quot;80&quot;,&quot;443&quot;, and &quot;12345-12349&quot;.
         
         Required?                    false
         Position?                    named
@@ -131,11 +130,15 @@ PARAMETERS
     
 INPUTS
     System.Object
+        
+    
         The Pipeline to append the new AllowedData to.
     
     
 OUTPUTS
     Google.Apis.Compute.v1.Data.Firewall+AllowedData
+        
+    
     
     
     ----------  EXAMPLE 1  ----------

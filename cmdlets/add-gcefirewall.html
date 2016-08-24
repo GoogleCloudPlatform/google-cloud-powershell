@@ -161,8 +161,8 @@ PARAMETERS
         Accept wildcard characters?  false
         
     -SourceTag &lt;List`1&gt;
-        The instance tag which this rule applies to. One or both of SourceRange and SourceTag may be set. If both parameters are set, an inbound connection is allowed it matches either SourceRange or SourceTag. Source tags cannot be used to allow access to 
-        an instance&#39;s external IP address. Source tags can only be used to control traffic traveling from an instance inside the same network as the firewall rule.
+        The instance tag which this rule applies to. One or both of SourceRange and SourceTag may be set. If both parameters are set, an inbound connection is allowed it matches either SourceRange or SourceTag. Source tags cannot be used to allow access to an instance&#39;s 
+        external IP address. Source tags can only be used to control traffic traveling from an instance inside the same network as the firewall rule.
         
         Required?                    false
         Position?                    named
@@ -187,11 +187,15 @@ PARAMETERS
     
 INPUTS
     System.Collections.Generic.List`1[[Google.Apis.Compute.v1.Data.Firewall+AllowedData, Google.Apis.Compute.v1, Version=1.15.0.572, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab]]
+        
+    
         A list of allowed protocols and ports. you can use New-GceFirewallProtocol to create them.
     
     
 OUTPUTS
     Google.Apis.Compute.v1.Data.Firewall
+        
+    
     
     
     ----------  EXAMPLE 1  ----------
