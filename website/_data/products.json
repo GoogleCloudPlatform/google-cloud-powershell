@@ -14,4 +14,9 @@
         "description": "Google Cloud SQL lets you set-up, maintain, manage, and administer your relational MySQL databases on Google's Cloud Platform.",
         "homepageUrl": "https://cloud.google.com/sql/"
     }
+    {
+        "productName":  "Google Cloud DNS",
+        "description": "Google Cloud DNS publishes your domain names on Google's global network of anycast name servers and lets you manage and administer them on Google's Cloud Platform.",
+        "homepageUrl": "https://cloud.google.com/dns/"
+    }
 ]
