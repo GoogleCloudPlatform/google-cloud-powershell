@@ -1,4 +1,7 @@
-﻿using Google.Apis.Compute.v1;
+﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
+
+using Google.Apis.Compute.v1;
 using Google.Apis.Compute.v1.Data;
 using Google.PowerShell.Common;
 using System;
@@ -41,7 +44,7 @@ namespace Google.PowerShell.ComputeEngine
     [OutputType(typeof(Image))]
     public class GetGceImageCmdlets : GceCmdlet
     {
-        private static readonly string[] DefaultProjects = {
+        private static readonly string[] s_defaultProjects = {
                 "centos-cloud", "coreos-cloud", "debian-cloud", "debian-cloud",
                 "rhel-cloud", "suse-cloud", "ubuntu-os-cloud", "windows-cloud"
             };
@@ -76,7 +79,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(Position = 1)]
-        public string[] Project { get; set; } = DefaultProjects;
+        public string[] Project { get; set; } = s_defaultProjects;
 
         /// <summary>
         /// <para type="description">

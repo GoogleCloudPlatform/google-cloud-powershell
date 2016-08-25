@@ -82,6 +82,9 @@
         <a ng-click="selected = 'compute engine'"
            ng-class="{selected: selected == 'compute engine'}"
            >Compute Engine</a>
+        <a ng-click="selected = 'dns'"
+            ng-class="{selected: selected == 'dns'}"
+           >DNS</a>
       </div>
 
       <div hljs hljs-language="powershell" ng-show="selected == 'cloud storage'">
@@ -105,6 +108,15 @@ $config | Add-GceInstance -Project $project -Zone "us-central1-b"
 $instance = Get-GceInstance $vmName
       </div>
 
+      <div hljs hljs-language="powershell" ng-show="selected == 'dns'">
+Add-GcdManagedZone `
+    -Name "my-new-zone" `
+    -DnsName "dnsexample.com." `
+    -Description "This is my first zone."
+
+$newZone = Get-GcdManagedZone -Zone "my-new-zone"
+      </div>
+
     </div>
   </div><!-- end of .container -->
 </section><!-- end of .featuring -->
@@ -122,6 +134,11 @@ $instance = Get-GceInstance $vmName
       <li>
         <a href="{{baseUrl}}cmdlets/#google-cloud-storage">
           Google Compute Engine
+        </a>
+      </li>
+      <li>
+        <a href="{{baseUrl}}cmdlets/#google-cloud-sql">
+          Google Cloud SQL
         </a>
       </li>
     </ul>

@@ -1,4 +1,4 @@
-﻿// Copyright 2015 Google Inc. All Rights Reserved.
+﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
 using System.Management.Automation;
@@ -30,7 +30,7 @@ namespace Google.PowerShell.CloudStorage
     public class RemoveGcsBucketLoggingCmdlet : GcsCmdlet
     {
         /// <summary>
-        /// <para typedef="description">
+        /// <para type="description">
         /// The name of the bucket to remove logging for. This parameter will also accept a Bucket
         /// object.
         /// </para>
@@ -78,7 +78,7 @@ namespace Google.PowerShell.CloudStorage
     public class WriteGcsBucketLoggingCmdlet : GcsCmdlet
     {
         /// <summary>
-        /// <para typedef="description">
+        /// <para type="description">
         /// The name of the bucket to configure. This parameter will also accept a Bucket object.
         /// </para>
         /// </summary>

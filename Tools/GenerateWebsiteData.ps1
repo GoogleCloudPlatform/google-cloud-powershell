@@ -12,6 +12,7 @@ $cmdlets = Get-Command -Module "Google.PowerShell"
 $apiMappings = @{
     "Gcs" = "Google Cloud Storage"
     "Gce" = "Google Compute Engine"
+    "GcSql" = "Google Cloud SQL"
 }
 
 function convertToString ($obj)

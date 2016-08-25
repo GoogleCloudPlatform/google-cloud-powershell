@@ -1,4 +1,4 @@
-﻿// Copyright 2016 Google Inc. All Rights Reserved.
+﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
 using Google.Apis.Compute.v1.Data;
@@ -232,7 +232,7 @@ namespace Google.PowerShell.ComputeEngine
         /// Because this cmdlet uses MyInvocation.BoundParameters to get the parameter values, we can't just
         /// set the respective porperties to their default values, as they would not be bound.
         /// </summary>
-        private static readonly IDictionary<string, object> DefaultParameterValues =
+        private static readonly IDictionary<string, object> s_defaultParameterValues =
             new Dictionary<string, object>
             {
                 {"CloudLogging", ReadWrite.Write},
@@ -240,8 +240,7 @@ namespace Google.PowerShell.ComputeEngine
                 {"ServiceControl", true},
                 {"ServiceManagement", true},
                 {"Storage", ReadWrite.Read}
-
-            };
+};
 
         /// <summary>
         /// Maps parameter names to a sub dictionary. each sub dictionary maps parameter values to their scope
@@ -252,7 +251,7 @@ namespace Google.PowerShell.ComputeEngine
         /// get the related sope with 
         /// <code>string scope = NamevalueScopeMap["BigtableAdmin"][BigTableAdminEnum.Tables]</code>
         /// </example>
-        private static readonly IDictionary<string, IDictionary<object, string>> NameValueScopeMap =
+        private static readonly IDictionary<string, IDictionary<object, string>> s_nameValueScopeMap =
             new Dictionary<string, IDictionary<object, string>>
             {
                 {
@@ -369,7 +368,7 @@ namespace Google.PowerShell.ComputeEngine
             }
 
             // Add scopes for parameters with default values that were not bound.
-            foreach (KeyValuePair<string, object> defaultParameter in DefaultParameterValues)
+            foreach (KeyValuePair<string, object> defaultParameter in s_defaultParameterValues)
             {
                 if (!MyInvocation.BoundParameters.ContainsKey(defaultParameter.Key))
                 {
@@ -395,11 +394,11 @@ namespace Google.PowerShell.ComputeEngine
             const string baseUri = "https://www.googleapis.com/auth/";
 
             string scopeType = parameter.Key;
-            if (NameValueScopeMap.ContainsKey(scopeType))
+            if (s_nameValueScopeMap.ContainsKey(scopeType))
             {
-                if (NameValueScopeMap[scopeType].ContainsKey(parameter.Value))
+                if (s_nameValueScopeMap[scopeType].ContainsKey(parameter.Value))
                 {
-                    string scopeString = NameValueScopeMap[scopeType][parameter.Value];
+                    string scopeString = s_nameValueScopeMap[scopeType][parameter.Value];
                     scopes.Add($"{baseUri}{scopeString}");
                 }
             }
