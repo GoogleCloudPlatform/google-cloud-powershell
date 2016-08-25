@@ -60,16 +60,16 @@
       <HintPath>..\packages\Google.Apis.Core.1.15.0\lib\net45\Google.Apis.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Google.Apis.Dns.v1, Version=1.13.1.517, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Apis.Dns.v1.1.13.1.517\lib\portable-net45+netcore45+wpa81+wp8\Google.Apis.Dns.v1.dll</HintPath>
+    <Reference Include="Google.Apis.Dns.v1, Version=1.15.0.517, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.Dns.v1.1.15.0.517\lib\portable-net45+netcore45+wpa81+wp8\Google.Apis.Dns.v1.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Google.Apis.PlatformServices, Version=1.15.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
       <HintPath>..\packages\Google.Apis.1.15.0\lib\net45\Google.Apis.PlatformServices.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Google.Apis.SQLAdmin.v1beta4, Version=1.13.1.494, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Apis.SQLAdmin.v1beta4.1.13.1.494\lib\portable-net45+netcore45+wpa81+wp8\Google.Apis.SQLAdmin.v1beta4.dll</HintPath>
+    <Reference Include="Google.Apis.SQLAdmin.v1beta4, Version=1.15.0.558, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.SQLAdmin.v1beta4.1.15.0.558\lib\portable-net45+netcore45+wpa81+wp8\Google.Apis.SQLAdmin.v1beta4.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Google.Apis.Storage.v1, Version=1.15.0.573, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
@@ -160,6 +160,16 @@
     <Compile Include="Dns\GcdQuota.cs" />
     <Compile Include="Dns\GcdResourceRecordSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Sql\GcSqlBackupRunCmdlets.cs" />
+    <Compile Include="Sql\GcSqlCmdlet.cs" />
+    <Compile Include="Sql\GcSqlFlagsCmdlet.cs" />
+    <Compile Include="Sql\GcSqlInstanceCmdlets.cs" />
+    <Compile Include="Sql\GcSqlInstanceConfigCmdlets.cs" />
+    <Compile Include="Sql\GcSqlInstanceReplicaConfigCmdlet.cs" />
+    <Compile Include="Sql\GcSqlOperationCmdlet.cs" />
+    <Compile Include="Sql\GcSqlSettingConfigCmdlet.cs" />
+    <Compile Include="Sql\GcSqlSslCmdlets.cs" />
+    <Compile Include="Sql\GcSqlTiersCmdlet.cs" />
     <Compile Include="Storage\GcsBucket.cs" />
     <Compile Include="Storage\GcsBucketLogging.cs" />
     <Compile Include="Storage\GcsBucketWebsite.cs" />

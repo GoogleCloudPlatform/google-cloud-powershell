@@ -8,5 +8,15 @@
         "productName":  "Google Compute Engine",
         "description": "Google Compute Engine lets you create and run virtual machines on Google infrastructure. Compute Engine offers scale, performance, and value that allows you to easily launch large compute clusters on Google's infrastructure. There are no upfront investments and you can run thousands of virtual CPUs on a system that has been designed to be fast, and to offer strong consistency of performance.",
         "homepageUrl": "https://cloud.google.com/compute/"
+    },
+    {
+        "productName":  "Google Cloud SQL",
+        "description": "Google Cloud SQL lets you set-up, maintain, manage, and administer your relational MySQL databases on Google's Cloud Platform.",
+        "homepageUrl": "https://cloud.google.com/sql/"
+    }
+    {
+        "productName":  "Google Cloud DNS",
+        "description": "Google Cloud DNS publishes your domain names on Google's global network of anycast name servers and lets you manage and administer them on Google's Cloud Platform.",
+        "homepageUrl": "https://cloud.google.com/dns/"
     }
 ]

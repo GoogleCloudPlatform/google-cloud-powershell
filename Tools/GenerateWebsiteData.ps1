@@ -12,6 +12,7 @@ $cmdlets = Get-Command -Module "Google.PowerShell"
 $apiMappings = @{
     "Gcs" = "Google Cloud Storage"
     "Gce" = "Google Compute Engine"
+    "GcSql" = "Google Cloud SQL"
 }
 
 # Generate a single JSON file containing all the documentation for all the
