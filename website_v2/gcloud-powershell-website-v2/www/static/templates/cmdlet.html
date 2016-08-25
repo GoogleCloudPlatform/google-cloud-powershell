@@ -7,9 +7,10 @@
     <h2>
       {{property.toUpperCase()}}
     </h2>
-    <pre>
+    <pre ng-if="property != 'parameters'")>
       {{productInfo[refCtrl.params.product][refCtrl.params.cmdlet][property]}}
     </pre>
+    <parameter-table ng-if="property === 'parameters'"></parameter-table>
   </div>
 </div>
 <p ng-show="productInfo === undefined || 

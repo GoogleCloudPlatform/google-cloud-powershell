@@ -32,6 +32,7 @@
     });
 
     /* TODO: Change templates from html to .ng */
+    /** Template for the table of contents. **/
     app.directive('contentTable', function() {
         return {
             restrict: 'E',
@@ -41,4 +42,11 @@
         };
     });
 
+    /** Template for the parameter set tables. **/
+    app.directive('parameterTable', function() {
+        return {
+            restrict: 'E',
+            templateUrl: 'static/templates/parameter-table.html'
+        };
+    });
 })();
