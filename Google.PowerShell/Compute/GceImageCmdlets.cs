@@ -39,6 +39,9 @@ namespace Google.PowerShell.ComputeEngine
     /// <code>PS C:\> Get-GceImage -Project "my-project" -IncludeDeprecated</code>
     /// <para>Lists all images in project "my-project", including images marked as deprecated.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/images#resource)">
+    /// [Image resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceImage", DefaultParameterSetName = ParameterSetNames.OfProject)]
     [OutputType(typeof(Image))]
@@ -202,6 +205,9 @@ namespace Google.PowerShell.ComputeEngine
     /// <code>PS C:\> Get-GceDisk "my-disk" | Add-GceImage -Name "my-image" -Family "my-family"</code>
     /// <para>Creates a new image named "my-image" of the family "my-family" in the default project.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/images#resource)">
+    /// [Image resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceImage")]
     [OutputType(typeof(Image))]
@@ -287,6 +293,9 @@ namespace Google.PowerShell.ComputeEngine
     /// <code>PS C:\> Get-GceImage -Project "my-project" | Remove-GceImage</code>
     /// <para>Removes all images from project "my-project".</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/images#resource)">
+    /// [Image resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceImage", SupportsShouldProcess = true,
         DefaultParameterSetName = ParameterSetNames.ByName)]
@@ -375,6 +384,9 @@ namespace Google.PowerShell.ComputeEngine
     /// </code>
     /// <para>Marks the image named "my-old-image" as obsolete, and sets "my-new-image" as its replacement.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/images#resource)">
+    /// [Image resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Disable, "GceImage")]
     [OutputType(typeof(Image))]

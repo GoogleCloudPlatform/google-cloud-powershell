@@ -22,6 +22,9 @@ namespace Google.PowerShell.ComputeEngine
     /// <para>Creates a scope on the default service account that can make BigQuery queries and read bigtable
     /// data.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
+    /// [Instance resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GceServiceAccountConfig", DefaultParameterSetName = ParameterSetNames.FromFlags)]
     [OutputType(typeof(ServiceAccount))]

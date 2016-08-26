@@ -44,6 +44,9 @@ namespace Google.PowerShell.ComputeEngine
     /// </code>
     /// <para>Waits for the metadata "instance/tags" to be updated by the server.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/storing-retrieving-metadata)">
+    /// [Metadata server documentation]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceMetadata")]
     [OutputType(typeof(string))]

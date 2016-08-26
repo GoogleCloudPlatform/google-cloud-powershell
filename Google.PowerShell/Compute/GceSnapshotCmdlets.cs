@@ -28,6 +28,9 @@ namespace Google.PowerShell.Compute
     /// <para>Creates a new disk snapshot from the disk named "my-disk". The name of the snapshot will start
     /// with "my-disk" and end with the utc date and time the snapshot was taken.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/snapshots#resource)">
+    /// [Snapshot resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceSnapshot")]
     [OutputType(typeof(Snapshot))]
@@ -140,6 +143,9 @@ namespace Google.PowerShell.Compute
     /// <code>PS C:\> Get-GceSnapshot "my-snapshot"</code>
     /// <para>Gets the snapshot in the default project named "my-snapshot".</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/snapshots#resource)">
+    /// [Snapshot resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceSnapshot", DefaultParameterSetName = ParameterSetNames.OfProject)]
     [OutputType(typeof(Snapshot))]
@@ -217,6 +223,9 @@ namespace Google.PowerShell.Compute
     /// <code>PS C:\> Get-GceSnapshot "my-snapshot" | Remove-GceSnapshot</code>
     /// <para>Deletes the snapshot named "my-snapshot" in the default project.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/snapshots#resource)">
+    /// [Snapshot resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceSnapshot", SupportsShouldProcess = true)]
     public class RemoveGceSnapshotCmdlet : GceConcurrentCmdlet

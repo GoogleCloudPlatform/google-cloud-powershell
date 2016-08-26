@@ -28,6 +28,9 @@ namespace Google.PowerShell.ComputeEngine
     /// <code>PS C:\> Get-GceTargetProxy "my-target-proxy"</code>
     /// <para>This command gets the target proxy named "my-target-proxy" in the default project and zone</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/targetHttpProxies#resource)">
+    /// [Target Proxy resource definition]
+    /// </para>
     [Cmdlet(VerbsCommon.Get, "GceTargetProxy", DefaultParameterSetName = ParameterSetNames.OfProject)]
     [OutputType(typeof(TargetHttpProxy), typeof(TargetHttpsProxy))]
     public class GetGceTargetProxyCmdlet : GceCmdlet
