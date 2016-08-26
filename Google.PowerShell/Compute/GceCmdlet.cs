@@ -132,7 +132,7 @@ namespace Google.PowerShell.ComputeEngine
         private void WriteProgress(Operation op, string progressMessage)
         {
 
-            int activityId = op.Id.GetHashCode();
+            int activityId = Math.Abs(op.Id.GetHashCode());
             string activity = progressMessage ?? op.Description ?? BuildActivity(op);
             string statusDescription = op.StatusMessage ?? op.Status;
             int percentComplete;
@@ -180,7 +180,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <param name="op">The operation the progress bar was created for.</param>
         private void WriteProgressComplete(Operation op)
         {
-            int activityId = op.Id.GetHashCode();
+            int activityId = Math.Abs(op.Id.GetHashCode());
             string activity = op.Description ?? op.OperationType ?? BuildActivity(op);
             string statusDescription = op.StatusMessage ?? op.Status;
             ProgressRecord record = new ProgressRecord(activityId, activity, statusDescription)
