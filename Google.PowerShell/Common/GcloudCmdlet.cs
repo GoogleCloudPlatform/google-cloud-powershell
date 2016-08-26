@@ -147,7 +147,7 @@ namespace Google.PowerShell.Common
                         pa.ParameterSetName.Equals("__AllParameterSets") ||
                         pa.ParameterSetName.Equals(ParameterSetName)
                  );
-            return !MyInvocation.BoundParameters.ContainsKey(member.Name) && parameterAttributes.Any();
+            return parameterAttributes.Any();
         }
 
         /// <summary>
