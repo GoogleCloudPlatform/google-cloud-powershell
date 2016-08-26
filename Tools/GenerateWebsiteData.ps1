@@ -27,8 +27,8 @@ foreach ($cmdlet in $cmdlets) {
     $cmdletResource = $cmdlet.Name.Split("-")[1]
 
     # Get documentation on the cmdlet.
-    $docText = Get-Help -Full $cmdlet.Name | Out-String
-    $docObj = Get-Help -Full $cmdlet.Name
+    $docText = Get-Help -Detailed $cmdlet.Name | Out-String
+    $docObj = Get-Help -Detailed $cmdlet.Name
     $summary = ($docObj.Synopsis | Out-String).Trim()
 
     # Determine which product the cmdlet belongs to, "Google Compute Engine".
