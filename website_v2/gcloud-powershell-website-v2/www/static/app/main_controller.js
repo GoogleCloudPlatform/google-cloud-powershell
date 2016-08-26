@@ -1,5 +1,9 @@
 var app = angular.module('powershellSite');
 
+/**
+ * The main controller for the app.
+ * Sets up the productInfo object.
+ */
 app.controller('MainController',
     function($scope, $http) {
       $scope.productInfo = {};
