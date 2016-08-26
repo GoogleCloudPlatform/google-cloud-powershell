@@ -10,8 +10,13 @@
         "homepageUrl": "https://cloud.google.com/compute/"
     },
     {
-        "productName":  "Google Cloud SQL",
+        "productName": "Google Cloud SQL",
         "description": "Google Cloud SQL lets you set-up, maintain, manage, and administer your relational MySQL databases on Google's Cloud Platform.",
         "homepageUrl": "https://cloud.google.com/sql/"
+    },
+    {
+        "productName":  "Google Cloud DNS",
+        "description": "Google Compute DNS lets you add, edit and delete DNS records served from Google's Cloud Platform.",
+        "homepageUrl": "https://cloud.google.com/dns/"
     }
 ]
