@@ -1,0 +1,19 @@
+<div>
+  <!-- Displays the parameters for each parameter set. -->
+  <table ng-repeat="(setName,parameterSet) in productInfo[refCtrl.params.product][refCtrl.params.cmdlet].parameters">
+    <tr>
+      <th>{{setName}}</th>
+    </tr>
+    <tr>
+      <th>Name</th>
+      <th>Mandatory</th>
+      <th>Description</th>
+    </tr>
+    <!-- We should display all parameters in the parameterset. -->
+    <tr ng-repeat="parameter in parameterSet">
+      <td>{{parameter.name}}</td>
+      <td>{{parameter.mandatory}}</td>
+      <td>{{parameter.description}}</td>
+    </tr>
+  </table>
+</div>

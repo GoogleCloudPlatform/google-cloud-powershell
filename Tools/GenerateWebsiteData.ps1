@@ -13,11 +13,41 @@ $apiMappings = @{
     "Gcs" = "Google Cloud Storage"
     "Gce" = "Google Compute Engine"
     "GcSql" = "Google Cloud SQL"
+    "Gcd" = "Google Cloud DNS"
 }
 
 function convertToString ($obj)
 {
     ($obj | Out-String).replace("`r`n","`n")
+}
+
+# Get ParameterSets creates the parameter set hashtable for each cmdlet.
+# It takes in the get-help object for the cmdlet.
+function getParameterSets ($docObj) {
+    $parameterSets = (Get-command $docObj.name).ParameterSets
+    # First, the cmdlet's parameters are accrued.
+    $parameterTable = @{}
+    ForEach ($par in $docObj.parameters.parameter) {
+        $parInfo = @{
+            "name" = $par.Name
+            "description" = $par.description.text
+            "mandatory" = $par.required
+        }
+        $parameterTable.Add($par.Name,$parInfo)
+    }
+
+    # then they are organized by parameter set.
+    $sets = @{}
+    ForEach ($set in $parameterSets) {
+        $setInfo = @{}
+        ForEach ($par in ($set | select -ExpandProperty parameters)) {
+            if ($parameterTable.ContainsKey($par.Name)) {
+                $setInfo.Add($par.name,$parameterTable.($par.name))
+            }
+        }
+        $sets.Add($set.name,$setInfo)
+    }
+    return $sets
 }
 
 # Generate a single JSON file containing all the documentation for all the
@@ -28,6 +58,8 @@ $cmdletDocObjects = @()
 #Allows us to separate out cmdlets by product.
 $cmdletDocObjectsGcs = @{}
 $cmdletDocObjectsGce = @{}
+$cmdletDocObjectsGcSql = @{}
+$cmdletDocObjectsGcd = @{}
 foreach ($cmdlet in $cmdlets) {
     Write-Host "Building $($cmdlet.Name)..."
 
@@ -80,7 +112,7 @@ foreach ($cmdlet in $cmdlets) {
         "synopsis" = convertToString($docObj.Synopsis)
         
         "description" = ($docObj.Description | Out-String).Trim()
-        "parameters" = convertToString($docObj.Parameters)
+        "parameters" = getParameterSets($docObj, $name)
         "inputs" = convertToString($docObj.inputTypes)
         "outputs" = convertToString($docObj.returnValues)
         "examples" = convertToString($docObj.Examples)
@@ -92,8 +124,14 @@ foreach ($cmdlet in $cmdlets) {
     if ($cloudProduct -eq "Google Cloud Storage") {
         $cmdletDocObjectsGcs.Add($name,$cmdletDocObjFull)
     }
-    else {
+    if ($cloudProduct -eq "Google Compute Engine") {
         $cmdletDocObjectsGce.Add($name,$cmdletDocObjFull)
+    }
+    if ($cloudProduct -eq "Google Cloud SQL") {
+        $cmdletDocObjectsGcSql.Add($name,$cmdletDocObjFull)
+    }
+    if ($cloudProduct -eq "Google Cloud DNS") {
+        $cmdletDocObjectsGcd.Add($name,$cmdletDocObjFull)
     }
 }
 
@@ -101,6 +139,8 @@ foreach ($cmdlet in $cmdlets) {
 $cmdletDocObjectsFull = @{
     "Google Compute Engine" = $cmdletDocObjectsGce
     "Google Cloud Storage" = $cmdletDocObjectsGcs
+    "Google Cloud SQL" = $cmdletDocObjectsGcSql
+    "Google Cloud DNS" = $cmdletDocObjectsGcd
 }
 
 # Finally we write the json files.
