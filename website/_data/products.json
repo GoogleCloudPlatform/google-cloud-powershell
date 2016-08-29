@@ -16,7 +16,7 @@
     },
     {
         "productName":  "Google Cloud DNS",
-        "description": "Google Compute DNS lets you add, edit and delete DNS records served from Google's Cloud Platform.",
+        "description": "Google Cloud DNS publishes your domain names on Google's global network of anycast name servers and lets you manage and administer them on Google's Cloud Platform.",
         "homepageUrl": "https://cloud.google.com/dns/"
     }
 ]
