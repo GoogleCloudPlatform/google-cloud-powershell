@@ -15,8 +15,6 @@ using static Google.Apis.Storage.v1.ObjectsResource.InsertMediaUpload;
 
 namespace Google.PowerShell.CloudStorage
 {
-    // TODO(chrsmith): For all object-related cmdlets, provide an alternate ParameterSet that
-    // supports just the object name, with the gs://<bucket>/<object> syntax.
 
     // TODO(chrsmith): Provide a way to upload an entire directory to Gcs. Reuse New-GcsObject?
     // Upload-GcsObject?
@@ -105,7 +103,13 @@ namespace Google.PowerShell.CloudStorage
     /// Uploads a local file into a Google Cloud Storage bucket.
     /// </para>
     /// <para type="description">
-    /// Uploads a local file into a Google Cloud Storage bucket.
+    /// Uploads a local file into a Google Cloud Storage bucket. You can set the value of the new object
+    /// directly with -Contents, read it from a file with -File, or define neither to create an empty object.
+    /// </para>
+    /// <para type="description">
+    /// Note: Most Google Cloud Storage utilities, including the PowerShell Provider and the Google Cloud
+    /// Console treat '/' as a path separator. They do not, however, treat '\' the same. If you wish to create
+    /// an empty object to treat as a folder, the name should end with '/'.
     /// </para>
     /// <example>
     ///   <para>Upload a local log file to GCS.</para>
