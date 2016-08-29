@@ -61,6 +61,8 @@
   </div>
   
   <div ng-controller="MainController as mainCtrl">
+    <!-- The loader. -->
+    <p ng-if="mainCtrl.loading">Loading</p>
     <!-- The TOC body. -->
     <content-table ng-if="!mainCtrl.loading" product-info="mainCtrl.productInfo"></content-table>
     <!-- The Information body. -->
