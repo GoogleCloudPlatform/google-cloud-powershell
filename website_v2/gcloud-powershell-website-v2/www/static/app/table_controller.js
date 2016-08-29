@@ -9,7 +9,7 @@ app.controller('TableController', function($scope, $attrs) {
   /** What the current active product is. */
   this.activeProduct = '';
 
-  /*
+  /**
    * onProductClick is used when a product is clicked.
    * 'productName' is the product clicked.
    */
@@ -18,7 +18,7 @@ app.controller('TableController', function($scope, $attrs) {
     if (this.activeProduct === productName) {
       this.activeProduct = '';
     }
-    /*
+    /**
      * Or it sets the information to be the information screen for
      * the applicable product.
      */
@@ -27,7 +27,7 @@ app.controller('TableController', function($scope, $attrs) {
     }
   };
 
-  /*
+  /**
    * isExpanded just tells whether or not a product is expanded
    * 'productName' is the product we are checking.
    */

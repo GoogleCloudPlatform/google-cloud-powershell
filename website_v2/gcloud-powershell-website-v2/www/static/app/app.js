@@ -2,7 +2,7 @@
     /* This is the angular module for the website. */
     var app = angular.module('powershellSite', ['ngRoute']);
 
-    /*
+    /**
      * Ordering matters with the routeprovider, as we must populate parameters
      * according to the URL.
      */

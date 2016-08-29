@@ -9,7 +9,7 @@ app.controller('MainController',
       this.productInfo = {};
       this.loading = true;
       try {
-        /*
+        /**
          * We have to chain promises in order to supply the data
          * without causing a race condition.
          */
@@ -40,10 +40,16 @@ app.controller('MainController',
         this.loading = false;
       }
       this.params = $routeParams;
-      /*
+      /**
        * The order we want cmdlet information to be displayed in.
        * Can be changed
        */
       this.order = ['synopsis', 'syntax', 'description', 'parameters',
           'examples', 'inputs', 'outputs'];
+
+      /* Gets the parameters for the productInfo passed in */
+      this.getParams = function(productInfo) {
+        var cmdlet = productInfo[$routeParams.product][$routeParams.cmdlet];
+        return cmdlet.parameters;
+      };
 });

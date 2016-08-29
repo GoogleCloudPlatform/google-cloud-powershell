@@ -1,6 +1,6 @@
 ﻿var app = angular.module('powershellSite');
 
-/*
+/**
  * Angular doesn't sort objects, only arrays, so this filter was made.
  * This filter takes in A JSON object of cmdlets for a product and
  * allows you to sort them based off a specific cmdlet field, such as
