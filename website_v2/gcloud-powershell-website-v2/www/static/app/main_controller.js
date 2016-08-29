@@ -8,7 +8,7 @@ app.controller('MainController',
     function($scope, $http) {
       $scope.productInfo = {};
       try {
-        /*
+        /**
          * We have to chain promises in order to supply the data
          * without causing a race condition.
          */
