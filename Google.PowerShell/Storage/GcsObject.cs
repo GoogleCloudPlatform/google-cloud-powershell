@@ -148,20 +148,20 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
+        /// Local path to the file to upload.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 2, Mandatory = true, ParameterSetName = ParameterSetNames.ContentsFromFile)]
+        public string File { get; set; }
+
+        /// <summary>
+        /// <para type="description">
         /// Text content to write to the Storage object. Ignored if File is specified.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ContentsFromString,
             Position = 2, ValueFromPipeline = true)]
         public string Contents { get; set; } = "";
-
-        /// <summary>
-        /// <para type="description">
-        /// Local path to the file to upload.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 2, Mandatory = true, ParameterSetName = ParameterSetNames.ContentsFromFile)]
-        public string File { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -182,16 +182,6 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
-        /// Provide a predefined ACL to the object. e.g. "publicRead" where the project owner gets
-        /// OWNER access, and allUsers get READER access.
-        /// </para>
-        /// <para type="link" uri="(https://cloud.google.com/storage/docs/json_api/v1/objects/insert)">[API Documentation]</para>
-        /// </summary>
-        [Parameter(Mandatory = false)]
-        public PredefinedAclEnum? PredefinedAcl { get; set; }
-
-        /// <summary>
-        /// <para type="description">
         /// Provide metadata for the Cloud Storage object. Some values, such as Content-Type, Content-MD5, ETag have a
         /// special meaning. You can also specify custom values that have application-specific meaning.
         /// </para>
@@ -206,6 +196,16 @@ namespace Google.PowerShell.CloudStorage
         /// </summary>
         [Parameter(Mandatory = false)]
         public SwitchParameter Force { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Provide a predefined ACL to the object. e.g. "publicRead" where the project owner gets
+        /// OWNER access, and allUsers get READER access.
+        /// </para>
+        /// <para type="link" uri="(https://cloud.google.com/storage/docs/json_api/v1/objects/insert)">[API Documentation]</para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public PredefinedAclEnum? PredefinedAcl { get; set; }
 
         protected override void ProcessRecord()
         {

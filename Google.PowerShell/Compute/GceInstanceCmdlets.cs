@@ -59,16 +59,12 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The project that owns the instances.
+        /// The name of the instance.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.OfProject)]
-        [Parameter(ParameterSetName = ParameterSetNames.OfZone)]
-        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
-        [Parameter(ParameterSetName = ParameterSetNames.OfInstanceGroupManager)]
-        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
-        public string Project { get; set; }
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        public string Name { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -84,12 +80,16 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The name of the instance.
+        /// The project that owns the instances.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
-            Position = 0, ValueFromPipeline = true)]
-        public string Name { get; set; }
+        [Parameter(ParameterSetName = ParameterSetNames.OfProject)]
+        [Parameter(ParameterSetName = ParameterSetNames.OfZone)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
+        [Parameter(ParameterSetName = ParameterSetNames.OfInstanceGroupManager)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
+        public string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -977,6 +977,80 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
+        /// The disk to attach. Can the name of a disk, a disk object from Get-GceDisk, or an attached disk
+        /// object from New-GceAttachedDiskConfig.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.Disk)]
+        [Parameter(ParameterSetName = ParameterSetNames.DiskByObject)]
+        public object[] AddDisk { get; set; } = { };
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the disk to detach.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.Disk)]
+        [Parameter(ParameterSetName = ParameterSetNames.DiskByObject)]
+        [ArrayPropertyTransform(typeof(Disk), nameof(Disk.Name))]
+        public string[] RemoveDisk { get; set; } = { };
+
+        /// <summary>
+        /// <para type="description">
+        /// The keys and values of the metadata to add.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.Metadata)]
+        [Parameter(ParameterSetName = ParameterSetNames.MetadataByObject)]
+        public Hashtable AddMetadata { get; set; } = new Hashtable();
+
+        /// <summary>
+        /// <para type="description">
+        /// The keys of the metadata to remove.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.Metadata)]
+        [Parameter(ParameterSetName = ParameterSetNames.MetadataByObject)]
+        public string[] RemoveMetadata { get; set; } = { };
+
+        /// <summary>
+        /// <para type="description">
+        /// The tag to add.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.Tag)]
+        [Parameter(ParameterSetName = ParameterSetNames.TagByObject)]
+        public string[] AddTag { get; set; } = { };
+
+        /// <summary>
+        /// <para type="description">
+        /// The tag to remove.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.Tag)]
+        [Parameter(ParameterSetName = ParameterSetNames.TagByObject)]
+        public string[] RemoveTag { get; set; } = { };
+
+        /// <summary>
+        /// <para type="description">
+        /// The new access config to add to a network interface.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.AccessConfig)]
+        [Parameter(ParameterSetName = ParameterSetNames.AccessConfigByObject)]
+        public AccessConfig[] AddAccessConfig { get; set; } = { };
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the access config to remove from the network interface.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.AccessConfig)]
+        [Parameter(ParameterSetName = ParameterSetNames.AccessConfigByObject)]
+        public string[] RemoveAccessConfig { get; set; } = { };
+
+        /// <summary>
+        /// <para type="description">
         /// The project that owns the instance to update.
         /// </para>
         /// </summary>
@@ -1047,80 +1121,6 @@ namespace Google.PowerShell.ComputeEngine
         [PropertyByTypeTransformation(Property = nameof(Apis.Compute.v1.Data.NetworkInterface.Name),
             TypeToTransform = typeof(NetworkInterface))]
         public string NetworkInterface { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The new access config to add to a network interface.
-        /// </para>
-        /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.AccessConfig)]
-        [Parameter(ParameterSetName = ParameterSetNames.AccessConfigByObject)]
-        public AccessConfig[] AddAccessConfig { get; set; } = { };
-
-        /// <summary>
-        /// <para type="description">
-        /// The name of the access config to remove from the network interface.
-        /// </para>
-        /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.AccessConfig)]
-        [Parameter(ParameterSetName = ParameterSetNames.AccessConfigByObject)]
-        public string[] RemoveAccessConfig { get; set; } = { };
-
-        /// <summary>
-        /// <para type="description">
-        /// The disk to attach. Can the name of a disk, a disk object from Get-GceDisk, or an attached disk
-        /// object from New-GceAttachedDiskConfig.
-        /// </para>
-        /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.Disk)]
-        [Parameter(ParameterSetName = ParameterSetNames.DiskByObject)]
-        public object[] AddDisk { get; set; } = { };
-
-        /// <summary>
-        /// <para type="description">
-        /// The name of the disk to detach.
-        /// </para>
-        /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.Disk)]
-        [Parameter(ParameterSetName = ParameterSetNames.DiskByObject)]
-        [ArrayPropertyTransform(typeof(Disk), nameof(Disk.Name))]
-        public string[] RemoveDisk { get; set; } = { };
-
-        /// <summary>
-        /// <para type="description">
-        /// The keys and values of the metadata to add.
-        /// </para>
-        /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.Metadata)]
-        [Parameter(ParameterSetName = ParameterSetNames.MetadataByObject)]
-        public Hashtable AddMetadata { get; set; } = new Hashtable();
-
-        /// <summary>
-        /// <para type="description">
-        /// The keys of the metadata to remove.
-        /// </para>
-        /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.Metadata)]
-        [Parameter(ParameterSetName = ParameterSetNames.MetadataByObject)]
-        public string[] RemoveMetadata { get; set; } = { };
-
-        /// <summary>
-        /// <para type="description">
-        /// The tag to add.
-        /// </para>
-        /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.Tag)]
-        [Parameter(ParameterSetName = ParameterSetNames.TagByObject)]
-        public string[] AddTag { get; set; } = { };
-
-        /// <summary>
-        /// <para type="description">
-        /// The tag to remove.
-        /// </para>
-        /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.Tag)]
-        [Parameter(ParameterSetName = ParameterSetNames.TagByObject)]
-        public string[] RemoveTag { get; set; } = { };
 
         protected override void ProcessRecord()
         {
