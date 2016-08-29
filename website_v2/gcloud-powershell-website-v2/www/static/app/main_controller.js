@@ -9,10 +9,7 @@ app.controller('MainController',
       this.productInfo = {};
       this.loading = true;
       try {
-        /**
-         * We have to chain promises in order to supply the data
-         * without causing a race condition.
-         */
+        /* We need to load the json and verify routeparameters. */
         var promise = $http.get('static/_data/cmdletsFull.json');
         promise.then(function(res) {
           /* We store the json info so templates have access */
