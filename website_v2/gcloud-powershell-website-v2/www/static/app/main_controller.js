@@ -8,6 +8,7 @@ app.controller('MainController',
     function($scope, $http, $routeParams) {
       this.productInfo = {};
       this.loading = true;
+      this.errorLoading = false;
       try {
         /* We need to load the json and verify routeparameters. */
         var promise = $http.get('static/_data/cmdletsFull.json');
@@ -35,6 +36,7 @@ app.controller('MainController',
       } catch (err) {
         console.error(err);
         this.loading = false;
+        this.errorLoading = true;
       }
       this.params = $routeParams;
       /**

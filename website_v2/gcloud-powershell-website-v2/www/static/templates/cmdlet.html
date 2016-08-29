@@ -1,4 +1,4 @@
-﻿<div ng-show="mainCtrl.productInfo != {} && mainCtrl.params.product != undefined" 
+﻿<div ng-show="!mainCtrl.errorLoading && mainCtrl.params.product != undefined" 
   class="information-area">
   <h1>{{mainCtrl.params.cmdlet}}</h1>
   <!-- Display all applicable information for a cmdlet. 
@@ -13,5 +13,5 @@
     <parameter-table ng-if="property === 'parameters'"></parameter-table>
   </div>
 </div>
-<p ng-show="mainCtrl.productInfo === {}">Could not load cmdlet information.</p>
+<p ng-if="mainCtrl.errorLoading">Could not load cmdlet information.</p>
 <p ng-show="mainCtrl.params.product === undefined">Invalid Product or Cmdlet</p>
