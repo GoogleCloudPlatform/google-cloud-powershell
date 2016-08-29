@@ -1,6 +1,6 @@
 <div>
   <!-- Displays the parameters for each parameter set. -->
-  <table ng-repeat="(setName,parameterSet) in mainCtrl.productInfo[mainCtrl.params.product][mainCtrl.params.cmdlet].parameters">
+  <table ng-repeat="(setName,parameterSet) in mainCtrl.getParams(productInfo)">
     <tr>
       <th>{{setName}}</th>
     </tr>
