@@ -39,6 +39,7 @@ namespace Google.PowerShell.ComputeEngine
     /// <code>PS C:\> Get-GceImage -Project "my-project" -IncludeDeprecated</code>
     /// <para>Lists all images in project "my-project", including images marked as deprecated.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/images)">[Google Cloud Platform images]</para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceImage", DefaultParameterSetName = ParameterSetNames.OfProject)]
     [OutputType(typeof(Image))]
