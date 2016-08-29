@@ -5,7 +5,7 @@ app.controller('ReferenceController', ['$scope', '$routeParams',
     function($scope, $routeParams) {
       /**
        * This function utilizes the promise set up by the main controller
-       * in order to ensure that the json is loaded before anything is processed.
+       * to ensure that the json is loaded before anything is processed.
        */
       $scope.res.then(function(ret) {
         var prodInfo = $scope.productInfo;
@@ -38,4 +38,10 @@ app.controller('ReferenceController', ['$scope', '$routeParams',
        */
       this.order = ['synopsis', 'syntax', 'description', 'parameters',
           'examples', 'inputs', 'outputs'];
+
+      /* Gets the parameters for the productInfo passed in */
+      this.getParams = function(productInfo) {
+        var cmdlet = productInfo[$routeParams.product][$routeParams.cmdlet];
+        return cmdlet.parameters;
+      };
 }]);
