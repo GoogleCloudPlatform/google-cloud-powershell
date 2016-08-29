@@ -22,7 +22,6 @@
   <script src="static/app/app.js"></script>
   <script src="static/app/main_controller.js"></script>
   <script src="static/app/table_controller.js"></script>
-  <script src="static/app/reference_controller.js"></script>
   <script src="static/app/cmdlet_filter.js"></script>
 </head>
 <body ng-app="powershellSite">
@@ -61,11 +60,11 @@
     </div>
   </div>
   
-  <div ng-controller="MainController">
+  <div ng-controller="MainController as mainCtrl">
     <!-- The TOC body. -->
-    <content-table></content-table>
+    <content-table ng-if="!mainCtrl.loading" product-info="mainCtrl.productInfo"></content-table>
     <!-- The Information body. -->
-    <ng-view id="reference"></ng-view>
+    <ng-view id="reference" ng-if="!mainCtrl.loading"></ng-view>
   </div>
   <!-- The maia footer. -->
   <div class="maia-footer" id="maia-footer">

@@ -1,19 +1,19 @@
-﻿<div ng-show="productInfo != undefined && refCtrl.params.product != undefined"
+﻿<div ng-show="mainCtrl.productInfo != undefined && mainCtrl.params.product != undefined"
   class="information-area">
-  <h1>{{refCtrl.params.product}}</h1>
+  <h1>{{mainCtrl.params.product}}</h1>
   <table>
     <tr>
       <th>Name</th>
       <th>Description</th>
     </tr>
     <!-- We should display all cmdlets for a product -->
-    <tr ng-repeat="(order,cmdlet) in productInfo[refCtrl.params.product] | orderByCmdletProp: 'name'">
+    <tr ng-repeat="(order,cmdlet) in mainCtrl.productInfo[mainCtrl.params.product] | orderByCmdletProp: 'name'">
       <td>
-        <a href="/{{refCtrl.params.product}}/{{cmdlet.name}}"class="cmdletName">{{cmdlet.name}}</a>
+        <a href="/{{mainCtrl.params.product}}/{{cmdlet.name}}"class="cmdletName">{{cmdlet.name}}</a>
       </td>
       <td>{{cmdlet.description}}</td>
     </tr>
   </table>
 </div>
-<p ng-show="productInfo === undefined || 
-  refCtrl.params.product === undefined">Invalid Product</p>
+<p ng-show="mainCtrl.productInfo === undefined || 
+  mainCtrl.params.product === undefined">Invalid Product</p>

@@ -4,6 +4,7 @@
 app.controller('TableController', function($scope, $attrs) {
   /* Whether or not a product's information is expanded. */
   this.expanded = false;
+  this.productInfo = $scope.productInfo;
 
   /** What the current active product is. */
   this.activeProduct = '';

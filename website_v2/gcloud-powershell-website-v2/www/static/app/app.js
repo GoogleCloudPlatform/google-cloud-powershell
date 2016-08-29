@@ -10,20 +10,17 @@
         $routeProvider
             .when('/', {
                 templateUrl: 'static/templates/home.html',
-                controller: 'ReferenceController',
-                controllerAs: 'refCtrl',
+
                 reloadOnSearch: false
             })
             .when('/:product', {
                 templateUrl: 'static/templates/product.html',
-                controller: 'ReferenceController',
-                controllerAs: 'refCtrl',
+
                 reloadOnSearch: false
             })
             .when('/:product/:cmdlet', {
                 templateUrl: 'static/templates/cmdlet.html',
-                controller: 'ReferenceController',
-                controllerAs: 'refCtrl',
+
                 reloadOnSearch: false
             });
 
@@ -38,7 +35,10 @@
             restrict: 'E',
             templateUrl: 'static/templates/content-table.html',
             controller: 'TableController',
-            controllerAs: 'tableCtrl'
+            controllerAs: 'tableCtrl',
+            scope: {
+                productInfo: '='
+            }
         };
     });
 

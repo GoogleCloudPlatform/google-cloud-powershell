@@ -5,20 +5,45 @@ var app = angular.module('powershellSite');
  * Sets up the productInfo object.
  */
 app.controller('MainController',
-    function($scope, $http) {
-      $scope.productInfo = {};
+    function($scope, $http, $routeParams) {
+      this.productInfo = {};
+      this.loading = true;
       try {
         /*
          * We have to chain promises in order to supply the data
          * without causing a race condition.
          */
-        $scope.res = $http.get('static/_data/cmdletsFull.json')
-            .then(function(res) {
-              /* We store the json info on the scope so everything has access */
-              $scope.productInfo = res.data;
-        });
+        var promise = $http.get('static/_data/cmdletsFull.json');
+        promise.then(function(res) {
+          /* We store the json info so templates have access */
+          this.productInfo = res.data;
+          this.loading = false;
+          
+          /* We make sure no invalid routes were passed in */
+          if (Object.keys($routeParams).length === 2 && (
+              !($routeParams.product in this.productInfo) ||
+              !($routeParams.cmdlet in 
+              this.productInfo[$routeParams.product]))) {
+                console.error('Invalid Product or Cmdlet');
+                $routeParams.product = undefined;
+                return;
+          }
+          else if (Object.keys($routeParams).length === 1 &&
+              !($routeParams.product in this.productInfo)) {
+                console.error('Invalid Product');
+                $routeParams.product = undefined;
+                return;
+          }
+        }.bind(this));
       } catch (err) {
-        $scope.productInfo = null;
         console.error(err);
+        this.loading = false;
       }
+      this.params = $routeParams;
+      /*
+       * The order we want cmdlet information to be displayed in.
+       * Can be changed
+       */
+      this.order = ['synopsis', 'syntax', 'description', 'parameters',
+          'examples', 'inputs', 'outputs'];
 });
