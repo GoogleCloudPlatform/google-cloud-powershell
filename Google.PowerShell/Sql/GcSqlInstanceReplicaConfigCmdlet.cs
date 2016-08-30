@@ -45,6 +45,10 @@ namespace Google.PowerShell.Sql
     ///   If successful, the command returns a ReplicaConfiguration resource containing the replica configuration.
     ///   </para>
     /// </example>
+    /// <para type="link" uri="https://cloud.google.com/tools/powershell/docs/sql/setup">
+    ///   [Setting up Instances]
+    /// </para>
+    /// <para type="link" uri="https://cloud.google.com/tools/powershell/docs/sql/replica">[Replica Instances]</para>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GcSqlInstanceReplicaConfig")]
     [OutputType(typeof(ReplicaConfiguration))]

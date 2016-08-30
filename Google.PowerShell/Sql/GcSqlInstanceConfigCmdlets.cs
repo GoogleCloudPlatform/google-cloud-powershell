@@ -44,6 +44,9 @@ namespace Google.PowerShell.Sql
     ///   <br></br>
     ///   <para>If successful, the command returns the populated Instance resource with the name "myInstance".</para>
     /// </example>
+    /// <para type="link" uri="https://cloud.google.com/tools/powershell/docs/sql/setup">
+    ///   [Setting up Instances]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GcSqlInstanceConfig")]
     [OutputType(typeof(DatabaseInstance))]
