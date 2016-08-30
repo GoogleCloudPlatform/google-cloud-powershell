@@ -10,3 +10,16 @@ Promote-GcSqlReplica.
 Start-GcSqlReplica
 Remove-GcSqlSslCert
 Remove-GcdManagedZone
+Remove-GcsBucket
+Remove-GcsObject
+Remove-GceFirewall
+Remove-GceHealthCheck
+Remove-GceImage
+Remove-GceInstance
+Remove-GceInstanceTemplate
+Remove-GceManagedInstanceGroup
+Wait-GceManagedInstanceGroup
+Remove-GceRoute
+Remove-GceSnapshot
+Remove-GceDisk
+Remove-GceAddress

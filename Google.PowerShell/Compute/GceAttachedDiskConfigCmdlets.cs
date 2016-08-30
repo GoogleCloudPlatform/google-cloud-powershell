@@ -30,6 +30,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     ///  </example>
     [Cmdlet(VerbsCommon.New, "GceAttachedDiskConfig", DefaultParameterSetName = ParameterSetNames.Persistant)]
+    [OutputType(typeof(AttachedDisk))]
     public class NewGceAttachedDiskConfigCmdlet : GceCmdlet
     {
         private class ParameterSetNames
