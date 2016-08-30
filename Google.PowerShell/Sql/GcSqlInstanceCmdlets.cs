@@ -305,7 +305,10 @@ namespace Google.PowerShell.Sql
     ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/import-export)">
-    ///   [Importing and Exporting]
+    ///   [How-To: Importing and Exporting]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/sql/docs/import-export/)">
+    ///   [Overview of Importing and Exporting]
     /// </para>
     /// </summary>
     [Cmdlet(VerbsData.Export, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.Sql)]
@@ -479,7 +482,10 @@ namespace Google.PowerShell.Sql
     ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/import-export)">
-    ///   [Importing and Exporting]
+    ///   [How-To: Importing and Exporting]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/sql/docs/import-export/)">
+    ///   [Overview of Importing and Exporting]
     /// </para>
     /// </summary>
     [Cmdlet(VerbsData.Import, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.Sql)]
@@ -1083,7 +1089,15 @@ namespace Google.PowerShell.Sql
     ///   <br></br>
     ///   <para>If successful, the command returns nothing.</para>
     /// </example>
-    /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/backup)">[Managing Backups]</para>
+    /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/backup)">
+    ///   [Managing Backups]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/sql/docs/backup-recovery/backups)">
+    ///   [Overview of Backups]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/sql/docs/backup-recovery/restore)">
+    ///   [Overview of Restoring an instance]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsData.Restore, "GcSqlInstanceBackup", SupportsShouldProcess = true)]
     public class RestoreGcSqlInstanceBackupCmdlet : GcSqlCmdlet

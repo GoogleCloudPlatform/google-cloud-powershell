@@ -38,6 +38,9 @@ namespace Google.PowerShell.Sql
     ///   <br></br>
     ///   <para>If successful, the command returns the relevant backup run.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/sql/docs/backup-recovery/backups)">
+    ///   [Overview of Backups]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlBackupRun", DefaultParameterSetName = ParameterSetNames.GetList)]
     [OutputType(typeof(BackupRun))]
@@ -136,7 +139,12 @@ namespace Google.PowerShell.Sql
     ///   <br></br>
     ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
-    /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/backup)">[Managing Backups]</para>
+    /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/backup)">
+    ///   [Managing Backups]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/sql/docs/backup-recovery/backups)">
+    ///   [Overview of Backups]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GcSqlBackupRun", SupportsShouldProcess = true,
         DefaultParameterSetName = ParameterSetNames.ByName)]

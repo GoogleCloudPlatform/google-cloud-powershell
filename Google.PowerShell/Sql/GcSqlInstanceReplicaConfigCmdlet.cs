@@ -48,7 +48,15 @@ namespace Google.PowerShell.Sql
     /// <para type="link" uri="https://cloud.google.com/tools/powershell/docs/sql/setup">
     ///   [Setting up Instances]
     /// </para>
-    /// <para type="link" uri="https://cloud.google.com/tools/powershell/docs/sql/replica">[Replica Instances]</para>
+    /// <para type="link" uri="https://cloud.google.com/tools/powershell/docs/sql/replica">
+    ///   [Replica Instances]
+    /// </para>
+    /// <para type="link" uri="https://cloud.google.com/sql/docs/replication/">
+    ///   [Replication Options]
+    /// </para>
+    /// <para type="link" uri="https://cloud.google.com/sql/docs/replication/tips">
+    ///   [Replication Requirements and Tips]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GcSqlInstanceReplicaConfig")]
     [OutputType(typeof(ReplicaConfiguration))]
