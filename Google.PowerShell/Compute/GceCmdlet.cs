@@ -131,7 +131,7 @@ namespace Google.PowerShell.ComputeEngine
         ///  method will generate a message from the operation.</param>
         private void WriteProgress(Operation op, string progressMessage)
         {
-
+            // ProgressRecord was throwing an error on negative activityIds.
             int activityId = Math.Abs(op.Id.GetHashCode());
             string activity = progressMessage ?? op.Description ?? BuildActivity(op);
             string statusDescription = op.StatusMessage ?? op.Status;
