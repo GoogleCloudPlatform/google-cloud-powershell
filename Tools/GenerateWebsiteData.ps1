@@ -56,7 +56,8 @@ function getLinks ($docObj) {
     $relatedLinks = $docObj.relatedLinks
     $links = @{}
     ForEach ($link in $relatedLinks.navigationLink) {
-        $links.Add($link.linkText,$link.uri)
+        $uri = $link.uri.replace("(","").replace(")","")
+        $links.Add($link.linkText,$uri)
     }
     return $links
 }

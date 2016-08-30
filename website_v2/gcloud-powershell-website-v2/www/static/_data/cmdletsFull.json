@@ -571,7 +571,7 @@
                                                           "synopsis":  "Gets the current metadata from the metadata server.\n",
                                                           "name":  "Get-GceMetadata",
                                                           "links":  {
-                                                                        "[Metadata Documentation]":  "(https://cloud.google.com/compute/docs/storing-retrieving-metadata)"
+                                                                        "[Metadata Documentation]":  "https://cloud.google.com/compute/docs/storing-retrieving-metadata"
                                                                     },
                                                           "examples":  "\n----------  EXAMPLE 1  ----------\n\nPS C:\\\u003e $allMetadata = Get-GceMetadata -Recurse | ConvertFrom-Json\n\n\nGets all of the metadata and converts it from the given JSON to a PSCustomObject.\n----------  EXAMPLE 2  ----------\n\nPS C:\\\u003e $hostName = Get-GceMetadata -Path \"instance/hostname\"\n\n\nGets the hostname of the instance.\n----------  EXAMPLE 3  ----------\n\nPS C:\\\u003e $customProjectMetadata = Get-GceMetadata -Path \"project/attributes/customKey\"\n\n\nGets the value of the custom metadata with key \"customKey\" placed in the project .\n----------  EXAMPLE 4  ----------\n\nPS C:\\\u003e $metadata, $etag = Get-GceMetadata -AppendETag -Recurse\n\n\nGets the entire metadata tree, and the ETag of the version retrieved.\n----------  EXAMPLE 5  ----------\n\nPS C:\\\u003e $newTags, $newEtag = Get-GceMetadata -Path \"instance/tags\" -AppendETag -WaitUpdate `\n                                -LastETag $oldETag\n\n\nWaits for the metadata \"instance/tags\" to be updated by the server.\n\n\n\n"
                                                       },
@@ -3493,7 +3493,7 @@
                                                                 "synopsis":  "Updates the logging data associated with a Cloud Storage Bucket.\n",
                                                                 "name":  "Write-GcsBucketLogging",
                                                                 "links":  {
-                                                                              "[Access Logs]":  "(https://cloud.google.com/storage/docs/access-logs)"
+                                                                              "[Access Logs]":  "https://cloud.google.com/storage/docs/access-logs"
                                                                           },
                                                                 "examples":  "\n----------  EXAMPLE 1  ----------\n\nStart generating logs data for access to bucket \"widgetco\".\nPS C:\\\u003e Write-GcsBucketLogging \"widgetco\" -LogBucket \"widgetco-logs\" -LogObjectPrefix \"log-output/bucket\"\nLogs should be accessible afterwards via, at gs://widgetco-logs/log-output/bucket_usage_\u003ctimestamp\u003e_\u003cid\u003e_v0.\n\n\n\n\n\n"
                                                             },
@@ -3514,7 +3514,7 @@
                                                                  "synopsis":  "Removes the logging data associated with a Cloud Storage Bucket.\n",
                                                                  "name":  "Remove-GcsBucketLogging",
                                                                  "links":  {
-                                                                               "[Access Logs]":  "(https://cloud.google.com/storage/docs/access-logs)"
+                                                                               "[Access Logs]":  "https://cloud.google.com/storage/docs/access-logs"
                                                                            },
                                                                  "examples":  "\n----------  EXAMPLE 1  ----------\n\nStop generating logs data for access to bucket \"widgetco\".\nPS C:\\\u003e Remove-GcsBucketLogging \"widgetco\"\n\n\n\n\n\n"
                                                              },
@@ -3881,8 +3881,8 @@
                                                                  "synopsis":  "Removes the website associated with a Cloud Storage Bucket.\n",
                                                                  "name":  "Remove-GcsBucketWebsite",
                                                                  "links":  {
-                                                                               "[Static Website Hosting]":  "(https://cloud.google.com/storage/docs/hosting-static-website)",
-                                                                               "[Static Website Troubleshooting]":  "(https://cloud.google.com/storage/docs/static-website)"
+                                                                               "[Static Website Hosting]":  "https://cloud.google.com/storage/docs/hosting-static-website",
+                                                                               "[Static Website Troubleshooting]":  "https://cloud.google.com/storage/docs/static-website"
                                                                            },
                                                                  "examples":  "\n----------  EXAMPLE 1  ----------\n\nRemove the website data for $bucket.\nPS C:\\\u003e Remove-GcsBucketWebsite $bucket\n\n\n\n\n\n"
                                                              },
@@ -3939,8 +3939,8 @@
                                                                 "synopsis":  "Updates the website associated with a Cloud Storage Bucket.\n",
                                                                 "name":  "Write-GcsBucketWebsite",
                                                                 "links":  {
-                                                                              "[Static Website Hosting]":  "(https://cloud.google.com/storage/docs/hosting-static-website)",
-                                                                              "[Static Website Troubleshooting]":  "(https://cloud.google.com/storage/docs/static-website)"
+                                                                              "[Static Website Hosting]":  "https://cloud.google.com/storage/docs/hosting-static-website",
+                                                                              "[Static Website Troubleshooting]":  "https://cloud.google.com/storage/docs/static-website"
                                                                           },
                                                                 "examples":  "\n----------  EXAMPLE 1  ----------\n\nHost http://example.com from the contents of $bucket.\nPS C:\\\u003e Write-GcsBucketWebsite $bucket -MainPageSuffix \"main.html\" -NotFoundPage \"error.html\"\nNext, set the domains DNS records to point to Cloud Storage. See the \"Static WebsiteHosting\" help topic for more \ninformation.\n\n\n\n\n\n"
                                                             },
@@ -5417,8 +5417,8 @@
                                                            "synopsis":  "Removes an existing Google DNS ManagedZone within a Project.\n",
                                                            "name":  "Remove-GcdManagedZone",
                                                            "links":  {
-                                                                         "[Troubleshooting]":  "(https://cloud.google.com/dns/troubleshooting)",
-                                                                         "[Managing Zones]":  "(https://cloud.google.com/dns/zones/)"
+                                                                         "[Troubleshooting]":  "https://cloud.google.com/dns/troubleshooting",
+                                                                         "[Managing Zones]":  "https://cloud.google.com/dns/zones/"
                                                                      },
                                                            "examples":  "\n----------  EXAMPLE 1  ----------\n\nDelete the (non-empty) ManagedZone \"test1\" from the Project \"testing.\"\nPS C:\\\u003e Remove-GcdManagedZone -Project \"testing\" -Zone \"test1\" -Force\n(If successful, the command returns nothing.)\n\n\n\n\n\n"
                                                        },
@@ -5449,9 +5449,9 @@
                                                               "synopsis":  "Gets the ResourceRecordSet resources within a ManagedZone of a Project.\n",
                                                               "name":  "Get-GcdResourceRecordSet",
                                                               "links":  {
-                                                                            "[Managing Records]":  "(https://cloud.google.com/dns/records/)",
-                                                                            "[Supported Resource Record Formats]":  "(https://cloud.google.com/dns/records/json-record)",
-                                                                            "[Troubleshooting]":  "(https://cloud.google.com/dns/troubleshooting)"
+                                                                            "[Managing Records]":  "https://cloud.google.com/dns/records/",
+                                                                            "[Supported Resource Record Formats]":  "https://cloud.google.com/dns/records/json-record",
+                                                                            "[Troubleshooting]":  "https://cloud.google.com/dns/troubleshooting"
                                                                         },
                                                               "examples":  "\n----------  EXAMPLE 1  ----------\n\nGet the ResourceRecordSet resources in the ManagedZone \"test1\" in the Project \"testing.\"\nPS C:\\\u003e Get-GcdResourceRecordSet -Project \"testing\" -Zone \"test1\"\nKind : dns#resourceRecordSet\nName : gcloudexample1.com.\nRrdatas : {ns-cloud-e1.googledomains.com., ns-cloud-e2.googledomains.com., ns-cloud-e3.googledomains.com., \nns-cloud-e4.googledomains.com.}\nTtl : 21600\nType : NS\nETag :\nKind : dns#resourceRecordSet\nName : gcloudexample1.com.\nRrdatas : {ns-cloud-e1.googledomains.com.cloud-dns-hostmaster.google.com. 1 21600 3600 259200 300}\nTtl : 21600\nType : SOA\nETag :\n\n\n----------  EXAMPLE 2  ----------\n\nGet the ResourceRecordSets of type \"NS\" or \"AAAA\" in the ManagedZone \"testZone2\" in the Project \"testing.\"\nPS C:\\\u003e Get-GcdResourceRecordSet -Project \"testing\" -Zone \"testZone2\" -Filter \"NS\",\"AAAA\"\nKind : dns#resourceRecordSet\nName : gcloudexample1.com.\nRrdatas : {ns-cloud-e1.googledomains.com., ns-cloud-e2.googledomains.com., ns-cloud-e3.googledomains.com., \nns-cloud-e4.googledomains.com.}\nTtl : 21600\nType : NS\nETag :\nKind : dns#resourceRecordSet\nName : gcloudexample1.com.\nRrdatas : {2001:db8:85a3::8a2e:370:7334}\nTtl : 300\nType : AAAA\nETag :\n\n\n\n\n\n"
                                                           },
@@ -5482,8 +5482,8 @@
                                                    "synopsis":  "Gets the Change resources within a ManagedZone of a Project.\n",
                                                    "name":  "Get-GcdChange",
                                                    "links":  {
-                                                                 "[Troubleshooting]":  "(https://cloud.google.com/dns/troubleshooting)",
-                                                                 "[Monitoring Changes]":  "(https://cloud.google.com/dns/monitoring)"
+                                                                 "[Troubleshooting]":  "https://cloud.google.com/dns/troubleshooting",
+                                                                 "[Monitoring Changes]":  "https://cloud.google.com/dns/monitoring"
                                                              },
                                                    "examples":  "\n----------  EXAMPLE 1  ----------\n\nGet the Change resources in the ManagedZone \"test1\" in the Project \"testing.\"\nPS C:\\\u003e Get-GcdChange -Project \"testing\" -Zone \"test1\"\nAdditions :\nDeletions : {gcloudexample1.com.}\nId : 1\nKind : dns#change\nStartTime : 2016-06-29T16:30:50.670Z\nStatus : done\nETag :\nAdditions : {gcloudexample1.com., gcloudexample1.com.}\nDeletions :\nId : 0\nKind : dns#change\nStartTime : 2016-06-29T16:27:50.670Z\nStatus : done\nETag :\n\n\n----------  EXAMPLE 2  ----------\n\nGet the Change resource with id \"0\" in the ManagedZone \"test1\" in the Project \"testing.\"\nPS C:\\\u003e Get-GcdChange -Project \"testing\" -Zone \"test1\" -ChangeId \"0\"\nAdditions : {gcloudexample1.com., gcloudexample1.com.}\nDeletions :\nId : 0\nKind : dns#change\nStartTime : 2016-06-29T16:27:50.670Z\nStatus : done\nETag :\n\n\n\n\n\n"
                                                },
@@ -5504,8 +5504,8 @@
                                                   "synopsis":  "Fetch the DNS quota of an existing Project.\n",
                                                   "name":  "Get-GcdQuota",
                                                   "links":  {
-                                                                "[Quotas]":  "(https://cloud.google.com/dns/quota)",
-                                                                "[Troubleshooting]":  "(https://cloud.google.com/dns/troubleshooting)"
+                                                                "[Quotas]":  "https://cloud.google.com/dns/quota",
+                                                                "[Troubleshooting]":  "https://cloud.google.com/dns/troubleshooting"
                                                             },
                                                   "examples":  "\n----------  EXAMPLE 1  ----------\n\nGet the DNS quota of the Project \"testing\"\nPS C:\\\u003e Get-GcdQuota -Project \"testing\"\nKind : dns#quota\nManagedZones : 100\nResourceRecordsPerRrset : 100\nRrsetAdditionsPerChange : 100\nRrsetDeletionsPerChange : 100\nRrsetsPerManagedZone : 10000\nTotalRrdataSizePerChange : 10000\nETag :\n\n\n\n\n\n"
                                               },
@@ -5558,8 +5558,8 @@
                                                    "synopsis":  "Add a new Change to a ManagedZone of a Project.\n",
                                                    "name":  "Add-GcdChange",
                                                    "links":  {
-                                                                 "[Troubleshooting]":  "(https://cloud.google.com/dns/troubleshooting)",
-                                                                 "[Monitoring Changes]":  "(https://cloud.google.com/dns/monitoring)"
+                                                                 "[Troubleshooting]":  "https://cloud.google.com/dns/troubleshooting",
+                                                                 "[Monitoring Changes]":  "https://cloud.google.com/dns/monitoring"
                                                              },
                                                    "examples":  "\n----------  EXAMPLE 1  ----------\n\nAdd a new Change that adds a new A-type ResourceRecordSet, $newARecord, and removes an existing CNAME-type record, \n$oldCNAMERecord, from the ManagedZone \"test1\" (governing \"gcloudexample1.com.\") in the Project \"testing.\"\nPS C:\\\u003e $newARecord = New-GcdResourceRecordSet -Name \"gcloudexample1.com.\" -Rrdata \"104.1.34.167\"\nPS C:\\\u003e $oldCNAMERecord = (Get-GcdResourceRecordSet -Zone \"test1\" -Filter \"CNAME\")[0]\nPS C:\\\u003e Add-GcdChange -Project \"testing\" -Zone \"test1\" -Add $newARecord -Remove $oldCNAMERecord\nAdditions : {gcloudexample1.com.}\nDeletions : {www.gcloudexample1.com.}\nId : 3\nKind : dns#change\nStartTime : 2016-06-29T16:30:50.670Z\nStatus : done\nETag :\n\n\n----------  EXAMPLE 2  ----------\n\nAdd the Change request $change2 to the ManagedZone \"test1\" in the Project \"testing,\" where $change2 is a previously \nexecuted Change request in ManagedZone \"test1\" that we want to apply again.\nPS C:\\\u003e $change2 = Get-GcdChange -Project \"testing\" -Zone \"test1\" -ChangeId 2\nPS C:\\\u003e Add-GcdChange -Project \"testing\" -Zone \"test1\" -ChangeRequest $change2\nAdditions :\nDeletions : {gcloudexample1.com.}\nId : 4\nKind : dns#change\nStartTime : 2016-06-29T18:30:50.670Z\nStatus : done\nETag :\n\n\n\n\n\n"
                                                },
@@ -5601,8 +5601,8 @@
                                                         "synopsis":  "Add a new Google DNS ManagedZone to the Project.\n",
                                                         "name":  "Add-GcdManagedZone",
                                                         "links":  {
-                                                                      "[Troubleshooting]":  "(https://cloud.google.com/dns/troubleshooting)",
-                                                                      "[Managing Zones]":  "(https://cloud.google.com/dns/zones/)"
+                                                                      "[Troubleshooting]":  "https://cloud.google.com/dns/troubleshooting",
+                                                                      "[Managing Zones]":  "https://cloud.google.com/dns/zones/"
                                                                   },
                                                         "examples":  "\n----------  EXAMPLE 1  ----------\n\nCreate a new ManagedZone in the DNSProject \"testing\" with the name \"test1,\" DNS name \"gcloudexample.com.,\" and \ndescription \"test description.\"\nPS C:\\\u003e Add-GcdManagedZone -Project \"testing\" -Name \"testzone1\" -DnsName \"gcloudexample.com.\" -Description \"test \ndescription\"\nCreationTime : 2016-06-29T15:30:50.667Z\nDescription : testing description\nDnsName : gcloudexample.com.\nId : 4735311843662425164\nKind : dns#managedZone\nName : test1\nNameServerSet :\nNameServers : {ns-cloud-e1.googledomains.com., ns-cloud-e2.googledomains.com., ns-cloud-e3.googledomains.com., \nns-cloud-e4.googledomains.com.}\nETag :\n\n\n\n\n\n"
                                                     },
@@ -5641,9 +5641,9 @@
                                                               "synopsis":  "Create an independent new ResourceRecordSet resource.\n",
                                                               "name":  "New-GcdResourceRecordSet",
                                                               "links":  {
-                                                                            "[Managing Records]":  "(https://cloud.google.com/dns/records/)",
-                                                                            "[Supported Resource Record Formats]":  "(https://cloud.google.com/dns/records/json-record)",
-                                                                            "[Troubleshooting]":  "(https://cloud.google.com/dns/troubleshooting)"
+                                                                            "[Managing Records]":  "https://cloud.google.com/dns/records/",
+                                                                            "[Supported Resource Record Formats]":  "https://cloud.google.com/dns/records/json-record",
+                                                                            "[Troubleshooting]":  "https://cloud.google.com/dns/troubleshooting"
                                                                         },
                                                               "examples":  "\n----------  EXAMPLE 1  ----------\n\nCreate a new ResourceRecordSet resource with name \"gcloudexample.com.\", Rrdata [\"7.5.7.8\"], type \"A,\" and ttl 300.\nPS C:\\\u003e New-GcdResourceRecordSet -Name \"gcloudexample.com.\" -Rrdata \"7.5.7.8\" -Type \"A\" -Ttl 300\nKind : dns#resourceRecordSet\nName : gcloudexample1.com.\nRrdatas : {7.5.7.8}\nTtl : 300\nType : A\nETag :\n\n\n\n\n\n"
                                                           },
@@ -5669,8 +5669,8 @@
                                                         "synopsis":  "Gets the Google DNS ManagedZones within a Project.\n",
                                                         "name":  "Get-GcdManagedZone",
                                                         "links":  {
-                                                                      "[Troubleshooting]":  "(https://cloud.google.com/dns/troubleshooting)",
-                                                                      "[Managing Zones]":  "(https://cloud.google.com/dns/zones/)"
+                                                                      "[Troubleshooting]":  "https://cloud.google.com/dns/troubleshooting",
+                                                                      "[Managing Zones]":  "https://cloud.google.com/dns/zones/"
                                                                   },
                                                         "examples":  "\n----------  EXAMPLE 1  ----------\n\nGet the ManagedZones for the Project \"testing.\"\nPS C:\\\u003e Get-GcdManagedZone -Project \"testing\"\nCreationTime : 2016-06-29T15:30:50.667Z\nDescription : testing description\nDnsName : gcloudexample1.com.\nId : 4735311843662425164\nKind : dns#managedZone\nName : test1\nNameServerSet :\nNameServers : {ns-cloud-e1.googledomains.com., ns-cloud-e2.googledomains.com., ns-cloud-e3.googledomains.com., \nns-cloud-e4.googledomains.com.}\nETag :\nCreationTime : 2016-06-29T15:30:50.667Z\nDescription :\nDnsName : gcloudexample2.com.\nId : 4484350849440060468\nKind : dns#managedZone\nName : testZone2\nNameServerSet :\nNameServers : {ns-cloud-e1.googledomains.com., ns-cloud-e2.googledomains.com., ns-cloud-e3.googledomains.com., \nns-cloud-e4.googledomains.com.}\nETag :\n\n\n----------  EXAMPLE 2  ----------\n\nGet the ManagedZone \"test1\" for the Project \"testing.\"\nPS C:\\\u003e Get-GcdManagedZone -Project \"testing\" -Zone \"test1\"\nCreationTime : 2016-06-29T15:30:50.667Z\nDescription : testing description\nDnsName : gcloudexample1.com.\nId : 4735311843662425164\nKind : dns#managedZone\nName : test1\nNameServerSet :\nNameServers : {ns-cloud-e1.googledomains.com., ns-cloud-e2.googledomains.com., ns-cloud-e3.googledomains.com., \nns-cloud-e4.googledomains.com.}\nETag :\n\n\n\n\n\n"
                                                     }
