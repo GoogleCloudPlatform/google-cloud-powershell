@@ -54,6 +54,6 @@ app.controller('MainController',
       
       /* Tells us if the object passed in is empty */
       this.isEmpty = function(linkObject) {
-        return (Object.keys(linkObject) != 0);
+        return (Object.keys(linkObject) === 0);
       }
 });

@@ -13,7 +13,7 @@
     <parameter-table ng-if="property === 'parameters'"></parameter-table>
   </div>
   <!-- Displays all related links for a cmdlet -->
-  <div ng-show="mainCtrl.isEmpty(mainCtrl.productInfo[mainCtrl.params.product][mainCtrl.params.cmdlet].links)">
+  <div ng-show="!mainCtrl.isEmpty(mainCtrl.productInfo[mainCtrl.params.product][mainCtrl.params.cmdlet].links)">
     <h2>Related Links</h2>
     <div ng-repeat="(text,link) in mainCtrl.productInfo[mainCtrl.params.product][mainCtrl.params.cmdlet].links">
       <a href="{{link}}">{{text}}</a>
