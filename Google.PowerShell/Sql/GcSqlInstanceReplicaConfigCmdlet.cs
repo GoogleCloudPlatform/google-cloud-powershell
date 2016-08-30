@@ -45,16 +45,16 @@ namespace Google.PowerShell.Sql
     ///   If successful, the command returns a ReplicaConfiguration resource containing the replica configuration.
     ///   </para>
     /// </example>
-    /// <para type="link" uri="https://cloud.google.com/tools/powershell/docs/sql/setup">
+    /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/setup)">
     ///   [Setting up Instances]
     /// </para>
-    /// <para type="link" uri="https://cloud.google.com/tools/powershell/docs/sql/replica">
+    /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/replica)">
     ///   [Replica Instances]
     /// </para>
-    /// <para type="link" uri="https://cloud.google.com/sql/docs/replication/">
+    /// <para type="link" uri="(https://cloud.google.com/sql/docs/replication/)">
     ///   [Replication Options]
     /// </para>
-    /// <para type="link" uri="https://cloud.google.com/sql/docs/replication/tips">
+    /// <para type="link" uri="(https://cloud.google.com/sql/docs/replication/tips)">
     ///   [Replication Requirements and Tips]
     /// </para>
     /// </summary>

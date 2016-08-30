@@ -40,7 +40,7 @@ namespace Google.PowerShell.Sql
     ///   <br></br>
     ///   <para>(If successful, the command returns Settings resource containing the setting configuration.)</para>
     /// </example>
-    /// <para type="link" uri="https://cloud.google.com/sql/docs/instance-settings">
+    /// <para type="link" uri="(https://cloud.google.com/sql/docs/instance-settings)">
     ///   [Instance Settings]
     /// </para>
     /// </summary>

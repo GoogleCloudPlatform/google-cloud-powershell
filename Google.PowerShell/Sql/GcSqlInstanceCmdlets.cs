@@ -126,7 +126,7 @@ namespace Google.PowerShell.Sql
     ///   <br></br>
     ///   <para>If successful, the command returns a resource for the added instance.</para>
     /// </example>
-    /// <para type="link" uri="https://cloud.google.com/tools/powershell/docs/sql/setup">
+    /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/setup)">
     ///   [Setting up Instances]
     /// </para>
     /// </summary>
@@ -822,7 +822,7 @@ namespace Google.PowerShell.Sql
     ///   <br></br>
     ///   <para>If successful, the command returns nothing.</para>
     /// </example>
-    /// <para type="link" uri="https://cloud.google.com/tools/powershell/docs/sql/replica">[Replica Instances]</para>
+    /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/replica)">[Replica Instances]</para>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Start, "GcSqlReplica")]
     public class StartGcSqlReplicaCmdlet : GcSqlCmdlet
@@ -903,7 +903,7 @@ namespace Google.PowerShell.Sql
     ///   <br></br>
     ///   <para>If successful, the command returns nothing.</para>
     /// </example>
-    /// <para type="link" uri="https://cloud.google.com/tools/powershell/docs/sql/replica">[Replica Instances]</para>
+    /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/replica)">[Replica Instances]</para>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Stop, "GcSqlReplica", SupportsShouldProcess = true)]
     public class StopGcSqlReplicaCmdlet : GcSqlCmdlet
@@ -987,7 +987,7 @@ namespace Google.PowerShell.Sql
     ///   <br></br>
     ///   <para>If successful, the command returns nothing.</para>
     /// </example>
-    /// <para type="link" uri="https://cloud.google.com/tools/powershell/docs/sql/replica">[Replica Instances]</para>
+    /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/replica)">[Replica Instances]</para>
     /// </summary>
     [Cmdlet("Promote", "GcSqlReplica")]
     public class PromoteGcSqlReplicaCmdlet : GcSqlCmdlet
@@ -1609,7 +1609,7 @@ namespace Google.PowerShell.Sql
     ///   <br></br>
     ///   <para>If successful, the command returns nothing.</para>
     /// </example>
-    /// <para type="link" uri="https://cloud.google.com/tools/powershell/docs/sql/replica">[Replica Instances]</para>
+    /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/replica)">[Replica Instances]</para>
     /// </summary>
     [Cmdlet("Failover", "GcSqlInstance")]
     public class FailoverGcSqlInstanceCmdlet : GcSqlCmdlet
