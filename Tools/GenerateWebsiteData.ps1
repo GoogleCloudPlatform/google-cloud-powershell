@@ -50,6 +50,17 @@ function getParameterSets ($docObj) {
     return $sets
 }
 
+# getLinks creates the related link hashtable for each cmdlet.
+# It takes in the get-help object for the cmdlet.
+function getLinks ($docObj) {
+    $relatedLinks = $docObj.relatedLinks
+    $links = @{}
+    ForEach ($link in $relatedLinks.navigationLink) {
+        $links.Add($link.linkText,$link.uri)
+    }
+    return $links
+}
+
 # Generate a single JSON file containing all the documentation for all the
 # cmdlets. Unfortunately we can't split these into multiple files because of
 # the way we generating web pages in Jekyll/angular..
@@ -112,11 +123,12 @@ foreach ($cmdlet in $cmdlets) {
         "synopsis" = convertToString($docObj.Synopsis)
         
         "description" = ($docObj.Description | Out-String).Trim()
-        "parameters" = getParameterSets($docObj, $name)
+        "parameters" = getParameterSets($docObj)
         "inputs" = convertToString($docObj.inputTypes)
         "outputs" = convertToString($docObj.returnValues)
         "examples" = convertToString($docObj.Examples)
-        }
+        "links" = getLinks($docObj)
+    }
 
     $cmdletDocObjects += $cmdletDocObj
 

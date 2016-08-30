@@ -12,6 +12,13 @@
     </pre>
     <parameter-table ng-if="property === 'parameters'"></parameter-table>
   </div>
+  <!-- Displays all related links for a cmdlet -->
+  <div>
+    <h2>Related Links</h2>
+    <div ng-repeat="(text,link) in mainCtrl.productInfo[mainCtrl.params.product][mainCtrl.params.cmdlet].links">
+      <a href="{{link}}">{{text}}</a>
+    </div>
+  </div>
 </div>
 <p ng-if="mainCtrl.errorLoading">Could not load cmdlet information.</p>
 <p ng-show="mainCtrl.params.product === undefined">Invalid Product or Cmdlet</p>
