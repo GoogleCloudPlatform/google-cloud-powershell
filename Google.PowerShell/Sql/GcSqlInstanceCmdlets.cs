@@ -472,6 +472,7 @@ namespace Google.PowerShell.Sql
     ///   <br></br>
     ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
+    ///  <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/import-export)">[Importing and Exporting]</para>
     /// </summary>
     [Cmdlet(VerbsData.Import, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.Sql)]
     public class ImportGcSqlInstanceCmdlet : GcSqlCmdlet
@@ -1071,6 +1072,7 @@ namespace Google.PowerShell.Sql
     ///   <br></br>
     ///   <para>If successful, the command returns nothing.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/backup)">[Managing Backups]</para>
     /// </summary>
     [Cmdlet(VerbsData.Restore, "GcSqlInstanceBackup", SupportsShouldProcess = true)]
     public class RestoreGcSqlInstanceBackupCmdlet : GcSqlCmdlet

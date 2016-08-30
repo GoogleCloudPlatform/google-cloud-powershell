@@ -136,6 +136,7 @@ namespace Google.PowerShell.Sql
     ///   <br></br>
     ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/backup)">[Managing Backups]</para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GcSqlBackupRun", SupportsShouldProcess = true,
         DefaultParameterSetName = ParameterSetNames.ByName)]
