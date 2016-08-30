@@ -93,7 +93,8 @@ namespace Google.PowerShell.CloudStorage
         {
             storageObject.Metadata = metadata;
 
-            ObjectsResource.PatchRequest patchReq = service.Objects.Patch(storageObject, storageObject.Bucket, storageObject.Name);
+            ObjectsResource.PatchRequest patchReq = service.Objects.Patch(storageObject, storageObject.Bucket,
+                storageObject.Name);
             patchReq.Projection = ObjectsResource.PatchRequest.ProjectionEnum.Full;
 
             return patchReq.Execute();
@@ -210,7 +211,6 @@ namespace Google.PowerShell.CloudStorage
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            var service = GetStorageService();
 
             Dictionary<string, string> metadataDict = ConvertToDictionary(Metadata);
 
@@ -243,14 +243,15 @@ namespace Google.PowerShell.CloudStorage
                 //     "If you set the x-goog-if-generation-match header to 0, Google Cloud Storage only
                 //     performs the specified request if the object does not currently exist."
                 // See https://cloud.google.com/storage/docs/reference-headers#xgoogifgenerationmatch
-                bool objectExists = TestObjectExists(service, Bucket, ObjectName);
+                bool objectExists = TestObjectExists(Service, Bucket, ObjectName);
                 if (objectExists && !Force.IsPresent)
                 {
-                    throw new PSArgumentException($"Storage object '{ObjectName}' already exists. Use -Force to overwrite.");
+                    throw new PSArgumentException(
+                        $"Storage object '{ObjectName}' already exists. Use -Force to overwrite.");
                 }
 
                 Object newGcsObject = UploadGcsObject(
-                    service, Bucket, ObjectName, contentStream,
+                    Service, Bucket, ObjectName, contentStream,
                     objContentType, PredefinedAcl,
                     metadataDict);
 
@@ -295,9 +296,8 @@ namespace Google.PowerShell.CloudStorage
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            var service = GetStorageService();
 
-            ObjectsResource.GetRequest getReq = service.Objects.Get(Bucket, ObjectName);
+            ObjectsResource.GetRequest getReq = Service.Objects.Get(Bucket, ObjectName);
             getReq.Projection = ObjectsResource.GetRequest.ProjectionEnum.Full;
             Object gcsObject = getReq.Execute();
             WriteObject(gcsObject);
@@ -360,7 +360,6 @@ namespace Google.PowerShell.CloudStorage
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            var service = GetStorageService();
 
             string bucket = null;
             string objectName = null;
@@ -381,13 +380,13 @@ namespace Google.PowerShell.CloudStorage
             // You cannot specify both an ACL list and a predefined ACL using the API. (b/30358979?)
             // We issue a GET + Update. Since we aren't using ETags, there is a potential for a
             // race condition.
-            var getReq = service.Objects.Get(bucket, objectName);
+            var getReq = Service.Objects.Get(bucket, objectName);
             getReq.Projection = ObjectsResource.GetRequest.ProjectionEnum.Full;
             Object objectInsert = getReq.Execute();
             // The API doesn't allow both predefinedAcl and access controls. So drop existing ACLs.
             objectInsert.Acl = null;
 
-            ObjectsResource.UpdateRequest updateReq = service.Objects.Update(objectInsert, bucket, objectName);
+            ObjectsResource.UpdateRequest updateReq = Service.Objects.Update(objectInsert, bucket, objectName);
             updateReq.PredefinedAcl = PredefinedAcl;
 
             Object gcsObject = updateReq.Execute();
@@ -462,9 +461,8 @@ namespace Google.PowerShell.CloudStorage
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            var service = GetStorageService();
 
-            ObjectsResource.ListRequest listReq = service.Objects.List(Bucket);
+            ObjectsResource.ListRequest listReq = Service.Objects.List(Bucket);
             listReq.Projection = ObjectsResource.ListRequest.ProjectionEnum.Full;
             listReq.Delimiter = Delimiter;
             listReq.Prefix = Prefix;
@@ -539,7 +537,6 @@ namespace Google.PowerShell.CloudStorage
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            var service = GetStorageService();
 
             switch (ParameterSetName)
             {
@@ -559,7 +556,7 @@ namespace Google.PowerShell.CloudStorage
                 return;
             }
 
-            ObjectsResource.DeleteRequest delReq = service.Objects.Delete(Bucket, ObjectName);
+            ObjectsResource.DeleteRequest delReq = Service.Objects.Delete(Bucket, ObjectName);
             string result = delReq.Execute();
             if (!string.IsNullOrWhiteSpace(result))
             {
@@ -588,7 +585,7 @@ namespace Google.PowerShell.CloudStorage
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommunications.Read, "GcsObject", DefaultParameterSetName = ParameterSetNames.ByName)]
-    [OutputType(typeof(string))]  // Not 100% correct, cmdlet will output nothing if -OutFile is specified.
+    [OutputType(typeof(string))] // Not 100% correct, cmdlet will output nothing if -OutFile is specified.
     public class ReadGcsObjectCmdlet : GcsObjectCmdlet
     {
         private class ParameterSetNames
@@ -646,7 +643,6 @@ namespace Google.PowerShell.CloudStorage
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            var service = GetStorageService();
 
             if (InputObject != null)
             {
@@ -655,7 +651,7 @@ namespace Google.PowerShell.CloudStorage
             }
 
             string uri = GetBaseUri(Bucket, ObjectName);
-            var downloader = new MediaDownloader(service);
+            var downloader = new MediaDownloader(Service);
 
             // Write object contents to the pipeline if no -OutFile is specified.
             if (string.IsNullOrEmpty(OutFile))
@@ -798,7 +794,6 @@ namespace Google.PowerShell.CloudStorage
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            var service = GetStorageService();
 
             Stream contentStream;
             if (!string.IsNullOrEmpty(File))
@@ -828,7 +823,7 @@ namespace Google.PowerShell.CloudStorage
             {
                 try
                 {
-                    ObjectsResource.GetRequest getReq = service.Objects.Get(Bucket, ObjectName);
+                    ObjectsResource.GetRequest getReq = Service.Objects.Get(Bucket, ObjectName);
                     getReq.Projection = ObjectsResource.GetRequest.ProjectionEnum.Full;
 
                     existingGcsObject = getReq.Execute();
@@ -838,7 +833,7 @@ namespace Google.PowerShell.CloudStorage
                     if (Metadata != null)
                     {
                         Object existingGcsObjectUpdatedMetadata = UpdateObjectMetadata(
-                            service, existingGcsObject, ConvertToDictionary(Metadata));
+                            Service, existingGcsObject, ConvertToDictionary(Metadata));
                         existingObjectMetadata = ConvertToDictionary(existingGcsObjectUpdatedMetadata.Metadata);
                     }
                 }
@@ -846,7 +841,8 @@ namespace Google.PowerShell.CloudStorage
                 {
                     if (!Force.IsPresent)
                     {
-                        throw new PSArgumentException($"Storage object '{ObjectName}' does not exist. Use -Force to ignore.");
+                        throw new PSArgumentException(
+                            $"Storage object '{ObjectName}' does not exist. Use -Force to ignore.");
                     }
                 }
 
@@ -859,7 +855,7 @@ namespace Google.PowerShell.CloudStorage
                 // because of the upload semantics of Cloud Storage.
                 // See: https://cloud.google.com/storage/docs/consistency
                 Object updatedGcsObject = UploadGcsObject(
-                    service, Bucket, ObjectName, contentStream,
+                    Service, Bucket, ObjectName, contentStream,
                     contentType, null /* predefinedAcl */,
                     existingObjectMetadata);
 
@@ -904,13 +900,12 @@ namespace Google.PowerShell.CloudStorage
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            var service = GetStorageService();
 
             // Unfortunately there is no way to test if an object exists on the API, so we
             // just issue a GET and intercept the 404 case.
             try
             {
-                ObjectsResource.GetRequest objGetReq = service.Objects.Get(Bucket, ObjectName);
+                ObjectsResource.GetRequest objGetReq = Service.Objects.Get(Bucket, ObjectName);
                 objGetReq.Projection = ObjectsResource.GetRequest.ProjectionEnum.Full;
                 objGetReq.Execute();
 
@@ -920,6 +915,77 @@ namespace Google.PowerShell.CloudStorage
             {
                 WriteObject(false);
             }
+        }
+    }
+
+    [Cmdlet(VerbsCommon.Copy, "GcsObject", DefaultParameterSetName = ParameterSetNames.ByObject)]
+    [OutputType(typeof(Object))]
+    public class CopyGcsObject : GcsCmdlet
+    {
+
+        private class ParameterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByObject = "ByObject";
+        }
+
+        [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true, ValueFromPipeline = true)]
+        public Object InputObject { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the bucket containing the object. Will also accept a Bucket object.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true)]
+        [PropertyByTypeTransformation(Property = nameof(Bucket.Name), TypeToTransform = typeof(Bucket))]
+        public string SourceBucket { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the object to write to.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true)]
+        public string SourceObjectName { get; set; }
+
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the bucket in which the copy will reside.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, Position = 0)]
+        [PropertyByTypeTransformation(Property = nameof(Bucket.Name), TypeToTransform = typeof(Bucket))]
+        public string DestinationBucket { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the copy.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, Position = 1)]
+        public string DestinationObjectName { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            Object gcsObject;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.ByName:
+                    gcsObject = Service.Objects.Get(SourceBucket, SourceObjectName).Execute();
+                    break;
+                case ParameterSetNames.ByObject:
+                    gcsObject = InputObject;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+            ObjectsResource.CopyRequest request = Service.Objects.Copy(gcsObject,
+                gcsObject.Bucket, gcsObject.Name,
+                DestinationBucket ?? gcsObject.Bucket, DestinationObjectName ?? gcsObject.Name);
+            Object response = request.Execute();
+            WriteObject(response);
         }
     }
 }

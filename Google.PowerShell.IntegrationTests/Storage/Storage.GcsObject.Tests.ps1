@@ -600,4 +600,41 @@ Describe "Test-GcsObject" {
     }
 }
 
+Describe "Copy-GcsObject" {
+    $bucket = "gcps-copy-object-testing"
+    $r = Get-Random
+
+    It "Should fail to read non-existant bucket" {
+        { Copy-GcsObject -SourceBucket $bucket -SourceObject "test-source" $bucket "test-dest" } |
+            Should Throw 404
+    }
+
+    Context "With bucket" {
+        BeforeAll {
+            New-GcsBucket $bucket
+        }
+        
+        It "Should fail to read non-existant source object" {
+            { Copy-GcsObject -SourceBucket $bucket -SourceObject "test-source" $bucket "test-dest" } |
+                Should Throw 404
+        }
+
+        It "Should work by name" {
+            New-GcsObject $bucket "test-source" -Contents "test1-$r"
+            Copy-GcsObject -SourceBucket $bucket -SourceObject "test-source" $bucket "test-dest"
+            Read-GcsObject $bucket "test-dest" | Should Be "test1-$r"
+        }
+
+        It "Should work by object" {
+            $sourceObj = New-GcsObject $bucket "test-source2" -Contents "test2-$r"
+            $sourceObj | Copy-GcsObject $bucket "test-dest2"
+            Read-GcsObject $bucket "test-dest2" | Should Be "test2-$r"
+        }
+
+        AfterAll {
+            Remove-GcsBucket $bucket -Force
+        }
+    }
+}
+
 Reset-GCloudConfig $oldActiveConfig $configName

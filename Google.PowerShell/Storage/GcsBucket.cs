@@ -68,11 +68,10 @@ namespace Google.PowerShell.CloudStorage
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            var service = GetStorageService();
 
             if (ParameterSetName == ParameterSetNames.SingleBucket)
             {
-                BucketsResource.GetRequest req = service.Buckets.Get(Name);
+                BucketsResource.GetRequest req = Service.Buckets.Get(Name);
                 req.Projection = BucketsResource.GetRequest.ProjectionEnum.Full;
                 Bucket bucket = req.Execute();
                 WriteObject(bucket);
@@ -80,7 +79,7 @@ namespace Google.PowerShell.CloudStorage
 
             if (ParameterSetName == ParameterSetNames.BucketsByProject)
             {
-                var req = service.Buckets.List(Project);
+                var req = Service.Buckets.List(Project);
                 req.Projection = BucketsResource.ListRequest.ProjectionEnum.Full;
                 Buckets buckets = req.Execute();
                 WriteObject(buckets.Items, true);
@@ -169,14 +168,15 @@ namespace Google.PowerShell.CloudStorage
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            var service = GetStorageService();
 
-            var bucket = new Google.Apis.Storage.v1.Data.Bucket();
-            bucket.Name = Name;
-            bucket.Location = Location;
-            bucket.StorageClass = StorageClass;
+            var bucket = new Bucket
+            {
+                Name = Name,
+                Location = Location,
+                StorageClass = StorageClass
+            };
 
-            BucketsResource.InsertRequest insertReq = service.Buckets.Insert(bucket, Project);
+            BucketsResource.InsertRequest insertReq = Service.Buckets.Insert(bucket, Project);
             insertReq.PredefinedAcl = DefaultBucketAcl;
             insertReq.PredefinedDefaultObjectAcl = DefaultObjectAcl;
             bucket = insertReq.Execute();
@@ -240,10 +240,9 @@ namespace Google.PowerShell.CloudStorage
             {
                 return;
             }
-            var service = GetStorageService();
             try
             {
-                service.Buckets.Delete(Name).Execute();
+                Service.Buckets.Delete(Name).Execute();
             }
             catch (GoogleApiException re)
             {
@@ -251,11 +250,11 @@ namespace Google.PowerShell.CloudStorage
                 {
                     WriteVerbose("Got RequestError[409]. Bucket not empty.");
 
-                    List<Task<string>> deleteTasks = AskDeleteObjects(service);
+                    List<Task<string>> deleteTasks = AskDeleteObjects(Service);
 
                     WaitDeleteTasks(deleteTasks);
 
-                    service.Buckets.Delete(Name).Execute();
+                    Service.Buckets.Delete(Name).Execute();
                 }
             }
         }
@@ -358,11 +357,10 @@ namespace Google.PowerShell.CloudStorage
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            var service = GetStorageService();
 
             try
             {
-                service.Buckets.Get(Name).Execute();
+                Service.Buckets.Get(Name).Execute();
                 WriteObject(true);
             }
             catch (GoogleApiException ex)
