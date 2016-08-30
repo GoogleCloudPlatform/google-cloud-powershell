@@ -51,4 +51,9 @@ app.controller('MainController',
         var cmdlet = productInfo[$routeParams.product][$routeParams.cmdlet];
         return cmdlet.parameters;
       };
+      
+      /* Tells us if the object passed in is empty */
+      this.isEmpty = function(linkObject) {
+        return (Object.keys(linkObject) != 0);
+      }
 });
