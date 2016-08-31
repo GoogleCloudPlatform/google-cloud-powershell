@@ -23,6 +23,9 @@ namespace Google.PowerShell.ComputeEngine
     ///   <para> Creates a new instance description and saves it to $config. The new instance will create a new
     ///   boot disk from $image.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
+    /// [Instance resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GceInstanceConfig")]
     [OutputType(typeof(Instance))]

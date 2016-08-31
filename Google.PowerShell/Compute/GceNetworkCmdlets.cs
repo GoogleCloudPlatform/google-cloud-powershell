@@ -25,6 +25,9 @@ namespace Google.PowerShell.Compute
     /// <code>PS C:\> Get-GceNetwork "default"</code>
     /// <para>Gets the default network for the default project.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/networks#resource)">
+    /// [Network resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceNetwork")]
     [OutputType(typeof(Network))]

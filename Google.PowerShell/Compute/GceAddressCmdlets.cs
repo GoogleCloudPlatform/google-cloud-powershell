@@ -29,6 +29,9 @@ namespace Google.PowerShell.ComputeEngine
     /// Get a named addresses of the region of the current gcloud config.
     /// </para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/addresses#resource)">
+    /// [Address resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceAddress", DefaultParameterSetName = ParameterSetNames.OfProject)]
     [OutputType(typeof(Address))]
@@ -192,6 +195,9 @@ namespace Google.PowerShell.ComputeEngine
     /// <code>Add-GceAddress $addressName -Global</code>
     /// <para>Adds a global address to the default project:</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/addresses#resource)">
+    /// [Address resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceAddress", DefaultParameterSetName = ParameterSetNames.ByValues)]
     [OutputType(typeof(Address))]

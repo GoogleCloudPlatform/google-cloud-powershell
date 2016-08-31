@@ -23,6 +23,9 @@ namespace Google.PowerShell.ComputeEngine
     /// </code>
     /// <para>Creates two GceFirewallProtocol objects, and sends them to the Add-GceFirewall cmdlet.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/firewalls#resource)">
+    /// [Firewall resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GceFirewallProtocol", DefaultParameterSetName = ParameterSetNames.Default)]
     [OutputType(typeof(Firewall.AllowedData))]

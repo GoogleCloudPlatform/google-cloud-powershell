@@ -25,6 +25,9 @@ namespace Google.PowerShell.ComputeEngine
     /// <code>PS C:\> Get-GceInstanceTemplate "my-template"</code>
     /// <para>Gets the instance template naemd "my-template" in the default project.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instanceTemplates#resource)">
+    /// [Instance Template resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceInstanceTemplate", DefaultParameterSetName = ParameterSetNames.Default)]
     [OutputType(typeof(InstanceTemplate))]
@@ -153,8 +156,11 @@ namespace Google.PowerShell.ComputeEngine
     /// PS C:\> Add-GceInstanceTemplate $name "n1-standard-4" -BootDiskImage $image `
     ///             -ServiceAccount $serviceAccount
     /// </code>
-    /// </example>
     /// <para>Creates a new instance template for a 4 core machine that has access to BigQuery.</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instanceTemplates#resource)">
+    /// [Instance Template resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceInstanceTemplate", DefaultParameterSetName = ParameterSetNames.ByValues)]
     [OutputType(typeof(InstanceTemplate))]
@@ -350,6 +356,9 @@ namespace Google.PowerShell.ComputeEngine
     /// <code>PS C:\> Get-GceInstanceTemplate | Remove-GceInstanceTemplate</code>
     /// <para>Removes all instance templates in the default project.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instanceTemplates#resource)">
+    /// [Instance Template resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceInstanceTemplate", SupportsShouldProcess = true,
         DefaultParameterSetName = ParamterSetNames.ByName)]
