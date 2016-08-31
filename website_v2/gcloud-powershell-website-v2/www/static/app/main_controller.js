@@ -56,9 +56,9 @@ app.controller('MainController',
       this.isEmpty = function(linkObject) {
         return (Object.keys(linkObject).length === 0);
       };
-      
+
       /* Gets the relevant cmdlet property from the productInfo */
       this.getProperty = function(productInfo,  property) {
-        return productInfo[$routeParams.product][$routeParams.cmdlet][property]
-      }
+        return productInfo[$routeParams.product][$routeParams.cmdlet][property];
+      };
 });
