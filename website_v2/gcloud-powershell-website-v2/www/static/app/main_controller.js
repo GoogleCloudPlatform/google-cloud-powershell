@@ -16,11 +16,11 @@ app.controller('MainController',
           /* We store the json info so templates have access */
           this.productInfo = res.data;
           this.loading = false;
-          
+
           /* We make sure no invalid routes were passed in */
           if (Object.keys($routeParams).length === 2 && (
               !($routeParams.product in this.productInfo) ||
-              !($routeParams.cmdlet in 
+              !($routeParams.cmdlet in
               this.productInfo[$routeParams.product]))) {
                 console.error('Invalid Product or Cmdlet');
                 $routeParams.product = undefined;
@@ -51,9 +51,9 @@ app.controller('MainController',
         var cmdlet = productInfo[$routeParams.product][$routeParams.cmdlet];
         return cmdlet.parameters;
       };
-      
+
       /* Tells us if the object passed in is empty */
       this.isEmpty = function(linkObject) {
         return (Object.keys(linkObject) === 0);
-      }
+      };
 });

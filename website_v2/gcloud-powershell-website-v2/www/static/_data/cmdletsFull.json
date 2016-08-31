@@ -4177,7 +4177,7 @@
                                                         "synopsis":  "Retrieves a resource containing information about a backup run, or lists all backup runs for an instance.\n",
                                                         "name":  "Get-GcSqlBackupRun",
                                                         "links":  {
-
+                                                                      "[Overview of Backups]":  "https://cloud.google.com/sql/docs/backup-recovery/backups"
                                                                   },
                                                         "examples":  "\n----------  EXAMPLE 1  ----------\n\nGets a list of backup runs for the instance \"myInstance\".\nPS C:\\\u003e Get-GcSqlBackupRun \"myInstance\"\nIf successful, the command returns a list of backupruns the instance has.\n\n\n----------  EXAMPLE 2  ----------\n\nGets the resource for the backup run with ID \"1234\" from instance \"myInstance\".\nPS C:\\\u003e Get-GcSqlBackupRun \"myInstance\" \"1234\"\nIf successful, the command returns the relevant backup run.\n\n\n\n\n\n"
                                                     },
@@ -4294,7 +4294,9 @@
                                                                  "synopsis":  "Restores a backup of a Cloud SQL Instance.\n",
                                                                  "name":  "Restore-GcSqlInstanceBackup",
                                                                  "links":  {
-
+                                                                               "[Managing Backups]":  "https://cloud.google.com/tools/powershell/docs/sql/backup",
+                                                                               "[Overview of Restoring an instance]":  "https://cloud.google.com/sql/docs/backup-recovery/restore",
+                                                                               "[Overview of Backups]":  "https://cloud.google.com/sql/docs/backup-recovery/backups"
                                                                            },
                                                                  "examples":  "\n----------  EXAMPLE 1  ----------\n\nRestores backup run with id 0 of the SQL Instance \"testRepl1\" from the Project \"testing\" to the same SQL Instance.\nPS C:\\\u003e Restore-GcSqlInstanceBackup -Project \"testing\" -BackupRunId 1243244 -Instance \"testRepl1\"\nIf successful, the command returns nothing.\n\n\n----------  EXAMPLE 2  ----------\n\nRestores backup run with id 0 of the SQL Instance \"testRepl2\" from the Project \"testing\" to the SQL Instance \n\"testRepl1\" (which must be in the same project).\nPS C:\\\u003e Restore-GcSqlInstanceBackup -Project \"testing\" -BackupRunId 0 -Instance \"testRepl1\" -BackupInstance \"testRepl2\"\nIf successful, the command returns nothing.\n\n\n\n\n\n"
                                                              },
@@ -4320,7 +4322,7 @@
                                                        "synopsis":  "Creates a new Cloud SQL instance.\n",
                                                        "name":  "Add-GcSqlInstance",
                                                        "links":  {
-
+                                                                     "[Setting up Instances]":  "https://cloud.google.com/tools/powershell/docs/sql/setup"
                                                                  },
                                                        "examples":  "\n----------  EXAMPLE 1  ----------\n\nAdds the instance represented by $myInstance to our project set in gcloud config.\nPS C:\\\u003e Add-GcSqlInstance $myInstance\nIf successful, the command returns a resource for the added instance.\n\n\n\n\n\n"
                                                    },
@@ -4399,7 +4401,8 @@
                                                           "synopsis":  "Exports data from a Cloud SQL instance to a Google Cloud Storage bucket as a MySQL dump or CSV file.\n",
                                                           "name":  "Export-GcSqlInstance",
                                                           "links":  {
-
+                                                                        "[Overview of Importing and Exporting]":  "https://cloud.google.com/sql/docs/import-export/",
+                                                                        "[How-To: Importing and Exporting]":  "https://cloud.google.com/tools/powershell/docs/sql/import-export"
                                                                     },
                                                           "examples":  "\n----------  EXAMPLE 1  ----------\n\nExports the databases inside the instance \"myInstance\" to the Cloud Storage bucket file \"gs://bucket/file.gz\" as a \nMySQL dump file.\nPS C:\\\u003e Export-GcSqlInstance \"myInstance\" \"gs://bucket/file.gz\"\nIf successful, the command doesn\u0027t return anything.\n\n\n----------  EXAMPLE 2  ----------\n\nExports the databases inside the instance \"myInstance\" to the Cloud Storage bucket file \"gs://bucket/file.csv\" as a \nCSV file with the select query \"SELECT * FROM data.table\"\nPS C:\\\u003e Export-GcSqlInstance \"myInstance\" \"gs://bucket/file.csv\" \"SELECT * FROM data.table\"\nIf successful, the command doesn\u0027t return anything.\n\n\n----------  EXAMPLE 3  ----------\n\nExports the databases \"myData\" and \"myData2\" inside the instance \"myInstance\" to the Cloud Storage bucket file \n\"gs://bucket/file.gz\" as a MySQL dump file.\nPS C:\\\u003e Export-GcSqlInstance \"myInstance\" \"gs://bucket/file.csv\" -Database \"myData\",\"myData2\"\nIf successful, the command doesn\u0027t return anything.\n\n\n\n\n\n"
                                                       },
@@ -4672,7 +4675,7 @@
                                                             "synopsis":  "Failover a Cloud SQL Instance.\n",
                                                             "name":  "Failover-GcSqlInstance",
                                                             "links":  {
-
+                                                                          "[Replica Instances]":  "https://cloud.google.com/tools/powershell/docs/sql/replica"
                                                                       },
                                                             "examples":  "\n----------  EXAMPLE 1  ----------\n\nFailover the SQL Instance \"test1\" in the Project \"testing.\"\nPS C:\\\u003e Failover-GcSqlReplica -Project \"testing\" -Instance \"test1\"\nIf successful, the command returns nothing.\n\n\n----------  EXAMPLE 2  ----------\n\nFailover the SQL Instance \"test1\" with current settings version 3 in the Project \"testing.\"\nPS C:\\\u003e Failover-GcSqlReplica -Project \"testing\" -Instance \"test1\" - SettingsVersion 3\nIf successful, the command returns nothing.\n\n\n\n\n\n"
                                                         },
@@ -4748,7 +4751,7 @@
                                                           "synopsis":  "Promotes a Cloud SQL Replica.\n",
                                                           "name":  "Promote-GcSqlReplica",
                                                           "links":  {
-
+                                                                        "[Replica Instances]":  "https://cloud.google.com/tools/powershell/docs/sql/replica"
                                                                     },
                                                           "examples":  "\n----------  EXAMPLE 1  ----------\n\nPromote the SQL Replica \"testRepl1\" from the Project \"testing.\"\nPS C:\\\u003e Promote-GcSqlReplica -Project \"testing\" -Replica \"testRepl1\"\nIf successful, the command returns nothing.\n\n\n\n\n\n"
                                                       },
@@ -4786,7 +4789,8 @@
                                                            "synopsis":  "Deletes a specified backup from a Cloud SQL instance.\n",
                                                            "name":  "Remove-GcSqlBackupRun",
                                                            "links":  {
-
+                                                                         "[Overview of Backups]":  "https://cloud.google.com/sql/docs/backup-recovery/backups",
+                                                                         "[Managing Backups]":  "https://cloud.google.com/tools/powershell/docs/sql/backup"
                                                                      },
                                                            "examples":  "\n----------  EXAMPLE 1  ----------\n\nRemoves the backup with ID \"1234\" from the instance \"myInstance\".\nPS C:\\\u003e Remove-GcSqlBackupRun \"myInstance\" \"1234\"\nIf successful, the command doesn\u0027t return anything.\n\n\n----------  EXAMPLE 2  ----------\n\nRemoves the backup identified by the resource $myBackup.\nPS C:\\\u003e Remove-GcSqlBackupRun $myBackup\nIf successful, the command doesn\u0027t return anything.\n\n\n\n\n\n"
                                                        },
@@ -4819,7 +4823,7 @@
                                                        "synopsis":  "Stops a Cloud SQL Replica.\n",
                                                        "name":  "Stop-GcSqlReplica",
                                                        "links":  {
-
+                                                                     "[Replica Instances]":  "https://cloud.google.com/tools/powershell/docs/sql/replica"
                                                                  },
                                                        "examples":  "\n----------  EXAMPLE 1  ----------\n\nStop the SQL Replica \"testRepl1\" from the Project \"testing.\"\nPS C:\\\u003e Stop-GcSqlReplica -Project \"testing\" -Replica \"testRepl1\"\nIf successful, the command returns nothing.\n\n\n\n\n\n"
                                                    },
@@ -5047,7 +5051,7 @@
                                                             "synopsis":  "Makes a new Google Cloud SQL Instance Settings configuration for a second generation instance.\n",
                                                             "name":  "New-GcSqlSettingConfig",
                                                             "links":  {
-
+                                                                          "[Instance Settings]":  "https://cloud.google.com/sql/docs/instance-settings"
                                                                       },
                                                             "examples":  "\n----------  EXAMPLE 1  ----------\n\nCreates a settings resource with tier \"db-n1-standard-1\".\nPS C:\\\u003e New-GcSqlSettingConfig \"db-n1-standard-1\"\n(If successful, the command returns Settings resource containing the setting configuration.)\n\n\n----------  EXAMPLE 2  ----------\n\nCreates a settings resource with tier \"db-n1-standard-1\", and a maintenance window on monday at 22:00.\nPS C:\\\u003e New-GcSqlSettingConfig \"db-n1-standard-1\" -MaintenanceWindowDay 1 -MaintenanceWindowHour \"22:00\"\n(If successful, the command returns Settings resource containing the setting configuration.)\n\n\n\n\n\n"
                                                         },
@@ -5118,7 +5122,10 @@
                                                                     "synopsis":  "Creates a configuration for a replicaConfiguration.\n",
                                                                     "name":  "New-GcSqlInstanceReplicaConfig",
                                                                     "links":  {
-
+                                                                                  "[Replication Requirements and Tips]":  "https://cloud.google.com/sql/docs/replication/tips",
+                                                                                  "[Replica Instances]":  "https://cloud.google.com/tools/powershell/docs/sql/replica",
+                                                                                  "[Replication Options]":  "https://cloud.google.com/sql/docs/replication/",
+                                                                                  "[Setting up Instances]":  "https://cloud.google.com/tools/powershell/docs/sql/setup"
                                                                               },
                                                                     "examples":  "\n----------  EXAMPLE 1  ----------\n\nCreates a basic replica configuration resource.\nPS C:\\\u003e New-GcSqlInstanceReplicaConfig\nIf successful, the command returns a ReplicaConfiguration resource containing the replica configuration.\n\n\n----------  EXAMPLE 2  ----------\n\nCreates a basic replica configuration resource with a retry interval of 10 seconds.\nPS C:\\\u003e New-GcSqlInstanceReplicaConfig -MySqlRetryInterval 10\nIf successful, the command returns a ReplicaConfiguration resource containing the replica configuration.\n\n\n\n\n\n"
                                                                 },
@@ -5186,7 +5193,8 @@
                                                           "synopsis":  "Imports data into a Cloud SQL instance from a MySQL dump or CSV file stored either in a Google Cloud Storage bucket or on your local machine.\n",
                                                           "name":  "Import-GcSqlInstance",
                                                           "links":  {
-
+                                                                        "[Overview of Importing and Exporting]":  "https://cloud.google.com/sql/docs/import-export/",
+                                                                        "[How-To: Importing and Exporting]":  "https://cloud.google.com/tools/powershell/docs/sql/import-export"
                                                                     },
                                                           "examples":  "\n----------  EXAMPLE 1  ----------\n\nImports the MySQL dump file at \"gs://bucket/file\" into the already existing database \"myData\" in the instance \n\"myInstance\".\nPS C:\\\u003e Import-GcSqlInstance \"myInstance\" \"gs://bucket/file\" \"myData\"\nIf successful, the command doesn\u0027t return anything.\n\n\n----------  EXAMPLE 2  ----------\n\nImports the CSV file at \"gs://bucket/file.csv\" into the table \"myTable\" in the already existing database \"myData\" in \nthe instance \"myInstance\".\nPS C:\\\u003e Import-GcSqlInstance \"myInstance\" \"gs://bucket/file.csv\" \"myData\" \"myTable\"\nIf successful, the command doesn\u0027t return anything.\n\n\n----------  EXAMPLE 3  ----------\n\nImports the CSV file at \"C:\\Users\\Bob\\file.csv\" into the table \"myTable\" in the already existing database \"myData\" in \nthe instance \"myInstance\".\nPS C:\\\u003e Import-GcSqlInstance \"myInstance\" \"C:\\Users\\Bob\\file.csv\" \"myData\" \"myTable\"\nIf successful, the command doesn\u0027t return anything.\n\n\n\n\n\n"
                                                       },
@@ -5257,7 +5265,7 @@
                                                         "synopsis":  "Starts a Cloud SQL Replica.\n",
                                                         "name":  "Start-GcSqlReplica",
                                                         "links":  {
-
+                                                                      "[Replica Instances]":  "https://cloud.google.com/tools/powershell/docs/sql/replica"
                                                                   },
                                                         "examples":  "\n----------  EXAMPLE 1  ----------\n\nStart the SQL Replica \"testRepl1\" from the Project \"testing.\"\nPS C:\\\u003e Start-GcSqlReplica -Project \"testing\" -Replica \"testRepl1\"\nIf successful, the command returns nothing.\n\n\n\n\n\n"
                                                     },
@@ -5351,7 +5359,8 @@
                                                              "synopsis":  "Makes a new Google Cloud SQL instance description.\n",
                                                              "name":  "New-GcSqlInstanceConfig",
                                                              "links":  {
-
+                                                                           "[Instance Settings]":  "https://cloud.google.com/sql/docs/instance-settings",
+                                                                           "[How-To: Setting up Instances]":  "https://cloud.google.com/tools/powershell/docs/sql/setup"
                                                                        },
                                                              "examples":  "\n----------  EXAMPLE 1  ----------\n\nCreates an instance resource with name \"myInstance\" and settings $mySettings\nPS C:\\\u003e New-GcSqlInstanceConfig \"myInstance\" $mySettings\nIf successful, the command returns the populated Instance resource with the name \"myInstance\".\n\n\n----------  EXAMPLE 2  ----------\n\nCreates an instance resource with name \"myInstance\", settings $mySettings, and replica configuration $myRepl\nPS C:\\\u003e New-GcSqlInstanceConfig \"myInstance\" $mySettings -ReplicaConfig $myRepl\nIf successful, the command returns the populated Instance resource with the name \"myInstance\".\n\n\n\n\n\n"
                                                          },
