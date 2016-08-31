@@ -22,7 +22,8 @@ function convertToString ($obj)
 }
 
 # Get ParameterSets creates the parameter set hashtable for each cmdlet.
-# It takes in the get-help object for the cmdlet.
+# It takes in the System.Management.Automation.PSCustomObject object
+# for the cmdlet, which is acquird with Get-Help..
 function getParameterSets ($docObj) {
     $parameterSets = (Get-command $docObj.name).ParameterSets
     # First, the cmdlet's parameters are accrued.
@@ -51,7 +52,8 @@ function getParameterSets ($docObj) {
 }
 
 # getLinks creates the related link hashtable for each cmdlet.
-# It takes in the get-help object for the cmdlet.
+# It takes in the System.Management.Automation.PSCustomObject object
+# for the cmdlet, which is acquird with Get-Help.
 function getLinks ($docObj) {
     $relatedLinks = $docObj.relatedLinks
     $links = @{}
