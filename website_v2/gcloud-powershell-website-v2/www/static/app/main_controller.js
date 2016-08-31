@@ -46,12 +46,6 @@ app.controller('MainController',
       this.order = ['synopsis', 'syntax', 'description', 'parameters',
           'examples', 'inputs', 'outputs'];
 
-      /* Gets the parameters for the productInfo passed in */
-      this.getParams = function(productInfo) {
-        var cmdlet = productInfo[$routeParams.product][$routeParams.cmdlet];
-        return cmdlet.parameters;
-      };
-
       /* Tells us if the object passed in is empty */
       this.isEmpty = function(linkObject) {
         return (Object.keys(linkObject).length === 0);
