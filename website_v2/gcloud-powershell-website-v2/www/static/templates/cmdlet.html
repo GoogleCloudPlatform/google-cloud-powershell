@@ -8,14 +8,14 @@
       {{property.toUpperCase()}}
     </h2>
     <pre ng-if="property != 'parameters'")>
-      {{mainCtrl.getProperty(mainCtrl.productInfo, property)}}
+      {{mainCtrl.getProperty(property)}}
     </pre>
     <parameter-table ng-if="property === 'parameters'"></parameter-table>
   </div>
   <!-- Displays all related links for a cmdlet. -->
-  <div ng-show="!mainCtrl.isEmpty(mainCtrl.getProperty(mainCtrl.productInfo, 'links'))">
+  <div ng-show="!mainCtrl.isEmpty(mainCtrl.getProperty('links'))">
     <h2>Related Links</h2>
-    <div ng-repeat="(text,link) in mainCtrl.getProperty(mainCtrl.productInfo, 'links')">
+    <div ng-repeat="(text,link) in mainCtrl.getProperty('links')">
       <a href="{{link}}">{{text}}</a>
     </div>
   </div>

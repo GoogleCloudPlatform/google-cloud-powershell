@@ -52,7 +52,7 @@ app.controller('MainController',
       };
 
       /* Gets the relevant cmdlet property from the productInfo */
-      this.getProperty = function(productInfo,  property) {
-        return productInfo[$routeParams.product][$routeParams.cmdlet][property];
+      this.getProperty = function(property) {
+        return this.productInfo[$routeParams.product][$routeParams.cmdlet][property];
       };
 });
