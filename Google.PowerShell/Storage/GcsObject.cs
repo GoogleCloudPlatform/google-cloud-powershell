@@ -918,6 +918,15 @@ namespace Google.PowerShell.CloudStorage
         }
     }
 
+    /// <summary>
+    /// <para type="synopsis">
+    /// Copies a Google Cloud Storage object to another location.
+    /// </para>
+    /// <para type="description">
+    /// Copies a Google Cloud Storage object to another location The target location may be in the same bucket
+    /// with a different name or a different bucket with any name.
+    /// </para>
+    /// </summary>
     [Cmdlet(VerbsCommon.Copy, "GcsObject", DefaultParameterSetName = ParameterSetNames.ByObject)]
     [OutputType(typeof(Object))]
     public class CopyGcsObject : GcsCmdlet
@@ -929,6 +938,9 @@ namespace Google.PowerShell.CloudStorage
             public const string ByObject = "ByObject";
         }
 
+        /// <summary>
+        /// A Google Cloud Storage object description 
+        /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true, ValueFromPipeline = true)]
         public Object InputObject { get; set; }
 
