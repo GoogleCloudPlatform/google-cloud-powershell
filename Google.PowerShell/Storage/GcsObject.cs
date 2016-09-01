@@ -939,8 +939,9 @@ namespace Google.PowerShell.CloudStorage
         }
 
         /// <summary>
-        /// A Google Cloud Storage object description of the object to read from. They can be retrieved using
-        /// Get-GcsObject.
+        /// <para type="description">
+        /// A Google Cloud Storage object to read from. Can be obtained with Get-GcsObject or Find-GcsObject.
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true, ValueFromPipeline = true)]
         public Object InputObject { get; set; }
@@ -981,7 +982,9 @@ namespace Google.PowerShell.CloudStorage
         public string DestinationObjectName { get; set; }
 
         /// <summary>
+        /// <para type="description">
         /// If set, will overwrite existing objects without prompt.
+        /// </para>
         /// </summary>
         [Parameter]
         public SwitchParameter Force { get; set; }
@@ -1012,8 +1015,8 @@ namespace Google.PowerShell.CloudStorage
                         Service.Objects.Get(destinationBucket, destinationObject);
                     objGetReq.Execute();
                     // If destination does not exist, jump to catch statment.
-                    if (!ShouldContinue("Object exists. Overwrite?",
-                        $"{destinationBucket}/{destinationObject}"))
+                    if (!ShouldContinue(
+                        "Object exists. Overwrite?", $"{destinationBucket}/{destinationObject}"))
                     {
                         return;
                     }

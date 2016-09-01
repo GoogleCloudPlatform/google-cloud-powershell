@@ -642,6 +642,12 @@ Describe "Copy-GcsObject" {
             Read-GcsObject $bucket "test-dest2" | Should Be "test2-$r"
         }
 
+        It "Should overwrite existing object" {
+            $sourceObj = Get-GcsObject $bucket "test-source"
+            $sourceObj | Copy-GcsObject $bucket "test-dest2" -Force
+            Read-GcsObject $bucket "test-dest2" | Should Be "test1-$r"
+        }
+
         AfterAll {
             Remove-GcsBucket $bucket -Force
         }
