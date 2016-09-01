@@ -13,6 +13,7 @@ $apiMappings = @{
     "Gcs" = "Google Cloud Storage"
     "Gce" = "Google Compute Engine"
     "GcSql" = "Google Cloud SQL"
+    "Gcd" = "Google Cloud DNS"
 }
 
 # Generate a single JSON file containing all the documentation for all the

@@ -22,6 +22,10 @@ Describe "Get-GceInstance" {
         { Get-GceInstance "gcps-instance-no-exist-$r" } | Should Throw "404"
     }
     
+    It "should fail for null project" {
+        { Get-GceInstance -Project $null } | Should Throw 'Parameter "project" is missing'
+    }
+
     It "should get one" {
         $result = Get-GceInstance $instance
         ($result | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.Instance"
