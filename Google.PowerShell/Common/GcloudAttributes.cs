@@ -80,9 +80,10 @@ namespace Google.PowerShell.Common
         /// <param name="instance">
         /// The instance the property is a member of.
         /// </param>
-        public void SetConfigDefault(PropertyInfo property, object instance)
+        public void SetConfigDefault(PropertyInfo property, GCloudCmdlet instance)
         {
-            if (property.GetValue(instance) == null)
+            bool isBoundParameter = instance.MyInvocation.BoundParameters.ContainsKey(property.Name);
+            if (!isBoundParameter)
             {
                 string settingsValue = CloudSdkSettings.GetSettingsValue(Property);
                 if (string.IsNullOrEmpty(settingsValue))
@@ -104,9 +105,10 @@ namespace Google.PowerShell.Common
         /// <param name="instance">
         /// The instance the field is a member of.
         /// </param>
-        public void SetConfigDefault(FieldInfo field, object instance)
+        public void SetConfigDefault(FieldInfo field, GCloudCmdlet instance)
         {
-            if (field.GetValue(instance) == null)
+            bool isBoundParameter = instance.MyInvocation.BoundParameters.ContainsKey(field.Name);
+            if (!isBoundParameter)
             {
                 string settingsValue = CloudSdkSettings.GetSettingsValue(Property);
                 if (string.IsNullOrEmpty(settingsValue))
