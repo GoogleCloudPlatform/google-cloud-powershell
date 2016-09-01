@@ -249,6 +249,11 @@ namespace Google.PowerShell.ComputeEngine
                 diskTypeResource = $"zones/{Zone}/diskTypes/{DiskType}";
             }
 
+            if (SizeGb.HasValue && SizeGb.Value > 1L << 30)
+            {
+                SizeGb = SizeGb.Value / (1L << 30);
+            }
+
             Disk newDisk = new Disk
             {
                 Name = DiskName,
@@ -361,6 +366,12 @@ namespace Google.PowerShell.ComputeEngine
                     break;
                 default:
                     throw UnknownParameterSetException;
+            }
+
+
+            if (NewSizeGb > 1L << 30)
+            {
+                NewSizeGb = NewSizeGb / (1L << 30);
             }
 
             var diskResizeReq = new DisksResizeRequest { SizeGb = NewSizeGb };
