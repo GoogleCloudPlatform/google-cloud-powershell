@@ -618,6 +618,17 @@ Describe "Copy-GcsObject" {
             { Copy-GcsObject -SourceBucket $bucket -SourceObject "test-source" $bucket "test-dest" } |
                 Should Throw 404
         }
+        
+        It "Should fail to read from unaccessable source bucket" {
+            { Copy-GcsObject -SourceBucket "asdf" -SourceObject "test-source" $bucket "test-dest" } |
+                Should Throw 403
+        }
+        
+        It "Should fail to write to unaccessable source bucket" {
+            New-GcsObject $bucket "test-source0" -Contents "test0-$r"
+            { Copy-GcsObject -SourceBucket $bucket -SourceObject "test-source0" "asdf" "test-dest" } |
+                Should Throw 403
+        }
 
         It "Should work by name" {
             New-GcsObject $bucket "test-source" -Contents "test1-$r"

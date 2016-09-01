@@ -939,14 +939,15 @@ namespace Google.PowerShell.CloudStorage
         }
 
         /// <summary>
-        /// A Google Cloud Storage object description 
+        /// A Google Cloud Storage object description of the object to read from. They can be retrieved using
+        /// Get-GcsObject.
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true, ValueFromPipeline = true)]
         public Object InputObject { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// Name of the bucket containing the object. Will also accept a Bucket object.
+        /// Name of the bucket containing the object to read from. Will also accept a Bucket object.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true)]
@@ -955,7 +956,7 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
-        /// Name of the object to write to.
+        /// Name of the object to read from.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true)]
@@ -964,7 +965,7 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
-        /// Name of the bucket in which the copy will reside.
+        /// Name of the bucket in which the copy will reside. Defaults to the source bucket.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, Position = 0)]
@@ -973,11 +974,17 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
-        /// The name of the copy.
+        /// The name of the copy. Defaults to the name of the source object.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, Position = 1)]
         public string DestinationObjectName { get; set; }
+
+        /// <summary>
+        /// If set, will overwrite existing objects without prompt.
+        /// </summary>
+        [Parameter]
+        public SwitchParameter Force { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -993,9 +1000,30 @@ namespace Google.PowerShell.CloudStorage
                 default:
                     throw UnknownParameterSetException;
             }
+
+            string destinationBucket = DestinationBucket ?? gcsObject.Bucket;
+            string destinationObject = DestinationObjectName ?? gcsObject.Name;
+
+            if (!Force)
+            {
+                try
+                {
+                    ObjectsResource.GetRequest objGetReq =
+                        Service.Objects.Get(destinationBucket, destinationObject);
+                    objGetReq.Execute();
+                    // If destination does not exist, jump to catch statment.
+                    if (!ShouldContinue("Object exists. Overwrite?",
+                        $"{destinationBucket}/{destinationObject}"))
+                    {
+                        return;
+                    }
+                }
+                catch (GoogleApiException ex) when (ex.Error.Code == 404) { }
+            }
+
             ObjectsResource.CopyRequest request = Service.Objects.Copy(gcsObject,
                 gcsObject.Bucket, gcsObject.Name,
-                DestinationBucket ?? gcsObject.Bucket, DestinationObjectName ?? gcsObject.Name);
+                destinationBucket, destinationObject);
             Object response = request.Execute();
             WriteObject(response);
         }
