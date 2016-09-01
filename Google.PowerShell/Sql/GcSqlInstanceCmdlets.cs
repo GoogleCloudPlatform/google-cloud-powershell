@@ -154,12 +154,14 @@ namespace Google.PowerShell.Sql
 
         protected override void ProcessRecord()
         {
-            InstancesResource.InsertRequest request = Service.Instances.Insert(InstanceConfig, Project);
+            DatabaseInstance instance = InstanceConfig;
+            instance.Project = Project;
+            InstancesResource.InsertRequest request = Service.Instances.Insert(instance, Project);
             WriteVerbose($"Adding instance '{InstanceConfig.Name}' to Project '{Project}'.");
             Operation result = request.Execute();
             WaitForSqlOperation(result);
-            /// We get the instance that was just added
-            /// so that the returned DatabaseInstance is as accurate as possible.
+            // We get the instance that was just added
+            // so that the returned DatabaseInstance is as accurate as possible.
             InstancesResource.GetRequest instanceRequest = Service.Instances.Get(Project, InstanceConfig.Name);
             WriteObject(instanceRequest.Execute());
         }

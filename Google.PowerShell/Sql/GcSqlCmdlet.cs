@@ -68,7 +68,9 @@ namespace Google.PowerShell.Sql
             Random rnd = new Random();
             int randProc = rnd.Next();
             ProgressRecord progress =
-                new ProgressRecord(randProc, $"Waiting for operation '{op.OperationType}' to finish.", "Waiting");
+                new ProgressRecord(randProc,
+                    $"Waiting for operation '{op.OperationType}' to finish. May take multiple minutes.",
+                    "Waiting");
             progress.PercentComplete = 0;
             WriteProgress(progress);
             int percentComplete = 1;
