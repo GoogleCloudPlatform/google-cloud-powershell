@@ -4,14 +4,14 @@
   <table>
     <tr>
       <th>Name</th>
-      <th>Description</th>
+      <th>Synopsis</th>
     </tr>
     <!-- We should display all cmdlets for a product -->
     <tr ng-repeat="(order,cmdlet) in mainCtrl.productInfo[mainCtrl.params.product] | orderByCmdletProp: 'name'">
-      <td>
+      <td class="cmdlet-cell">
         <a href="/{{mainCtrl.params.product}}/{{cmdlet.name}}"class="cmdletName">{{cmdlet.name}}</a>
       </td>
-      <td>{{cmdlet.description}}</td>
+      <td>{{cmdlet.synopsis}}</td>
     </tr>
   </table>
 </div>

@@ -1,4 +1,5 @@
 /* TODO: Bootstrap, hit this with the css hammer to make sure it's standard. */
+/* Table of contents */
 .table-of-contents {
     /*light grey color*/
     background-color: #fafafa;
@@ -7,23 +8,33 @@
     margin-top: 10px;
     overflow: hidden;
     height: 1%;
-    width: 400px;
+    width: 350px;
 }
+
+/* Reference pages */
 .information-area {
     margin-left: 420px;
     position: static;
-    width: 1200px;
+    width: 1300px;
     word-wrap: break-word;
 }
+
+/* cmdlet link */
 .link {
     /*Darker blue color*/
     color: #4285f6;
     cursor: pointer;
 }
 
+/* cmdlet name in product table */
 .cmdletName {
     /*Darker blue color*/
     color: #4285f6;
     cursor: pointer;
     margin-left: 20px;
+}
+
+/* The cell for the cmdlet in the product table */
+.cmdlet-cell {
+    width: 20%;
 }
