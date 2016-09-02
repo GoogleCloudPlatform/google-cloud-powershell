@@ -183,9 +183,9 @@ namespace Google.PowerShell.Sql
         /// Creates a default Google Cloud SQL Database instance.
         /// </summary>
         /// <returns> A SQL instance object. </returns>
-        private DatabaseInstance createDefaultInstance()
+        private DatabaseInstance CreateDefaultInstance()
         {
-            DatabaseInstance instance = new DatabaseInstance
+            return new DatabaseInstance
             {
                 Settings = new Settings {
                     Tier = "db-n1-standard-1",
@@ -195,7 +195,6 @@ namespace Google.PowerShell.Sql
                     {
                         BinaryLogEnabled = true,
                         Enabled = true,
-                        Kind = "sql#backupConfiguration",
                         StartTime = "22:00"
                     },
                     DataDiskSizeGb = 10,
@@ -204,7 +203,6 @@ namespace Google.PowerShell.Sql
                         Ipv4Enabled = false,
                         RequireSsl = false
                     },
-                    Kind = "sql#settings",
                     LocationPreference = new LocationPreference(),
                     MaintenanceWindow = new MaintenanceWindow
                     {
@@ -221,10 +219,8 @@ namespace Google.PowerShell.Sql
                 Project = Project,
                 DatabaseVersion = "MYSQL_5_6",
                 InstanceType = "CLOUD_SQL_INSTANCE",
-                Kind = "sql#instance",
                 State = "RUNNABLE"
             };
-            return instance;
         }
 
         protected override void ProcessRecord()
@@ -233,7 +229,7 @@ namespace Google.PowerShell.Sql
             switch (ParameterSetName)
             {
                 case ParameterSetNames.Default:
-                    instance = createDefaultInstance();
+                    instance = CreateDefaultInstance();
                     break;
                 case ParameterSetNames.ByConfig:
                     instance = InstanceConfig;
