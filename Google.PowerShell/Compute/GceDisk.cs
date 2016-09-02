@@ -257,6 +257,12 @@ namespace Google.PowerShell.ComputeEngine
                 diskTypeResource = $"zones/{Zone}/diskTypes/{DiskType}";
             }
 
+            // In PowerShell, 10GB is parsed as 10*2^30. If a user enters 10GB, bring it back down to 10.
+            if (SizeGb.HasValue && SizeGb.Value > 1L << 30)
+            {
+                SizeGb = SizeGb.Value / (1L << 30);
+            }
+
             Disk newDisk = new Disk
             {
                 Name = DiskName,
@@ -373,6 +379,12 @@ namespace Google.PowerShell.ComputeEngine
                     break;
                 default:
                     throw UnknownParameterSetException;
+            }
+
+            // In PowerShell, 10GB is parsed as 10*2^30. If a user enters 10GB, bring it back down to 10.
+            if (NewSizeGb > 1L << 30)
+            {
+                NewSizeGb = NewSizeGb / (1L << 30);
             }
 
             var diskResizeReq = new DisksResizeRequest { SizeGb = NewSizeGb };
