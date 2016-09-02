@@ -6,7 +6,7 @@ Import-GcSqlInstance
 Remove-GcSqlInstance
 Restore-GcSqlInstanceBackup
 Stop-GcSqlReplica
-Promote-GcSqlReplica.
+Promote-GcSqlReplica
 Start-GcSqlReplica
 Remove-GcSqlSslCert
 Remove-GcdManagedZone
