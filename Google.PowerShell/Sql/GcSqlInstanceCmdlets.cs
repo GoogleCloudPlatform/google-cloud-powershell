@@ -126,6 +126,16 @@ namespace Google.PowerShell.Sql
     ///   <br></br>
     ///   <para>If successful, the command returns a resource for the added instance.</para>
     /// </example>
+    /// <example>
+    ///   <para>
+    ///   Adds a default instance named "gootoso" to the project "myproject"
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> Add-GcSqlInstance "gootoso" -Project "myproject"
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>If successful, the command returns a resource for the added instance.</para>
+    /// </example>
     /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/setup)">
     ///   [Setting up Instances]
     /// </para>
@@ -134,6 +144,11 @@ namespace Google.PowerShell.Sql
     [OutputType(typeof(DatabaseInstance))]
     public class AddGcSqlInstanceCmdlet : GcSqlCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string Default = "Default";
+            public const string ByConfig = "ByConfig";
+        }
         /// <summary>
         /// <para type="description">
         /// Name of the project. Defaults to the Cloud SDK configuration for properties if not specified.
@@ -149,22 +164,94 @@ namespace Google.PowerShell.Sql
         /// Can be created with New-GcSqlInstanceConfig.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
+            ParameterSetName = ParameterSetNames.ByConfig)]
         public DatabaseInstance InstanceConfig { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The instance resource. 
+        /// Can be created with New-GcSqlInstanceConfig.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, 
+            ParameterSetName = ParameterSetNames.Default)]
+        public string Name { get; set; }
+
+
+        /// <summary>
+        /// Creates a default Google Cloud SQL Database instance.
+        /// </summary>
+        /// <returns> A SQL instance object. </returns>
+        private DatabaseInstance createDefaultInstance()
+        {
+            DatabaseInstance instance = new DatabaseInstance
+            {
+                Settings = new Settings {
+                    Tier = "db-n1-standard-1",
+                    PricingPlan = "PER_USE",
+                    ActivationPolicy = "ALWAYS",
+                    BackupConfiguration = new BackupConfiguration
+                    {
+                        BinaryLogEnabled = true,
+                        Enabled = true,
+                        Kind = "sql#backupConfiguration",
+                        StartTime = "22:00"
+                    },
+                    DataDiskSizeGb = 10,
+                    IpConfiguration = new IpConfiguration
+                    {
+                        Ipv4Enabled = false,
+                        RequireSsl = false
+                    },
+                    Kind = "sql#settings",
+                    LocationPreference = new LocationPreference(),
+                    MaintenanceWindow = new MaintenanceWindow
+                    {
+                        Day = 5,
+                        Hour = 22,
+                    },
+                    StorageAutoResize = false,
+                    DataDiskType = "PD_SSD",
+                    ReplicationType = "SYNCHRONOUS"
+                },
+                Name = Name,
+                Region = "us-central1",
+                BackendType = "SECOND_GEN",
+                Project = Project,
+                DatabaseVersion = "MYSQL_5_6",
+                InstanceType = "CLOUD_SQL_INSTANCE",
+                Kind = "sql#instance",
+                State = "RUNNABLE"
+            };
+            return instance;
+        }
 
         protected override void ProcessRecord()
         {
-            DatabaseInstance instance = InstanceConfig;
+            DatabaseInstance instance;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.Default:
+                    instance = createDefaultInstance();
+                    break;
+                case ParameterSetNames.ByConfig:
+                    instance = InstanceConfig;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
             instance.Project = Project;
             InstancesResource.InsertRequest request = Service.Instances.Insert(instance, Project);
-            WriteVerbose($"Adding instance '{InstanceConfig.Name}' to Project '{Project}'.");
+            WriteVerbose($"Adding instance '{instance.Name}' to Project '{Project}'.");
             Operation result = request.Execute();
             WaitForSqlOperation(result);
             // We get the instance that was just added
             // so that the returned DatabaseInstance is as accurate as possible.
-            InstancesResource.GetRequest instanceRequest = Service.Instances.Get(Project, InstanceConfig.Name);
+            InstancesResource.GetRequest instanceRequest = Service.Instances.Get(Project, instance.Name);
             WriteObject(instanceRequest.Execute());
         }
+
     }
 
     /// <summary>
