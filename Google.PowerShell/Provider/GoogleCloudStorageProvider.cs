@@ -1,9 +1,13 @@
+// Copyright 2016 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
+
 using Google.Apis.CloudResourceManager.v1;
 using Google.Apis.CloudResourceManager.v1.Data;
 using Google.Apis.Storage.v1;
 using Google.Apis.Storage.v1.Data;
 using Google.Apis.Upload;
 using Google.PowerShell.Common;
+using Google.PowerShell.Provider;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -236,18 +240,13 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// Maps the name of a bucket to a cache of data about the objects in that bucket.
         /// </summary>
-        private static readonly Dictionary<string, BucketModel> BucketModels =
-            new Dictionary<string, BucketModel>();
+        private static readonly Dictionary<string, CacheItem<BucketModel>> BucketModels =
+            new Dictionary<string, CacheItem<BucketModel>>();
 
         /// <summary>
         /// Maps the name of a bucket to a cahced object describing that bucket
         /// </summary>
-        private static readonly Dictionary<string, Bucket> BucketCache = new Dictionary<string, Bucket>();
-
-        /// <summary>
-        /// The most recent time the buchet cache was populated.
-        /// </summary>
-        private static DateTimeOffset _lastBucketCacheUpdate;
+        private readonly CacheItem<Dictionary<string, Bucket>> _bucketCache;
 
         /// <summary>
         /// Reports on the usage of the provider.
@@ -273,6 +272,7 @@ namespace Google.PowerShell.CloudStorage
             {
                 _telemetryReporter = new InMemoryCmdletResultReporter();
             }
+            _bucketCache = new CacheItem<Dictionary<string, Bucket>>(GetBucketMap);
         }
 
         /// <summary>
@@ -813,8 +813,8 @@ namespace Google.PowerShell.CloudStorage
         {
             if (dynamicParameters.File != null)
             {
-                dynamicParameters.ContentType = dynamicParameters.ContentType ??
-                                                NewGcsObjectCmdlet.InferContentType(dynamicParameters.File);
+                dynamicParameters.ContentType =
+                    dynamicParameters.ContentType ?? GcsCmdlet.InferContentType(dynamicParameters.File);
                 return new FileStream(dynamicParameters.File, FileMode.Open);
             }
             else
@@ -829,13 +829,14 @@ namespace Google.PowerShell.CloudStorage
         {
             if (BucketModels.ContainsKey(bucket))
             {
-                var model = BucketModels[bucket];
-                model.UpdateIfStale();
-                return model;
+                return BucketModels[bucket].Value;
             }
             else
             {
-                return BucketModels[bucket] = new BucketModel(bucket, Service);
+                CacheItem<BucketModel> bucketModel =
+                    new CacheItem<BucketModel>(() => new BucketModel(bucket, Service));
+                BucketModels[bucket] = bucketModel;
+                return bucketModel.Value;
             }
         }
 
@@ -895,9 +896,7 @@ namespace Google.PowerShell.CloudStorage
         }
 
         private void ObsoleteBucketCache()
-        {
-            _lastBucketCacheUpdate = DateTimeOffset.MinValue;
-        }
+        { }
 
         private IEnumerable<Object> ListChildren(GcsPath gcsPath, bool recurse, bool allPages = true)
         {
@@ -970,11 +969,7 @@ namespace Google.PowerShell.CloudStorage
 
         private Dictionary<string, Bucket> GetBucketCache()
         {
-            if (_lastBucketCacheUpdate + TimeSpan.FromMinutes(1) < DateTimeOffset.UtcNow)
-            {
-                UpdateBucketCache();
-            }
-            return BucketCache;
+            return _bucketCache.Value;
         }
 
         private IEnumerable<Bucket> ListAllBuckets()
@@ -982,16 +977,16 @@ namespace Google.PowerShell.CloudStorage
             return GetBucketCache().Values;
         }
 
-        private void UpdateBucketCache()
+        private Dictionary<string, Bucket> GetBucketMap()
         {
-            BucketCache.Clear();
+            Dictionary<string, Bucket> buckets = new Dictionary<string, Bucket>();
             List<Project> projects = ListAllProjects().ToList();
             var tasks = projects.Select(project => ListBucketsAsync(project)).ToList();
             foreach (var bucket in tasks.SelectMany(task => task.Result))
             {
-                BucketCache[bucket.Name] = bucket;
+                buckets[bucket.Name] = bucket;
             }
-            _lastBucketCacheUpdate = DateTimeOffset.UtcNow;
+            return buckets;
         }
     }
 }

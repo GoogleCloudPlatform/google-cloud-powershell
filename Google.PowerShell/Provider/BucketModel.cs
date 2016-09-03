@@ -1,6 +1,8 @@
+// Copyright 2016 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
+
 using Google.Apis.Storage.v1;
 using Google.Apis.Storage.v1.Data;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -13,15 +15,34 @@ namespace Google.PowerShell.CloudStorage
     /// </summary>
     public class BucketModel
     {
+        /// <summary>
+        /// Map of known object names to objects.
+        /// </summary>
         private Dictionary<string, Object> _objectMap = new Dictionary<string, Object>();
+        /// <summary>
+        /// Map of prefixes (folders), and whether they have children.
+        /// </summary>
         private Dictionary<string, bool> _prefixes = new Dictionary<string, bool>();
-        private DateTimeOffset _lastSync = DateTimeOffset.UtcNow;
+        /// <summary>
+        /// The name of the bucket this is a model of.
+        /// </summary>
         private string _bucket;
+        /// <summary>
+        /// The storage service used to connect to gcs.
+        /// </summary>
         private StorageService _service;
-        private static TimeSpan staleTime = TimeSpan.FromMinutes(1);
+        /// <summary>
+        /// Set to true if the bucket has more objects than could retrieved in a single request.
+        /// </summary>
         private bool _pageLimited = false;
-        private string _separatorString = "/";
-        private char _separator = '/';
+        /// <summary>
+        /// The string the provider uses as a folder separator.
+        /// </summary>
+        private const string SeparatorString = "/";
+        /// <summary>
+        /// The character the provider uses as a fodler separator
+        /// </summary>
+        private const char Separator = '/';
 
         /// <summary>
         /// Initializes the bucket model.
@@ -32,29 +53,15 @@ namespace Google.PowerShell.CloudStorage
         {
             _bucket = bucket;
             _service = service;
-            UpdateModel();
-        }
-
-        /// <summary>
-        /// Updates the model if it hasn't been updated in a minute.
-        /// </summary>
-        public void UpdateIfStale()
-        {
-            if (DateTimeOffset.UtcNow - _lastSync > staleTime)
-            {
-                UpdateModel();
-                _lastSync = DateTimeOffset.UtcNow;
-            }
+            PopulateModel();
         }
 
         /// <summary>
         /// Gets a clean set of data from the service. If the bucket has more than a single page of objects,
         /// the model will only take the first page.
         /// </summary>
-        public void UpdateModel()
+        public void PopulateModel()
         {
-            _objectMap.Clear();
-            _prefixes.Clear();
             ObjectsResource.ListRequest request = _service.Objects.List(_bucket);
             request.Projection = ObjectsResource.ListRequest.ProjectionEnum.Full;
             Objects objects = request.Execute();
@@ -62,8 +69,8 @@ namespace Google.PowerShell.CloudStorage
             foreach (Object gcsObject in objects.Items ?? Enumerable.Empty<Object>())
             {
                 _objectMap[gcsObject.Name] = gcsObject;
-                string prefix = gcsObject.Name.TrimEnd(_separator);
-                int lastSeparator = gcsObject.Name.LastIndexOf(_separator);
+                string prefix = gcsObject.Name.TrimEnd(Separator);
+                int lastSeparator = gcsObject.Name.LastIndexOf(Separator);
                 bool children = false;
                 while (lastSeparator > 0)
                 {
@@ -75,17 +82,15 @@ namespace Google.PowerShell.CloudStorage
                     }
                     _prefixes[prefix] = children;
                     children = true;
-                    lastSeparator = prefix.LastIndexOf(_separator);
+                    lastSeparator = prefix.LastIndexOf(Separator);
                 }
             }
         }
 
         /// <summary>
-        /// Checks if an object exists. If the model did not read all of the object during its last update, it
-        /// may make a service call if the object is not found in it's data.
+        /// Checks if an object exists. If the model did not read all of the objects during its last update, it
+        /// may make a service call if the object is not found in its data.
         /// </summary>
-        /// <param name="objectName">The name of the object to search for.</param>
-        /// <returns></returns>
         public bool ObjectExists(string objectName)
         {
             if (_pageLimited)
@@ -108,15 +113,14 @@ namespace Google.PowerShell.CloudStorage
                         _objectMap[objectName] = request.Execute();
                         return true;
                     }
-                    catch
+                    catch (GoogleApiException e) when (e.HttpStatusCode == HttpStatusCode.NotFound)
                     {
                         _objectMap[objectName] = null;
                         return false;
                     }
                 }
             }
-            return _objectMap.ContainsKey(objectName) ||
-                   _prefixes.ContainsKey(objectName);
+            return _objectMap.ContainsKey(objectName) || _prefixes.ContainsKey(objectName);
         }
 
         /// <summary>
@@ -127,7 +131,7 @@ namespace Google.PowerShell.CloudStorage
         /// existant objects.</returns>
         public bool IsContainer(string objectName)
         {
-            if (_prefixes.ContainsKey(objectName.TrimEnd(_separator)))
+            if (_prefixes.ContainsKey(objectName.TrimEnd(Separator)))
             {
                 return true;
             }
@@ -135,7 +139,7 @@ namespace Google.PowerShell.CloudStorage
             {
                 ObjectsResource.ListRequest request = _service.Objects.List(_bucket);
                 request.Prefix = objectName;
-                request.Delimiter = _separatorString;
+                request.Delimiter = SeparatorString;
                 Objects response = request.Execute();
                 return response.Prefixes != null && response.Prefixes.Count > 0;
             }
@@ -177,9 +181,9 @@ namespace Google.PowerShell.CloudStorage
             }
             else if (_prefixes.ContainsKey(objectName))
             {
-                if (_objectMap.ContainsKey(objectName + _separator))
+                if (_objectMap.ContainsKey(objectName + Separator))
                 {
-                    return _objectMap[objectName + _separator];
+                    return _objectMap[objectName + Separator];
                 }
                 else
                 {
@@ -197,9 +201,9 @@ namespace Google.PowerShell.CloudStorage
         }
 
         /// <summary>
-        /// Adds a Google Cloud Storage object to the model.
+        /// Adds or updates a Google Cloud Storage object to the model.
         /// </summary>
-        /// <param name="gcsObject">The Google Cloud Storage object to add.</param>
+        /// <param name="gcsObject">The Google Cloud Storage object to add or update.</param>
         public void AddObject(Object gcsObject)
         {
             _objectMap[gcsObject.Name] = gcsObject;

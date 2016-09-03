@@ -1,3 +1,6 @@
+// Copyright 2016 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
+
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -5,6 +8,9 @@ using System.Management.Automation.Provider;
 
 namespace Google.PowerShell.CloudStorage
 {
+    /// <summary>
+    /// Required by GoogleCloudStorageProvider.GetContentReader, used by Get-Contents.
+    /// </summary>
     public class GcsStringReader : IContentReader
     {
         private StreamReader _stream;

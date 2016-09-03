@@ -3,9 +3,10 @@
 # Install the GCP cmdlets module into the current PowerShell session.
 function Install-GcloudCmdlets() {
     $dll = Get-ChildItem $PSScriptRoot\.. -Recurse -Include Google.PowerShell.dll |
+        ? {Test-Path (Join-Path $_.PSParentPath GoogleCloudPowerShell.psd1)} |
         sort LastWriteTime -Descending |
         select -First 1
-    Import-Module (Join-Path (Split-Path $dll) GoogleCloudPowerShell.psd1)
+     Join-Path $dll.PSParentPath GoogleCloudPowerShell.psd1 | Import-Module
 }
 
 # Creates a GCS bucket owned associated with the project, deleting any existing
