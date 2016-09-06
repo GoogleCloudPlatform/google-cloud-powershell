@@ -85,9 +85,6 @@
     <None Include="Storage\Storage.GcsObject.Tests.ps1" />
     <None Include="Provider\Storage.Provider.Tests.ps1" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="Provider\TestFile.txt" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

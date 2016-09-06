@@ -6,12 +6,20 @@ Push-Location .
 $r = Get-Random
 
 Describe "Storage Provider"{
+    # The bucket which we create and in which we run all of our tests.
     $bucketName = "gcs-provider-test-$r"
+    # The first folder object we make.
     $folderName = "gcs-folder-$r"
+    # The first file object we make.
     $fileName = "gcs-file-$r"
+    # The file object we copy to.
     $cpFileName = "gcs-cp-file-$r"
+    # The folder object we copy to.
     $cpFolderName = "gcs-cp-folder-$r"
-    $content = "file content $r"
+    # The string we set as the content of a file.
+    $content1 = "file content 1 $r"
+    # The string we set as the content of a file.
+    $content2 = "file content 2 $r"
 
     It "Should have drive initalized" {
         Test-Path gs:\ | Should Be $true
@@ -52,10 +60,12 @@ Describe "Storage Provider"{
 
     It "Should write file" {
         cd gs:\$bucketName\$folderName
-        New-Item $fileName -File "$PSScriptRoot\TestFile.txt"
+        $tempFile = New-TemporaryFile
+        Set-Content $tempFile -Value $content1
+        New-Item $fileName -File $tempFile
         Test-Path $fileName | Should Be $true
         $gcsContents = Get-Content gs:\$bucketName\$folderName\$fileName
-        $localContents = Get-Content $PSScriptRoot\TestFile.txt
+        $localContents = Get-Content $tempFile
         Compare-Object $gcsContents $localContents | Should BeNullOrEmpty
     }
 
@@ -70,16 +80,16 @@ Describe "Storage Provider"{
 
     It "Should set content" {
         cd gs:\$bucketName\$folderName
-        Set-Content $fileName -Value $content
+        Set-Content $fileName -Value $content2
         sleep -Seconds 2
-        cat $fileName | Should Be $content
+        cat $fileName | Should Be $content2
     }
 
     It "Should copy file" {
         cd gs:\$bucketName\$folderName
         cp $fileName $cpFileName
         Test-Path $cpFileName | Should Be $true
-        cat $cpFileName | Should Be $content
+        cat $cpFileName | Should Be $content2
     }
 
     It "Should list files" {
@@ -99,7 +109,7 @@ Describe "Storage Provider"{
         $files.Count | Should Be 2
         ($files.Name -match $fileName).Count | Should Be 1
         ($files.Name -match $cpFileName).Count | Should Be 1
-        cat $fileName, $cpFileName | Should Be $content
+        cat $fileName, $cpFileName | Should Be $content2
     }
 
     It "Should delete file" {
@@ -130,7 +140,10 @@ Describe "Storage Provider"{
     }
 
     It "Should fail to enter bucket without permissions" {
-        (cd gs:\asdf 2>&1).Count | Should BeGreaterThan 0
+        # Confirm we get an error when attempting to cd into an illegal bucket.
+        $cdErrors = (cd gs:\asdf 2>&1)
+        $cdErrors.Count | Should Be 1
+        ($cdErrors | gm).TypeName | Should Be "System.Management.Automation.ErrorRecord"
     }
 
     # TODO(jimwp): Add test to ensure we are not bypassing access controls.

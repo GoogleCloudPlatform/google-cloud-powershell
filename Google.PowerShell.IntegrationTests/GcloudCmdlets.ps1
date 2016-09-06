@@ -2,10 +2,12 @@
 
 # Install the GCP cmdlets module into the current PowerShell session.
 function Install-GcloudCmdlets() {
+    # Find the latest Google.PowerShell.dll that shares a folder with GoogleCloudPowerShell.psd1.
     $dll = Get-ChildItem $PSScriptRoot\.. -Recurse -Include Google.PowerShell.dll |
-        ? {Test-Path (Join-Path $_.PSParentPath GoogleCloudPowerShell.psd1)} |
+        where {Test-Path (Join-Path $_.PSParentPath GoogleCloudPowerShell.psd1)} |
         sort LastWriteTime -Descending |
         select -First 1
+    # Import the GoogleCloudPowerShell.psd1 in the folder of the latest dll.
      Join-Path $dll.PSParentPath GoogleCloudPowerShell.psd1 | Import-Module
 }
 

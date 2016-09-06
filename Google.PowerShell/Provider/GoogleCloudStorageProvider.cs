@@ -30,7 +30,7 @@ namespace Google.PowerShell.CloudStorage
     public class GoogleCloudStorageProvider : NavigationCmdletProvider, IContentCmdletProvider
     {
         /// <summary>
-        /// Dynamic parameters for "Set-Content"
+        /// Dynamic parameters for "Set-Content".
         /// </summary>
         public class GcsGetContentWriterDynamicParameters
         {
@@ -39,7 +39,7 @@ namespace Google.PowerShell.CloudStorage
         }
 
         /// <summary>
-        /// Dynamic paramters for Copy-Item
+        /// Dynamic paramters for Copy-Item.
         /// </summary>
         public class GcsCopyItemDynamicParameters
         {
@@ -244,7 +244,7 @@ namespace Google.PowerShell.CloudStorage
             new Dictionary<string, CacheItem<BucketModel>>();
 
         /// <summary>
-        /// Maps the name of a bucket to a cahced object describing that bucket
+        /// Maps the name of a bucket to a cahced object describing that bucket.
         /// </summary>
         private readonly CacheItem<Dictionary<string, Bucket>> _bucketCache;
 
@@ -278,7 +278,7 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// Creates a default Google Cloud Storage drive named gs.
         /// </summary>
-        /// <returns>A single drive named gs</returns>
+        /// <returns>A single drive named gs.</returns>
         protected override Collection<PSDriveInfo> InitializeDefaultDrives()
         {
             return new Collection<PSDriveInfo>
@@ -349,7 +349,7 @@ namespace Google.PowerShell.CloudStorage
         /// PowerShell uses this to check if an item is a container. All drives, all buckets, objects that end
         /// with "/", and prefixes to objects are containers.
         /// </summary>
-        /// <param name="path">The path of the item to check</param>
+        /// <param name="path">The path of the item to check.</param>
         /// <returns>True if the item at the path is a container.</returns>
         protected override bool IsItemContainer(string path)
         {

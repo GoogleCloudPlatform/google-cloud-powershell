@@ -11,7 +11,11 @@ using Object = Google.Apis.Storage.v1.Data.Object;
 namespace Google.PowerShell.CloudStorage
 {
     /// <summary>
-    /// This class maintains a local description of the objects in a bucket.
+    /// This class maintains a local description of the objects in a bucket. It is used by the
+    /// GoogleCloudStorageProvider to prevent redundant service calls e.g. to discover if an object
+    /// exists. It keeps track of real objects, which we treat as files, and of name prefixes,
+    /// which act like folders. A real object named "myFolder/" will be both a prefix "myFolder" and an object
+    /// "myFolder/".
     /// </summary>
     public class BucketModel
     {
@@ -28,19 +32,20 @@ namespace Google.PowerShell.CloudStorage
         /// </summary>
         private string _bucket;
         /// <summary>
-        /// The storage service used to connect to gcs.
+        /// The storage service used to connect to Google Cloud Storage.
         /// </summary>
         private StorageService _service;
         /// <summary>
         /// Set to true if the bucket has more objects than could retrieved in a single request.
         /// </summary>
         private bool _pageLimited = false;
+
         /// <summary>
         /// The string the provider uses as a folder separator.
         /// </summary>
         private const string SeparatorString = "/";
         /// <summary>
-        /// The character the provider uses as a fodler separator
+        /// The character the provider uses as a folder separator
         /// </summary>
         private const char Separator = '/';
 
@@ -69,6 +74,7 @@ namespace Google.PowerShell.CloudStorage
             foreach (Object gcsObject in objects.Items ?? Enumerable.Empty<Object>())
             {
                 _objectMap[gcsObject.Name] = gcsObject;
+                // Find the prefixes (parent folders) of this object.
                 string prefix = gcsObject.Name.TrimEnd(Separator);
                 int lastSeparator = gcsObject.Name.LastIndexOf(Separator);
                 bool children = false;
@@ -95,7 +101,6 @@ namespace Google.PowerShell.CloudStorage
         {
             if (_pageLimited)
             {
-
                 if (_objectMap.ContainsKey(objectName))
                 {
                     return _objectMap[objectName] != null;
@@ -171,8 +176,6 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// Gets the Google Cloud Storage object of a given object name.
         /// </summary>
-        /// <param name="objectName">The name of the object to get.</param>
-        /// <returns></returns>
         public Object GetGcsObject(string objectName)
         {
             if (_objectMap.ContainsKey(objectName))

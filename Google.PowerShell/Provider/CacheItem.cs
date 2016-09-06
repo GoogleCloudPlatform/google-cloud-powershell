@@ -5,6 +5,11 @@ using System;
 
 namespace Google.PowerShell.Provider
 {
+    /// <summary>
+    /// A CacheItem will get an object from the given update function and continue to return that object for
+    /// the duration of cacheLifetime. It will then make another call to the update function to get a new 
+    /// version of the object. The default cache lifetime is one minute.
+    /// </summary>
     public class CacheItem<T>
     {
         private DateTimeOffset _lastUpdate = DateTimeOffset.MinValue;
