@@ -23,6 +23,9 @@ namespace Google.PowerShell.ComputeEngine
     /// <code>PS C:\> Get-GceUrlMap "my-url-map"</code>
     /// <para>This command gets the url map named "my-url-map"</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/urlMaps#resource)">
+    /// [Url Map resource definition]
+    /// </para>
     [Cmdlet(VerbsCommon.Get, "GceUrlMap", DefaultParameterSetName = ParameterSetNames.OfProject)]
     [OutputType(typeof(UrlMap))]
     public class GceGceUrlMapCmdlet : GceCmdlet

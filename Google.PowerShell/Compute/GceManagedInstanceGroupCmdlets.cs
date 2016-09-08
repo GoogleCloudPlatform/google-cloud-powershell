@@ -34,6 +34,9 @@ namespace Google.PowerShell.Compute
     /// <para>Lists the status of all members of the instance group named "my-instance-group" in the default
     /// project and zone.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instanceGroupManagers#resource)">
+    /// [Managed Instance Group resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceManagedInstanceGroup", DefaultParameterSetName = ParameterSetNames.ListProject)]
     [OutputType(typeof(InstanceGroupManager), typeof(ManagedInstance))]
@@ -230,6 +233,9 @@ namespace Google.PowerShell.Compute
     /// <para>Creates a new managed instance group named "my-instance-group". The instance of the group will
     /// be created from template "my-template" and the group will create four instances.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instanceGroupManagers#resource)">
+    /// [Managed Instance Group resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceManagedInstanceGroup")]
     [OutputType(typeof(InstanceGroupManager))]
@@ -412,6 +418,9 @@ namespace Google.PowerShell.Compute
     /// <code>PS C:\> Get-GceManagedInstanceGroup -Zone "us-central1-a" | Remove-GceManagedInstanceGroup</code>
     /// <para>Removes all managed instance groups of the default project in zone "us-central1-a".</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instanceGroupManagers#resource)">
+    /// [Managed Instance Group resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceManagedInstanceGroup", SupportsShouldProcess = true,
         DefaultParameterSetName = ParameterSetNames.ByName)]
@@ -529,6 +538,9 @@ namespace Google.PowerShell.Compute
     /// <para>The tempalte "new-template" becomes the template for all new instances created by managed
     /// instance group "my-group"</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instanceGroupManagers#resource)">
+    /// [Managed Instance Group resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceManagedInstanceGroup", SupportsShouldProcess = true)]
     [OutputType(typeof(InstanceGroupManager))]
@@ -875,6 +887,9 @@ namespace Google.PowerShell.Compute
     /// <code>PS C:\> Get-GceManagedInstanceGroup -Zone "us-central1-a" | Wait-GceManagedInstanceGroup</code>
     /// <para>Waits for all maanged instance groups in zone us-central1-a to reach a normal running state.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instanceGroupManagers#resource)">
+    /// [Managed Instance Group resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Wait, "GceManagedInstanceGroup")]
     public class WaitGceManagedInstanceGroupCmdlet : GceCmdlet

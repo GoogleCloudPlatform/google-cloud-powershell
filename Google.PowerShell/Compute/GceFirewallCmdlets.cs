@@ -24,6 +24,9 @@ namespace Google.PowerShell.ComputeEngine
     /// <code>PS C:\> Get-GceFirewall "my-firewall"</code>
     /// <para>Gets the information of the firewall rule in the default project named "my-firewall".</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/firewalls#resource)">
+    /// [Firewall resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceFirewall")]
     [OutputType(typeof(Firewall))]
@@ -100,6 +103,9 @@ namespace Google.PowerShell.ComputeEngine
     /// traffic using tcp on ports 80 and 443 as well as the esp protocol from servers tagged my-source to
     /// servers tagged my-target.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/firewalls#resource)">
+    /// [Firewall resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceFirewall")]
     [OutputType(typeof(Firewall))]
@@ -223,6 +229,9 @@ namespace Google.PowerShell.ComputeEngine
     /// <code>PS C:\> Remove-GceFirewall "my-firewall"</code>
     /// <para>Removes the firewall named "my-firewall" in the default project.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/firewalls#resource)">
+    /// [Firewall resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceFirewall", SupportsShouldProcess = true)]
     public class RemoveGceFirewallCmdlet : GceCmdlet
@@ -288,6 +297,9 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// <para type="description">
     /// Overwrites all data about a firewall rule.
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/firewalls#resource)">
+    /// [Firewall resource definition]
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceFirewall")]

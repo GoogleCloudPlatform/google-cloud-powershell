@@ -65,7 +65,7 @@ namespace Google.PowerShell.Common
             return new BaseClientService.Initializer()
             {
                 HttpClientInitializer = getCredsTask.Result,
-                ApplicationName = "Google Cloud PowerShell",
+                ApplicationName = "google-cloud-powershell",
             };
         }
 

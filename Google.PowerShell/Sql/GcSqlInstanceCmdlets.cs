@@ -126,11 +126,29 @@ namespace Google.PowerShell.Sql
     ///   <br></br>
     ///   <para>If successful, the command returns a resource for the added instance.</para>
     /// </example>
+    /// <example>
+    ///   <para>
+    ///   Adds a default instance named "gootoso" to the project "myproject"
+    ///   </para>
+    ///   <para><code>
+    ///     PS C:\> Add-GcSqlInstance "gootoso" -Project "myproject"
+    ///   </code></para>
+    ///   <br></br>
+    ///   <para>If successful, the command returns a resource for the added instance.</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/setup)">
+    ///   [Setting up Instances]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GcSqlInstance")]
     [OutputType(typeof(DatabaseInstance))]
     public class AddGcSqlInstanceCmdlet : GcSqlCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string Default = "Default";
+            public const string ByConfig = "ByConfig";
+        }
         /// <summary>
         /// <para type="description">
         /// Name of the project. Defaults to the Cloud SDK configuration for properties if not specified.
@@ -146,20 +164,90 @@ namespace Google.PowerShell.Sql
         /// Can be created with New-GcSqlInstanceConfig.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
+            ParameterSetName = ParameterSetNames.ByConfig)]
         public DatabaseInstance InstanceConfig { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The instance resource. 
+        /// Can be created with New-GcSqlInstanceConfig.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, 
+            ParameterSetName = ParameterSetNames.Default)]
+        public string Name { get; set; }
+
+
+        /// <summary>
+        /// Creates a default Google Cloud SQL Database instance.
+        /// </summary>
+        /// <returns> A SQL instance object. </returns>
+        private DatabaseInstance CreateDefaultInstance()
+        {
+            return new DatabaseInstance
+            {
+                Settings = new Settings {
+                    Tier = "db-n1-standard-1",
+                    PricingPlan = "PER_USE",
+                    ActivationPolicy = "ALWAYS",
+                    BackupConfiguration = new BackupConfiguration
+                    {
+                        BinaryLogEnabled = true,
+                        Enabled = true,
+                        StartTime = "22:00"
+                    },
+                    DataDiskSizeGb = 10,
+                    IpConfiguration = new IpConfiguration
+                    {
+                        Ipv4Enabled = false,
+                        RequireSsl = false
+                    },
+                    LocationPreference = new LocationPreference(),
+                    MaintenanceWindow = new MaintenanceWindow
+                    {
+                        Day = 5,
+                        Hour = 22,
+                    },
+                    StorageAutoResize = false,
+                    DataDiskType = "PD_SSD",
+                    ReplicationType = "SYNCHRONOUS"
+                },
+                Name = Name,
+                Region = "us-central1",
+                BackendType = "SECOND_GEN",
+                Project = Project,
+                DatabaseVersion = "MYSQL_5_6",
+                InstanceType = "CLOUD_SQL_INSTANCE",
+                State = "RUNNABLE"
+            };
+        }
 
         protected override void ProcessRecord()
         {
-            InstancesResource.InsertRequest request = Service.Instances.Insert(InstanceConfig, Project);
-            WriteVerbose($"Adding instance '{InstanceConfig.Name}' to Project '{Project}'.");
+            DatabaseInstance instance;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.Default:
+                    instance = CreateDefaultInstance();
+                    break;
+                case ParameterSetNames.ByConfig:
+                    instance = InstanceConfig;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+            instance.Project = Project;
+            InstancesResource.InsertRequest request = Service.Instances.Insert(instance, Project);
+            WriteVerbose($"Adding instance '{instance.Name}' to Project '{Project}'.");
             Operation result = request.Execute();
             WaitForSqlOperation(result);
-            /// We get the instance that was just added
-            /// so that the returned DatabaseInstance is as accurate as possible.
-            InstancesResource.GetRequest instanceRequest = Service.Instances.Get(Project, InstanceConfig.Name);
+            // We get the instance that was just added
+            // so that the returned DatabaseInstance is as accurate as possible.
+            InstancesResource.GetRequest instanceRequest = Service.Instances.Get(Project, instance.Name);
             WriteObject(instanceRequest.Execute());
         }
+
     }
 
     /// <summary>
@@ -301,6 +389,12 @@ namespace Google.PowerShell.Sql
     ///   <br></br>
     ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/import-export)">
+    ///   [How-To: Importing and Exporting]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/sql/docs/import-export/)">
+    ///   [Overview of Importing and Exporting]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsData.Export, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.Sql)]
     public class ExportGcSqlInstanceCmdlet : GcSqlCmdlet
@@ -472,6 +566,12 @@ namespace Google.PowerShell.Sql
     ///   <br></br>
     ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/import-export)">
+    ///   [How-To: Importing and Exporting]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/sql/docs/import-export/)">
+    ///   [Overview of Importing and Exporting]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsData.Import, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.Sql)]
     public class ImportGcSqlInstanceCmdlet : GcSqlCmdlet
@@ -807,6 +907,7 @@ namespace Google.PowerShell.Sql
     ///   <br></br>
     ///   <para>If successful, the command returns nothing.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/replica)">[Replica Instances]</para>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Start, "GcSqlReplica")]
     public class StartGcSqlReplicaCmdlet : GcSqlCmdlet
@@ -887,6 +988,7 @@ namespace Google.PowerShell.Sql
     ///   <br></br>
     ///   <para>If successful, the command returns nothing.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/replica)">[Replica Instances]</para>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Stop, "GcSqlReplica", SupportsShouldProcess = true)]
     public class StopGcSqlReplicaCmdlet : GcSqlCmdlet
@@ -970,6 +1072,7 @@ namespace Google.PowerShell.Sql
     ///   <br></br>
     ///   <para>If successful, the command returns nothing.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/replica)">[Replica Instances]</para>
     /// </summary>
     [Cmdlet("Promote", "GcSqlReplica")]
     public class PromoteGcSqlReplicaCmdlet : GcSqlCmdlet
@@ -1071,6 +1174,15 @@ namespace Google.PowerShell.Sql
     ///   <br></br>
     ///   <para>If successful, the command returns nothing.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/backup)">
+    ///   [Managing Backups]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/sql/docs/backup-recovery/backups)">
+    ///   [Overview of Backups]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/sql/docs/backup-recovery/restore)">
+    ///   [Overview of Restoring an instance]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsData.Restore, "GcSqlInstanceBackup", SupportsShouldProcess = true)]
     public class RestoreGcSqlInstanceBackupCmdlet : GcSqlCmdlet
@@ -1582,6 +1694,7 @@ namespace Google.PowerShell.Sql
     ///   <br></br>
     ///   <para>If successful, the command returns nothing.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/replica)">[Replica Instances]</para>
     /// </summary>
     [Cmdlet("Failover", "GcSqlInstance")]
     public class FailoverGcSqlInstanceCmdlet : GcSqlCmdlet

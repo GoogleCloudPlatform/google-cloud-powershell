@@ -34,6 +34,9 @@ namespace Google.PowerShell.ComputeEngine
     ///   </code>
     ///     <para> Adds an HTTP health check with non-default values</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/httpHealthChecks#resource)">
+    /// [HealthCheck resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceHealthCheck", DefaultParameterSetName = ParameterSetNames.ByValues)]
     [OutputType(typeof(HttpHealthCheck), typeof(HttpsHealthCheck))]
@@ -227,6 +230,9 @@ namespace Google.PowerShell.ComputeEngine
     ///     Gets the HTTP health check named "my-health-check" in the project of the Cloud SDK config.
     ///   </para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/httpHealthChecks#resource)">
+    /// [HealthCheck resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceHealthCheck", DefaultParameterSetName = ParameterSetNames.OfProject)]
     [OutputType(typeof(HttpHealthCheck), typeof(HttpsHealthCheck))]
@@ -398,6 +404,9 @@ namespace Google.PowerShell.ComputeEngine
     ///   <code> PS C:&gt; Get-GceHealthCheck -Project "my-project | Remove-GceHealthCheck</code>
     ///   <para> Remove all health checks from project "my-project". </para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/httpHealthChecks#resource)">
+    /// [HealthCheck resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceHealthCheck", SupportsShouldProcess = true)]
     public class RemoveGceHealthCheckCmdlet : GceConcurrentCmdlet
@@ -525,6 +534,9 @@ namespace Google.PowerShell.ComputeEngine
     ///   </code>
     ///   <para> Changes the  HTTP health check "my-health-check" from project "my-project". </para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/httpHealthChecks#resource)">
+    /// [HealthCheck resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceHealthCheck", SupportsShouldProcess = true)]
     [OutputType(typeof(HttpHealthCheck), typeof(HttpsHealthCheck))]
