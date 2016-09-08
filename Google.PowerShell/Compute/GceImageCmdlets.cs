@@ -42,6 +42,7 @@ namespace Google.PowerShell.ComputeEngine
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/images#resource)">
     /// [Image resource definition]
     /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/images)">[Google Cloud Platform images]</para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceImage", DefaultParameterSetName = ParameterSetNames.OfProject)]
     [OutputType(typeof(Image))]
