@@ -66,16 +66,30 @@ Describe "New-GceDisk" {
             -Project $project `
             -DiskName $diskName `
             -Description "$r" `
-            -SizeGb 215 `
+            -SizeGb 15 `
             -DiskType "pd-ssd" `
             -Zone "us-central1-c"
 
         # Confirmed the return object sets all the expected fields.
         $disk.Name | Should MatchExactly $diskName
         $disk.Description | Should MatchExactly 
-        $disk.SizeGb | Should BeExactly 215
+        $disk.SizeGb | Should BeExactly 15
         $disk.Type | Should Match "pd-ssd"
         $disk.Zone | Should Match "us-central1-c"
+
+        # Confirm the values were actually set, too.
+        $getdisk = Get-GceDisk -Project $project -DiskName $diskName
+        (Compare-Object $disk $getdisk) | Should BeNullOrEmpty
+
+        Remove-GceDisk $disk
+    }
+
+    It "should work for size labeled GB" {
+        $disk = New-GceDisk -Project $project -DiskName $diskName -SizeGb 20GB
+
+        # Confirmed the return object sets all the expected fields.
+        $disk.Name | Should MatchExactly $diskName
+        $disk.SizeGb | Should BeExactly 20
 
         # Confirm the values were actually set, too.
         $getdisk = Get-GceDisk -Project $project -DiskName $diskName
@@ -101,8 +115,10 @@ Describe "New-GceDisk" {
     }
 
     Context "with snapshot" {
-        $snapshotSource = New-GceDisk "snapshot-source-$r" -SizeGb 1
-        $snapshot = $snapshotSource | Add-GceSnapshot -Name "test-snapshot-disk-source-$r"
+        BeforeAll{
+            $snapshotSource = New-GceDisk "snapshot-source-$r" -SizeGb 1
+            $snapshot = $snapshotSource | Add-GceSnapshot -Name "test-snapshot-disk-source-$r"
+        }
 
         It "should work for snapshot" {
             $disk = New-GceDisk $diskName $snapshot
@@ -120,8 +136,10 @@ Describe "New-GceDisk" {
             Remove-GceDisk $disk
         }
 
-        Remove-GceDisk $snapshotSource
-        Remove-GceSnapshot $snapshot
+        AfterAll {
+            Remove-GceDisk $snapshotSource
+            Remove-GceSnapshot $snapshot
+        }
     }
 
     It "should fail with invalid disk names" {
@@ -140,6 +158,11 @@ Describe "Resize-GceDisk" {
     It "should work using object pipeline" {
         $disk = Get-GceDisk $diskName | Resize-GceDisk 20
         $disk.SizeGb | Should BeExactly 20
+    }
+ 
+    It "should work using size labeled gb" {
+        $disk = Get-GceDisk $diskName | Resize-GceDisk 30GB
+        $disk.SizeGb | Should BeExactly 30
     }
 
     It "should work using name." {

@@ -32,6 +32,9 @@ namespace Google.PowerShell.Compute
     /// <code>PS C:\> Get-GceMachineType "f1-micro"</code>
     /// <para>Gets the machine type named f1-micro in the default project and zone.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/machineTypes#resource)">
+    /// [Machine Type resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceMachineType", DefaultParameterSetName = ParameterSetNames.OfProject)]
     [OutputType(typeof(MachineType))]

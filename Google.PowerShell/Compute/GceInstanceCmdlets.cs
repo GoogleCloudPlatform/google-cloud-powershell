@@ -22,6 +22,9 @@ namespace Google.PowerShell.ComputeEngine
     /// all instances in a zone, or a specific instance by name. Can also get all instances of a managed
     /// instance group.
     /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
+    /// [Instance resource definition]
+    /// </para>
     /// <example>
     ///     <code> PS C:\> Get-GceInstance -Project "my-project" </code>
     ///     <para> Gets all instances of the project "my-project".</para>
@@ -334,6 +337,9 @@ namespace Google.PowerShell.ComputeEngine
     ///     http and https server.
     ///   </para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
+    /// [Instance resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceInstance")]
     [OutputType(typeof(Instance))]
@@ -585,6 +591,9 @@ namespace Google.PowerShell.ComputeEngine
     ///     </code>
     ///     <para>Removes all instances in project "my-project" that are currently stopped.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
+    /// [Instance resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceInstance", SupportsShouldProcess = true)]
     public class RemoveGceInstanceCmdlet : GceConcurrentCmdlet
@@ -679,6 +688,9 @@ namespace Google.PowerShell.ComputeEngine
     ///     </code>
     ///     <para>Starts all instances in project "my-project" that are currently stopped.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
+    /// [Instance resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Start, "GceInstance")]
     [OutputType(typeof(Instance))]
@@ -776,6 +788,9 @@ namespace Google.PowerShell.ComputeEngine
     ///     </code>
     ///     <para>Stops all instances in project "my-project" that are currently running.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
+    /// [Instance resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Stop, "GceInstance")]
     [OutputType(typeof(Instance))]
@@ -872,6 +887,9 @@ namespace Google.PowerShell.ComputeEngine
     ///     </code>
     ///     <para>Removes all instances in project "my-project".</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
+    /// [Instance resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Restart, "GceInstance")]
     [OutputType(typeof(Instance))]
@@ -957,6 +975,9 @@ namespace Google.PowerShell.ComputeEngine
     /// <para type="description">
     /// With this cmdlet, you can update metadata, attach and detach disks, add and remove acces configs,
     /// or add and remove tags.
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
+    /// [Instance resource definition]
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceInstance")]

@@ -24,12 +24,10 @@ namespace Google.PowerShell.CloudStorage
         /// </summary>
         protected const string UTF8TextMimeType = "text/plain; charset=utf-8";
 
-        // TODO(chrsmith): Cache the storage service? Create it in OnProcessRecord every time? (So it does so once?)
-
-        protected StorageService GetStorageService()
-        {
-            return new StorageService(GetBaseClientServiceInitializer());
-        }
+        /// <summary>
+        /// The storage service.
+        /// </summary>
+        public StorageService Service { get; } = new StorageService(GetBaseClientServiceInitializer());
 
         /// <summary>
         /// Constructs the media URL of an object from its bucket and name. This does not include the generation

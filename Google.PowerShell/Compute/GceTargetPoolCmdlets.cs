@@ -29,6 +29,9 @@ namespace Google.PowerShell.ComputeEngine
     /// <code>PS C:\> Get-GceTargetPool "my-target-pool"</code>
     /// <para>This command gets the target pool named "my-target-pool" in the default project and zone</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/targetPools#resource)">
+    /// [Target Pool resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceTargetPool", DefaultParameterSetName = ParameterSetNames.OfProject)]
     [OutputType(typeof(TargetPool))]
@@ -176,6 +179,9 @@ namespace Google.PowerShell.ComputeEngine
     /// </code>
     /// <para>This command removes the instance pointed to by $instanceUrl from target pool "my-pool".</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/targetPools#resource)">
+    /// [Target Pool resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceTargetPool")]
     [OutputType(typeof(TargetPool))]

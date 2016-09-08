@@ -60,6 +60,19 @@ Describe "Add-GcSqlInstance" {
         Remove-GcSqlInstance $instance
     }
     
+    It "should be able to make a default with just a name" {
+        $r = Get-Random
+        # A random number is used to avoid collisions with the speed of creating
+        # and deleting instances.
+        $instance = "test-inst$r"
+        $instances = Get-GcSqlInstance
+        Add-GcSqlInstance $instance
+        $newInstances = Get-GcSqlInstance
+        ($instances.Name -contains $instance) | Should Be false
+        ($newInstances.Name -contains $instance) | Should Be true
+        Remove-GcSqlInstance $instance
+    }
+
     It "should be able to reflect custom settings" {
         $r = Get-Random
         # A random number is used to avoid collisions with the speed of creating
