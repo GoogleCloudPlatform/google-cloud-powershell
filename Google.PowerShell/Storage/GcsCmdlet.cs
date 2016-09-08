@@ -83,7 +83,7 @@ namespace Google.PowerShell.CloudStorage
             int index = file.LastIndexOf('.');
             if (index == -1)
             {
-                return null;
+                return OctetStreamMimeType;
             }
             string extension = file.ToLowerInvariant().Substring(index);
             // http://www.freeformatter.com/mime-types-list.html
@@ -106,7 +106,7 @@ namespace Google.PowerShell.CloudStorage
                 case ".zip":
                     return "application/zip";
             }
-            return null;
+            return OctetStreamMimeType;
         }
 
         /// <summary>

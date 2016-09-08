@@ -26,9 +26,11 @@ namespace Google.PowerShell.CloudStorage
     /// <summary>
     /// A powershell provider that connects to Google Cloud Storage.
     /// </summary>
-    [CmdletProvider("GoogleCloudStorage", ProviderCapabilities.ShouldProcess)]
+    [CmdletProvider(ProviderName, ProviderCapabilities.ShouldProcess)]
     public class GoogleCloudStorageProvider : NavigationCmdletProvider, IContentCmdletProvider
     {
+        private const string ProviderName = "GoogleCloudStorage";
+
         /// <summary>
         /// Dynamic parameters for "Set-Content".
         /// </summary>
@@ -229,12 +231,12 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// The Google Cloud Storage service.
         /// </summary>
-        private StorageService Service { get; } = new StorageService(GCloudCmdlet.GetBaseClientServiceInitializer());
+        private static StorageService Service { get; } = new StorageService(GCloudCmdlet.GetBaseClientServiceInitializer());
 
         /// <summary>
         /// This service is used to get all the accessible projects.
         /// </summary>
-        private CloudResourceManagerService ResourceService { get; } =
+        private static CloudResourceManagerService ResourceService { get; } =
             new CloudResourceManagerService(GCloudCmdlet.GetBaseClientServiceInitializer());
 
         /// <summary>
@@ -246,7 +248,8 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// Maps the name of a bucket to a cahced object describing that bucket.
         /// </summary>
-        private readonly CacheItem<Dictionary<string, Bucket>> _bucketCache;
+        private static readonly CacheItem<Dictionary<string, Bucket>> BucketCache =
+            new CacheItem<Dictionary<string, Bucket>>(UpdateBucketCache);
 
         /// <summary>
         /// Reports on the usage of the provider.
@@ -272,7 +275,6 @@ namespace Google.PowerShell.CloudStorage
             {
                 _telemetryReporter = new InMemoryCmdletResultReporter();
             }
-            _bucketCache = new CacheItem<Dictionary<string, Bucket>>(GetBucketMap);
         }
 
         /// <summary>
@@ -283,7 +285,7 @@ namespace Google.PowerShell.CloudStorage
         {
             return new Collection<PSDriveInfo>
             {
-                new PSDriveInfo("gs", ProviderInfo, "", "GoogleCloudStorage", PSCredential.Empty)
+                new PSDriveInfo("gs", ProviderInfo, "", ProviderName, PSCredential.Empty)
             };
         }
 
@@ -304,15 +306,12 @@ namespace Google.PowerShell.CloudStorage
         /// <returns>True if GcsPath.Parse() can parse it.</returns>
         protected override bool IsValidPath(string path)
         {
-            GcsPath.Parse(path);
             return true;
         }
 
         /// <summary>
         /// PowerShell uses this to check if items exist.
         /// </summary>
-        /// <param name="path">The path to the item to get.</param>
-        /// <returns>true if the item exists.</returns>
         protected override bool ItemExists(string path)
         {
             var gcsPath = GcsPath.Parse(path);
@@ -321,7 +320,7 @@ namespace Google.PowerShell.CloudStorage
                 case GcsPath.GcsPathType.Drive:
                     return true;
                 case GcsPath.GcsPathType.Bucket:
-                    var bucketCache = GetBucketCache();
+                    var bucketCache = BucketCache.Value;
                     if (bucketCache.ContainsKey(gcsPath.Bucket))
                     {
                         return true;
@@ -400,7 +399,7 @@ namespace Google.PowerShell.CloudStorage
                     break;
                 case GcsPath.GcsPathType.Bucket:
                     Bucket bucket;
-                    var bucketCache = GetBucketCache();
+                    var bucketCache = BucketCache.Value;
                     if (bucketCache.ContainsKey(gcsPath.Bucket))
                     {
                         bucket = bucketCache[gcsPath.Bucket];
@@ -535,7 +534,7 @@ namespace Google.PowerShell.CloudStorage
                 default:
                     throw new InvalidOperationException($"Unknown Path Type {gcsPath.Type}");
             }
-            ClearBucketModels();
+            BucketModels.Clear();
             _telemetryReporter.ReportSuccess(nameof(GoogleCloudStorageProvider), nameof(NewItem));
         }
 
@@ -584,7 +583,7 @@ namespace Google.PowerShell.CloudStorage
                     childRequest.DestinationPredefinedAcl = dyanmicParameters.DestinationAcl;
                     childRequest.Projection = ObjectsResource.CopyRequest.ProjectionEnum.Full;
                     Object childObject = childRequest.Execute();
-                    bool isContainer = new GcsPath(childObject).Type != GcsPath.GcsPathType.Object;
+                    bool isContainer = (new GcsPath(childObject).Type != GcsPath.GcsPathType.Object);
                     WriteItemObject(childObject, copyPath, isContainer);
                 }
             }
@@ -600,7 +599,7 @@ namespace Google.PowerShell.CloudStorage
                 Object response = request.Execute();
                 WriteItemObject(response, copyPath, gcsCopyPath.Type != GcsPath.GcsPathType.Object);
             }
-            ClearBucketModels();
+            BucketModels.Clear();
             _telemetryReporter.ReportSuccess(nameof(GoogleCloudStorageProvider), nameof(CopyItem));
         }
 
@@ -632,6 +631,10 @@ namespace Google.PowerShell.CloudStorage
             return contentReader;
         }
 
+        /// <summary>
+        /// Required by IContentCmdletProvider, along with GetContentReader(string). Returns null because we
+        /// have no need for dynamic parameters on Get-Content.
+        /// </summary>
         public object GetContentReaderDynamicParameters(string path)
         {
             return null;
@@ -721,7 +724,7 @@ namespace Google.PowerShell.CloudStorage
                     {
                         Service.Objects.Delete(gcsPath.Bucket, gcsPath.ObjectPath).Execute();
                     }
-                    ClearBucketModels();
+                    BucketModels.Clear();
                     break;
                 default:
                     throw new InvalidOperationException($"Unknown Path Type {gcsPath.Type}");
@@ -749,21 +752,18 @@ namespace Google.PowerShell.CloudStorage
             }
         }
 
-        private void RemoveBucket(GcsPath gcsPath, bool recurse)
+        private void RemoveBucket(GcsPath gcsPath, bool removeObjects)
         {
-            if (recurse)
+            if (removeObjects)
             {
-                List<Task<string>> deleteTasks = StartDeleteObjects(gcsPath.Bucket);
-                WaitDeleteTasks(deleteTasks);
+                DeleteObjects(gcsPath);
             }
             Service.Buckets.Delete(gcsPath.Bucket).Execute();
         }
 
-        /// <summary>
-        /// Asks the user about deleting bucket objects, and starts async tasks to do so.
-        /// </summary>
-        private List<Task<string>> StartDeleteObjects(string bucketName)
+        private void DeleteObjects(GcsPath gcsPath)
         {
+            string bucketName = gcsPath.Bucket;
             List<Task<string>> deleteTasks = new List<Task<string>>();
 
             ObjectsResource.ListRequest request = Service.Objects.List(bucketName);
@@ -776,27 +776,24 @@ namespace Google.PowerShell.CloudStorage
                 }
                 request.PageToken = gcsObjects.NextPageToken;
             } while (request.PageToken != null && !Stopping);
-
-            return deleteTasks;
+            WaitDeleteTasks(deleteTasks);
         }
 
         /// <summary>
-        /// Waits on the list of delete tasks to compelet, updating progress as it does so.
+        /// Waits on the list of delete tasks to compelete, updating progress as it does so.
         /// </summary>
         private void WaitDeleteTasks(List<Task<string>> deleteTasks)
         {
             int totalTasks = deleteTasks.Count;
-            int finishedTasks = 0;
             int activityId = ActivityIdGenerator.Next();
-
-            foreach (var deleteTask in deleteTasks)
+            while (deleteTasks.Count > 0)
             {
-                deleteTask.Wait();
-                finishedTasks++;
+                Task<string> deleteTask = Task.WhenAny(deleteTasks).Result;
+                deleteTasks.Remove(deleteTask);
                 WriteProgress(
                     new ProgressRecord(activityId, "Delete bucket objects", "Deleting objects")
                     {
-                        PercentComplete = (finishedTasks * 100) / totalTasks,
+                        PercentComplete = ((totalTasks - deleteTasks.Count) * 100) / totalTasks,
                         RecordType = ProgressRecordType.Processing
                     });
             }
@@ -827,22 +824,11 @@ namespace Google.PowerShell.CloudStorage
 
         private BucketModel GetBucketModel(string bucket)
         {
-            if (BucketModels.ContainsKey(bucket))
+            if (!BucketModels.ContainsKey(bucket))
             {
-                return BucketModels[bucket].Value;
+                BucketModels.Add(bucket, new CacheItem<BucketModel>(() => new BucketModel(bucket, Service)));
             }
-            else
-            {
-                CacheItem<BucketModel> bucketModel =
-                    new CacheItem<BucketModel>(() => new BucketModel(bucket, Service));
-                BucketModels[bucket] = bucketModel;
-                return bucketModel.Value;
-            }
-        }
-
-        private void ClearBucketModels()
-        {
-            BucketModels.Clear();
+            return BucketModels[bucket].Value;
         }
 
         private Object NewObject(GcsPath gcsPath, NewGcsObjectDynamicParameters dynamicParameters, Stream contentStream)
@@ -931,29 +917,24 @@ namespace Google.PowerShell.CloudStorage
             } while (allPages && !Stopping && request.PageToken != null);
         }
 
-        private async Task<IEnumerable<Bucket>> ListBucketsAsync(Project project)
+        private static async Task<IEnumerable<Bucket>> ListBucketsAsync(Project project)
         {
             BucketsResource.ListRequest request = Service.Buckets.List(project.ProjectId);
             var allBuckets = new List<Bucket>();
-            do
+            try
             {
-                try
+                do
                 {
                     Buckets buckets = await request.ExecuteAsync();
                     allBuckets.AddRange(buckets.Items ?? Enumerable.Empty<Bucket>());
-                }
-                catch (GoogleApiException e)
-                {
-                    if (e.HttpStatusCode != HttpStatusCode.Forbidden)
-                    {
-                        throw;
-                    }
-                }
-            } while (!Stopping && request.PageToken != null);
+                    request.PageToken = buckets.NextPageToken;
+                } while (request.PageToken != null);
+            }
+            catch (GoogleApiException e) when (e.HttpStatusCode == HttpStatusCode.Forbidden) { }
             return allBuckets;
         }
 
-        private IEnumerable<Project> ListAllProjects()
+        private static IEnumerable<Project> ListAllProjects()
         {
             ProjectsResource.ListRequest request = ResourceService.Projects.List();
             do
@@ -964,29 +945,20 @@ namespace Google.PowerShell.CloudStorage
                     yield return project;
                 }
                 request.PageToken = projects.NextPageToken;
-            } while (!Stopping && request.PageToken != null);
-        }
-
-        private Dictionary<string, Bucket> GetBucketCache()
-        {
-            return _bucketCache.Value;
+            } while (request.PageToken != null);
         }
 
         private IEnumerable<Bucket> ListAllBuckets()
         {
-            return GetBucketCache().Values;
+            return BucketCache.Value.Values;
         }
 
-        private Dictionary<string, Bucket> GetBucketMap()
+        private static Dictionary<string, Bucket> UpdateBucketCache()
         {
-            Dictionary<string, Bucket> buckets = new Dictionary<string, Bucket>();
             List<Project> projects = ListAllProjects().ToList();
-            var tasks = projects.Select(project => ListBucketsAsync(project)).ToList();
-            foreach (var bucket in tasks.SelectMany(task => task.Result))
-            {
-                buckets[bucket.Name] = bucket;
-            }
-            return buckets;
+            IEnumerable<Bucket> buckets =
+                projects.Select(ListBucketsAsync).ToList().SelectMany(task => task.Result);
+            return buckets.ToDictionary(bucket => bucket.Name);
         }
     }
 }
