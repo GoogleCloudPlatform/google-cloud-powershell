@@ -20,7 +20,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </summary>
     /// <example>
     /// <code>
-    /// <para>PS C:\> $disks = (New-GceAttachedDiskConfig (Get-GceImage "debian-cloud" -Family "debian-8") -Boot -AutoDelete),</para>
+    /// <para>PS C:\> $disks = (New-GceAttachedDiskConfig (Get-GceImage "windows-cloud" -Family "windows-2012-r2") -Boot -AutoDelete),</para>
     /// <para>                 (New-GceAttachedDiskConfig (Get-GceDisk "persistant-disk-name") -ReadOnly)</para>
     /// <para>PS C:\> Add-GceInstanceTemplate -Name "template-name" -Disk $disks</para>
     /// </code>
