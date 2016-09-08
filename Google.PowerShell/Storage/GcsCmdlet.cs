@@ -22,7 +22,7 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// MIME attachment for UTF-8 encoding text.
         /// </summary>
-        protected const string UTF8TextMimeType = "text/plain; charset=utf-8";
+        public const string UTF8TextMimeType = "text/plain; charset=utf-8";
 
         /// <summary>
         /// The storage service.
@@ -76,12 +76,12 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// Infer the MIME type of a non-qualified file path. Returns null if no match is found.
         /// </summary>
-        protected string InferContentType(string file)
+        public static string InferContentType(string file)
         {
             int index = file.LastIndexOf('.');
             if (index == -1)
             {
-                return null;
+                return OctetStreamMimeType;
             }
             string extension = file.ToLowerInvariant().Substring(index);
             // http://www.freeformatter.com/mime-types-list.html
@@ -104,7 +104,7 @@ namespace Google.PowerShell.CloudStorage
                 case ".zip":
                     return "application/zip";
             }
-            return null;
+            return OctetStreamMimeType;
         }
 
         /// <summary>

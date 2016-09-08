@@ -7,7 +7,7 @@ $r = Get-Random
 $routeName = "test-route-$r"
 $allIps = "0.0.0.0/0"
 $defaultNetwork = Get-GceNetwork default
-$defaultRouteCount = (gcloud compute regions list).Count
+$defaultRouteCount = (Get-GceRoute).Count
 
 Describe "Add-GceRoute" {
     It "should fail for wrong project" {
