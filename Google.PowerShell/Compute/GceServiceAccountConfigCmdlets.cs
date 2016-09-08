@@ -113,7 +113,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The type of Cloud Logging API scope to add. Defaults to Write. Also accepts None, Read and Full.
+        /// The type of Stackdriver Logging API scope to add. Defaults to Write. Also accepts None, Read and Full.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.FromFlags)]
