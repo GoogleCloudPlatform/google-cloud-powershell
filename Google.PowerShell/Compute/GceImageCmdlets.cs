@@ -47,9 +47,9 @@ namespace Google.PowerShell.ComputeEngine
     [OutputType(typeof(Image))]
     public class GetGceImageCmdlets : GceCmdlet
     {
-        private static readonly string[] s_defaultProjects = {
-                "centos-cloud", "coreos-cloud", "debian-cloud", "debian-cloud",
-                "rhel-cloud", "suse-cloud", "ubuntu-os-cloud", "windows-cloud"
+        private static readonly string[] DefaultProjects = {
+                "centos-cloud", "coreos-cloud", "debian-cloud", "debian-cloud", "rhel-cloud",
+                "suse-cloud", "ubuntu-os-cloud", "windows-cloud", "windows-sql-cloud"
             };
 
         private class ParameterSetNames
@@ -82,7 +82,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(Position = 1)]
-        public string[] Project { get; set; } = s_defaultProjects;
+        public string[] Project { get; set; } = DefaultProjects;
 
         /// <summary>
         /// <para type="description">
