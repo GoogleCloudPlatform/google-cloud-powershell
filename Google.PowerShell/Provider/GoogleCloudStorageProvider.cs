@@ -242,13 +242,13 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// Maps the name of a bucket to a cache of data about the objects in that bucket.
         /// </summary>
-        private static readonly Dictionary<string, CacheItem<BucketModel>> BucketModels =
+        private static Dictionary<string, CacheItem<BucketModel>> BucketModels { get; } =
             new Dictionary<string, CacheItem<BucketModel>>();
 
         /// <summary>
         /// Maps the name of a bucket to a cahced object describing that bucket.
         /// </summary>
-        private static readonly CacheItem<Dictionary<string, Bucket>> BucketCache =
+        private static CacheItem<Dictionary<string, Bucket>> BucketCache { get; } =
             new CacheItem<Dictionary<string, Bucket>>(UpdateBucketCache);
 
         /// <summary>
