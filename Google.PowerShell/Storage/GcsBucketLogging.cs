@@ -1,15 +1,10 @@
 ﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
-using System.Management.Automation;
-
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Download;
-using Google.Apis.Services;
 using Google.Apis.Storage.v1;
 using Google.Apis.Storage.v1.Data;
-
 using Google.PowerShell.Common;
+using System.Management.Automation;
 
 namespace Google.PowerShell.CloudStorage
 {
@@ -42,9 +37,8 @@ namespace Google.PowerShell.CloudStorage
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            var service = GetStorageService();
 
-            BucketsResource.GetRequest req = service.Buckets.Get(this.Name);
+            BucketsResource.GetRequest req = Service.Buckets.Get(this.Name);
             req.Projection = BucketsResource.GetRequest.ProjectionEnum.Full;
             Bucket bucket = req.Execute();
 
@@ -52,7 +46,7 @@ namespace Google.PowerShell.CloudStorage
             // Logging doesn't work for patch-with-empty-obj.
             bucket.Logging = null;
 
-            BucketsResource.UpdateRequest req2 = service.Buckets.Update(bucket, this.Name);
+            BucketsResource.UpdateRequest req2 = Service.Buckets.Update(bucket, this.Name);
             req2.Projection = BucketsResource.UpdateRequest.ProjectionEnum.Full;
             req2.Execute();
 
@@ -95,15 +89,14 @@ namespace Google.PowerShell.CloudStorage
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            var service = GetStorageService();
 
             Bucket.LoggingData logging = new Bucket.LoggingData();
             logging.LogBucket = this.LogBucket;
             logging.LogObjectPrefix = this.LogObjectPrefix;
 
-            Bucket bucket = service.Buckets.Get(this.Name).Execute();
+            Bucket bucket = Service.Buckets.Get(this.Name).Execute();
             bucket.Logging = logging;
-            var req = service.Buckets.Patch(bucket, this.Name);
+            var req = Service.Buckets.Patch(bucket, this.Name);
             req.Projection = BucketsResource.PatchRequest.ProjectionEnum.Full;
             req.Execute();
 

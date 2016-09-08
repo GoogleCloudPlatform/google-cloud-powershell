@@ -18,6 +18,9 @@ namespace Google.PowerShell.Compute
     /// <para type="description">
     /// Adds a new networking route.
     /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/routes#resource)">
+    /// [Route resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceRoute")]
     [OutputType(typeof(Route))]
@@ -183,6 +186,9 @@ namespace Google.PowerShell.Compute
     /// <para type="description">
     /// Lists all the networking routes for a project, or gets a specific one by project and name.
     /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/routes#resource)">
+    /// [Route resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceRoute")]
     [OutputType(typeof(Route))]
@@ -242,6 +248,9 @@ namespace Google.PowerShell.Compute
     /// </para>
     /// <para type="description">
     /// Deletes a networking route.
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/routes#resource)">
+    /// [Route resource definition]
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceRoute", SupportsShouldProcess = true,

@@ -25,8 +25,12 @@ namespace Google.PowerShell.ComputeEngine
     ///   <code>PS C:\> Get-GceDisk -Project "ppiper-prod" "ppiper-frontend"</code>
     ///   <para>Get the disk named "ppiper-frontend".</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/disks#resource)">
+    /// [Disk resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceDisk")]
+    [OutputType(typeof(Disk))]
     public class GetGceDiskCmdlet : GceCmdlet
     {
         /// <summary>
@@ -148,8 +152,12 @@ namespace Google.PowerShell.ComputeEngine
     ///   <code>PS C:\> Get-GceSnapshot "snapshot-name" | New-GceDisk "disk-from-snapshot" </code>
     ///   <para>Creates a new persistant disk from the snapshot named "snapshot-name".</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/disks#resource)">
+    /// [Disk resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GceDisk", DefaultParameterSetName = ParameterSetNames.EmptyDisk)]
+    [OutputType(typeof(Disk))]
     public class NewGceDiskCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
@@ -249,6 +257,12 @@ namespace Google.PowerShell.ComputeEngine
                 diskTypeResource = $"zones/{Zone}/diskTypes/{DiskType}";
             }
 
+            // In PowerShell, 10GB is parsed as 10*2^30. If a user enters 10GB, bring it back down to 10.
+            if (SizeGb.HasValue && SizeGb.Value > 1L << 30)
+            {
+                SizeGb = SizeGb.Value / (1L << 30);
+            }
+
             Disk newDisk = new Disk
             {
                 Name = DiskName,
@@ -288,8 +302,12 @@ namespace Google.PowerShell.ComputeEngine
     ///   <code>PS C:\> Get-GceDisk "my-disk" | Resize-GceDisk 15</code>
     ///   <para>Changes the size of the persistant disk "my-disk" to 15GB.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/disks#resource)">
+    /// [Disk resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet("Resize", "GceDisk", DefaultParameterSetName = ParameterSetNames.ByObject)]
+    [OutputType(typeof(Disk))]
     public class ResizeGceDiskCmdlet : GceConcurrentCmdlet
     {
 
@@ -363,6 +381,12 @@ namespace Google.PowerShell.ComputeEngine
                     throw UnknownParameterSetException;
             }
 
+            // In PowerShell, 10GB is parsed as 10*2^30. If a user enters 10GB, bring it back down to 10.
+            if (NewSizeGb > 1L << 30)
+            {
+                NewSizeGb = NewSizeGb / (1L << 30);
+            }
+
             var diskResizeReq = new DisksResizeRequest { SizeGb = NewSizeGb };
             DisksResource.ResizeRequest resizeReq =
                 Service.Disks.Resize(diskResizeReq, project, zone, name);
@@ -390,6 +414,9 @@ namespace Google.PowerShell.ComputeEngine
     /// <code>PS C:\> Get-GceDisk "my-disk" | Remove-GceDisk</code>
     /// <para>Removes the disk in the default project and zone named "my-disk".</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/disks#resource)">
+    /// [Disk resource definition]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceDisk", SupportsShouldProcess = true,
         DefaultParameterSetName = ParameterSetNames.ByName)]

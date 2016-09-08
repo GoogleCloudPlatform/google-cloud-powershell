@@ -35,6 +35,9 @@ namespace Google.PowerShell.ComputeEngine
     /// <code>PS C:\> Get-GceForwardingRule "my-forwarding-rule" -Gobal</code>
     /// <para>This command gets the global forwarding rule named "my-forwarding-rule" in the default project.</para>
     /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/forwardingRules#resource)">
+    /// [Forwarding Rule resource definition]
+    /// </para>
     [Cmdlet(VerbsCommon.Get, "GceForwardingRule", DefaultParameterSetName = ParameterSetNames.OfProject)]
     [OutputType(typeof(ForwardingRule))]
     public class GetGceForwardingRuleCmdlet : GceCmdlet
