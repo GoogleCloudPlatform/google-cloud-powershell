@@ -72,7 +72,7 @@ namespace Google.PowerShell.Common
         }
 
         /// <summary>
-        /// Gives the property a default value from the gcould config.
+        /// Gives the property a default value from the gcould config if needed.
         /// </summary>
         /// <param name="property">
         /// The property info.
@@ -89,6 +89,12 @@ namespace Google.PowerShell.Common
             }
         }
 
+        /// <summary>
+        /// Gives the property a default value from the gcould config. This sets the property regardless of its
+        /// current value.
+        /// </summary>
+        /// <param name="property">The property to set.</param>
+        /// <param name="instance">The instance that contains the property to set.</param>
         public void SetObjectConfigDefault(PropertyInfo property, object instance)
         {
             string settingsValue = CloudSdkSettings.GetSettingsValue(Property);
