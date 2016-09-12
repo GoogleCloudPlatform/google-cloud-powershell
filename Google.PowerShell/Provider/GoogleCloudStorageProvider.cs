@@ -863,7 +863,7 @@ namespace Google.PowerShell.CloudStorage
                 ConfigPropertyNameAttribute configPropertyName =
                     (ConfigPropertyNameAttribute)Attribute.GetCustomAttribute(
                         property, typeof(ConfigPropertyNameAttribute));
-                configPropertyName.SetConfigDefault(property, dynamicParams);
+                configPropertyName.SetObjectConfigDefault(property, dynamicParams);
             }
 
             var bucket = new Bucket

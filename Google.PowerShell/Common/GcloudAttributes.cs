@@ -72,7 +72,7 @@ namespace Google.PowerShell.Common
         }
 
         /// <summary>
-        /// Gives the property a default value from the gcould config.
+        /// Gives the property a default value from the gcould config if needed.
         /// </summary>
         /// <param name="property">
         /// The property info.
@@ -85,15 +85,26 @@ namespace Google.PowerShell.Common
             bool isBoundParameter = instance.MyInvocation.BoundParameters.ContainsKey(property.Name);
             if (!isBoundParameter)
             {
-                string settingsValue = CloudSdkSettings.GetSettingsValue(Property);
-                if (string.IsNullOrEmpty(settingsValue))
-                {
-                    throw new PSInvalidOperationException(
-                        $"Parameter {property.Name} was not set and does not have a default value.");
-                }
-
-                property.SetValue(instance, settingsValue);
+                SetObjectConfigDefault(property, instance);
             }
+        }
+
+        /// <summary>
+        /// Gives the property a default value from the gcould config. This sets the property regardless of its
+        /// current value.
+        /// </summary>
+        /// <param name="property">The property to set.</param>
+        /// <param name="instance">The instance that contains the property to set.</param>
+        public void SetObjectConfigDefault(PropertyInfo property, object instance)
+        {
+            string settingsValue = CloudSdkSettings.GetSettingsValue(Property);
+            if (string.IsNullOrEmpty(settingsValue))
+            {
+                throw new PSInvalidOperationException(
+                    $"Parameter {property.Name} was not set and does not have a default value.");
+            }
+
+            property.SetValue(instance, settingsValue);
         }
 
         /// <summary>
