@@ -85,15 +85,20 @@ namespace Google.PowerShell.Common
             bool isBoundParameter = instance.MyInvocation.BoundParameters.ContainsKey(property.Name);
             if (!isBoundParameter)
             {
-                string settingsValue = CloudSdkSettings.GetSettingsValue(Property);
-                if (string.IsNullOrEmpty(settingsValue))
-                {
-                    throw new PSInvalidOperationException(
-                        $"Parameter {property.Name} was not set and does not have a default value.");
-                }
-
-                property.SetValue(instance, settingsValue);
+                SetObjectConfigDefault(property, instance);
             }
+        }
+
+        public void SetObjectConfigDefault(PropertyInfo property, object instance)
+        {
+            string settingsValue = CloudSdkSettings.GetSettingsValue(Property);
+            if (string.IsNullOrEmpty(settingsValue))
+            {
+                throw new PSInvalidOperationException(
+                    $"Parameter {property.Name} was not set and does not have a default value.");
+            }
+
+            property.SetValue(instance, settingsValue);
         }
 
         /// <summary>
