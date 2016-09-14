@@ -3,7 +3,13 @@
 #
 # Bootstraps the Google Cloud cmdlets into the current PowerShell session.
 
-$modulePath = Get-ChildItem $PSScriptRoot -Include "GoogleCloud.psd1" -Recurse | Select -First 1
+function Get-ScriptDirectory
+{
+    $invocation = (Get-Variable MyInvocation -Scope 1).Value
+    return Split-Path $invocation.MyCommand.Path
+}
+
+$modulePath = Join-Path (Get-ScriptDirectory) "GoogleCloudPowerShell.psd1"
 Import-Module $modulePath
 
 $Env:UserProfile

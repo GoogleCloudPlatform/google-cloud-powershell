@@ -24,10 +24,10 @@ manually via:
     # Run "AppendPsModulePath.ps1" to register the Cloud Tools for PowerShell
     # module. Where the script is located depends on where you installed the
     # Cloud SDK. For normal user-based installs:
-    %AppData%\..\Local\Google\Cloud SDK\google-cloud-sdk\platform\PowerShell\GoogleCloud\
+    %AppData%\..\Local\Google\Cloud SDK\google-cloud-sdk\platform\GoogleCloudPowerShell\
     
     # For admin-based installs:
-    C:\Program Files (x86)\Google\Cloud SDK\google-cloud-sdk\platform\PowerShell\GoogleCloud\
+    C:\Program Files (x86)\Google\Cloud SDK\google-cloud-sdk\platform\GoogleCloudPowerShell
 
 Cloud Tools for PowerShell uses your Cloud SDK credentials. So if you have not
 already, run `gcloud auth login` or `gcloud init` to login.
