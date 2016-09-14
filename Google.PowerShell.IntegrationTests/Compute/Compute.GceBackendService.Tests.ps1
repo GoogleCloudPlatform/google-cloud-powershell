@@ -4,7 +4,7 @@ Install-GcloudCmdlets
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Describe "Get-GceBackendService" {
-    
+    $r = Get-Random
     $serviceName1 = "backend-service1-$r"
     $serviceName2 = "backend-service2-$r"
 
