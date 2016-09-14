@@ -197,7 +197,7 @@
     <None Include="README.md" />
     <None Include="ReleaseFiles\BootstrapGoogleCloudPowerShell.ps1" />
     <None Include="ReleaseFiles\GoogleCloudPlatform.Format.ps1xml" />
-    <None Include="ReleaseFiles\GoogleCloudPowerShell.psd1" />
+    <None Include="ReleaseFiles\GoogleCloud.psd1" />
     <None Include="ReleaseFiles\PatchFromGcs.ps1" />
   </ItemGroup>
   <ItemGroup />
