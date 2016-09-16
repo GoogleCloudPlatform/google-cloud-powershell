@@ -69,13 +69,36 @@ NestedModules = @('.\Google.PowerShell.dll')
 FunctionsToExport = '*'
 
 # Cmdlets to export from this module
-CmdletsToExport = '*'
+CmdletsToExport = 'Add-GcdChange', 'Get-GcdChange', 'Add-GcdManagedZone', 'Get-GcdManagedZone',
+    'Remove-GcdManagedZone', 'Get-GcdQuota', 'Get-GcdResourceRecordSet', 'New-GcdResourceRecordSet',
+    'Add-GceAddress', 'Get-GceAddress', 'Remove-GceAddress', 'New-GceAttachedDiskConfig',
+    'Get-GceBackendService', 'Get-GceDisk', 'New-GceDisk', 'Remove-GceDisk', 'Resize-GceDisk',
+    'Add-GceFirewall', 'Get-GceFirewall', 'Remove-GceFirewall', 'Set-GceFirewall', 'New-GceFirewallProtocol',
+    'Get-GceForwardingRule', 'Add-GceHealthCheck', 'Get-GceHealthCheck', 'Remove-GceHealthCheck',
+    'Set-GceHealthCheck', 'Add-GceImage', 'Disable-GceImage', 'Get-GceImage', 'Remove-GceImage',
+    'Add-GceInstance', 'Get-GceInstance', 'Remove-GceInstance', 'Restart-GceInstance', 'Set-GceInstance',
+    'Start-GceInstance', 'Stop-GceInstance', 'New-GceInstanceConfig', 'Add-GceInstanceTemplate',
+    'Get-GceInstanceTemplate', 'Remove-GceInstanceTemplate', 'Get-GceMachineType',
+    'Add-GceManagedInstanceGroup', 'Get-GceManagedInstanceGroup', 'Remove-GceManagedInstanceGroup',
+    'Set-GceManagedInstanceGroup', 'Wait-GceManagedInstanceGroup', 'Get-GceMetadata', 'Get-GceNetwork',
+     'Add-GceRoute', 'Get-GceRoute', 'Remove-GceRoute', 'New-GceServiceAccountConfig', 'Add-GceSnapshot',
+    'Get-GceSnapshot', 'Remove-GceSnapshot', 'Get-GceTargetPool', 'Set-GceTargetPool', 'Get-GceTargetProxy',
+    'Get-GceUrlMap', 'Get-GcsBucket', 'New-GcsBucket', 'Remove-GcsBucket', 'Test-GcsBucket',
+    'Remove-GcsBucketLogging', 'Write-GcsBucketLogging', 'Remove-GcsBucketWebsite', 'Write-GcsBucketWebsite',
+    'Copy-GcsObject', 'Find-GcsObject', 'Get-GcsObject', 'New-GcsObject', 'Read-GcsObject', 'Remove-GcsObject',
+    'Set-GcsObject', 'Test-GcsObject', 'Write-GcsObject', 'Get-GcSqlBackupRun', 'Remove-GcSqlBackupRun',
+    'Get-GcSqlFlags', 'Add-GcSqlInstance', 'Export-GcSqlInstance', 'Failover-GcSqlInstance',
+    'Get-GcSqlInstance', 'Import-GcSqlInstance', 'Remove-GcSqlInstance', 'Restart-GcSqlInstance',
+    'Update-GcSqlInstance', 'Restore-GcSqlInstanceBackup', 'New-GcSqlInstanceConfig',
+    'New-GcSqlInstanceReplicaConfig', 'Get-GcSqlOperation', 'Promote-GcSqlReplica', 'Start-GcSqlReplica',
+    'Stop-GcSqlReplica', 'New-GcSqlSettingConfig', 'Add-GcSqlSslCert', 'Get-GcSqlSslCert',
+    'Remove-GcSqlSslCert', 'Reset-GcSqlSslConfig', 'Add-GcSqlSslEphemeral', 'Get-GcSqlTiers'
 
 # Variables to export from this module
-VariablesToExport = '*'
+VariablesToExport = @()
 
 # Aliases to export from this module
-AliasesToExport = '*'
+AliasesToExport = @()
 
 # DSC resources to export from this module
 # DscResourcesToExport = @()
