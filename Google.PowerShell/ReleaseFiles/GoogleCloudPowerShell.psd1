@@ -87,10 +87,10 @@ CmdletsToExport = 'Add-GcdChange', 'Get-GcdChange', 'Add-GcdManagedZone', 'Get-G
     'Remove-GcsBucketLogging', 'Write-GcsBucketLogging', 'Remove-GcsBucketWebsite', 'Write-GcsBucketWebsite',
     'Copy-GcsObject', 'Find-GcsObject', 'Get-GcsObject', 'New-GcsObject', 'Read-GcsObject', 'Remove-GcsObject',
     'Set-GcsObject', 'Test-GcsObject', 'Write-GcsObject', 'Get-GcSqlBackupRun', 'Remove-GcSqlBackupRun',
-    'Get-GcSqlFlags', 'Add-GcSqlInstance', 'Export-GcSqlInstance', 'Failover-GcSqlInstance',
+    'Get-GcSqlFlags', 'Add-GcSqlInstance', 'Export-GcSqlInstance', 'Invoke-GcSqlInstanceFailover',
     'Get-GcSqlInstance', 'Import-GcSqlInstance', 'Remove-GcSqlInstance', 'Restart-GcSqlInstance',
     'Update-GcSqlInstance', 'Restore-GcSqlInstanceBackup', 'New-GcSqlInstanceConfig',
-    'New-GcSqlInstanceReplicaConfig', 'Get-GcSqlOperation', 'Promote-GcSqlReplica', 'Start-GcSqlReplica',
+    'New-GcSqlInstanceReplicaConfig', 'Get-GcSqlOperation', 'Convert-GcSqlReplicaToInstance', 'Start-GcSqlReplica',
     'Stop-GcSqlReplica', 'New-GcSqlSettingConfig', 'Add-GcSqlSslCert', 'Get-GcSqlSslCert',
     'Remove-GcSqlSslCert', 'Reset-GcSqlSslConfig', 'Add-GcSqlSslEphemeral', 'Get-GcSqlTiers'
 

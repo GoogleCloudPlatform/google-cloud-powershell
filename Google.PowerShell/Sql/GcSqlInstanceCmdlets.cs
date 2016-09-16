@@ -174,7 +174,7 @@ namespace Google.PowerShell.Sql
         /// Can be created with New-GcSqlInstanceConfig.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0, 
+        [Parameter(Mandatory = true, Position = 0,
             ParameterSetName = ParameterSetNames.Default)]
         public string Name { get; set; }
 
@@ -187,7 +187,8 @@ namespace Google.PowerShell.Sql
         {
             return new DatabaseInstance
             {
-                Settings = new Settings {
+                Settings = new Settings
+                {
                     Tier = "db-n1-standard-1",
                     PricingPlan = "PER_USE",
                     ActivationPolicy = "ALWAYS",
@@ -1068,14 +1069,14 @@ namespace Google.PowerShell.Sql
     /// </para>
     /// <example>
     ///   <para>Promote the SQL Replica "testRepl1" from the Project "testing."</para>
-    ///   <para><code>PS C:\> Promote-GcSqlReplica -Project "testing" -Replica "testRepl1"</code></para>
+    ///   <para><code>PS C:\> Convert-GcSqlReplicaToInstance -Project "testing" -Replica "testRepl1"</code></para>
     ///   <br></br>
     ///   <para>If successful, the command returns nothing.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/replica)">[Replica Instances]</para>
     /// </summary>
-    [Cmdlet("Promote", "GcSqlReplica")]
-    public class PromoteGcSqlReplicaCmdlet : GcSqlCmdlet
+    [Cmdlet(VerbsData.Convert, "GcSqlReplicaToInstance")]
+    public class ConvertGcSqlReplicaToInstanceCmdlet : GcSqlCmdlet
     {
         private class ParameterSetNames
         {
@@ -1696,7 +1697,7 @@ namespace Google.PowerShell.Sql
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/replica)">[Replica Instances]</para>
     /// </summary>
-    [Cmdlet("Failover", "GcSqlInstance")]
+    [Cmdlet(VerbsLifecycle.Invoke, "GcSqlInstanceFailover")]
     public class FailoverGcSqlInstanceCmdlet : GcSqlCmdlet
     {
         private class ParameterSetNames
