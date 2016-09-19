@@ -15,5 +15,4 @@ Import-Module $modulePath
 $Env:UserProfile
 clear
 
-$welcomeBanner = "Google Cloud PowerShell"
-Write-Output $welcomeBanner
+Write-Output "Google Cloud Tools for PowerShell"
