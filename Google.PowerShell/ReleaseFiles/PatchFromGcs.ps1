@@ -22,11 +22,11 @@ if (-not $installPath) {
     }
 }
 $installPath = $installPath -replace '"' # Registry values had quotes. This removes them.
-Push-Location (Join-Path $installPath "google-cloud-sdk\platform")
-$googlePowerShellPath = Resolve-Path "GoogleCloudPowerShell"
+Push-Location (Join-Path $installPath "google-cloud-sdk\platform\PowerShell")
+$googlePowerShellPath = Resolve-Path "GoogleCloud"
 
 if (-not (Test-Path $googlePowerShellPath)) {
-    Write-Error "Can not find Google PowerShell. '$googlePowerShellPath' does not exist."
+    Write-Error "Can not find Cloud Tools for PowerShell. '$googlePowerShellPath' does not exist."
     return
 }
 
@@ -35,7 +35,7 @@ if (Test-Path $pathToOldCmdlets) {
     Remove-Item $pathToOldCmdlets -Recurse
 }
 Move-Item $googlePowerShellPath $pathToOldCmdlets
-Import-Module "$pathToOldCmdlets/GoogleCloudPowerShell.psd1"
+Import-Module "$pathToOldCmdlets/GoogleCloud.psd1"
 $bucket = Get-GcsBucket g-cloudsharp-unsignedbinaries
 
 # Find objects in the powershell directory, and select one most recently created.
