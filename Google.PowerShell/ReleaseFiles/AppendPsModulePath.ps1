@@ -1,7 +1,8 @@
 ﻿# Copyright 2016 Google Inc. All Rights Reserved.
 # Licensed under the Apache License Version 2.0.
 #
-# Appends the Google PowerShell module location to the registry's PSModulePath environment variable
+# Appends the Cloud Tools for PowerShell module location to the registry's PSModulePath environment
+# variable
 
 param($installPath) # Let a user manually select a Cloud SDK install path
 $installPath = $installPath -or $args[0]
@@ -20,7 +21,9 @@ if (-not $installPath) {
     }
 }
 $installPath = $installPath -replace '"' # Registry values had quotes for some reason
-$googlePowerShellPath = Join-Path $installPath "google-cloud-sdk\platform\GoogleCloudPowerShell"
+# The folder above where the PowerShell cmdlets are installed. PowerShell will crawl subfolders
+# looking for .psd1 files. (So it should find .\GoogleCloud\GoogleCloud.psd1.)
+$googlePowerShellPath = Join-Path $installPath "google-cloud-sdk\platform\PowerShell"
 
 if (-not (Test-Path $googlePowerShellPath)) {
     Write-Error "Can not find Google PowerShell. $googlePowerShellPath does not exist."
