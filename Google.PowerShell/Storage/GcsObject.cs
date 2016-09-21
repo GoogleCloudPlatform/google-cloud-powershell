@@ -106,7 +106,8 @@ namespace Google.PowerShell.CloudStorage
     /// <para type="description">
     /// Uploads a local file into a Google Cloud Storage bucket. You can set the value of the new object
     /// directly with -Contents, read it from a file with -File, or define neither to create an empty object.
-    /// Use this instead of Write-GcsObject when creating a new Google Cloud Storage object.
+    /// Use this instead of Write-GcsObject when creating a new Google Cloud Storage object. You will get
+    /// a warning if the object already exists.
     /// </para>
     /// <para type="description">
     /// Note: Most Google Cloud Storage utilities, including the PowerShell Provider and the Google Cloud
@@ -710,7 +711,7 @@ namespace Google.PowerShell.CloudStorage
     /// <para type="description">
     /// Replaces the contents of a Cloud Storage object with data from the local disk or a value
     /// from the pipeline. Use this instead of New-GcsObject to set the contents of a Google Cloud Storage
-    /// object that already exists.
+    /// object that already exists. You will get a warning if the object does not exist.
     /// </para>
     /// <example>
     ///   <para>Update the contents of the Storage Object with the string "OK".</para>
