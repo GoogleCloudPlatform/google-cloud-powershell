@@ -33,7 +33,7 @@ $msbuild = "c:\Program Files (x86)\MSBuild\14.0\Bin\MSBuild.exe"
 & $msbuild @($slnFile, "/t:Clean,Build", "/p:Configuration=Debug")
 
 if (-Not (Test-Path $debugDir)) {
-    Write-Host -ForegroundColor Red "ERROR: Build results not found."
+    Write-Error "Build results not found."
     Exit
 }
 
@@ -65,7 +65,7 @@ Write-Host -ForegroundColor Cyan "*** Sanity checking ***"
 function ConfirmExists($relativePath) {
    $fullPath = Join-Path $packageDir $relativePath
    if (-Not (Test-Path $fullPath)) {
-       Write-Host -ForegroundColor Red "ERROR: Expected file '$fullPath' does not exist."
+       Write-Error "Expected file '$fullPath' does not exist."
        Exit
    }
 }
