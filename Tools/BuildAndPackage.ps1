@@ -2,46 +2,38 @@
 # integrated into the Google Cloud SDK. This is really of only use to Googlers doing the
 # official releases of the PowerShell module.
 
-# Bin directory for the Google.PowerShell project.
-$binDir = Join-Path $PSScriptRoot "\..\Google.PowerShell\bin\"
-$binDir = [System.IO.Path]::GetFullPath($binDir)
+Clear-Host
+Write-Host -ForegroundColor Yellow "Building and Packaging Google Cloud Tools for PowerShell"
+Write-Host
+
+# Root of the repo. Assuming ran from the Tools folder.
+$projectRoot = Join-Path $PSScriptRoot ".." -Resolve
+
+# Folders for the solution and build outputs.
+$slnFile = Join-Path $projectRoot "gcloud-powershell.sln"
+$binDir = Join-Path $projectRoot "Google.PowerShell\bin\"
 $debugDir = Join-Path $binDir "Debug"
 
-# PowerShell directory, which contains our module.
-$powerShellDir = Join-Path $binDir "PowerShell"
-
-# GoogleCloudPowerShell directory, which contains a faux module for backwards compat.
-$gcpsDir = Join-Path $binDir "GoogleCloudPowerShell"
-
-# The final archive we are producing.
-$archivePath = Join-Path $binDir "powershell-x.x.x.zip"
-
-Clear-Host
-Write-Host -ForegroundColor Yellow "Building and Packaging Google Cloud Tools for PowerShell`n"
+# Folders where the build artifacts are stored, the things to be packaged up.
+$packageDir = Join-Path $binDir "Packaged"
+$powerShellDir = Join-Path $packageDir "PowerShell"
+$gcpsDir = Join-Path $packageDir "GoogleCloudPowerShell"
+$archivePath = Join-Path $packageDir "powershell-x.x.x.zip"
 
 # Purge the existing bin directory.
-Write-Host -ForegroundColor Cyan "`n*** Purging the bindir***"
+Write-Host -ForegroundColor Cyan "*** Purging the bindir***"
 if (Test-Path $binDir) {
     Remove-Item $binDir -Recurse -Force
 }
-Write-Host "done`n"
 
 # Build the project.
-Write-Host -ForegroundColor Cyan "`n*** Building the project ***"
+Write-Host -ForegroundColor Cyan "*** Building the project ***"
 
-# TODO(chrsmith): Enable the build from this script. The project's PostBuild step requires some
-# environment variables not defined in PowerShell. (I assume set from Visual Studio?)
-# copy /Y "$(ProjectDir)\ReleaseFiles\*" "$(TargetDir)"
-#     "$(SolutionDir)\third_party\XmlDoc2CmdletDoc\XmlDoc2CmdletDoc.exe" "$(TargetPath)"
-# msbuild /t:Clean;Build $solutionPath
-Read-Host @"
-*******************
-Build Google.PowerShell. Not automated, please do this in Visual Studio.
-(press enter once build is complete)
-*******************
-"@
+$msbuild = "c:\Program Files (x86)\MSBuild\14.0\Bin\MSBuild.exe"
+& $msbuild @($slnFile, "/t:Clean,Build", "/p:Configuration=Debug")
+
 if (-Not (Test-Path $debugDir)) {
-    Write-Host -ForegroundColor Red "ERROR: new binaries not found"
+    Write-Host -ForegroundColor Red "ERROR: Build results not found."
     Exit
 }
 
@@ -52,14 +44,14 @@ if (-Not (Test-Path $debugDir)) {
 # file in that location so that existing machines, with the old PSModulePath, will get updates.
 # TODO(chrsmith): Given that only ~2 months of Cloud SDK installs are effected, and those machines
 # may get paved, etc., and full uninstall/reinstall will fix it, consider removing this in H2 2017.
-Write-Host -ForegroundColor Cyan "`n*** HACK: Creating GoogleCloudPowerShell module ***"
-Write-Host "done`n"
+Write-Host -ForegroundColor Cyan "*** HACK: Creating GoogleCloudPowerShell module ***"
 
+New-Item -ItemType Directory $packageDir
 New-Item -ItemType Directory $gcpsDir
 Move-Item (Join-Path $debugDir "GoogleCloudPowerShell.psd1") "$gcpsDir\GoogleCloudPowerShell.psd1"
 
 # Package the bits. Requires setting up the right directory structure.
-Write-Host -ForegroundColor Cyan "`n*** Packaging the bits ***"
+Write-Host -ForegroundColor Cyan "*** Packaging the bits ***"
 
 New-Item -ItemType Directory $powerShellDir
 Copy-Item -Recurse $debugDir $powerShellDir
@@ -69,24 +61,23 @@ $moduleDir = Join-Path $powerShellDir "Debug"
 Rename-Item $moduleDir "GoogleCloud"
 
 # Ensure key files are in the right place.
-Write-Host -ForegroundColor Cyan "`n*** Sanity checking ***"
+Write-Host -ForegroundColor Cyan "*** Sanity checking ***"
 function ConfirmExists($relativePath) {
-   $fullPath = Join-Path $binDir $relativePath
+   $fullPath = Join-Path $packageDir $relativePath
    if (-Not (Test-Path $fullPath)) {
-       Write-Host -ForegroundColor Red "ERROR: Expected file $fullPath does not exist."
+       Write-Host -ForegroundColor Red "ERROR: Expected file '$fullPath' does not exist."
        Exit
    }
 }
+
 ConfirmExists "PowerShell\GoogleCloud\GoogleCloud.psd1"
 ConfirmExists "PowerShell\GoogleCloud\Google.PowerShell.dll"
 ConfirmExists "PowerShell\GoogleCloud\BootstrapCloudToolsForPowerShell.ps1"
 ConfirmExists "GoogleCloudPowerShell\GoogleCloudPowerShell.psd1"
-Write-Host "done"
 
-Write-Host -ForegroundColor Cyan "`n*** Compressing ***"
+Write-Host -ForegroundColor Cyan "*** Compressing ***"
 Compress-Archive -Path @($powerShellDir, $gcpsDir) $archivePath
-Write-Host "done"
 
-# Fin.
-Write-Host -ForegroundColor Cyan "`n*** Complete ***"
-Write-Host "The latest build is at:`n$archivePath"
+Write-Host -ForegroundColor Cyan "*** Complete ***"
+Write-Host "The latest build is at:"
+Write-Host $archivePath
