@@ -10,6 +10,8 @@ Describe "Storage Provider"{
     $bucketName = "gcs-provider-test-$r"
     # The first folder object we make.
     $folderName = "gcs-folder-$r"
+    # The name of a folder that is only implied as a prefix.
+    $fakeFolderName = "fake-folder-$r"
     # The first file object we make.
     $fileName = "gcs-file-$r"
     # The file object we copy to.
@@ -132,6 +134,20 @@ Describe "Storage Provider"{
         rm $cpFolderName -Recurse
         Test-Path $cpFolderName | Should Be $false
         Test-GcsObject $bucketName "$cpFolderName/" | Should Be $false
+    }
+
+    It "Should create tiered item" {
+        cd gs:\$bucketName
+        $newFile = New-Item $fakeFolderName\$fileName -Value $content1
+        Test-Path $fakeFolderName | Should Be True
+        Test-Path $fakeFolderName\ | Should Be True
+        { cd $fakeFolderName } | Should Not Throw
+        cd ..
+        { cd $fakeFolderName\ } | Should Not Throw
+        cat $fileName | Should Be $content1
+        $file = ls
+        $file.Count | Should Be 1
+        Compare-Object $newFile $file | Should Be $null
     }
 
     It "Should remove bucket" {
