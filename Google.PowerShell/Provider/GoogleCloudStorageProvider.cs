@@ -154,7 +154,13 @@ namespace Google.PowerShell.CloudStorage
         /// </summary>
         private class GcsPath
         {
-            public enum GcsPathType { Drive, Bucket, Object }
+            public enum GcsPathType
+            {
+                Drive,
+                Bucket,
+                Object
+            }
+
             public string Bucket { get; } = null;
             public string ObjectPath { get; } = null;
 
@@ -229,13 +235,7 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// The Google Cloud Storage service.
         /// </summary>
-        private static StorageService Service { get; } = NewService;
-
-        /// <summary>
-        /// This property returns a new storage service every time it is called. Useful for handling many 
-        /// asyncronous service calls simultaniously.
-        /// </summary>
-        private static StorageService NewService => new StorageService(GCloudCmdlet.GetBaseClientServiceInitializer());
+        private static StorageService Service { get; } = GetNewService();
 
         /// <summary>
         /// This service is used to get all the accessible projects.
@@ -258,36 +258,34 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// Reports on the usage of the provider.
         /// </summary>
-        private IReportCmdletResults TelemetryReporter => _telemetryReporter.Value;
+        private static IReportCmdletResults TelemetryReporter = NewTelemetryReporter();
 
-        /// <summary>
-        /// A many created instances of the provider are never used. Making this a lazy prevents it from having
-        /// to be instantiated every time.
-        /// </summary>
-        private readonly Lazy<IReportCmdletResults> _telemetryReporter;
         private const string ProviderName = "GoogleCloudStorage";
+
         /// <summary>
         /// A random number generator for progress bar ids.
         /// </summary>
         private static Random ActivityIdGenerator { get; } = new Random();
 
         /// <summary>
-        /// Default constructor that initializes the telemetry reporter.
+        /// This methods returns a new storage service.
         /// </summary>
-        public GoogleCloudStorageProvider()
+        private static StorageService GetNewService()
         {
-            _telemetryReporter = new Lazy<IReportCmdletResults>(() =>
+            return new StorageService(GCloudCmdlet.GetBaseClientServiceInitializer());
+        }
+
+        private static IReportCmdletResults NewTelemetryReporter()
+        {
+            if (CloudSdkSettings.GetOptIntoUsageReporting())
             {
-                if (CloudSdkSettings.GetOptIntoUsageReporting())
-                {
-                    string clientID = CloudSdkSettings.GetAnoymousClientID();
-                    return new GoogleAnalyticsCmdletReporter(clientID);
-                }
-                else
-                {
-                    return new InMemoryCmdletResultReporter();
-                }
-            });
+                string clientID = CloudSdkSettings.GetAnoymousClientID();
+                return new GoogleAnalyticsCmdletReporter(clientID);
+            }
+            else
+            {
+                return new InMemoryCmdletResultReporter();
+            }
         }
 
         /// <summary>
@@ -933,7 +931,7 @@ namespace Google.PowerShell.CloudStorage
         private static async Task<IEnumerable<Bucket>> ListBucketsAsync(Project project)
         {
             // Using a new service on every request here ensures they can all be handled at the same time.
-            BucketsResource.ListRequest request = NewService.Buckets.List(project.ProjectId);
+            BucketsResource.ListRequest request = GetNewService().Buckets.List(project.ProjectId);
             var allBuckets = new List<Bucket>();
             try
             {
@@ -956,6 +954,7 @@ namespace Google.PowerShell.CloudStorage
                 ListProjectsResponse projects = request.Execute();
                 foreach (Project project in projects.Projects ?? Enumerable.Empty<Project>())
                 {
+                    // The Storage Service considers invactive projects to not exist.
                     if (project.LifecycleState == "ACTIVE")
                     {
                         yield return project;
@@ -973,7 +972,8 @@ namespace Google.PowerShell.CloudStorage
         private static Dictionary<string, Bucket> UpdateBucketCache()
         {
             List<Project> projects = ListAllProjects().ToList();
-            var tasks = projects.Select(ListBucketsAsync).ToList();
+            // Use ToList() to start all the tasks.
+            List<Task<IEnumerable<Bucket>>> tasks = projects.Select(ListBucketsAsync).ToList();
             IEnumerable<Bucket> buckets = tasks.SelectMany(task => task.Result);
             return buckets.ToDictionary(bucket => bucket.Name);
         }
