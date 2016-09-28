@@ -231,6 +231,10 @@ namespace Google.PowerShell.CloudStorage
         /// </summary>
         private static StorageService Service { get; } = NewService;
 
+        /// <summary>
+        /// This property returns a new storage service every time it is called. Useful for handling many 
+        /// asyncronous service calls simultaniously.
+        /// </summary>
         private static StorageService NewService => new StorageService(GCloudCmdlet.GetBaseClientServiceInitializer());
 
         /// <summary>
@@ -256,6 +260,10 @@ namespace Google.PowerShell.CloudStorage
         /// </summary>
         private IReportCmdletResults TelemetryReporter => _telemetryReporter.Value;
 
+        /// <summary>
+        /// A many created instances of the provider are never used. Making this a lazy prevents it from having
+        /// to be instantiated every time.
+        /// </summary>
         private readonly Lazy<IReportCmdletResults> _telemetryReporter;
         private const string ProviderName = "GoogleCloudStorage";
         /// <summary>
@@ -924,6 +932,7 @@ namespace Google.PowerShell.CloudStorage
 
         private static async Task<IEnumerable<Bucket>> ListBucketsAsync(Project project)
         {
+            // Using a new service on every request here ensures they can all be handled at the same time.
             BucketsResource.ListRequest request = NewService.Buckets.List(project.ProjectId);
             var allBuckets = new List<Bucket>();
             try
