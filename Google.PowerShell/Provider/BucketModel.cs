@@ -105,7 +105,7 @@ namespace Google.PowerShell.CloudStorage
                 {
                     return _objectMap[objectName] != null;
                 }
-                else if (_prefixes.ContainsKey(objectName))
+                else if (_prefixes.ContainsKey(objectName.TrimEnd('/')))
                 {
                     return true;
                 }
@@ -125,7 +125,7 @@ namespace Google.PowerShell.CloudStorage
                     }
                 }
             }
-            return _objectMap.ContainsKey(objectName) || _prefixes.ContainsKey(objectName);
+            return _objectMap.ContainsKey(objectName) || _prefixes.ContainsKey(objectName.TrimEnd('/'));
         }
 
         /// <summary>
