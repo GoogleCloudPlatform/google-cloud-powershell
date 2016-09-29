@@ -101,11 +101,13 @@ namespace Google.PowerShell.CloudStorage
 
     /// <summary>
     /// <para type="synopsis">
-    /// Uploads a local file into a Google Cloud Storage bucket.
+    /// Uploads a local file or folder into a Google Cloud Storage bucket.
     /// </para>
     /// <para type="description">
-    /// Uploads a local file into a Google Cloud Storage bucket. You can set the value of the new object
-    /// directly with -Contents, read it from a file with -File, or define neither to create an empty object.
+    /// Uploads a local file or folder into a Google Cloud Storage bucket. You can set the value of the new object
+    /// directly with -Contents, read it from a file with -File, or define neither to create an empty object. You
+    /// can also upload an entire folder by giving the folder path to -Folder. However, you will not be able to
+    /// use -ObjectName or -ContentType parameter in this case.
     /// Use this instead of Write-GcsObject when creating a new Google Cloud Storage object. You will get
     /// a warning if the object already exists.
     /// </para>
@@ -117,12 +119,16 @@ namespace Google.PowerShell.CloudStorage
     /// <example>
     ///   <para>Upload a local log file to GCS.</para>
     ///   <para><code>PS C:\> New-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt" `</code></para>
-    ///   <para><code>    -File "C:\logs\log-000.txt"</code></para>
+    ///   <para><code>    -Path "C:\logs\log-000.txt"</code></para>
     /// </example>
     /// <example>
     ///   <para>Pipe a string to a a file on GCS. Sets a custom metadata value.</para>
     ///   <para><code>PS C:\> "Hello, World!" | New-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt" `</code></para>
     ///   <para><code>    -Metadata @{ "logsource" = $env:computername }</code></para>
+    /// </example>
+    /// <example>
+    ///   <para>Upload a folder to GCS</para>
+    ///   <para><code>PS C:\> New-GcsObject -Bucket "widget-co-logs" -Folder "C:\Folder"</code></para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GcsObject", DefaultParameterSetName = ParameterSetNames.ContentsFromString)]
@@ -133,6 +139,7 @@ namespace Google.PowerShell.CloudStorage
         {
             public const string ContentsFromString = "ContentsFromString";
             public const string ContentsFromFile = "ContentsFromFile";
+            public const string ContentsFromFolder = "ContentsFromFolder";
         }
 
         /// <summary>
@@ -147,15 +154,16 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
-        /// The name of the created Cloud Storage object.
+        /// The name of the created Cloud Storage object. Ignored if Folder is specified
         /// </para>
         /// </summary>
-        [Parameter(Position = 1, Mandatory = true)]
+        [Parameter(Position = 1, Mandatory = true, ParameterSetName = ParameterSetNames.ContentsFromString)]
+        [Parameter(Position = 1, Mandatory = true, ParameterSetName = ParameterSetNames.ContentsFromFile)]
         public string ObjectName { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// Text content to write to the Storage object. Ignored if File is specified.
+        /// Text content to write to the Storage object. Ignored if File or Folder is specified.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ContentsFromString,
@@ -168,7 +176,17 @@ namespace Google.PowerShell.CloudStorage
         /// </para>
         /// </summary>
         [Parameter(Position = 2, Mandatory = true, ParameterSetName = ParameterSetNames.ContentsFromFile)]
+        [ValidateNotNullOrEmpty()]
         public string File { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Local path to the folder to upload.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 2, Mandatory = true, ParameterSetName = ParameterSetNames.ContentsFromFolder)]
+        [ValidateNotNullOrEmpty()]
+        public string Folder { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -184,7 +202,8 @@ namespace Google.PowerShell.CloudStorage
         /// specifed by the Metadata parameter.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ContentsFromFile)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ContentsFromString)]
         public string ContentType { get; set; }
 
         /// <summary>
@@ -222,9 +241,24 @@ namespace Google.PowerShell.CloudStorage
 
             // Content type to use for the new object.
             string objContentType = null;
-
             Stream contentStream = null;
-            if (!string.IsNullOrEmpty(File))
+
+            if (ParameterSetName == ParameterSetNames.ContentsFromFolder)
+            {
+                // user gives us the path to a folder, we will resolve the path and upload the content of that folder
+                string resolvedFolderPath = GetFullPath(Folder);
+                if (string.IsNullOrWhiteSpace(resolvedFolderPath) || !Directory.Exists(resolvedFolderPath))
+                {
+                    throw new DirectoryNotFoundException(string.Format("Directory {0} cannot be found", resolvedFolderPath));
+                }
+
+                // call helper method to upload the content of the directory, the relative directory name of this directory
+                // will be its name
+                UploadDirectoryToGCSBucket(resolvedFolderPath, metadataDict, Path.GetFileName(resolvedFolderPath));
+                return;
+            }
+
+            if (ParameterSetName == ParameterSetNames.ContentsFromFile)
             {
                 objContentType = GetContentType(ContentType, metadataDict, InferContentType(File));
                 string qualifiedPath = GetFullPath(File);
@@ -243,13 +277,72 @@ namespace Google.PowerShell.CloudStorage
                 contentStream = new MemoryStream(contentBuffer);
             }
 
+            UploadStreamToGCSObject(contentStream, objContentType, metadataDict, ObjectName);
+        }
+
+        /// <summary>
+        /// Upload a directory to a gcs bucket, aiming to maintain that directory structure as well.
+        /// For example, if we are uploading folder A with file C.txt and subfolder B with file D.txt,
+        /// then the bucket should have A\C.txt and A\B\D.txt
+        /// </summary>
+        private void UploadDirectoryToGCSBucket(string directory, Dictionary<string, string> metadataDict, string relativeDirectoryName)
+        {
+            if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
+            {
+                // do nothing if directory is not valid
+                return;
+            }
+
+            // have to append slash to create directory on the cloud
+            string relativeDirectoryNameWithSlash = relativeDirectoryName + "/";
+
+            if (TestObjectExists(Service, Bucket, relativeDirectoryNameWithSlash) && !Force.IsPresent)
+            {
+                // if the directory exists and force is not present, throw an error
+                throw new PSArgumentException(
+                    $"Storage object '{relativeDirectoryNameWithSlash}' already exists. Use -Force to overwrite.");
+            }
+
+            // create a directory on the cloud
+            string objContentType = GetContentType(null, metadataDict, UTF8TextMimeType);
+            byte[] contentBuffer = Encoding.UTF8.GetBytes(Contents);
+            Stream contentStream = new MemoryStream(contentBuffer);
+            UploadStreamToGCSObject(contentStream, objContentType, metadataDict, relativeDirectoryNameWithSlash);
+
+            foreach (string file in Directory.EnumerateFiles(directory))
+            {
+                // upload each individual file
+                UploadStreamToGCSObject(new FileStream(file, FileMode.Open),
+                    GetContentType(ContentType, metadataDict, InferContentType(file)),
+                    metadataDict,
+                    // get a relative path compared to the root path, also have to replace \ with / so it will be created with correct folder structure
+                    Path.Combine(relativeDirectoryName, Path.GetFileName(file)).Replace('\\', '/'));
+            }
+
+            foreach (string subDirectory in Directory.EnumerateDirectories(directory))
+            {
+                // recursively upload subfolder, we have to replace \ with /
+                UploadDirectoryToGCSBucket(subDirectory, metadataDict, Path.Combine(relativeDirectoryName, Path.GetFileName(subDirectory)).Replace('\\', '/'));
+            }
+        }
+
+        /// <summary>
+        /// Upload a gcs object using a stream.
+        /// </summary>
+        private void UploadStreamToGCSObject(Stream contentStream, string objContentType, Dictionary<string,string> metadataDict, string objectName)
+        {
+            if (contentStream == null)
+            {
+                return;
+            }
+
             using (contentStream)
             {
                 // We could potentially avoid this extra step by using a special request header.
                 //     "If you set the x-goog-if-generation-match header to 0, Google Cloud Storage only
                 //     performs the specified request if the object does not currently exist."
                 // See https://cloud.google.com/storage/docs/reference-headers#xgoogifgenerationmatch
-                bool objectExists = TestObjectExists(Service, Bucket, ObjectName);
+                bool objectExists = TestObjectExists(Service, Bucket, objectName);
                 if (objectExists && !Force.IsPresent)
                 {
                     throw new PSArgumentException(
@@ -257,7 +350,7 @@ namespace Google.PowerShell.CloudStorage
                 }
 
                 Object newGcsObject = UploadGcsObject(
-                    Service, Bucket, ObjectName, contentStream,
+                    Service, Bucket, objectName, contentStream,
                     objContentType, PredefinedAcl,
                     metadataDict);
 

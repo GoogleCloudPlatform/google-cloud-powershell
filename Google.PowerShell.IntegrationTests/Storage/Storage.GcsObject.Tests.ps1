@@ -34,6 +34,11 @@ Describe "New-GcsObject" {
             | Should Throw "File not found"
     }
 
+    It "should fail if the folder does not exist" {
+        { New-GcsObject $bucket -Folder "C:\I should not exist" } `
+            | Should Throw "Directory C:\I should not exist cannot be found"
+    }
+
     It "accepts pipeline input as object contents" {
         "test string" | New-GcsObject $bucket "pipeline-test"
         Read-GcsObject $bucket "pipeline-test" | Should Be "test string"
@@ -206,6 +211,66 @@ Describe "New-GcsObject" {
         # It will also apply to the Metadata too.
         $obj.Metadata["Content-Type"] | Should Be "image/jpeg"
         Remove-GcsObject $obj
+    }
+
+    It "should upload an empty folder" {
+        $TestFolder = Join-Path $TestDrive "TestFolder"
+
+        try {
+            if (-not (Test-Path $TestFolder))
+            {
+                New-Item -ItemType Directory -Path $TestFolder | Out-Null
+            }
+
+            $folder = New-GcsObject -Bucket $bucket -Folder $TestFolder -Force
+            $folderName = "TestFolder/"
+
+            $folder.Name | should be $folderName
+            $folder.Size | should be 0
+
+            $folderOnline = Get-GcsObject -Bucket $bucket -ObjectName $folderName
+            $folderOnline.Name | should be $folderName
+            $folderOnline.Size | should be 0
+        }
+        finally
+        {
+            Remove-Item $TestFolder -Recurse -Force -ErrorAction Ignore
+        }
+    }
+
+    It "should upload a folder with files and subfolders" {
+        $TestFolder = Join-Path $TestDrive "TestFolder"
+
+        try {
+            if (-not (Test-Path $TestFolder))
+            {
+                New-Item -ItemType Directory -Path $TestFolder | Out-Null
+            }
+
+            "Hello, world" | Out-File (Join-Path $TestFolder "world.txt")
+            "Hello, mars" | Out-File (Join-Path $TestFolder "mars.txt")
+            "Hello, jupiter" | Out-File (Join-Path $TestFolder "jupiter.txt")
+
+            $TestSubfolder = Join-Path $TestFolder "TestSubfolder"
+            New-Item -ItemType Directory -Path $TestSubfolder | Out-Null
+
+            "Hello, saturn" | Out-File (Join-Path $TestSubfolder "saturn.txt")
+            "Hello, pluto" | Out-File (Join-Path $TestSubfolder "pluto.txt")
+
+            $result = New-GcsObject -Bucket $bucket -Folder $TestFolder -Force
+
+            $result.Count | should be 7
+            $result.Name -contains "TestFolder/jupiter.txt" | should be $true
+            $result.Name -contains "TestFolder/mars.txt" | should be $true
+            $result.Name -contains "TestFolder/TestSubfolder/pluto.txt" | should be $true
+
+            $saturn = Get-GcsObject -Bucket $bucket -ObjectName "TestFolder/TestSubfolder/saturn.txt"
+            $saturn.ContentType | should be "text/plain"
+        }
+        finally
+        {
+            Remove-Item $TestFolder -Recurse -Force -ErrorAction Ignore
+        }
     }
 }
 
