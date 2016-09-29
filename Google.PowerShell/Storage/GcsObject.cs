@@ -252,9 +252,8 @@ namespace Google.PowerShell.CloudStorage
                     throw new DirectoryNotFoundException($"Directory '{resolvedFolderPath}' cannot be found.");
                 }
 
-                // Call helper method to upload the contents of the directory.
-                // The relative directory name of this directory will be its name.
-                UploadDirectoryToGCSBucket(resolvedFolderPath, metadataDict, Path.GetFileName(resolvedFolderPath));
+                // The relative directory name of this directory will be the name of the directory itself.
+                UploadDirectory(resolvedFolderPath, metadataDict, Path.GetFileName(resolvedFolderPath));
                 return;
             }
 
@@ -277,59 +276,64 @@ namespace Google.PowerShell.CloudStorage
                 contentStream = new MemoryStream(contentBuffer);
             }
 
-            UploadStreamToGCSObject(contentStream, objContentType, metadataDict, ObjectName);
+            UploadStreamToGcsObject(contentStream, objContentType, metadataDict, ObjectName);
         }
 
         /// <summary>
-        /// Upload a directory to a gcs bucket, aiming to maintain that directory structure as well.
+        /// Upload a directory to a GCS bucket, aiming to maintain that directory structure as well.
         /// For example, if we are uploading folder A with file C.txt and subfolder B with file D.txt,
         /// then the bucket should have A\C.txt and A\B\D.txt
         /// </summary>
-        private void UploadDirectoryToGCSBucket(string directory, Dictionary<string, string> metadataDict, string relativeDirectoryName)
+        private void UploadDirectory(string directory, Dictionary<string, string> metadataDict, string gcsObjectNamePrefix)
         {
             if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
             {
-                // Do nothing if the directory is not valid.
                 return;
             }
 
             // We have to append / at the end to create a directory on the cloud.
-            string relativeDirectoryNameWithSlash = relativeDirectoryName + "/";
+            string gcsObjectNamePrefixWithSlash = gcsObjectNamePrefix + "/";
 
-            if (TestObjectExists(Service, Bucket, relativeDirectoryNameWithSlash) && !Force.IsPresent)
+            if (TestObjectExists(Service, Bucket, gcsObjectNamePrefixWithSlash) && !Force.IsPresent)
             {
-                // If the directory exists and force is not present, throw an error.
                 throw new PSArgumentException(
-                    $"Storage object '{relativeDirectoryNameWithSlash}' already exists. Use -Force to overwrite.");
+                    $"Storage object '{gcsObjectNamePrefixWithSlash}' already exists. Use -Force to overwrite.");
             }
 
             // Create a directory on the cloud.
             string objContentType = GetContentType(null, metadataDict, UTF8TextMimeType);
             byte[] contentBuffer = Encoding.UTF8.GetBytes(Contents);
             Stream contentStream = new MemoryStream(contentBuffer);
-            UploadStreamToGCSObject(contentStream, objContentType, metadataDict, relativeDirectoryNameWithSlash);
+            UploadStreamToGcsObject(contentStream, objContentType, metadataDict, gcsObjectNamePrefixWithSlash);
 
             foreach (string file in Directory.EnumerateFiles(directory))
             {
                 // Upload each individual file.
-                UploadStreamToGCSObject(new FileStream(file, FileMode.Open),
+                string fileName = Path.GetFileName(file);
+                string fileWithGcsObjectNamePrefix = Path.Combine(gcsObjectNamePrefix, fileName);
+                // We have to replace \ with / so it will be created with correct folder structure.
+                fileWithGcsObjectNamePrefix = ConvertLocalToGcsFolderPath(fileWithGcsObjectNamePrefix);
+                UploadStreamToGcsObject(new FileStream(file, FileMode.Open),
                     GetContentType(ContentType, metadataDict, InferContentType(file)),
                     metadataDict,
-                    // Get a relative path compared to the root path, also we have to replace \ with / so it will be created with correct folder structure.
-                    Path.Combine(relativeDirectoryName, Path.GetFileName(file)).Replace('\\', '/'));
+                    ConvertLocalToGcsFolderPath(fileWithGcsObjectNamePrefix));
             }
 
             foreach (string subDirectory in Directory.EnumerateDirectories(directory))
             {
-                // Recursively upload subfolder and replace \ with /.
-                UploadDirectoryToGCSBucket(subDirectory, metadataDict, Path.Combine(relativeDirectoryName, Path.GetFileName(subDirectory)).Replace('\\', '/'));
+                // Recursively upload subfolder.
+                string subDirectoryName = Path.GetFileName(subDirectory);
+                string subDirectoryWithGcsObjectNamePrefix = Path.Combine(gcsObjectNamePrefix, subDirectoryName);
+                UploadDirectory(subDirectory,
+                    metadataDict,
+                    ConvertLocalToGcsFolderPath(subDirectoryWithGcsObjectNamePrefix));
             }
         }
 
         /// <summary>
-        /// Upload a gcs object using a stream.
+        /// Upload a GCS object using a stream.
         /// </summary>
-        private void UploadStreamToGCSObject(Stream contentStream, string objContentType, Dictionary<string,string> metadataDict, string objectName)
+        private void UploadStreamToGcsObject(Stream contentStream, string objContentType, Dictionary<string,string> metadataDict, string objectName)
         {
             if (contentStream == null)
             {
@@ -356,6 +360,14 @@ namespace Google.PowerShell.CloudStorage
 
                 WriteObject(newGcsObject);
             }
+        }
+
+        /// <summary>
+        /// Replace \ with / in path to complies with GCS path
+        /// </summary>
+        private static string ConvertLocalToGcsFolderPath(string localFilePath)
+        {
+            return localFilePath.Replace('\\', '/');
         }
     }
 

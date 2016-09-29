@@ -222,12 +222,12 @@ Describe "New-GcsObject" {
 
             $folder = New-GcsObject -Bucket $bucket -Folder $testFolder -Force
 
-            $folder.Name | should be "$folderName/"
-            $folder.Size | should be 0
+            $folder.Name | Should Be "$folderName/"
+            $folder.Size | Should Be 0
 
             $folderOnline = Get-GcsObject -Bucket $bucket -ObjectName "$folderName/"
-            $folderOnline.Name | should be "$folderName/"
-            $folderOnline.Size | should be 0
+            $folderOnline.Name | Should Be "$folderName/"
+            $folderOnline.Size | Should Be 0
         }
         finally
         {
@@ -254,20 +254,36 @@ Describe "New-GcsObject" {
 
             $result = New-GcsObject -Bucket $bucket -Folder $testFolder -Force
 
-            $result.Count | should be 7
-            $result.Name -contains "$folderName/jupiter.txt" | should be $true
-            $result.Name -contains "$folderName/mars.txt" | should be $true
-            $result.Name -contains "$folderName/TestSubfolder/pluto.txt" | should be $true
+            # The query returns 7 even though we create 5 because 2 of them are folders.
+            $result.Count | Should Be 7
+            # Confirm the files and folders were created.
+            $result.Name -contains "$folderName/" | should be $true
+            $result.Name -contains "$folderName/world.txt" | Should Be $true
+            $result.Name -contains "$folderName/jupiter.txt" | Should Be $true
+            $result.Name -contains "$folderName/mars.txt" | Should Be $true
+            $result.Name -contains "$folderName/TestSubFolder/" | should be $true
+            $result.Name -contains "$folderName/TestSubfolder/pluto.txt" | Should Be $true
+            $result.Name -contains "$folderName/TestSubfolder/saturn.txt" | Should Be $true
 
             $saturn = Get-GcsObject -Bucket $bucket -ObjectName "$folderName/TestSubfolder/saturn.txt"
-            $saturn.ContentType | should be "text/plain"
+            $saturn.ContentType | Should Be "text/plain"
 
-            $objs = Find-GcsObject -Delimiter "/" -Bucket $bucket -Prefix "$folderName/TestSubfolder"
-            $objs.Count | should be 0
+            # This should contain everything except the TestSubFolder and its files.
+            $objs = Find-GcsObject -Delimiter "/" -Bucket $bucket -Prefix "$folderName/"
+            $objs.Count | Should Be 4
+            $objs.Name -contains "$folderName/TestSubfolder/pluto.txt" | Should Be $false
+            $objs.Name -contains "$folderName/TestSubfolder/saturn.txt" | Should Be $false
+            $objs.Name -contains "$folderName/TestSubfolder/" | Should Be $false
 
-            $objs = Find-GcsObject -Bucket $bucket -Prefix "$folderName/TestSubfolder"
-            $objs.Count | should be 3
-            $objs.Name -contains "$folderName/TestSubfolder/pluto.txt" | should be $true
+            # Everything should be returned!
+            $objs = Find-GcsObject -Bucket $bucket -Prefix "$folderName/"
+            $objs.Count | Should Be 7
+
+            $objs = Find-GcsObject -Bucket $bucket -Prefix "$folderName/TestSubfolder/"
+            $objs.Count | Should Be 3
+            $objs.Name -contains "$folderName/TestSubfolder/pluto.txt" | Should Be $true
+            $objs.Name -contains "$folderName/TestSubfolder/saturn.txt" | Should Be $true
+            $objs.Name -contains "$folderName/TestSubfolder/" | Should Be $true
         }
         finally
         {
