@@ -91,27 +91,28 @@ namespace Google.PowerShell.Common
             ProviderInfo provider = null;
             string[] result;
 
-            // resolve filepath and get the first one
+            // Resolve filepath.
             try
             {
                 result = GetResolvedProviderPathFromPSPath(filePath, out provider).ToArray();
             }
             catch (ItemNotFoundException itemEx)
             {
-                // in case the file path is not created but we should still return the resolve path
+                // In case the file path is not created, an error will be thrown.
+                // But we should still return the resolved path.
                 result = new string[] { itemEx.ItemName };
             }
 
             if (result.Length != 1)
             {
-                // cannot really resolve this
-                return null;
+                // Cannot really resolve this, just return the unresolved path.
+                return filePath;
             }
 
-            // otherwise, we also have to check that the provider is a filesystem
+            // Otherwise, we also have to check that the provider is a filesystem.
             if (provider.ImplementingType != typeof(FileSystemProvider))
             {
-                return null;
+                return filePath;
             }
 
             return result[0];

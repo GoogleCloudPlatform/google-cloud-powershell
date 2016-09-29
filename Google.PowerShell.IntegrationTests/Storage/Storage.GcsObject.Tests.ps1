@@ -36,7 +36,7 @@ Describe "New-GcsObject" {
 
     It "should fail if the folder does not exist" {
         { New-GcsObject $bucket -Folder "C:\I should not exist" } `
-            | Should Throw "Directory C:\I should not exist cannot be found"
+            | Should Throw "Directory 'C:\I should not exist' cannot be found"
     }
 
     It "accepts pipeline input as object contents" {
@@ -214,62 +214,64 @@ Describe "New-GcsObject" {
     }
 
     It "should upload an empty folder" {
-        $TestFolder = Join-Path $TestDrive "TestFolder"
+        $folderName = [System.IO.Path]::GetRandomFileName()
+        $testFolder = "$TestDrive/$folderName"
 
         try {
-            if (-not (Test-Path $TestFolder))
-            {
-                New-Item -ItemType Directory -Path $TestFolder | Out-Null
-            }
+            New-Item -ItemType Directory -Path $testFolder | Out-Null
 
-            $folder = New-GcsObject -Bucket $bucket -Folder $TestFolder -Force
-            $folderName = "TestFolder/"
+            $folder = New-GcsObject -Bucket $bucket -Folder $testFolder -Force
 
-            $folder.Name | should be $folderName
+            $folder.Name | should be "$folderName/"
             $folder.Size | should be 0
 
-            $folderOnline = Get-GcsObject -Bucket $bucket -ObjectName $folderName
-            $folderOnline.Name | should be $folderName
+            $folderOnline = Get-GcsObject -Bucket $bucket -ObjectName "$folderName/"
+            $folderOnline.Name | should be "$folderName/"
             $folderOnline.Size | should be 0
         }
         finally
         {
-            Remove-Item $TestFolder -Recurse -Force -ErrorAction Ignore
+            Remove-Item $testFolder -Recurse -Force -ErrorAction Ignore
         }
     }
 
     It "should upload a folder with files and subfolders" {
-        $TestFolder = Join-Path $TestDrive "TestFolder"
+        $folderName = [System.IO.Path]::GetRandomFileName()
+        $testFolder = "$TestDrive/$folderName"
 
         try {
-            if (-not (Test-Path $TestFolder))
-            {
-                New-Item -ItemType Directory -Path $TestFolder | Out-Null
-            }
+            New-Item -ItemType Directory -Path $testFolder | Out-Null
 
-            "Hello, world" | Out-File (Join-Path $TestFolder "world.txt")
-            "Hello, mars" | Out-File (Join-Path $TestFolder "mars.txt")
-            "Hello, jupiter" | Out-File (Join-Path $TestFolder "jupiter.txt")
+            "Hello, world" | Out-File "$testFolder/world.txt"
+            "Hello, mars" | Out-File "$testFolder/mars.txt"
+            "Hello, jupiter" | Out-File "$testFolder/jupiter.txt"
 
-            $TestSubfolder = Join-Path $TestFolder "TestSubfolder"
-            New-Item -ItemType Directory -Path $TestSubfolder | Out-Null
+            $testSubfolder = "$testFolder/TestSubfolder"
+            New-Item -ItemType Directory -Path $testSubfolder | Out-Null
 
-            "Hello, saturn" | Out-File (Join-Path $TestSubfolder "saturn.txt")
-            "Hello, pluto" | Out-File (Join-Path $TestSubfolder "pluto.txt")
+            "Hello, saturn" | Out-File "$testSubfolder/saturn.txt"
+            "Hello, pluto" | Out-File "$testSubfolder/pluto.txt"
 
-            $result = New-GcsObject -Bucket $bucket -Folder $TestFolder -Force
+            $result = New-GcsObject -Bucket $bucket -Folder $testFolder -Force
 
             $result.Count | should be 7
-            $result.Name -contains "TestFolder/jupiter.txt" | should be $true
-            $result.Name -contains "TestFolder/mars.txt" | should be $true
-            $result.Name -contains "TestFolder/TestSubfolder/pluto.txt" | should be $true
+            $result.Name -contains "$folderName/jupiter.txt" | should be $true
+            $result.Name -contains "$folderName/mars.txt" | should be $true
+            $result.Name -contains "$folderName/TestSubfolder/pluto.txt" | should be $true
 
-            $saturn = Get-GcsObject -Bucket $bucket -ObjectName "TestFolder/TestSubfolder/saturn.txt"
+            $saturn = Get-GcsObject -Bucket $bucket -ObjectName "$folderName/TestSubfolder/saturn.txt"
             $saturn.ContentType | should be "text/plain"
+
+            $objs = Find-GcsObject -Delimiter "/" -Bucket $bucket -Prefix "$folderName/TestSubfolder"
+            $objs.Count | should be 0
+
+            $objs = Find-GcsObject -Bucket $bucket -Prefix "$folderName/TestSubfolder"
+            $objs.Count | should be 3
+            $objs.Name -contains "$folderName/TestSubfolder/pluto.txt" | should be $true
         }
         finally
         {
-            Remove-Item $TestFolder -Recurse -Force -ErrorAction Ignore
+            Remove-Item $testFolder -Recurse -Force -ErrorAction Ignore
         }
     }
 }
