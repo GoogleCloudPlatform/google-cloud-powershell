@@ -246,7 +246,7 @@ Describe "New-GcsObject" {
         }
     }
 
-    It "should upload a folder with slashes at the end of the path" {
+    It "should work for both forwards slashes and backslashes in the path" {
         $folderName = [System.IO.Path]::GetRandomFileName()
         $testFolder = "$env:TEMP/$folderName"
 
@@ -254,7 +254,7 @@ Describe "New-GcsObject" {
             New-Item -ItemType Directory -Path $testFolder | Out-Null
             "Hello, world" | Out-File "$testFolder/world.txt"
 
-            # Add a backwards slash to the end and make sure it is uploaded.
+            # Add a backslash to the end and make sure it is uploaded.
             $result = New-GcsObject -Bucket $bucket -Folder "$testFolder\" -Force
 
             $result.Count | Should Be 2

@@ -257,7 +257,7 @@ namespace Google.PowerShell.CloudStorage
             {
                 // User gives us the path to a folder, we will resolve the path and upload the contents of that folder.
                 // Have to take care of / and \ in the end of the directory path because Path.GetFileName will return
-                // empty string if that is not trimmed off.
+                // an empty string if that is not trimmed off.
                 string resolvedFolderPath = GetFullPath(Folder).TrimEnd("/\\".ToCharArray());
                 if (string.IsNullOrWhiteSpace(resolvedFolderPath) || !Directory.Exists(resolvedFolderPath))
                 {
@@ -269,6 +269,7 @@ namespace Google.PowerShell.CloudStorage
                 {
                     gcsObjectNamePrefix = Path.Combine(ObjectNamePrefix, gcsObjectNamePrefix);
                 }
+                // TODO(quoct): Add a progress indicator if there are too many files.
                 UploadDirectory(resolvedFolderPath, metadataDict, ConvertLocalToGcsFolderPath(gcsObjectNamePrefix));
                 return;
             }
