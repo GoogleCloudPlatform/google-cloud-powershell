@@ -96,7 +96,7 @@ namespace Google.PowerShell.Common
 
                 // Only return the resolved path if there are no ambiguities.
                 // If path contains wildcards, then it may resolved to more than 1 path.
-                if (result.Length == 1 && provider.ImplementingType == typeof(FileSystemProvider))
+                if (result?.Length == 1 && provider.ImplementingType == typeof(FileSystemProvider))
                 {
                     return result[0];
                 }

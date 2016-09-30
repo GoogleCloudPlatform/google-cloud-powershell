@@ -6,7 +6,18 @@ $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 Describe "New-GcsObject" {
 
     $bucket = "gcps-object-testing"
-    Create-TestBucket $project $bucket
+
+    BeforeEach {
+        if (-not (Test-GcsBucket $bucket)) {
+            Create-TestBucket $project $bucket
+        }
+    }
+
+    AfterEach {
+        if (Test-GcsBucket $bucket) {
+            Remove-GcsBucket -Name $bucket -Force
+        }
+    }
 
     It "should work" {
         $filename = [System.IO.Path]::GetTempFileName()
@@ -215,7 +226,7 @@ Describe "New-GcsObject" {
 
     It "should upload an empty folder" {
         $folderName = [System.IO.Path]::GetRandomFileName()
-        $testFolder = "$TestDrive/$folderName"
+        $testFolder = "$env:TEMP/$folderName"
 
         try {
             New-Item -ItemType Directory -Path $testFolder | Out-Null
@@ -235,9 +246,37 @@ Describe "New-GcsObject" {
         }
     }
 
+    It "should upload a folder with slashes at the end of the path" {
+        $folderName = [System.IO.Path]::GetRandomFileName()
+        $testFolder = "$env:TEMP/$folderName"
+
+        try {
+            New-Item -ItemType Directory -Path $testFolder | Out-Null
+            "Hello, world" | Out-File "$testFolder/world.txt"
+
+            # Add a backwards slash to the end and make sure it is uploaded.
+            $result = New-GcsObject -Bucket $bucket -Folder "$testFolder\" -Force
+
+            $result.Count | Should Be 2
+            $result.Name -contains "$folderName/" | should be $true
+            $result.Name -contains "$folderName/world.txt" | should be $true
+
+            # Add a forwards slash to the end and make sure it is uploaded.
+            $result = New-GcsObject -Bucket $bucket -Folder "$testFolder/" -Force
+
+            $result.Count | Should Be 2
+            $result.Name -contains "$folderName/" | should be $true
+            $result.Name -contains "$folderName/world.txt" | should be $true
+        }
+        finally
+        {
+            Remove-Item $testFolder -Recurse -Force -ErrorAction Ignore
+        }
+    }
+
     It "should upload a folder with files and subfolders" {
         $folderName = [System.IO.Path]::GetRandomFileName()
-        $testFolder = "$TestDrive/$folderName"
+        $testFolder = "$env:TEMP/$folderName"
 
         try {
             New-Item -ItemType Directory -Path $testFolder | Out-Null
@@ -284,6 +323,26 @@ Describe "New-GcsObject" {
             $objs.Name -contains "$folderName/TestSubfolder/pluto.txt" | Should Be $true
             $objs.Name -contains "$folderName/TestSubfolder/saturn.txt" | Should Be $true
             $objs.Name -contains "$folderName/TestSubfolder/" | Should Be $true
+        }
+        finally
+        {
+            Remove-Item $testFolder -Recurse -Force -ErrorAction Ignore
+        }
+    }
+
+    It "should upload a folder with the correct prefix" {
+        $folderName = [System.IO.Path]::GetRandomFileName()
+        $testFolder = "$env:TEMP/$folderName"
+
+        try {
+            New-Item -ItemType Directory -Path $testFolder | Out-Null
+            "Hello, world" | Out-File "$testFolder/world.txt"
+            $prefix = "Planet"
+            $result = New-GcsObject -Bucket $bucket -Folder "$testFolder/" -Force -ObjectNamePrefix $prefix
+
+            $result.Count | Should Be 2
+            $result.Name -contains "$prefix/$folderName/" | should be $true
+            $result.Name -contains "$prefix/$folderName/world.txt" | should be $true
         }
         finally
         {
@@ -394,7 +453,18 @@ Describe "Find-GcsObject" {
 Describe "Remove-GcsObject" {
 
     $bucket = "gcps-get-object-testing"
-    Create-TestBucket $project $bucket
+
+    BeforeEach {
+        if (-not (Test-GcsBucket $bucket)) {
+            Create-TestBucket $project $bucket
+        }
+    }
+
+    AfterEach {
+        if (Test-GcsBucket $bucket) {
+            Remove-GcsBucket -Name $bucket -Force
+        }
+    }
 
     It "should work" {
         Add-TestFile $bucket "testfile.txt"
@@ -517,7 +587,18 @@ Describe "Read-GcsObject" {
 Describe "Write-GcsObject" {
 
     $bucket = "gcps-write-object-testing"
-    Create-TestBucket $project $bucket
+
+    BeforeEach {
+        if (-not (Test-GcsBucket $bucket)) {
+            Create-TestBucket $project $bucket
+        }
+    }
+
+    AfterEach {
+        if (Test-GcsBucket $bucket) {
+            Remove-GcsBucket -Name $bucket -Force
+        }
+    }
 
     It "should work" {
         $objectName = "folder/file.txt"

@@ -190,6 +190,16 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
+        /// When uploading the contents of a directory into Google Cloud Storage, this is the prefix
+        /// applied to every object which is uploaded.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ContentsFromFolder)]
+        [ValidateNotNullOrEmpty]
+        public string ObjectNamePrefix { get; set; }
+
+        /// <summary>
+        /// <para type="description">
         /// Content type of the Cloud Storage object. e.g. "image/png" or "text/plain".
         /// </para>
         /// <para type="description">
@@ -246,14 +256,20 @@ namespace Google.PowerShell.CloudStorage
             if (ParameterSetName == ParameterSetNames.ContentsFromFolder)
             {
                 // User gives us the path to a folder, we will resolve the path and upload the contents of that folder.
-                string resolvedFolderPath = GetFullPath(Folder);
+                // Have to take care of / and \ in the end of the directory path because Path.GetFileName will return
+                // empty string if that is not trimmed off.
+                string resolvedFolderPath = GetFullPath(Folder).TrimEnd("/\\".ToCharArray());
                 if (string.IsNullOrWhiteSpace(resolvedFolderPath) || !Directory.Exists(resolvedFolderPath))
                 {
                     throw new DirectoryNotFoundException($"Directory '{resolvedFolderPath}' cannot be found.");
                 }
 
-                // The relative directory name of this directory will be the name of the directory itself.
-                UploadDirectory(resolvedFolderPath, metadataDict, Path.GetFileName(resolvedFolderPath));
+                string gcsObjectNamePrefix = Path.GetFileName(resolvedFolderPath);
+                if (!string.IsNullOrWhiteSpace(ObjectNamePrefix))
+                {
+                    gcsObjectNamePrefix = Path.Combine(ObjectNamePrefix, gcsObjectNamePrefix);
+                }
+                UploadDirectory(resolvedFolderPath, metadataDict, ConvertLocalToGcsFolderPath(gcsObjectNamePrefix));
                 return;
             }
 
@@ -291,40 +307,43 @@ namespace Google.PowerShell.CloudStorage
                 return;
             }
 
-            // We have to append / at the end to create a directory on the cloud.
-            string gcsObjectNamePrefixWithSlash = gcsObjectNamePrefix + "/";
+            // Confirm that gcsObjectNamePrefix is a GCS folder.
+            if (!gcsObjectNamePrefix.EndsWith("/"))
+            {
+                gcsObjectNamePrefix += "/";
+            }
 
-            if (TestObjectExists(Service, Bucket, gcsObjectNamePrefixWithSlash) && !Force.IsPresent)
+            if (TestObjectExists(Service, Bucket, gcsObjectNamePrefix) && !Force.IsPresent)
             {
                 throw new PSArgumentException(
-                    $"Storage object '{gcsObjectNamePrefixWithSlash}' already exists. Use -Force to overwrite.");
+                    $"Storage object '{gcsObjectNamePrefix}' already exists. Use -Force to overwrite.");
             }
 
             // Create a directory on the cloud.
             string objContentType = GetContentType(null, metadataDict, UTF8TextMimeType);
-            byte[] contentBuffer = Encoding.UTF8.GetBytes(Contents);
-            Stream contentStream = new MemoryStream(contentBuffer);
-            UploadStreamToGcsObject(contentStream, objContentType, metadataDict, gcsObjectNamePrefixWithSlash);
+            Stream contentStream = new MemoryStream();
+            UploadStreamToGcsObject(contentStream, objContentType, metadataDict, gcsObjectNamePrefix);
 
             foreach (string file in Directory.EnumerateFiles(directory))
             {
-                // Upload each individual file.
                 string fileName = Path.GetFileName(file);
                 string fileWithGcsObjectNamePrefix = Path.Combine(gcsObjectNamePrefix, fileName);
                 // We have to replace \ with / so it will be created with correct folder structure.
                 fileWithGcsObjectNamePrefix = ConvertLocalToGcsFolderPath(fileWithGcsObjectNamePrefix);
-                UploadStreamToGcsObject(new FileStream(file, FileMode.Open),
+                UploadStreamToGcsObject(
+                    new FileStream(file, FileMode.Open),
                     GetContentType(ContentType, metadataDict, InferContentType(file)),
                     metadataDict,
                     ConvertLocalToGcsFolderPath(fileWithGcsObjectNamePrefix));
             }
 
+            // Recursively upload subfolder.
             foreach (string subDirectory in Directory.EnumerateDirectories(directory))
             {
-                // Recursively upload subfolder.
                 string subDirectoryName = Path.GetFileName(subDirectory);
                 string subDirectoryWithGcsObjectNamePrefix = Path.Combine(gcsObjectNamePrefix, subDirectoryName);
-                UploadDirectory(subDirectory,
+                UploadDirectory(
+                    subDirectory,
                     metadataDict,
                     ConvertLocalToGcsFolderPath(subDirectoryWithGcsObjectNamePrefix));
             }
@@ -337,7 +356,7 @@ namespace Google.PowerShell.CloudStorage
         {
             if (contentStream == null)
             {
-                return;
+                contentStream = new MemoryStream();
             }
 
             using (contentStream)
