@@ -9,6 +9,10 @@ function Install-GcloudCmdlets() {
         select -First 1
     # Import the GoogleCloud.psd1 in the folder of the latest dll.
      Join-Path $dll.PSParentPath GoogleCloud.psd1 | Import-Module
+
+     # Set environment variable to disable Google Analytics metric reporting.
+     # Shouldn't persist beyond the current PowerShell session.
+     $env:DISABLE_POWERSHELL_ANALYTICS = "TRUE"
 }
 
 # Creates a GCS bucket owned associated with the project, deleting any existing
