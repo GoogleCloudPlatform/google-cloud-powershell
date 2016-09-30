@@ -5,12 +5,12 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 
-// Shamelessly cribbed from https://github.com/GoogleCloudPlatform/
-// /GoogleCloudExtension/GoogleAnalyticsUtils/GoogleAnalyticsReporter.cs at 3e07c60 on Jul 12
+// Shamelessly cribbed from https://github.com/GoogleCloudPlatform/ at 3e07c60 on Jul 12
 // Also under the Apache License. Local changes:
-// - Disabled calling DebugPrintAnalyticsOutput.
+// - Disabled calling DebugPrintAnalyticsOutput
+// - Changed namespace
 
-namespace GoogleAnalyticsUtils
+namespace Google.PowerShell.Common
 {
     /// <summary>
     /// <para>

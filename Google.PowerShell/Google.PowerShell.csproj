@@ -129,12 +129,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Common\ExtensionAnalytics.cs" />
     <Compile Include="Common\GoogleAnalyticsReporter.cs" />
     <Compile Include="Common\CloudSdkSettings.cs" />
     <Compile Include="Common\GcloudCmdlet.cs" />
-    <Compile Include="Common\MeasurementProtocolService.cs" />
     <Compile Include="Common\Preconditions.cs" />
+    <Compile Include="Common\ReportCmdletResults.cs" />
     <Compile Include="Compute\GceAddressCmdlets.cs" />
     <Compile Include="Compute\GceBackendServiceCmdlets.cs" />
     <Compile Include="Compute\GceCmdlet.cs" />

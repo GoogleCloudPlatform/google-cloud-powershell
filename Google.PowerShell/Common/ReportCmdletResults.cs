@@ -1,16 +1,8 @@
 ﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
-using GoogleAnalyticsUtils;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Net;
 using System.Reflection;
-using System.Text;
-using System.Web;
 
 namespace Google.PowerShell.Common
 {
@@ -190,7 +182,7 @@ namespace Google.PowerShell.Common
                 action: cmdletName,
                 // e.g. FromString, FromFile
                 label: parameterSet,
-                // null (success), 403, 404
+                // null (success), 1 (error)
                 value: errorCode);
         }
     }
