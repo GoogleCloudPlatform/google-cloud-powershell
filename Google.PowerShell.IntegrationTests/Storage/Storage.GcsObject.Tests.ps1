@@ -6,7 +6,18 @@ $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 Describe "New-GcsObject" {
 
     $bucket = "gcps-object-testing"
-    Create-TestBucket $project $bucket
+
+    BeforeEach {
+        if (-not (Test-GcsBucket $bucket)) {
+            Create-TestBucket $project $bucket
+        }
+    }
+
+    AfterEach {
+        if (Test-GcsBucket $bucket) {
+            Remove-GcsBucket -Name $bucket -Force
+        }
+    }
 
     It "should work" {
         $filename = [System.IO.Path]::GetTempFileName()
@@ -32,6 +43,11 @@ Describe "New-GcsObject" {
     It "should fail if the file does not exist" {
         { New-GcsObject $bucket "file-not-found.txt" -File "C:\file-404" } `
             | Should Throw "File not found"
+    }
+
+    It "should fail if the folder does not exist" {
+        { New-GcsObject $bucket -Folder "C:\I should not exist" } `
+            | Should Throw "Directory 'C:\I should not exist' cannot be found"
     }
 
     It "accepts pipeline input as object contents" {
@@ -207,6 +223,132 @@ Describe "New-GcsObject" {
         $obj.Metadata["Content-Type"] | Should Be "image/jpeg"
         Remove-GcsObject $obj
     }
+
+    It "should upload an empty folder" {
+        $folderName = [System.IO.Path]::GetRandomFileName()
+        $testFolder = "$env:TEMP/$folderName"
+
+        try {
+            New-Item -ItemType Directory -Path $testFolder | Out-Null
+
+            $folder = New-GcsObject -Bucket $bucket -Folder $testFolder -Force
+
+            $folder.Name | Should Be "$folderName/"
+            $folder.Size | Should Be 0
+
+            $folderOnline = Get-GcsObject -Bucket $bucket -ObjectName "$folderName/"
+            $folderOnline.Name | Should Be "$folderName/"
+            $folderOnline.Size | Should Be 0
+        }
+        finally
+        {
+            Remove-Item $testFolder -Recurse -Force -ErrorAction Ignore
+        }
+    }
+
+    It "should work for both forwards slashes and backslashes in the path" {
+        $folderName = [System.IO.Path]::GetRandomFileName()
+        $testFolder = "$env:TEMP/$folderName"
+
+        try {
+            New-Item -ItemType Directory -Path $testFolder | Out-Null
+            "Hello, world" | Out-File "$testFolder/world.txt"
+
+            # Add a backslash to the end and make sure it is uploaded.
+            $result = New-GcsObject -Bucket $bucket -Folder "$testFolder\" -Force
+
+            $result.Count | Should Be 2
+            $result.Name -contains "$folderName/" | should be $true
+            $result.Name -contains "$folderName/world.txt" | should be $true
+
+            # Add a forwards slash to the end and make sure it is uploaded.
+            $result = New-GcsObject -Bucket $bucket -Folder "$testFolder/" -Force
+
+            $result.Count | Should Be 2
+            $result.Name -contains "$folderName/" | should be $true
+            $result.Name -contains "$folderName/world.txt" | should be $true
+        }
+        finally
+        {
+            Remove-Item $testFolder -Recurse -Force -ErrorAction Ignore
+        }
+    }
+
+    It "should upload a folder with files and subfolders" {
+        $folderName = [System.IO.Path]::GetRandomFileName()
+        $testFolder = "$env:TEMP/$folderName"
+
+        try {
+            New-Item -ItemType Directory -Path $testFolder | Out-Null
+
+            "Hello, world" | Out-File "$testFolder/world.txt"
+            "Hello, mars" | Out-File "$testFolder/mars.txt"
+            "Hello, jupiter" | Out-File "$testFolder/jupiter.txt"
+
+            $testSubfolder = "$testFolder/TestSubfolder"
+            New-Item -ItemType Directory -Path $testSubfolder | Out-Null
+
+            "Hello, saturn" | Out-File "$testSubfolder/saturn.txt"
+            "Hello, pluto" | Out-File "$testSubfolder/pluto.txt"
+
+            $result = New-GcsObject -Bucket $bucket -Folder $testFolder -Force
+
+            # The query returns 7 even though we create 5 because 2 of them are folders.
+            $result.Count | Should Be 7
+            # Confirm the files and folders were created.
+            $result.Name -contains "$folderName/" | should be $true
+            $result.Name -contains "$folderName/world.txt" | Should Be $true
+            $result.Name -contains "$folderName/jupiter.txt" | Should Be $true
+            $result.Name -contains "$folderName/mars.txt" | Should Be $true
+            $result.Name -contains "$folderName/TestSubFolder/" | should be $true
+            $result.Name -contains "$folderName/TestSubfolder/pluto.txt" | Should Be $true
+            $result.Name -contains "$folderName/TestSubfolder/saturn.txt" | Should Be $true
+
+            $saturn = Get-GcsObject -Bucket $bucket -ObjectName "$folderName/TestSubfolder/saturn.txt"
+            $saturn.ContentType | Should Be "text/plain"
+
+            # This should contain everything except the TestSubFolder and its files.
+            $objs = Find-GcsObject -Delimiter "/" -Bucket $bucket -Prefix "$folderName/"
+            $objs.Count | Should Be 4
+            $objs.Name -contains "$folderName/TestSubfolder/pluto.txt" | Should Be $false
+            $objs.Name -contains "$folderName/TestSubfolder/saturn.txt" | Should Be $false
+            $objs.Name -contains "$folderName/TestSubfolder/" | Should Be $false
+
+            # Everything should be returned!
+            $objs = Find-GcsObject -Bucket $bucket -Prefix "$folderName/"
+            $objs.Count | Should Be 7
+
+            $objs = Find-GcsObject -Bucket $bucket -Prefix "$folderName/TestSubfolder/"
+            $objs.Count | Should Be 3
+            $objs.Name -contains "$folderName/TestSubfolder/pluto.txt" | Should Be $true
+            $objs.Name -contains "$folderName/TestSubfolder/saturn.txt" | Should Be $true
+            $objs.Name -contains "$folderName/TestSubfolder/" | Should Be $true
+        }
+        finally
+        {
+            Remove-Item $testFolder -Recurse -Force -ErrorAction Ignore
+        }
+    }
+
+    It "should upload a folder with the correct prefix" {
+        $folderName = [System.IO.Path]::GetRandomFileName()
+        $testFolder = "$env:TEMP/$folderName"
+
+        try {
+            New-Item -ItemType Directory -Path $testFolder | Out-Null
+            "Hello, world" | Out-File "$testFolder/world.txt"
+            $prefix = "Planet"
+            $result = New-GcsObject -Bucket $bucket -Folder "$testFolder/" -Force -ObjectNamePrefix $prefix
+
+            $result.Count | Should Be 2
+            $result.Name -contains "$prefix/$folderName/" | should be $true
+            $result.Name -contains "$prefix/$folderName/world.txt" | should be $true
+        }
+        finally
+        {
+            Remove-Item $testFolder -Recurse -Force -ErrorAction Ignore
+        }
+    }
 }
 
 Describe "Get-GcsObject" {
@@ -311,7 +453,18 @@ Describe "Find-GcsObject" {
 Describe "Remove-GcsObject" {
 
     $bucket = "gcps-get-object-testing"
-    Create-TestBucket $project $bucket
+
+    BeforeEach {
+        if (-not (Test-GcsBucket $bucket)) {
+            Create-TestBucket $project $bucket
+        }
+    }
+
+    AfterEach {
+        if (Test-GcsBucket $bucket) {
+            Remove-GcsBucket -Name $bucket -Force
+        }
+    }
 
     It "should work" {
         Add-TestFile $bucket "testfile.txt"
@@ -434,7 +587,18 @@ Describe "Read-GcsObject" {
 Describe "Write-GcsObject" {
 
     $bucket = "gcps-write-object-testing"
-    Create-TestBucket $project $bucket
+
+    BeforeEach {
+        if (-not (Test-GcsBucket $bucket)) {
+            Create-TestBucket $project $bucket
+        }
+    }
+
+    AfterEach {
+        if (Test-GcsBucket $bucket) {
+            Remove-GcsBucket -Name $bucket -Force
+        }
+    }
 
     It "should work" {
         $objectName = "folder/file.txt"

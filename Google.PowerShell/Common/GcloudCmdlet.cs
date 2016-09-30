@@ -3,6 +3,7 @@
 
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
+using Microsoft.PowerShell.Commands;
 using System;
 using System.IO;
 using System.Linq;
@@ -87,9 +88,31 @@ namespace Google.PowerShell.Common
                 return filePath;
             }
 
-            // For relative files, qualify them based on where the PowerShell session is.
-            string currentDirectory = SessionState.Path.CurrentLocation.Path;
-            return Path.Combine(currentDirectory, filePath);
+            // Try to resolve the path using PowerShell (only applicable for FileSystemProvider).
+            try
+            {
+                ProviderInfo provider = null;
+                string[] result = GetResolvedProviderPathFromPSPath(filePath, out provider).ToArray();
+
+                // Only return the resolved path if there are no ambiguities.
+                // If path contains wildcards, then it may resolved to more than 1 path.
+                if (result?.Length == 1 && provider.ImplementingType == typeof(FileSystemProvider))
+                {
+                    return result[0];
+                }
+            }
+            catch (ItemNotFoundException itemEx)
+            {
+                // In case the file path is not created, an error will be thrown.
+                // But we should still return the resolved path if it is rooted.
+                if (Path.IsPathRooted(itemEx.ItemName))
+                {
+                    return itemEx.ItemName;
+                }
+            }
+
+            // Default with the input path in case we cannot resolve it.
+            return filePath;
         }
 
         /// <summary>
