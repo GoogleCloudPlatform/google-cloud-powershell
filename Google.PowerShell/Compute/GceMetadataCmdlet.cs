@@ -5,8 +5,10 @@ using Google.PowerShell.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Management.Automation;
 using System.Net;
+using System.Net.Http;
 
 namespace Google.PowerShell.ComputeEngine
 {
@@ -116,8 +118,10 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// Make this a field, so it can be aborted if cmdlet stops e.g. the user hits Ctrl-C.
+        /// Many properties of HttpWebRequest are not available on CoreCLR so it is better
+        /// to use HttpClient.
         /// </summary>
-        private HttpWebRequest _request;
+        private static HttpClient _client = new HttpClient();
 
         protected override void ProcessRecord()
         {
@@ -141,22 +145,25 @@ namespace Google.PowerShell.ComputeEngine
             }
 
             string query = string.Join("&", queryParameters);
-            _request = WebRequest.CreateHttp($"{basePath}{Path}?{query}");
-            _request.Headers.Add("Metadata-Flavor:Google");
+            _client.DefaultRequestHeaders.Add("Metadata-Flavor", "Google");
             if (WaitUpdate)
             {
-                _request.Timeout = -1;
+                _client.Timeout = System.Threading.Timeout.InfiniteTimeSpan;
             }
             try
             {
-                using (WebResponse response = _request.GetResponse())
-                using (Stream responseStream = response.GetResponseStream())
+                using (HttpResponseMessage response = _client.GetAsync($"{basePath}{Path}?{query}").Result)
+                using (Stream responseStream = response.Content?.ReadAsStreamAsync().Result)
                 using (StreamReader streamReader = new StreamReader(responseStream ?? Stream.Null))
                 {
                     WriteObject(streamReader.ReadToEnd());
                     if (AppendETag)
                     {
-                        WriteObject(response.Headers["ETag"]);
+                        IEnumerable<string> values;
+                        if (response.Headers.TryGetValues("ETag", out values))
+                        {
+                            WriteObject(values?.First());
+                        }
                     }
                 }
             }
@@ -176,7 +183,7 @@ namespace Google.PowerShell.ComputeEngine
 
         protected override void StopProcessing()
         {
-            _request?.Abort();
+            _client?.CancelPendingRequests();
             base.StopProcessing();
         }
     }
