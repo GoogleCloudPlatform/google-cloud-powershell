@@ -24,7 +24,10 @@ namespace Google.PowerShell.Common
         /// <summary>Environment variable which contains the Application Data settings.</summary>
         private const string AppdataEnvironmentVariable = "APPDATA";
 
-        /// <summary>GCloud configuration directory in Windows, relative to %APPDATA%.</summary>
+        /// <summary>
+        /// GCloud configuration directory, relative to %APPDATA% in Windows
+        /// and %HOME%/.config in UNIX.
+        /// </summary>
         private const string CloudSDKConfigDirectoryWindows = "gcloud";
 
         /// <summary>Name of the Cloud SDK file containing the name of the active config.</summary>
@@ -46,7 +49,11 @@ namespace Google.PowerShell.Common
         /// </summary>
         public static string GetCurrentConfigurationName()
         {
+#if !UNIX
             string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
+#else
+            string appDataFolder = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".config");
+#endif
             if (appDataFolder == null || !Directory.Exists(appDataFolder))
             {
                 return null;
@@ -73,7 +80,11 @@ namespace Google.PowerShell.Common
         /// </summary>
         public static string GetCurrentConfigurationFilePath()
         {
+#if !UNIX
             string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
+#else
+            string appDataFolder = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".config");
+#endif
             if (appDataFolder == null || !Directory.Exists(appDataFolder))
             {
                 return null;
@@ -167,7 +178,11 @@ namespace Google.PowerShell.Common
         /// </summary>
         public static string GetAnoymousClientID()
         {
+#if !UNIX
             string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
+#else
+            string appDataFolder = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".config");
+#endif
             if (appDataFolder == null || !Directory.Exists(appDataFolder))
             {
                 return null;

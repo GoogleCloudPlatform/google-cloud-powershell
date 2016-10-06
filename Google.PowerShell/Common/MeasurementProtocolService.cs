@@ -8,7 +8,9 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+#if !CORECLR
 using System.Web;
+#endif
 
 namespace Google.PowerShell.Common
 {
@@ -61,6 +63,9 @@ namespace Google.PowerShell.Common
             ClientId = clientId.Trim();
         }
 
+        // Removed this part of the code for CoreCLR for now, Chris is working on a PR
+        // that will remove this file.
+#if !CORECLR
         /// <summary>
         /// Generates the HTTP request object used for sending telemetry data.
         /// </summary>
@@ -129,6 +134,7 @@ namespace Google.PowerShell.Common
                 Debug.WriteLine("Error issuing Analytics request: {0}", ex.Message);
             }
         }
+#endif
 
         private static void AssertArgumentNotNullOrEmpty(string argumentName, string argumentValue)
         {
@@ -269,8 +275,11 @@ namespace Google.PowerShell.Common
 
         private void Report(string cmdletName, string parameterSet, int? errorCode)
         {
+            // Removed for CoreCLR for now. Chris is working on a PR that will remove this file.
+#if !CORECLR
             var request = MeasurementProtocolService.GenerateRequest("PowerShell", cmdletName, parameterSet, errorCode);
             MeasurementProtocolService.IssueRequest(request);
+#endif
         }
     }
 }

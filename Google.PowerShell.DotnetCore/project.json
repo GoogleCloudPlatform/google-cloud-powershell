@@ -1,0 +1,56 @@
+{
+  "name": "Google.PowerShell.DotnetCore",
+  "title": "Google Cloud Tools for PowerShell",
+  "description": "Google Cloud Tools for PowerShell, targeting the .NET Core runtime",
+  "copyright": "Google Inc. 2016",
+  "version": "1.0.0",
+
+  "runtimes": {
+    "win10-x64": { },
+    "ubuntu.16.04-x64": { }
+  },
+
+  "configurations": {
+    "Linux": {
+      "buildOptions": {
+        "define": [ "UNIX" ]
+      }
+    }
+  },
+
+  "buildOptions": {
+    "define": [ "CORECLR" ],
+    "compile": {
+      "include": [
+        "../Google.PowerShell/Common/*.cs",
+        "../Google.PowerShell/Compute/*.cs",
+        "../Google.PowerShell/Dns/*.cs",
+        "../Google.PowerShell/Properties/*.cs",
+        "../Google.PowerShell/Provider/*.cs",
+        "../Google.PowerShell/Sql/*.cs",
+        "../Google.PowerShell/Storage/*.cs"
+      ]
+    }
+  },
+
+  "frameworks": {
+    "netstandard1.6": {
+      "imports": "dnxcore50",
+      "buildOptions": {
+        "define": [ "CORECLR" ]
+      },
+      "dependencies": {
+        "System.Management.Automation": "1.0.0-*",
+        "Portable.BouncyCastle": "1.8.1.1",
+        "Google.Apis": "1.16.0",
+        "Google.Apis.Auth": "1.16.0",
+        "Google.Apis.Compute.v1": "1.16.0.594",
+        "Google.Apis.Core": "1.16.0",
+        "Google.Apis.Dns.v1": "1.16.0.602",
+        "Google.Apis.SQLAdmin.v1beta4": "1.16.0.599",
+        "Google.Apis.Storage.v1": "1.16.0.579",
+        "Google.Apis.CloudResourceManager.v1": "1.16.0.533"
+      }
+    }
+  }
+}
