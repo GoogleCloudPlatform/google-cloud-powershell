@@ -1,4 +1,5 @@
 ﻿. $PSScriptRoot\..\Dns\GcdCmdlets.ps1
+$project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Describe "Get-GcdManagedZone" {
     BeforeAll {
@@ -26,8 +27,8 @@ Describe "Get-GcdManagedZone" {
     }
 
     # Create 2 test zones
-    gcloud dns managed-zones create --dns-name=$dnsName1 --description=$testDescrip1 $testZone1 --project=$project
-    gcloud dns managed-zones create --dns-name=$dnsName2 --description=$testDescrip2 $testZone2 --project=$project
+    gcloud dns managed-zones create --dns-name=$dnsName1 --description=$testDescrip1 $testZone1 --project=$project 2>$null
+    gcloud dns managed-zones create --dns-name=$dnsName2 --description=$testDescrip2 $testZone2 --project=$project 2>$null
 
     It "should work and list the 2 ManagedZones just created" {
         $zones = Get-GcdManagedZone -Project $project
@@ -159,3 +160,4 @@ Describe "Remove-GcdManagedZone" {
     }
 }
 
+Reset-GCloudConfig $oldActiveConfig $configName

@@ -1,4 +1,5 @@
 ﻿. $PSScriptRoot\..\Dns\GcdCmdlets.ps1
+$project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Describe "Get-GcdResourceRecordSet" {
     BeforeAll {
@@ -22,7 +23,7 @@ Describe "Get-GcdResourceRecordSet" {
     }
 
     # Create zone for testing 
-    gcloud dns managed-zones create --dns-name=$dnsName1 --description=$testDescrip1 $testZone1 --project=$project
+    gcloud dns managed-zones create --dns-name=$dnsName1 --description=$testDescrip1 $testZone1 --project=$project 2>$null
 
     # Add a new A-type record and a new AAAA type record to the test zone
     Add-GcdChange -Project $project -Zone $testZone1 -Add $testRrsetA,$testRrsetAAAA
@@ -99,3 +100,5 @@ Describe "New-GcdResourceRecordSet" {
         $rrsetTXT.Type | Should Match "TXT"
     }
 }
+
+Reset-GCloudConfig $oldActiveConfig $configName

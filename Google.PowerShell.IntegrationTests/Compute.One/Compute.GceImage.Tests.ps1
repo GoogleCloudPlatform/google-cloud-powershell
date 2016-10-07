@@ -49,6 +49,7 @@ Describe "Add-GceImage" {
     }
 
     Remove-GceDisk $diskName
+    Get-GceImage -Project $project | Remove-GceImage
 }
 
 Describe "Get-GceImage" {

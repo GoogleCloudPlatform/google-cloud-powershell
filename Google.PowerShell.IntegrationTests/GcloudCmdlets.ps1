@@ -59,3 +59,28 @@ function Reset-GCloudConfig($oldConfig, $configName) {
     gcloud config configurations activate $oldConfig.NAME 2>$null
     gcloud config configurations delete $configName -q 2>$null
 }
+
+# Install Cloud SDK non-interactively.
+function Install-CloudSdk() {
+    Invoke-WebRequest -Uri "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-129.0.0-windows-x86_64-bundled-python.zip" `
+                      -OutFile "$env:APPDATA\gcloudsdk.zip"
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+    # This will extract it to a folder $env:APPDATA\google-cloud-sdk.
+    [System.IO.Compression.ZipFile]::ExtractToDirectory("$env:APPDATA\gcloudsdk.zip", "$env:APPDATA")
+    
+    $installationPath = "$env:LOCALAPPDATA\Google\Cloud SDK"
+
+    md $installationPath
+    Copy-Item "$env:APPDATA\google-cloud-sdk" $installationPath -Recurse -Force
+
+    # Set this to true to disable prompts.
+    $env:CLOUDSDK_CORE_DISABLE_PROMPTS = $true
+    & "$installationPath\google-cloud-sdk\install.bat" --quiet 2>$null
+
+    $cloudBinPath = "$installationPath\google-cloud-sdk\bin"
+    $envPath = [System.Environment]::GetEnvironmentVariable("Path")
+    if (-not $envPath.Contains($cloudBinPath)) {
+        [System.Environment]::SetEnvironmentVariable("Path", "$envPath;$cloudBinPath")
+    }
+}

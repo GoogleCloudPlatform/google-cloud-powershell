@@ -1,5 +1,6 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
+$project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Describe "New-GcSqlInstanceReplicaConfig" {
     It "shouldn't require any parameters" {
@@ -25,7 +26,7 @@ Describe "New-GcSqlSettingConfig" {
     It "should be able to instantiate itself with just Tier passed in" {
         $setting = New-GcSqlSettingConfig "D1"
         $setting.Tier | Should Be "D1"
-        $setting.DataDiskSizeGb | Should Be 10
+        $setting.DataDiskSizeGb | Should Be 50
         $setting.DataDiskType | Should be "PD_SSD"
         $setting.DatabaseFlags | Should BeNullOrEmpty
     }
@@ -91,3 +92,5 @@ Describe "New-GcSqlInstanceConfig" {
     }
 
 }
+
+Reset-GCloudConfig $oldActiveConfig $configName

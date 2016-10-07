@@ -24,7 +24,7 @@ Describe "Get-GcsBucket" {
     }
 
     It "should contain ACL information" {
-        (Get-GcsBucket -Project $project)[0].ACL.Length -gt 0 | Should Be $true
+        (Get-GcsBucket -Project $project)[0].ACL[0].Length -gt 0 | Should Be $true
     }
 
     It "should list all buckets in a project" {
