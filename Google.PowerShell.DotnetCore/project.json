@@ -1,13 +1,15 @@
 {
-  "name": "Google.PowerShell.DotnetCore",
+  "name": "Google.PowerShell",
   "title": "Google Cloud Tools for PowerShell",
   "description": "Google Cloud Tools for PowerShell, targeting the .NET Core runtime",
   "copyright": "Google Inc. 2016",
   "version": "1.0.0",
 
   "runtimes": {
+    "win81-x64": {},
     "win10-x64": {},
-    "ubuntu.16.04-x64": {}
+    "ubuntu.16.04-x64": {},
+    "osx.10.11-x64": {}
   },
 
   "configurations": {
