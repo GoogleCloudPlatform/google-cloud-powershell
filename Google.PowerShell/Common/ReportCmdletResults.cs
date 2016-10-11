@@ -7,7 +7,7 @@ using System.Reflection;
 namespace Google.PowerShell.Common
 {
     /// <summary>
-    /// Interface for interacting with the Measurement Protocol service. See concrete
+    /// Interface for reporting cmdlet invocations and results to analytic services. See concrete
     /// implementations for details.
     /// </summary>
     public interface IReportCmdletResults
@@ -31,7 +31,7 @@ namespace Google.PowerShell.Common
     /// <summary>
     /// Fake implementation of IReportCmdletResults for unit testing. This will also be used in
     /// production for users who have opted-out of sending analytics data to Google. (Read:
-    /// performance matters.)
+    /// performance matters, it can't just store everything in memory.)
     /// </summary>
     public class InMemoryCmdletResultReporter : IReportCmdletResults
     {
@@ -120,7 +120,7 @@ namespace Google.PowerShell.Common
     public enum AnalyticsEventCategory
     {
         CmdletInvocation,
-        Provider
+        ProviderInvocation
     }
 
     /// <summary>
@@ -128,7 +128,7 @@ namespace Google.PowerShell.Common
     /// </summary>
     public class GoogleAnalyticsCmdletReporter : IReportCmdletResults
     {
-        // Google Analytics Property ID, see di-metrics.
+        // Google Analytics Property ID.
         private const string PropertyId = "UA-36037335-1";
         // Application name to report to GA.
         private const string ApplicationName = "google-cloud-powershell";
@@ -136,9 +136,9 @@ namespace Google.PowerShell.Common
         private static readonly Lazy<string> s_appVersion = new Lazy<string>(() => Assembly.GetExecutingAssembly().GetName().Version.ToString());
 
         /// <summary>
-        /// Analytics reporter object.
+        /// Singleton instance of the event reporter object, wrapping the actual calls to Google Analytics.
         /// </summary>
-        private Lazy<AnalyticsReporter> _reporter = null;
+        private static Lazy<EventsReporter> s_reporter = null;
 
         /// <summary>
         /// Category for all analytic events reported through this instance.
@@ -154,36 +154,53 @@ namespace Google.PowerShell.Common
             bool disableReporting = !String.IsNullOrWhiteSpace(envVar);
 
             _category = analyticsCategory;
-            _reporter = new Lazy<AnalyticsReporter>(() =>
+            if (s_reporter == null)
             {
-                return new AnalyticsReporter(PropertyId,
-                    clientId: clientID,
-                    appName: ApplicationName,
-                    appVersion: s_appVersion.Value,
-                    debug: disableReporting);
-            });
+                // BUG: We only forward the clientID when the AnalyticsReporter is constructed the first time.
+                // If the user opts-out and then opts-into analytics reporting, their client ID will change,
+                // but we will keep using the same cached version. Will persist until the GoogleCloud PowerShell
+                // module is unloaded, i.e. until the PowerShell session terminates.
+                s_reporter = new Lazy<EventsReporter>(() =>
+                {
+                    var analyticsReporter = new AnalyticsReporter(
+                        PropertyId,
+                        clientId: clientID,
+                        appName: ApplicationName,
+                        appVersion: s_appVersion.Value,
+                        debug: disableReporting);
+
+                    return new EventsReporter(analyticsReporter);
+                });
+            }
         }
 
         public void ReportSuccess(string cmdletName, string parameterSet)
         {
-            Report(_category, cmdletName, parameterSet, null);
+            Report(cmdletName, parameterSet, null);
         }
 
         public void ReportFailure(string cmdletName, string parameterSet, int errorCode)
         {
-            Report(_category, cmdletName, parameterSet, errorCode);
+            Report(cmdletName, parameterSet, errorCode);
         }
 
-        // The virtual page view reported to analytics.
-        private static string GetPageViewUri(string cmdletName, string parameterSet) =>
-            $"/virtual/{cmdletName}/{parameterSet}";
-
-        private void Report(AnalyticsEventCategory category, string cmdletName, string parameterSet, int? errorCode)
+        private void Report(string cmdletName, string parameterSet, int? errorCode)
         {
-            string uri = GetPageViewUri(cmdletName, parameterSet);
-            string title = errorCode == null ? "Success" : "Failure-" + errorCode.ToString();
-            string host = category.ToString();
-            _reporter.Value?.ReportPageView(uri, title, host);
+            // The event type will be CmdletInvocation or ProviderInvocation. The specific cmdlet and parameter set
+            // used are encoded in the event's metadata.
+            AnalyticsEvent eventData = new AnalyticsEvent(
+                _category.ToString(),
+                "cmdletName", cmdletName,
+                "parameterSet", (parameterSet ?? "null"),
+                "errorCode", (errorCode.HasValue ? errorCode.ToString() : "null"));
+
+            s_reporter.Value.ReportEvent(
+                source: "virtual.powershell",
+                eventType: "powershell",
+                eventName: eventData.Name,
+                userLoggedIn: true,
+                projectNumber: null,
+                metadata: eventData.Metadata);
         }
     }
 }

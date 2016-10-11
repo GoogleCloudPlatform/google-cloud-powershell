@@ -4,17 +4,22 @@
 // Forked from https://github.com/GoogleCloudPlatform/google-cloud-visualstudio
 // At c1d57d0
 // Original files:
-// AnalyticsReporter.cs, IAnalyticsReporter.cs, IHitSender.cs, HitSender.cs
+//     AnalyticsReporter.cs, IAnalyticsReporter.cs, IHitSender.cs, HitSender.cs,
+//     IEventReporter.cs, EventReporter.cs, AnalyticsEvents.cs
 // Local changes:
 // - Changed namespaces
 // - Merged contents from multiple files into one.
 // - Removed calls to DebugPrintAnalyticsOutput
+// - Rewired how AnalyticsEvent's ApplicationVersion is set.
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net.Http;
-using System.Threading.Tasks;
+using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Google.PowerShell.Common
 {
@@ -340,5 +345,193 @@ namespace Google.PowerShell.Common
         }
 
         private static string GetCustomDimension(int index) => $"cd{index}";
+    }
+
+    /// <summary>
+    /// This interface abstracts a generic events reporter for analytics.
+    /// </summary>
+    public interface IEventsReporter
+    {
+        /// <summary>
+        /// Report an event to analytics.
+        /// </summary>
+        /// <param name="source">The source of the events.</param>
+        /// <param name="eventType">The event type.</param>
+        /// <param name="eventName">The event name.</param>
+        /// <param name="userLoggedIn">Is there a logged in user.</param>
+        /// <param name="projectNumber">The project number, optional.</param>
+        /// <param name="metadata">Extra metadata for the event, optional.</param>
+        void ReportEvent(
+            string source,
+            string eventType,
+            string eventName,
+            bool userLoggedIn,
+            string projectNumber = null,
+            Dictionary<string, string> metadata = null);
+    }
+
+    /// <summary>
+    /// Reports events using the provided analytics reporter.
+    /// </summary>
+    public class EventsReporter : IEventsReporter
+    {
+        private const string TrueValue = "true";
+        private const string FalseValue = "false";
+
+        // The custom dimension index for the various properties sent to Google Analytics.
+
+        // IsUserSignedIn (cd16): true if a user is signed on, false otherwise.
+        private const int IsUserSignedInIndex = 16;
+
+        // IsInternalUser (cd17): true if the user is internal to Google, false otherwise.
+        private const int IsInternalUserIndex = 17;
+
+        // EventType (cd19): the event type.
+        private const int EventTypeIndex = 19;
+
+        // EventName (cd20): the event name.
+        private const int EventNameIndex = 20;
+
+        // IsEventHit (cd21): true.
+        private const int IsEventHitIndex = 21;
+
+        // ProjectNumberHash (cd31): sha1 hash of the project numeric id.
+        private const int ProjectNumberHashIndex = 31;
+
+        private readonly string _eventSource;
+        private readonly IAnalyticsReporter _reporter;
+
+        public EventsReporter(IAnalyticsReporter reporter)
+        {
+            _reporter = Preconditions.CheckNotNull(reporter, nameof(reporter));
+        }
+
+        #region IEventsReporter
+
+        public void ReportEvent(
+            string source,
+            string eventType,
+            string eventName,
+            bool userLoggedIn,
+            string projectNumber = null,
+            Dictionary<string, string> metadata = null)
+        {
+            Preconditions.CheckNotNull(eventType, nameof(eventType));
+            Preconditions.CheckNotNull(eventName, nameof(eventName));
+
+            var customDimensions = new Dictionary<int, string>
+            {
+                { IsUserSignedInIndex, userLoggedIn ? TrueValue : FalseValue },
+                { IsInternalUserIndex, FalseValue },
+                { EventTypeIndex, eventType },
+                { EventNameIndex, eventName },
+                { IsEventHitIndex, TrueValue },
+            };
+            if (projectNumber != null)
+            {
+                customDimensions[ProjectNumberHashIndex] = GetHash(projectNumber);
+            }
+            var serializedMetadata = metadata != null ? SerializeEventMetadata(metadata) : null;
+
+            _reporter.ReportPageView(
+                page: GetPageViewURI(eventType: eventType, eventName: eventName),
+                title: serializedMetadata,
+                host: source,
+                customDimensions: customDimensions);
+        }
+
+        #endregion
+
+        private static string GetHash(string projectId)
+        {
+            var sha1 = SHA1.Create();
+            var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(projectId));
+
+            StringBuilder sb = new StringBuilder();
+            foreach (byte b in hash)
+            {
+                sb.AppendFormat("{0:x2}", b);
+            }
+            return sb.ToString();
+        }
+
+        private static string SerializeEventMetadata(Dictionary<string, string> metadata)
+        {
+            return String.Join(",", metadata.Select(SerializeMetadataEntry));
+        }
+
+        private static string SerializeMetadataEntry(KeyValuePair<string, string> entry) =>
+            $"{entry.Key}={EscapeValue(entry.Value)}";
+
+        /// <summary>
+        /// Escapes a value so it can be included in the GA hit and being able to parse them again on
+        /// the backend Only the ',', '=' and '\\' characters need to be escaped as those are the separators
+        /// for the values, in the string.
+        /// </summary>
+        private static string EscapeValue(string value)
+        {
+            var result = new StringBuilder();
+            foreach (var c in value)
+            {
+                switch (c)
+                {
+                    case ',':
+                    case '=':
+                    case '\\':
+                        result.Append($@"\{c}");
+                        break;
+
+                    default:
+                        result.Append(c);
+                        break;
+                }
+            }
+            return result.ToString();
+        }
+
+        private static string GetPageViewURI(string eventType, string eventName) =>
+            $"/virtual/{eventType}/{eventName}";
+    }
+
+    /// <summary>
+    /// Data object representing an analytics event. Useful for bundling data to be passed to an IEventReporter.
+    /// </summary>
+    internal class AnalyticsEvent
+    {
+        private const string VersionName = "version";
+
+        // Assembly version of Google.PowerShell.dll.
+        private static readonly Lazy<string> s_appVersion = new Lazy<string>(() => Assembly.GetExecutingAssembly().GetName().Version.ToString());
+
+        public string Name { get; }
+
+        public Dictionary<string, string> Metadata { get; }
+
+        public AnalyticsEvent(string name, params string[] metadata)
+        {
+            Name = name;
+            Metadata = GetMetadataFromParams(metadata);
+        }
+
+        private static Dictionary<string, string> GetMetadataFromParams(string[] args)
+        {
+            Dictionary<string, string> result = new Dictionary<string, string>();
+            if (args.Length != 0)
+            {
+                if ((args.Length % 2) != 0)
+                {
+                    Debug.WriteLine($"Invalid count of params: {args.Length}");
+                    return null;
+                }
+
+                for (int i = 0; i < args.Length; i += 2)
+                {
+                    result.Add(args[i], args[i + 1]);
+                }
+            }
+
+            result[VersionName] = s_appVersion.Value;
+            return result;
+        }
     }
 }
