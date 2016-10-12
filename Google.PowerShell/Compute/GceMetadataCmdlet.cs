@@ -118,8 +118,6 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// Make this a field, so it can be aborted if cmdlet stops e.g. the user hits Ctrl-C.
-        /// Many properties of HttpWebRequest are not available on CoreCLR so it is better
-        /// to use HttpClient.
         /// </summary>
         private static HttpClient _client = new HttpClient();
 

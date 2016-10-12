@@ -41,13 +41,9 @@ namespace Google.PowerShell.CloudStorage
 
         public void Close()
         {
-#if !CORECLR
-            _writer.Close();
-#else
             // StreamWriter on .NET Core does not have Close method so we
             // have to call Dispose() instead.
             _writer.Dispose();
-#endif
         }
     }
 }
