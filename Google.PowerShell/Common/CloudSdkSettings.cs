@@ -49,18 +49,15 @@ namespace Google.PowerShell.Common
         /// </summary>
         public static string GetCurrentConfigurationName()
         {
-#if !UNIX
-            string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
-#else
-            string appDataFolder = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".config");
-#endif
-            if (appDataFolder == null || !Directory.Exists(appDataFolder))
+            string cloudSdkFolder = GetCloudSdkFolder();
+
+            if (cloudSdkFolder == null || !Directory.Exists(cloudSdkFolder))
             {
                 return null;
             }
 
             string activeconfigFilePath = Path.Combine(
-                appDataFolder,
+                cloudSdkFolder,
                 CloudSDKConfigDirectoryWindows,
                 ActiveConfigFileName);
             try
@@ -80,18 +77,15 @@ namespace Google.PowerShell.Common
         /// </summary>
         public static string GetCurrentConfigurationFilePath()
         {
-#if !UNIX
-            string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
-#else
-            string appDataFolder = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".config");
-#endif
-            if (appDataFolder == null || !Directory.Exists(appDataFolder))
+            string cloudSdkFolder = GetCloudSdkFolder();
+
+            if (cloudSdkFolder == null || !Directory.Exists(cloudSdkFolder))
             {
                 return null;
             }
 
             string defaultConfigFile = Path.Combine(
-                appDataFolder,
+                cloudSdkFolder,
                 CloudSDKConfigDirectoryWindows,
                 ConfigurationsFolderName,
                 String.Format("config_{0}", GetCurrentConfigurationName()));
@@ -178,18 +172,15 @@ namespace Google.PowerShell.Common
         /// </summary>
         public static string GetAnoymousClientID()
         {
-#if !UNIX
-            string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
-#else
-            string appDataFolder = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".config");
-#endif
-            if (appDataFolder == null || !Directory.Exists(appDataFolder))
+            string cloudSdkFolder = GetCloudSdkFolder();
+
+            if (cloudSdkFolder == null || !Directory.Exists(cloudSdkFolder))
             {
                 return null;
             }
 
             string uuidFile = Path.Combine(
-                appDataFolder,
+                cloudSdkFolder,
                 CloudSDKConfigDirectoryWindows,
                 ClientIDFileName);
 
@@ -198,6 +189,18 @@ namespace Google.PowerShell.Common
                 return Guid.NewGuid().ToString();
             }
             return File.ReadAllText(uuidFile);
+        }
+
+        /// <summary>
+        /// Returns the folder that contains Cloud SDK Config.
+        /// </summary>
+        private static string GetCloudSdkFolder()
+        {
+#if !UNIX
+            return Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
+#else
+            return Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".config");
+#endif
         }
     }
 }
