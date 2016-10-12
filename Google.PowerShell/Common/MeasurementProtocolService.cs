@@ -8,7 +8,11 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+#if !CORECLR
+// System.Web.HttpUtility is not available on CoreCLR.
+// TODO(quoct): Finds an alternative to current use of System.Web.
 using System.Web;
+#endif
 
 namespace Google.PowerShell.Common
 {
@@ -61,11 +65,18 @@ namespace Google.PowerShell.Common
             ClientId = clientId.Trim();
         }
 
+        // Removed this part of the code for CoreCLR for now, Chris is working on a PR
+        // that will remove this file.
         /// <summary>
         /// Generates the HTTP request object used for sending telemetry data.
         /// </summary>
         public static HttpWebRequest GenerateRequest(string category, string action, string label, int? value = null)
         {
+#if CORECLR
+            // TODO(quoct): Wire telemetry reporting into PowerShell for non-Windows platforms.
+            // This requires finding an alternative to current use of System.Web.
+            return null;
+#else
             AssertArgumentNotNullOrEmpty(nameof(category), category);
             AssertArgumentNotNullOrEmpty(nameof(action), action);
             AssertArgumentNotNullOrEmpty(nameof(label), label);
@@ -106,6 +117,7 @@ namespace Google.PowerShell.Common
             }
 
             return request;
+#endif
         }
 
         /// <summary>
@@ -113,6 +125,11 @@ namespace Google.PowerShell.Common
         /// </summary>
         public static void IssueRequest(HttpWebRequest request)
         {
+#if CORECLR
+            // TODO(quoct): Wire telemetry reporting into PowerShell for non-Windows platforms.
+            // This requires finding an alternative to current use of System.Web.
+            return;
+#else
             try
             {
                 using (var webResponse = (HttpWebResponse)request.GetResponse())
@@ -128,6 +145,7 @@ namespace Google.PowerShell.Common
                 // network failure, e.g. there is no internet connection.
                 Debug.WriteLine("Error issuing Analytics request: {0}", ex.Message);
             }
+#endif
         }
 
         private static void AssertArgumentNotNullOrEmpty(string argumentName, string argumentValue)
@@ -269,8 +287,11 @@ namespace Google.PowerShell.Common
 
         private void Report(string cmdletName, string parameterSet, int? errorCode)
         {
+            // Removed for CoreCLR for now. Chris is working on a PR that will remove this file.
+#if !CORECLR
             var request = MeasurementProtocolService.GenerateRequest("PowerShell", cmdletName, parameterSet, errorCode);
             MeasurementProtocolService.IssueRequest(request);
+#endif
         }
     }
 }
