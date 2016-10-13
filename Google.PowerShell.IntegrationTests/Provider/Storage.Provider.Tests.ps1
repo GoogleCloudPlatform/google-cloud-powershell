@@ -71,7 +71,7 @@ Describe "Storage Provider"{
         Compare-Object $gcsContents $localContents | Should BeNullOrEmpty
     }
 
-    It "Should create file using set-content" {
+    It "Should create file using Set-Content" {
         cd gs:\$bucketName\$folderName
         rm $fileName
         Set-Content $fileName -Value $content1
