@@ -37,5 +37,13 @@ namespace Google.PowerShell.Provider
             _update = update;
             _cacheLifetime = cacheLifetime;
         }
+
+        /// <summary>
+        /// Forces the CacheItem to do a new update the next time the value is requested.
+        /// </summary>
+        public void Obsolete()
+        {
+            _lastUpdate = DateTimeOffset.MinValue;
+        }
     }
 }
