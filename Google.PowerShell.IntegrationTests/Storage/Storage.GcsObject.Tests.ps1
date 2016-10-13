@@ -626,7 +626,7 @@ Describe "Write-GcsObject" {
     }
 
     It "will accept contents from the pipeline" {
-        # Note that we aren't specifying the -Contents or -File parameter. Instead
+        # Note that we aren't specifying the -Value or -File parameter. Instead
         # that is set by the pipeline.
         $objectName = "write-gcsobject-from-pipeline"
         $objectContents = "This is some text from the PowerShell pipeline"
@@ -640,8 +640,35 @@ Describe "Write-GcsObject" {
         Read-GcsObject $bucket $objectName | Should BeExactly $objectContents
 
         # Exercise the explicit -Content parameter too.
-        Write-GcsObject $bucket ($objectName + "2") -Contents $objectContents -Force
+        Write-GcsObject $bucket ($objectName + "2") -Value $objectContents -Force
         Read-GcsObject $bucket ($objectName + "2") | Should BeExactly $objectContents
+
+        # Using piped in GCS Object with -Value.
+        $objectContents = "This is some text from the PowerShell pipeline using piped in GCS Object"
+        Get-GcsObject -Bucket $bucket -ObjectName $objectName | Write-GcsObject -Value $objectContents
+        Read-GcsObject -Bucket $bucket -ObjectName $objectName | Should BeExactly $objectContents
+
+        # Using piped in GCS Object with -File.
+        $fileContents = "This is the file contents."
+        $tempFile = [System.IO.Path]::GetTempFileName()
+
+        try {
+            $fileContents | Out-File $tempFile -Encoding ascii -NoNewline
+            Get-GcsObject -Bucket $bucket -ObjectName $objectName | Write-GcsObject -File $tempFile
+        }
+        finally {
+            Remove-Item $tempFile
+        }
+
+        # Confirm the contents have changed.
+        $tempFile = [System.IO.Path]::GetTempFileName()
+        try {
+            Read-GcsObject -Bucket $bucket -ObjectName $objectName $tempFile -Force
+            Get-Content $tempFile | Should BeExactly $fileContents
+        }
+        finally {
+            Remove-Item $tempFile
+        }
     }
 
     It "should accept relative file paths" {
@@ -789,19 +816,19 @@ Describe "Copy-GcsObject" {
         }
         
         It "Should fail to write to unaccessable source bucket" {
-            New-GcsObject $bucket "test-source0" -Contents "test0-$r"
+            New-GcsObject $bucket "test-source0" -Value "test0-$r"
             { Copy-GcsObject -SourceBucket $bucket -SourceObject "test-source0" "asdf" "test-dest" } |
                 Should Throw 403
         }
 
         It "Should work by name" {
-            New-GcsObject $bucket "test-source" -Contents "test1-$r"
+            New-GcsObject $bucket "test-source" -Value "test1-$r"
             Copy-GcsObject -SourceBucket $bucket -SourceObject "test-source" $bucket "test-dest"
             Read-GcsObject $bucket "test-dest" | Should Be "test1-$r"
         }
 
         It "Should work by object" {
-            $sourceObj = New-GcsObject $bucket "test-source2" -Contents "test2-$r"
+            $sourceObj = New-GcsObject $bucket "test-source2" -Value "test2-$r"
             $sourceObj | Copy-GcsObject $bucket "test-dest2"
             Read-GcsObject $bucket "test-dest2" | Should Be "test2-$r"
         }

@@ -398,7 +398,6 @@ namespace Google.PowerShell.Common
         // ProjectNumberHash (cd31): sha1 hash of the project numeric id.
         private const int ProjectNumberHashIndex = 31;
 
-        private readonly string _eventSource;
         private readonly IAnalyticsReporter _reporter;
 
         public EventsReporter(IAnalyticsReporter reporter)
