@@ -18,7 +18,7 @@ $debugDir = Join-Path $binDir "Debug"
 $packageDir = Join-Path $binDir "Packaged"
 $powerShellDir = Join-Path $packageDir "PowerShell"
 $gcpsDir = Join-Path $packageDir "GoogleCloudPowerShell"
-$archivePath = Join-Path $packageDir "powershell-x.x.x.zip"
+$archivePath = Join-Path $packageDir "powershell-0.1.8.zip"
 
 # Purge the existing bin directory.
 Write-Host -ForegroundColor Cyan "*** Purging the bindir***"
