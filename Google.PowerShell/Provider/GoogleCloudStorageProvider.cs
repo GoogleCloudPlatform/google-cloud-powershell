@@ -480,13 +480,20 @@ namespace Google.PowerShell.CloudStorage
                             {
                                 GetChildItems(bucket.Name, true);
                             }
+                            // It is possible to not have access to ojbects even if we have access to the bucket.
+                            // We ignore those objects as if they did not exist.
+                            catch (GoogleApiException e) when (e.HttpStatusCode == HttpStatusCode.Forbidden) { }
+                            catch (AggregateException e)
+                            {
+                                foreach (Exception innerException in e.InnerExceptions)
+                                {
+                                    WriteError(new ErrorRecord(
+                                        innerException, null, ErrorCategory.NotSpecified, bucket.Name));
+                                }
+                            }
                             catch (Exception e)
                             {
-                                if ((e as GoogleApiException)?.HttpStatusCode != HttpStatusCode.Forbidden)
-                                {
-                                    WriteError(
-                                        new ErrorRecord(e, null, ErrorCategory.NotSpecified, bucket.Name));
-                                }
+                                WriteError(new ErrorRecord(e, null, ErrorCategory.NotSpecified, bucket.Name));
                             }
                         }
                     }
@@ -522,6 +529,10 @@ namespace Google.PowerShell.CloudStorage
         /// <param name="newItemValue">The value of the item to create. We assume it is a string.</param>
         protected override void NewItem(string path, string itemTypeName, object newItemValue)
         {
+            if (!ShouldProcess(path, "New-Item"))
+            {
+                return;
+            }
             bool newFolder = itemTypeName == "Directory";
             if (newFolder && !path.EndsWith("/"))
             {
@@ -573,6 +584,10 @@ namespace Google.PowerShell.CloudStorage
         /// <param name="recurse">If true, will copy all decendent objects as well.</param>
         protected override void CopyItem(string path, string copyPath, bool recurse)
         {
+            if (!ShouldProcess($"Copy-Item from {path} to {copyPath}"))
+            {
+                return;
+            }
             var dyanmicParameters = (GcsCopyItemDynamicParameters)DynamicParameters;
             if (recurse)
             {
@@ -671,6 +686,8 @@ namespace Google.PowerShell.CloudStorage
                 Service.Objects.Insert(body, gcsPath.Bucket, outputStream, contentType);
             request.UploadAsync();
             IContentWriter contentWriter = new GcsContentWriter(inputStream);
+            // Force the bucket models to refresh with the potentially new object.
+            BucketModels.Clear();
             TelemetryReporter.ReportSuccess(nameof(GoogleCloudStorageProvider), nameof(GetContentWriter));
             return contentWriter;
         }
@@ -686,6 +703,10 @@ namespace Google.PowerShell.CloudStorage
         /// <param name="path">The path of the object to clear.</param>
         public void ClearContent(string path)
         {
+            if (!ShouldProcess(path, "Clear-Content"))
+            {
+                return;
+            }
             var gcsPath = GcsPath.Parse(path);
             Object body = new Object
             {
@@ -717,6 +738,10 @@ namespace Google.PowerShell.CloudStorage
         /// non-empty bucket.</param>
         protected override void RemoveItem(string path, bool recurse)
         {
+            if (!ShouldProcess(path, "Remove-Item"))
+            {
+                return;
+            }
             var gcsPath = GcsPath.Parse(path);
             switch (gcsPath.Type)
             {
@@ -724,7 +749,7 @@ namespace Google.PowerShell.CloudStorage
                     throw new InvalidOperationException("Use Remove-PSDrive to remove a drive.");
                 case GcsPath.GcsPathType.Bucket:
                     RemoveBucket(gcsPath, recurse);
-                    ObsoleteBucketCache();
+                    BucketCache.ForceRefresh();
                     break;
                 case GcsPath.GcsPathType.Object:
                     if (IsItemContainer(path))
@@ -769,7 +794,15 @@ namespace Google.PowerShell.CloudStorage
             {
                 DeleteObjects(gcsPath);
             }
-            Service.Buckets.Delete(gcsPath.Bucket).Execute();
+            try
+            {
+                Service.Buckets.Delete(gcsPath.Bucket).Execute();
+            }
+            catch (GoogleApiException e) when (e.HttpStatusCode == HttpStatusCode.Conflict)
+            {
+                // The objects my not have been cleared yet.
+                Service.Buckets.Delete(gcsPath.Bucket).Execute();
+            }
         }
 
         private void DeleteObjects(GcsPath gcsPath)
@@ -888,12 +921,9 @@ namespace Google.PowerShell.CloudStorage
             insertReq.PredefinedAcl = dynamicParams.DefaultBucketAcl;
             insertReq.PredefinedDefaultObjectAcl = dynamicParams.DefaultObjectAcl;
             Bucket newBucket = insertReq.Execute();
-            ObsoleteBucketCache();
+            BucketCache.ForceRefresh();
             return newBucket;
         }
-
-        private void ObsoleteBucketCache()
-        { }
 
         private IEnumerable<Object> ListChildren(GcsPath gcsPath, bool recurse, bool allPages = true)
         {

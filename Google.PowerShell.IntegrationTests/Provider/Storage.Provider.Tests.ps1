@@ -71,6 +71,15 @@ Describe "Storage Provider"{
         Compare-Object $gcsContents $localContents | Should BeNullOrEmpty
     }
 
+    It "Should create file using Set-Content" {
+        cd gs:\$bucketName\$folderName
+        rm $fileName
+        Set-Content $fileName -Value $content1
+        Sleep 1
+        Test-Path $fileName | Should Be $true
+        Get-Content $fileName | Should Be $content1
+    }
+
     It "Should clear file" {
         cd gs:\$bucketName\$folderName
         Clear-Content $fileName
@@ -132,6 +141,7 @@ Describe "Storage Provider"{
     It "Should remove folder" {
         cd gs:\$bucketName
         rm $cpFolderName -Recurse
+        Sleep 1
         Test-Path $cpFolderName | Should Be $false
         Test-GcsObject $bucketName "$cpFolderName/" | Should Be $false
     }
@@ -150,9 +160,16 @@ Describe "Storage Provider"{
         Compare-Object $newFile $file | Should Be $null
     }
 
+    It "Should not remove with -WhatIf" {
+        cd gs:\
+        {rm $bucketName -Recurse -WhatIf} | Should Not Throw
+        Test-Path $bucketName | Should Be $true
+    }
+
     It "Should remove bucket" {
         cd gs:\
         {rm $bucketName -Recurse} | Should Not Throw
+        Test-Path $bucketName | Should Be $false
     }
 
     It "Should fail to enter bucket without permissions" {
