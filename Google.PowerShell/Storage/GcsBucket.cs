@@ -340,7 +340,6 @@ namespace Google.PowerShell.CloudStorage
     /// <example>
     ///   <code>
     ///   PS C:\> Test-GcsBucket "foo"
-    ///   True
     ///   </code>
     ///   <para>Check if bucket "foo" exists.</para>
     /// </example>

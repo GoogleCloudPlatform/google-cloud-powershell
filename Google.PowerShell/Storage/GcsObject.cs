@@ -549,7 +549,11 @@ namespace Google.PowerShell.CloudStorage
     ///   <para>Get all objects in a storage bucket.</para>
     /// </example>
     /// <example>
+<<<<<<< HEAD
     ///   <code>PS C:\> Find-GcsObject -Bucket "widget-co-logs" -Prefix "pictures/winter" -Delimiter "/"</code>
+=======
+    ///   <code>PS C:\> Find-GcsObject -Bucket "widget-co-logs" -Prefix "pictures/winter" -Delimiter "/"</code><
+>>>>>>> origin/normalize-examples
     ///   <para>Get all objects in a specific folder Storage Bucket.</para>
     ///   <para>Because the Delimiter parameter was set, will not return objects under "pictures/winter/2016/".
     ///   The search will omit any objects matching the prefix containing the delimiter.</para>
