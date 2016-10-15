@@ -26,13 +26,12 @@ using System.Threading.Tasks;
 namespace Google.PowerShell.Common
 {
     /// <summary>
-    /// This class wraps the gcloud command and offers up some of its services in a
-    /// as async methods. 
+    /// This class wraps the gcloud command and offers up some of its services.
     /// </summary>
     public static class GCloudWrapper
     {
         /// <summary>
-        /// Returns the 
+        /// Returns the global installation properties path of GoogleCloud SDK.
         /// </summary>
         /// <returns></returns>
         public static string GetInstallationPropertiesPath()
@@ -58,10 +57,15 @@ namespace Google.PowerShell.Common
             throw new FileNotFoundException("Installation Properties file for Google Cloud SDK cannot be found.");
         }
 
+        /// <summary>
+        /// Returns the access token of the current active config.
+        /// </summary>
         public static TokenResponse GetAccessToken()
         {
-            string accessToken = GetGCloudCommandOutput("auth print-access-token");
+            // We get the issued time before the command so we won't be too late
+            // when it comes to token expiry.
             DateTime issuedTime = DateTime.Now;
+            string accessToken = GetGCloudCommandOutput("auth print-access-token");
             JToken tokenJson = JObject.Parse(accessToken);
 
             try
