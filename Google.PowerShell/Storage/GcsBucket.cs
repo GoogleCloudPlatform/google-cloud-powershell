@@ -26,16 +26,16 @@ namespace Google.PowerShell.CloudStorage
     /// user must have access to view the project.
     /// </para>
     /// <example>
+    ///   <code>PS C:\> Get-GcsBucket "widget-co-logs"</code>
     ///   <para>Get the bucket named "widget-co-logs".</para>
-    ///   <para><code>Get-GcsBucket "widget-co-logs"</code></para>
     /// </example>
     /// <example>
+    ///   <code>PS C:\> Get-GcsBucket -Project "widget-co"</code>
     ///   <para>Get all buckets for project "widget-co".</para>
-    ///   <para><code>Get-GcsBucket -Project "widget-co"</code></para>
     /// </example>
     /// <example>
+    ///   <code>Get-GcsBucket</code>
     ///   <para>Get all buckets for current project in the active gcloud configuration.</para>
-    ///   <para><code>Get-GcsBucket</code></para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcsBucket", DefaultParameterSetName = ParameterSetNames.BucketsByProject)]
@@ -96,8 +96,8 @@ namespace Google.PowerShell.CloudStorage
     /// have buckets with the same name.
     /// </para>
     /// <example>
-    /// <code>PS C:\> New-Gcsbucket "widget-co-logs"</code>
-    /// <para>Creates a new bucket named "widget-co-logs". </para>
+    ///   <code>PS C:\> New-Gcsbucket "widget-co-logs"</code>
+    ///   <para>Creates a new bucket named "widget-co-logs".</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GcsBucket"), OutputType(typeof(Bucket))]
@@ -201,10 +201,11 @@ namespace Google.PowerShell.CloudStorage
     /// <para>Forces the deletion of "bucket-with-files, despite the bucket containing objects.</para>
     /// </example>
     /// <example>
-    ///   <para><code>PS C:\> Remove-GcsBucket prod-database -WhatIf</code></para>
-    ///   <para><code>What if: Performing the operation "Delete Bucket" on target "prod-database".</code></para>
-    ///   <para>True</para>
-    ///   <para>Check if bucket "foo" exists.</para>
+    ///   <code>
+    ///   PS C:\> Remove-GcsBucket prod-database -WhatIf
+    ///   What if: Performing the operation "Delete Bucket" on target "prod-database".
+    ///   </code>
+    ///   <para>Prints what would happen if trying to delete bucket "prod-database".</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GcsBucket", SupportsShouldProcess = true)]
@@ -337,8 +338,10 @@ namespace Google.PowerShell.CloudStorage
     /// created.</para>
     /// </example>
     /// <example>
-    ///   <para><code>PS C:\> Test-GcsBucket "foo"</code></para>
-    ///   <para>True</para>
+    ///   <code>
+    ///   PS C:\> Test-GcsBucket "foo"
+    ///   True
+    ///   </code>
     ///   <para>Check if bucket "foo" exists.</para>
     /// </example>
     /// </summary>
