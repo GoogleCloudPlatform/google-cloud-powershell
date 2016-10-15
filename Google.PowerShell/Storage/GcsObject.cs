@@ -15,10 +15,6 @@ using static Google.Apis.Storage.v1.ObjectsResource.InsertMediaUpload;
 
 namespace Google.PowerShell.CloudStorage
 {
-
-    // TODO(chrsmith): Provide a way to upload an entire directory to Gcs. Reuse New-GcsObject?
-    // Upload-GcsObject?
-
     /// <summary>
     /// Base class for Cloud Storage Object cmdlets. Used to reuse common methods.
     /// </summary>
@@ -117,18 +113,23 @@ namespace Google.PowerShell.CloudStorage
     /// an empty object to treat as a folder, the name should end with '/'.
     /// </para>
     /// <example>
+    ///   <code>
+    ///   PS C:\> New-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt" `</code>
+    ///   >>    -File "C:\logs\log-000.txt"
+    ///   </code>
     ///   <para>Upload a local log file to GCS.</para>
-    ///   <para><code>PS C:\> New-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt" `</code></para>
-    ///   <para><code>    -File "C:\logs\log-000.txt"</code></para>
     /// </example>
     /// <example>
+    ///   <code>
+    ///   PS C:\> "Hello, World!" | New-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt" `
+    ///   >> -Metadata @{ "logsource" = $env:computername }
+    ///   </code>
     ///   <para>Pipe a string to a a file on GCS. Sets a custom metadata value.</para>
-    ///   <para><code>PS C:\> "Hello, World!" | New-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt" `</code></para>
-    ///   <para><code>    -Metadata @{ "logsource" = $env:computername }</code></para>
     /// </example>
     /// <example>
-    ///   <para>Upload a folder and its contents to GCS. The names of the created objects will be relative to the folder.</para>
-    ///   <para><code>PS C:\> New-GcsObject -Bucket "widget-co-logs" -Folder "$env:SystemDrive\inetpub\logs\LogFiles"</code></para>
+    ///  <code>PS C:\> New-GcsObject -Bucket "widget-co-logs" -Folder "$env:SystemDrive\inetpub\logs\LogFiles"</code>
+    ///   <para>Upload a folder and its contents to GCS. The names of the
+    ///   created objects will be relative to the folder.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GcsObject", DefaultParameterSetName = ParameterSetNames.ContentsFromString)]
@@ -394,14 +395,14 @@ namespace Google.PowerShell.CloudStorage
     /// <summary>
     /// <para type="synopsis">
     /// Get-GcsObject returns the Google Cloud Storage Object metadata with the given name. (Use
-    /// Find-GcsObject to return multiple objects.)
+    /// Find-GcsObject to return multiple objects or Read-GcsObject to get its contents.)
     /// </para>
     /// <para type="description">
     /// Returns the give Storage object's metadata.
     /// </para>
     /// <example>
+    ///   <code>PS C:\> Get-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt"</code>
     ///   <para>Get object metadata.</para>
-    ///   <para><code>PS C:\> Get-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt"</code></para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcsObject"), OutputType(typeof(Object))]
@@ -544,17 +545,18 @@ namespace Google.PowerShell.CloudStorage
     /// (There is no way to just return "subdir" in the previous example.)
     /// </para>
     /// <example>
-    ///   <para>Get all objects in a Storage Bucket</para>
-    ///   <para><code>PS C:\> Find-GcsObject -Bucket "widget-co-logs"</code></para>
+    ///   <code>PS C:\> Find-GcsObject -Bucket "widget-co-logs"</code>
+    ///   <para>Get all objects in a storage bucket.</para>
     /// </example>
     /// <example>
+    ///   <code>PS C:\> Find-GcsObject -Bucket "widget-co-logs" -Prefix "pictures/winter" -Delimiter "/"</code><
     ///   <para>Get all objects in a specific folder Storage Bucket.</para>
-    ///   <para><code>PS C:\> Find-GcsObject -Bucket "widget-co-logs" -Prefix "pictures/winter" -Delimiter "/"</code></para>
-    ///   <para>Because the Delimiter parameter was set, will not return objects under "pictures/winter/2016/". The search will omit any objects matching the prefix containing the delimiter.</para>
+    ///   <para>Because the Delimiter parameter was set, will not return objects under "pictures/winter/2016/".
+    ///   The search will omit any objects matching the prefix containing the delimiter.</para>
     /// </example>
     /// <example>
+    ///   <code>PS C:\> Find-GcsObject -Bucket "widget-co-logs" -Prefix "pictures/winter"</code>
     ///   <para>Get all objects in a specific folder Storage Bucket. Will return objects in pictures/winter/2016/.</para>
-    ///   <para><code>PS C:\> Find-GcsObject -Bucket "widget-co-logs" -Prefix "pictures/winter"</code></para>
     ///   <para>Because the Delimiter parameter was not set, will return objects under "pictures/winter/2016/".</para>
     /// </example>
     /// </summary>
@@ -625,8 +627,9 @@ namespace Google.PowerShell.CloudStorage
     /// Deletes a Cloud Storage object.
     /// </para>
     /// <example>
-    ///   <para><code>PS C:\> Remove-GcsObject ppiper-prod text-files/14683615 -WhatIf</code></para>
-    ///   <para><code>What if: Performing the operation "Delete Object" on target "[ppiper-prod] text-files/14683615".</code></para>
+    ///   <code>PS C:\> Remove-GcsObject ppiper-prod text-files/14683615 -WhatIf</code>
+    ///   <code>What if: Performing the operation "Delete Object" on target "[ppiper-prod]" text-files/14683615".</code>
+    ///   <para>Delete storage object named "text-files/14683615".
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GcsObject",
@@ -706,13 +709,15 @@ namespace Google.PowerShell.CloudStorage
     /// to disk instead.
     /// </para>
     /// <example>
-    ///   <para>Write the objects of a Storage Object to disk.</para>
-    ///   <para><code>PS C:\> Read-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt" `</code></para>
-    ///   <para><code>    -OutFile "C:\logs\log-000.txt"</code></para>
+    ///   <code>
+    ///   PS C:\> Read-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt" `
+    ///   >>    -OutFile "C:\logs\log-000.txt"
+    ///   </code>
+    ///   <para>Write the objects of a Storage Object to local disk at "C:\logs\log-000.txt".</para>
     /// </example>
     /// <example>
-    ///   <para>Read the Storage Object as a string.</para>
-    ///   <para><code>PS C:\> Read-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt" | Write-Host</code></para>
+    ///   <code>PS C:\> Read-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt" | Write-Host</code>
+    ///   <para>Returns the storage object's contents as a string.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommunications.Read, "GcsObject", DefaultParameterSetName = ParameterSetNames.ByName)]
@@ -839,8 +844,8 @@ namespace Google.PowerShell.CloudStorage
     /// object that already exists. You will get a warning if the object does not exist.
     /// </para>
     /// <example>
+    ///   <code>PS C:\> "OK" | Write-GcsObject -Bucket "widget-co-logs" -ObjectName "status.txt"</code>
     ///   <para>Update the contents of the Storage Object with the string "OK".</para>
-    ///   <para><code>PS C:\> "OK" | Write-GcsObject -Bucket "widget-co-logs" -ObjectName "status.txt"</code></para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommunications.Write, "GcsObject"), OutputType(typeof(Object))]
@@ -1004,9 +1009,8 @@ namespace Google.PowerShell.CloudStorage
     /// Verify the existence of a Cloud Storage Object.
     /// </para>
     /// <example>
+    ///   <code>PS C:\> Test-GcsObject -Bucket "widget-co-logs" -ObjectName "status.txt"</code>
     ///   <para>Test if an object named "status.txt" exists in the bucket "widget-co-logs".</para>
-    ///   <para><code>PS C:\> Test-GcsObject -Bucket "widget-co-logs" -ObjectName "status.txt"</code></para>
-    ///   <para><code>True</code></para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsDiagnostic.Test, "GcsObject"), OutputType(typeof(bool))]
