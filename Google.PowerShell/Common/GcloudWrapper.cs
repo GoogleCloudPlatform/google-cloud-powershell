@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Google.Apis.Auth.OAuth2.Responses;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -36,23 +38,52 @@ namespace Google.PowerShell.Common
         public static string GetInstallationPropertiesPath()
         {
             string gCloudInfoOutput = GetGCloudCommandOutput("info");
-            JToken token = JObject.Parse(gCloudInfoOutput);
+            JToken gCloudInfoJson = JObject.Parse(gCloudInfoOutput);
 
             try
             {
                 // SelectToken will throw NullReferenceException if the token cannot be found.
-                token = token.SelectToken("config.paths.installation_properties_path");
+                gCloudInfoJson = gCloudInfoJson.SelectToken("config.paths.installation_properties_path");
                 
-                if (token.Type == JTokenType.String)
+                if (gCloudInfoJson.Type == JTokenType.String)
                 {
-                    return token.Value<string>();
+                    return gCloudInfoJson.Value<string>();
                 }
             }
             catch (NullReferenceException)
             {
+                // Throw exception at the end.
             }
 
             throw new FileNotFoundException("Installation Properties file for Google Cloud SDK cannot be found.");
+        }
+
+        public static TokenResponse GetAccessToken()
+        {
+            string accessToken = GetGCloudCommandOutput("auth print-access-token");
+            DateTime issuedTime = DateTime.Now;
+            JToken tokenJson = JObject.Parse(accessToken);
+
+            try
+            {
+                // SelectToken will throw NullReferenceException if the token cannot be found.
+                tokenJson = tokenJson.SelectToken("token_response");
+
+                TokenResponse token = tokenJson.ToObject<TokenResponse>();
+                token.Issued = issuedTime;
+
+                return token;
+            }
+            catch (NullReferenceException)
+            {
+                // Throw exception at the end.
+            }
+            catch (JsonException)
+            {
+                // Throw exception at the end.
+            }
+
+            throw new InvalidDataException("Failed to get access token from gcloud auth print-access-token.");
         }
 
         private static string GetGCloudCommandOutput(string command, IDictionary<string, string> environment = null)
