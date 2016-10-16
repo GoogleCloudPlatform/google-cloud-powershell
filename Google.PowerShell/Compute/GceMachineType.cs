@@ -21,16 +21,16 @@ namespace Google.PowerShell.Compute
     /// type of a project in a zone with a name.
     /// </para>
     /// <example>
-    /// <code>PS C:\> Get-GceMachineType</code>
-    /// <para>Lists all machine types for the default project.</para>
+    ///   <code>PS C:\> Get-GceMachineType</code>
+    ///   <para>Lists all machine types for the default project.</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> Get-GceMachineType -Zone "us-central1-a"</code>
-    /// <para>Lists all machine types in zone us-central1-a for the default project.</para>
+    ///   <code>PS C:\> Get-GceMachineType -Zone "us-central1-a"</code>
+    ///   <para>Lists all machine types in zone us-central1-a for the default project.</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> Get-GceMachineType "f1-micro"</code>
-    /// <para>Gets the machine type named f1-micro in the default project and zone.</para>
+    ///   <code>PS C:\> Get-GceMachineType "f1-micro"</code>
+    ///   <para>Gets the machine type named f1-micro in the default project and zone.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/machineTypes#resource)">
     /// [Machine Type resource definition]

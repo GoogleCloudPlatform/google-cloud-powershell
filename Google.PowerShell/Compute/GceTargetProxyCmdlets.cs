@@ -17,16 +17,16 @@ namespace Google.PowerShell.ComputeEngine
     /// Lists target proxies of a project, or gets a specific one.
     /// </para>
     /// <example>
-    /// <code>PS C:\> Get-GceTargetProxy</code>
-    /// <para>This command lists all target proxies for the default project.</para>
+    ///   <code>PS C:\> Get-GceTargetProxy</code>
+    ///   <para>This command lists all target proxies for the default project.</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> Get-GceTargetProxy -Region us-central1</code>
-    /// <para>This command lists all target proxies in region "us-central1" for the default project.</para>
+    ///   <code>PS C:\> Get-GceTargetProxy -Region us-central1</code>
+    ///   <para>This command lists all target proxies in region "us-central1" for the default project.</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> Get-GceTargetProxy "my-target-proxy"</code>
-    /// <para>This command gets the target proxy named "my-target-proxy" in the default project and zone</para>
+    ///   <code>PS C:\> Get-GceTargetProxy "my-target-proxy"</code>
+    ///   <para>This command gets the target proxy named "my-target-proxy" in the default project and zone</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/targetHttpProxies#resource)">
     /// [Target Proxy resource definition]
@@ -134,7 +134,6 @@ namespace Google.PowerShell.ComputeEngine
                 }
             }
         }
-
 
         private IEnumerable<object> GetAllProjectTargetProxies(string project)
         {

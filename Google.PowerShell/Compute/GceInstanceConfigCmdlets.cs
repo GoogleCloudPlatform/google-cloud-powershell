@@ -17,11 +17,11 @@ namespace Google.PowerShell.ComputeEngine
     /// Use Add-GceInstance to instantiate the instance.
     /// </para>
     /// <example>
+    ///   <code> PS C:\> $config = New-GceInstanceConfig -Name "new-instance" -BootDiskImage $image</code>
     ///   <para>
-    ///     <code> PS C:\> $config = New-GceInstanceConfig -Name "new-instance" -BootDiskImage $image</code>
+    ///     Creates a new instance description and saves it to $config. The new instance will create a new
+    ///     boot disk from $image.
     ///   </para>
-    ///   <para> Creates a new instance description and saves it to $config. The new instance will create a new
-    ///   boot disk from $image.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
     /// [Instance resource definition]
@@ -98,8 +98,8 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// An AttachedDisk object specifying a disk to attach. Do not specify `-BootDiskImage` or
-        /// `-BootDiskSnapshot` if this is a boot disk. You can build one using New-GceAttachedDiskConfig.
+        /// An AttachedDisk object specifying a disk to attach. Do not specify -BootDiskImage or
+        /// -BootDiskSnapshot if this is a boot disk. You can build one using New-GceAttachedDiskConfig.
         /// </para>
         /// </summary>
         [Parameter]

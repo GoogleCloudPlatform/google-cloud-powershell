@@ -22,9 +22,6 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// Gets the first error message, or "Unknown error" if there is none.
         /// </summary>
-        /// <param name="errorData">
-        /// </param>
-        /// <returns></returns>
         private static string GetErrorMessaage(Operation.ErrorData errorData)
         {
             if (errorData?.Errors != null && errorData.Errors.Count > 0)

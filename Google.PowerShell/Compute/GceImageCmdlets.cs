@@ -20,29 +20,31 @@ namespace Google.PowerShell.ComputeEngine
     /// state of a disk, whether created manually, as part of a new instance, or from an instance tempalte.
     /// </para>
     /// <example>
-    /// <code>PS C:\> Get-GceImage</code>
-    /// <para>Lists all the standard up to date images.</para>
+    ///   <code>PS C:\> Get-GceImage</code>
+    ///   <para>Lists all the standard up to date images.</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> Get-GceImage -Family "window-2012-r2"</code>
-    /// <para>Gets the latest windows 2012 r2 image from the windows-cloud project.</para>
+    ///   <code>PS C:\> Get-GceImage -Family "window-2012-r2"</code>
+    ///   <para>Gets the latest windows 2012 r2 image from the windows-cloud project.</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> Get-GceImage "windows-server-2008-r2-dc-v20160719"</code>
-    /// <para>Gets the image named windows-server-2008-r2-dc-v20160719 from the windows-cloud project.</para>
+    ///   <code>PS C:\> Get-GceImage "windows-server-2008-r2-dc-v20160719"</code>
+    ///   <para>Gets the image named windows-server-2008-r2-dc-v20160719 from the windows-cloud project.</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> Get-GceImage "my-image" -Project "my-project"</code>
-    /// <para>Gets the custom image named "my-image" from the private project "my-project".</para>
+    ///   <code>PS C:\> Get-GceImage "my-image" -Project "my-project"</code>
+    ///   <para>Gets the custom image named "my-image" from the private project "my-project".</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> Get-GceImage -Project "my-project" -IncludeDeprecated</code>
-    /// <para>Lists all images in project "my-project", including images marked as deprecated.</para>
+    ///   <code>PS C:\> Get-GceImage -Project "my-project" -IncludeDeprecated</code>
+    ///   <para>Lists all images in project "my-project", including images marked as deprecated.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/images#resource)">
     /// [Image resource definition]
     /// </para>
-    /// <para type="link" uri="(https://cloud.google.com/compute/docs/images)">[Google Cloud Platform images]</para>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/images)">
+    /// [Google Cloud Platform images]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceImage", DefaultParameterSetName = ParameterSetNames.OfProject)]
     [OutputType(typeof(Image))]
@@ -203,8 +205,8 @@ namespace Google.PowerShell.ComputeEngine
     /// Creates a Google Compute Engine image from the given disk.
     /// </para>
     /// <example>
-    /// <code>PS C:\> Get-GceDisk "my-disk" | Add-GceImage -Name "my-image" -Family "my-family"</code>
-    /// <para>Creates a new image named "my-image" of the family "my-family" in the default project.</para>
+    ///   <code>PS C:\> Get-GceDisk "my-disk" | Add-GceImage -Name "my-image" -Family "my-family"</code>
+    ///   <para>Creates a new image named "my-image" of the family "my-family" in the default project.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/images#resource)">
     /// [Image resource definition]
@@ -287,12 +289,12 @@ namespace Google.PowerShell.ComputeEngine
     /// Removes a Google Compute Engine disk image.
     /// </para>
     /// <example>
-    /// <code>PS C:\> Remove-GceImage "my-image"</code>
-    /// <para>Removes the image named "my-image" in the default project.</para>
+    ///   <code>PS C:\> Remove-GceImage "my-image"</code>
+    ///   <para>Removes the image named "my-image" in the default project.</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> Get-GceImage -Project "my-project" | Remove-GceImage</code>
-    /// <para>Removes all images from project "my-project".</para>
+    ///   <code>PS C:\> Get-GceImage -Project "my-project" | Remove-GceImage</code>
+    ///   <para>Removes all images from project "my-project".</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/images#resource)">
     /// [Image resource definition]
@@ -371,19 +373,19 @@ namespace Google.PowerShell.ComputeEngine
     /// Marks an image or schedules an image to be marked as DEPRECATED, OBSOLETE, or DELETED.
     /// </para>
     /// <example>
-    /// <code>
-    /// <para>PS C:\> $image2 = Get-GceImage "my-new-image" -Project "my-project"</para>
-    /// <para>PS C:\> Disable-GceImage "my-old-image" -State DEPRECATED -Replacement $image2</para>
-    /// </code>
-    /// <para>Marks the image named "my-old-image" as deprecated, and sets "my-new-image" as its replacement.</para>
+    ///   <code>
+    ///   PS C:\> $image2 = Get-GceImage "my-new-image" -Project "my-project"
+    ///   PS C:\> Disable-GceImage "my-old-image" -State DEPRECATED -Replacement $image2
+    ///   </code>
+    ///   <para>Marks the image named "my-old-image" as deprecated, and sets "my-new-image" as its replacement.</para>
     /// </example>
     /// <example>
-    /// <code>
-    /// <para>PS C:\> $image1 = Get-GceImage "my-old-image" -Project "my-project"</para>
-    /// <para>PS C:\> $image2 = Get-GceImage "my-new-image" -Project "my-project"</para>
-    /// <para>PS C:\> Disable-GceImage $image1 -State OBSOLETE -Replacement $image2</para>
-    /// </code>
-    /// <para>Marks the image named "my-old-image" as obsolete, and sets "my-new-image" as its replacement.</para>
+    ///   <code>
+    ///   PS C:\> $image1 = Get-GceImage "my-old-image" -Project "my-project"
+    ///   PS C:\> $image2 = Get-GceImage "my-new-image" -Project "my-project"
+    ///   PS C:\> Disable-GceImage $image1 -State OBSOLETE -Replacement $image2
+    ///   </code>
+    ///   <para>Marks the image named "my-old-image" as obsolete, and sets "my-new-image" as its replacement.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/images#resource)">
     /// [Image resource definition]
