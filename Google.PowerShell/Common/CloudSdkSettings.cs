@@ -62,7 +62,7 @@ namespace Google.PowerShell.Common
             {
                 if (string.IsNullOrWhiteSpace(_installationPropertiesPath))
                 {
-                    _installationPropertiesPath = GCloudWrapper.GetInstallationPropertiesPath();
+                    _installationPropertiesPath = GCloudWrapper.GetInstallationPropertiesPath().Result;
                 }
 
                 return _installationPropertiesPath;

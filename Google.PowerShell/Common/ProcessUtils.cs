@@ -92,7 +92,7 @@ namespace Google.PowerShell.Common
         /// of the UI thread. Must not be null.</param>
         /// <param name="environment">Optional parameter with values for environment variables to pass on to the child process.</param>
         /// <returns></returns>
-        public static bool RunCommand(
+        public static Task<bool> RunCommand(
             string file,
             string args,
             EventHandler<OutputHandlerEventArgs> handler,
@@ -100,11 +100,16 @@ namespace Google.PowerShell.Common
         {
             var startInfo = GetStartInfoForInteractiveProcess(file, args, environment);
 
-            var process = Process.Start(startInfo);
-            ReadLinesFromOutput(OutputStream.StandardError, process.StandardError, handler);
-            ReadLinesFromOutput(OutputStream.StandardOutput, process.StandardOutput, handler);
-            process.WaitForExit();
-            return process.ExitCode == 0;
+            return Task.Run(async () =>
+            {
+                var process = Process.Start(startInfo);
+                var readErrorsTask = ReadLinesFromOutput(OutputStream.StandardError, process.StandardError, handler);
+                var readOutputTask = ReadLinesFromOutput(OutputStream.StandardOutput, process.StandardOutput, handler);
+                await readErrorsTask;
+                await readOutputTask;
+                process.WaitForExit();
+                return process.ExitCode == 0;
+            });
         }
 
         /// <summary>
@@ -114,19 +119,22 @@ namespace Google.PowerShell.Common
         /// <param name="args">The arguments to pass to the executable.</param>
         /// <param name="environment">The environment variables to use for the executable.</param>
         /// <returns></returns>
-        public static ProcessOutput GetCommandOutput(string file, string args, IDictionary<string, string> environment = null)
+        public static Task<ProcessOutput> GetCommandOutput(string file, string args, IDictionary<string, string> environment = null)
         {
             var startInfo = GetStartInfoForInteractiveProcess(file, args, environment);
 
-            var process = Process.Start(startInfo);
-            var readErrorsTask = process.StandardError.ReadToEndAsync();
-            var readOutputTask = process.StandardOutput.ReadToEndAsync();
-            process.WaitForExit();
-            var succeeded = process.ExitCode == 0;
-            return new ProcessOutput(
-                succeeded: succeeded,
-                standardOutput: readOutputTask.Result,
-                standardError: readErrorsTask.Result);
+            return Task.Run(async () =>
+            {
+                var process = Process.Start(startInfo);
+                var readErrorsTask = process.StandardError.ReadToEndAsync();
+                var readOutputTask = process.StandardOutput.ReadToEndAsync();
+                process.WaitForExit();
+                var succeeded = process.ExitCode == 0;
+                return new ProcessOutput(
+                    succeeded: succeeded,
+                    standardOutput: await readOutputTask,
+                    standardError: await readErrorsTask);
+            });
         }
 
         private static ProcessStartInfo GetBaseStartInfo(string file, string args, IDictionary<string, string> environment)
@@ -163,13 +171,16 @@ namespace Google.PowerShell.Common
             return startInfo;
         }
 
-        private static void ReadLinesFromOutput(OutputStream outputStream, StreamReader stream, EventHandler<OutputHandlerEventArgs> handler)
+        private static Task ReadLinesFromOutput(OutputStream outputStream, StreamReader stream, EventHandler<OutputHandlerEventArgs> handler)
         {
-            while (!stream.EndOfStream)
+            return Task.Run(() =>
             {
-                var line = stream.ReadLine();
-                handler(null, new OutputHandlerEventArgs(line, outputStream));
-            }
+                while (!stream.EndOfStream)
+                {
+                    var line = stream.ReadLine();
+                    handler(null, new OutputHandlerEventArgs(line, outputStream));
+                }
+            });
         }
     }
 }

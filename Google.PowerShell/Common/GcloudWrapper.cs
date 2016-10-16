@@ -34,9 +34,9 @@ namespace Google.PowerShell.Common
         /// Returns the global installation properties path of GoogleCloud SDK.
         /// </summary>
         /// <returns></returns>
-        public static string GetInstallationPropertiesPath()
+        public static async Task<string> GetInstallationPropertiesPath()
         {
-            string gCloudInfoOutput = GetGCloudCommandOutput("info");
+            string gCloudInfoOutput = await GetGCloudCommandOutput("info");
             JToken gCloudInfoJson = JObject.Parse(gCloudInfoOutput);
 
             try
@@ -60,12 +60,13 @@ namespace Google.PowerShell.Common
         /// <summary>
         /// Returns the access token of the current active config.
         /// </summary>
-        public static TokenResponse GetAccessToken()
+        public static async Task<ActiveUserToken> GetAccessToken()
         {
             // We get the issued time before the command so we won't be too late
             // when it comes to token expiry.
             DateTime issuedTime = DateTime.Now;
-            string accessToken = GetGCloudCommandOutput("auth print-access-token");
+
+            string accessToken = await GetGCloudCommandOutput("auth print-access-token");
             JToken tokenJson = JObject.Parse(accessToken);
 
             try
@@ -73,7 +74,7 @@ namespace Google.PowerShell.Common
                 // SelectToken will throw NullReferenceException if the token cannot be found.
                 tokenJson = tokenJson.SelectToken("token_response");
 
-                TokenResponse token = tokenJson.ToObject<TokenResponse>();
+                ActiveUserToken token = tokenJson.ToObject<ActiveUserToken>();
                 token.Issued = issuedTime;
 
                 return token;
@@ -90,12 +91,12 @@ namespace Google.PowerShell.Common
             throw new InvalidDataException("Failed to get access token from gcloud auth print-access-token.");
         }
 
-        private static string GetGCloudCommandOutput(string command, IDictionary<string, string> environment = null)
+        private static async Task<string> GetGCloudCommandOutput(string command, IDictionary<string, string> environment = null)
         {
             var actualCommand = $"gcloud {command} --format=json";
             // This code depends on the fact that gcloud.cmd is a batch file.
             Debug.Write($"Executing gcloud command: {actualCommand}");
-            ProcessOutput processOutput = ProcessUtils.GetCommandOutput("cmd.exe", $"/c {actualCommand}", environment);
+            ProcessOutput processOutput = await ProcessUtils.GetCommandOutput("cmd.exe", $"/c {actualCommand}", environment);
             if (processOutput.Succeeded)
             {
                 return processOutput.StandardOutput;
