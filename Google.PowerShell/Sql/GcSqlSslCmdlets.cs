@@ -20,35 +20,18 @@ namespace Google.PowerShell.Sql
     /// Does not include the private key.
     /// </para>
     /// <example>
-    ///   <para>
-    ///   Gets a list of SSL Certificates for the instance "myInstance".
-    ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Get-GcSqlSslCert "myInstance"
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns a list of SSL Certificates "myInstance" has.</para>
+    ///   <code>PS C:\> Get-GcSqlSslCert "myInstance"</code>
+    ///   <para>Gets a list of SSL Certificates for the instance "myInstance".</para>
     /// </example>
     /// <example>
-    ///   <para>
-    ///   Gets a list of SSL Certificates for the instance stored in $myInstance.
-    ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Get-GcSqlSslCert $myInstance
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns a list of SSL Certificates the instance has.</para>
+    ///   <code>PS C:\> Get-GcSqlSslCert $myInstance</code>
+    ///   <para>Gets a list of SSL Certificates for the instance stored in $myInstance.</para>
     /// </example>
     /// <example>
+    ///   <code>PS C:\> Get-GcSqlSslCert "myInstance" "myFinger"</code>
     ///   <para>
     ///   Get a resource for the SSL Certificate identified by the Sha1Fingerprint "myFinger" for the instance "myInstance".
     ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Get-GcSqlSslCert "myInstance" "myFinger"
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command return a single SSL Certificate.</para>
-    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlSslCert")]
     [OutputType(typeof(SslCert))]
@@ -123,8 +106,6 @@ namespace Google.PowerShell.Sql
         }
     }
 
-
-
     /// <summary>
     /// <para type="synopsis">
     /// Creates an SSL certificate and returns it along with the private key and server certificate authority. 
@@ -135,24 +116,12 @@ namespace Google.PowerShell.Sql
     /// The new certificate is not usable until the instance is restarted for first-generation instances
     /// </para>
     /// <example>
-    ///   <para>
-    ///   Adds the SSL Certificate called "myCert" to the instance "myInstance".
-    ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Add-GcSqlSslCert "myInstance" "myCert"
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns a detail of the SSL Certificate and its private key.</para>
+    ///   <code>PS C:\> Add-GcSqlSslCert "myInstance" "myCert"</code>
+    ///   <para>Adds the SSL Certificate called "myCert" to the instance "myInstance".</para>
     /// </example>
     /// <example>
-    ///   <para>
-    ///   Adds the SSL Certificate called "myCert" to the instance stored in $myInstance.
-    ///   </para>
-    ///   <para><code>
-    ///     PS C:\> $myInstance | Add-GcSqlSslCert "myCert" 
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns a detail of the SSL Certificate and its private key.</para>
+    ///   <code>PS C:\> $myInstance | Add-GcSqlSslCert "myCert"</code>
+    ///   <para>Adds the SSL Certificate called "myCert" to the instance stored in $myInstance.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GcSqlSslCert", DefaultParameterSetName = ParameterSetNames.ByName)]
@@ -233,28 +202,17 @@ namespace Google.PowerShell.Sql
     /// The change will not take effect until the instance is restarted for first-generation instances.
     /// </para>
     /// <para type="description">
-    /// Deletes the SSL certificate for the instance. 
-    /// The change will not take effect until the instance is restarted for first-generation instances.
+    /// Deletes the SSL certificate for the instance.
     /// </para>
     /// <example>
+    ///   <code>PS C:\> Remove-GcSqlSslCert "myInstance" "myFinger"</code>
     ///   <para>
     ///   Removes the SSL Certificate identified with the sha1Fingerprint "myFinger" from the instance "myInstance".
     ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Remove-GcSqlSslCert "myInstance" "myFinger"
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
     /// <example>
-    ///   <para>
-    ///   Removes the SSL Certificate stored in $toRemove.
-    ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Remove-GcSqlSslCert $toRemove
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command doesn't return anything.</para>
+    ///   <para>Removes the SSL Certificate stored in "myInstance".</para>
+    ///   <code>PS C:\> Remove-GcSqlSslCert "myInstance"</code>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GcSqlSslCert", SupportsShouldProcess = true,
@@ -348,14 +306,10 @@ namespace Google.PowerShell.Sql
     /// Users may use the certificate to authenticate as themselves when connecting to the database. 
     /// </para>
     /// <example>
-    ///   <para>
-    ///   Adds an ephemeral SSL Certificate to the instance "myInstance"
-    ///   </para>
-    ///   <para><code>
+    ///   <code>
     ///     PS C:\> Add-GcSqlSslEphemeral "myInstance" "-----BEGIN PUBLIC KEY-----..."
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns the ephemeral SSL Certificate.</para>
+    ///   </code>
+    ///   <para>Adds an ephemeral SSL Certificate to the instance "myInstance"</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GcSqlSslEphemeral")]
@@ -411,24 +365,14 @@ namespace Google.PowerShell.Sql
     /// Existing instances without a server certificate will need to call this once to set a server certificate.
     /// </para>
     /// <example>
-    ///   <para>
-    ///   Resets the SSL Certificates for the "myInstance" instance.
-    ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Reset-GcSqlSslConfig "myInstance"
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns the resource for the updated instance.</para>
+    ///   <code>PS C:\> Reset-GcSqlSslConfig "myInstance"</code>
+    ///   <para>Resets the SSL Certificates for the "myInstance" instance.</para>
     /// </example>
     /// <example>
+    ///   <code>PS C:\> Reset-GcSqlSslConfig $instance</code>
     ///   <para>
     ///   Resets the SSL Certificates for the instance represented by the resource stored in $instance.
     ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Reset-GcSqlSslConfig $instance
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns the resource for the updated instance.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Reset, "GcSqlSslConfig", SupportsShouldProcess = true,

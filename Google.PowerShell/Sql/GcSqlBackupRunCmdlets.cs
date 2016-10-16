@@ -24,7 +24,7 @@ namespace Google.PowerShell.Sql
     ///   <para>If successful, the command returns a list of backupruns the instance has.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-GcSqlBackupRun "myInstance" "1234"</code></para>
+    ///   <code>PS C:\> Get-GcSqlBackupRun "myInstance" "1234"</code>
     ///   <para>Gets the resource for the backup run with ID "1234" from instance "myInstance".</para>
     ///   <para>If successful, the command returns the relevant backup run.</para>
     /// </example>
