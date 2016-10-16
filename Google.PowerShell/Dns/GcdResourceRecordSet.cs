@@ -22,52 +22,14 @@ namespace Google.PowerShell.Dns
     /// types returned.
     /// </para>
     /// <example>
+    ///   <code>PS C:\> Get-GcdResourceRecordSet -Project "testing" -Zone "test1"</code>
     ///   <para>Get the ResourceRecordSet resources in the ManagedZone "test1" in the Project "testing."</para>
-    ///   <para><code>PS C:\> Get-GcdResourceRecordSet -Project "testing" -Zone "test1"</code></para>
-    ///   <br></br>
-    ///   <para>Kind    : dns#resourceRecordSet</para>
-    ///   <para>Name    : gcloudexample1.com.</para>
-    ///   <para>
-    ///   Rrdatas : {ns-cloud-e1.googledomains.com., ns-cloud-e2.googledomains.com., 
-    ///   ns-cloud-e3.googledomains.com., ns-cloud-e4.googledomains.com.}
-    ///   </para>
-    ///   <para>Ttl     : 21600</para>
-    ///   <para>Type    : NS</para>
-    ///   <para>ETag    :</para>
-    ///   <br></br>
-    ///   <para>Kind    : dns#resourceRecordSet</para>
-    ///   <para>Name    : gcloudexample1.com.</para>
-    ///   <para>
-    ///   Rrdatas : {ns-cloud-e1.googledomains.com.cloud-dns-hostmaster.google.com. 1 21600 3600 259200 300}
-    ///   </para>
-    ///   <para>Ttl     : 21600</para>
-    ///   <para>Type    : SOA</para>
-    ///   <para>ETag    :</para>
     /// </example>
     /// <example>
+    ///   <code>PS C:\> Get-GcdResourceRecordSet -Project "testing" -Zone "testZone2" -Filter "NS","AAAA"</code>
     ///   <para>
     ///   Get the ResourceRecordSets of type "NS" or "AAAA" in the ManagedZone "testZone2" in the Project "testing."
     ///   </para>
-    ///   <para>
-    ///     <code>PS C:\> Get-GcdResourceRecordSet -Project "testing" -Zone "testZone2" -Filter "NS","AAAA"</code>
-    ///   </para>
-    ///   <br></br>
-    ///   <para>Kind    : dns#resourceRecordSet</para>
-    ///   <para>Name    : gcloudexample1.com.</para>
-    ///   <para>
-    ///   Rrdatas : {ns-cloud-e1.googledomains.com., ns-cloud-e2.googledomains.com., 
-    ///   ns-cloud-e3.googledomains.com., ns-cloud-e4.googledomains.com.}
-    ///   </para>
-    ///   <para>Ttl     : 21600</para>
-    ///   <para>Type    : NS</para>
-    ///   <para>ETag    :</para> 
-    ///   <br></br>
-    ///   <para>Kind    : dns#resourceRecordSet</para>
-    ///   <para>Name    : gcloudexample1.com.</para>
-    ///   <para>Rrdatas : {2001:db8:85a3::8a2e:370:7334}</para>
-    ///   <para>Ttl     : 300</para>
-    ///   <para>Type    : AAAA</para>
-    ///   <para>ETag    :</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/dns/records/json-record)">
     /// [Supported Resource Record Formats]
@@ -149,20 +111,11 @@ namespace Google.PowerShell.Dns
     /// ManagedZone. 
     /// </para>
     /// <example>
+    ///   <code>PS C:\> New-GcdResourceRecordSet -Name "gcloudexample.com." -Rrdata "7.5.7.8" -Type "A" -Ttl 300</code>
     ///   <para>
     ///   Create a new ResourceRecordSet resource with name "gcloudexample.com.", Rrdata ["7.5.7.8"], type "A," and 
     ///   ttl 300.
     ///   </para>
-    ///   <para>
-    ///   <code>PS C:\> New-GcdResourceRecordSet -Name "gcloudexample.com." -Rrdata "7.5.7.8" -Type "A" -Ttl 300</code>
-    ///   </para>
-    ///   <br></br>
-    ///   <para>Kind    : dns#resourceRecordSet</para>
-    ///   <para>Name    : gcloudexample1.com.</para>
-    ///   <para>Rrdatas : {7.5.7.8}</para>
-    ///   <para>Ttl     : 300</para>
-    ///   <para>Type    : A</para>
-    ///   <para>ETag    :</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/dns/records/json-record)">
     /// [Supported Resource Record Formats]

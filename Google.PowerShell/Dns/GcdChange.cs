@@ -19,40 +19,19 @@ namespace Google.PowerShell.Dns
     /// </para>
     /// <para type="description">
     /// If a Project is specified, will instead return the Changes in the specified ManagedZone governed by that 
-    /// project. 
-    /// The filter ChangeId can be provided to return that specific Change.
+    /// project. The filter ChangeId can be provided to return that specific Change.
     /// </para>
     /// <example>
+    ///   <code>
+    ///   PS C:\> Get-GcdChange -Project "testing" -Zone "test1"
+    ///   </code>
     ///   <para>Get the Change resources in the ManagedZone "test1" in the Project "testing."</para>
-    ///   <para><code>PS C:\> Get-GcdChange -Project "testing" -Zone "test1"</code></para>
-    ///   <br></br>
-    ///   <para>Additions :</para>
-    ///   <para>Deletions : {gcloudexample1.com.}</para>
-    ///   <para>Id        : 1</para>
-    ///   <para>Kind      : dns#change</para>
-    ///   <para>StartTime : 2016-06-29T16:30:50.670Z</para> 
-    ///   <para>Status    : done</para> 
-    ///   <para>ETag      :</para>
-    ///   <br></br>
-    ///   <para>Additions : {gcloudexample1.com., gcloudexample1.com.}</para>
-    ///   <para>Deletions :</para>
-    ///   <para>Id        : 0</para>
-    ///   <para>Kind      : dns#change</para>
-    ///   <para>StartTime : 2016-06-29T16:27:50.670Z</para>
-    ///   <para>Status    : done</para>
-    ///   <para>ETag      :</para>
     /// </example>
     /// <example>
-    ///   <para>Get the Change resource with id "0" in the ManagedZone "test1" in the Project "testing."</para>
-    ///   <para><code>PS C:\> Get-GcdChange -Project "testing" -Zone "test1" -ChangeId "0"</code></para>
-    ///   <br></br>
-    ///   <para>Additions : {gcloudexample1.com., gcloudexample1.com.}</para>
-    ///   <para>Deletions : </para>
-    ///   <para>Id        : 0</para>
-    ///   <para>Kind      : dns#change</para>
-    ///   <para>StartTime : 2016-06-29T16:27:50.670Z</para>
-    ///   <para>Status    : done</para>
-    ///   <para>ETag      :</para>
+    ///   <code>PS C:\> Get-GcdChange -Project "testing" -Zone "test1" -ChangeId "0"</code>
+    ///   <para>
+    ///     Get the Change resource with id "0" in the ManagedZone "test1" in the Project "testing."
+    ///   </para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/dns/monitoring)">[Monitoring Changes]</para>
     /// <para type="link" uri="(https://cloud.google.com/dns/troubleshooting)">[Troubleshooting]</para>
@@ -116,56 +95,29 @@ namespace Google.PowerShell.Dns
     /// </para>
     /// <para type="description">
     /// If a Project is specified, will instead create the Change in the specified ManagedZone governed by that 
-    /// project. 
-    /// Either a Change request or ResourceRecordSet[] to add/remove can be given as input.
+    /// project. Either a Change request or ResourceRecordSet[] to add/remove can be given as input.
     /// </para>
-    /// <example>
+    /// <example>   
+    ///   <code>
+    ///     $newARecord = New-GcdResourceRecordSet -Name "gcloudexample1.com." -Rrdata "104.1.34.167"
+    ///     $oldCNAMERecord = (Get-GcdResourceRecordSet -Zone "test1" -Filter "CNAME")[0]
+    ///     Add-GcdChange -Project "testing" -Zone "test1" -Add $newARecord -Remove $oldCNAMERecord
+    ///   </code>
     ///   <para> 
     ///   Add a new Change that adds a new A-type ResourceRecordSet, $newARecord, and removes an existing CNAME-type 
     ///   record, $oldCNAMERecord, from the ManagedZone "test1" (governing "gcloudexample1.com.") in the Project 
     ///   "testing."
     ///   </para>
-    ///   <para>
-    ///     <code>
-    ///     PS C:\> $newARecord = New-GcdResourceRecordSet -Name "gcloudexample1.com." -Rrdata "104.1.34.167"
-    ///     </code>
-    ///   </para>
-    ///   <para>
-    ///     <code> PS C:\> $oldCNAMERecord = (Get-GcdResourceRecordSet -Zone "test1" -Filter "CNAME")[0]</code>
-    ///   </para>
-    ///   <para>
-    ///     <code>
-    ///     PS C:\> Add-GcdChange -Project "testing" -Zone "test1" -Add $newARecord -Remove $oldCNAMERecord
-    ///     </code>
-    ///   </para>
-    ///   <br></br>
-    ///   <para>Additions : {gcloudexample1.com.}</para>
-    ///   <para>Deletions : {www.gcloudexample1.com.}</para>
-    ///   <para>Id        : 3</para>
-    ///   <para>Kind      : dns#change</para>
-    ///   <para>StartTime : 2016-06-29T16:30:50.670Z</para> 
-    ///   <para>Status    : done</para> 
-    ///   <para>ETag      :</para>
     /// </example>
     /// <example>
+    ///   <code>
+    ///   PS C:\> $change2 = Get-GcdChange -Project "testing" -Zone "test1" -ChangeId 2
+    ///   PS C:\> Add-GcdChange -Project "testing" -Zone "test1" -ChangeRequest $change2
+    ///   </code>
     ///   <para>
     ///   Add the Change request $change2 to the ManagedZone "test1" in the Project "testing," where $change2 is a 
     ///   previously executed Change request in ManagedZone "test1" that we want to apply again.
     ///   </para>
-    ///   <para>
-    ///     <code>PS C:\> $change2 = Get-GcdChange -Project "testing" -Zone "test1" -ChangeId 2 </code>
-    ///   </para>
-    ///   <para>
-    ///     <code>PS C:\> Add-GcdChange -Project "testing" -Zone "test1" -ChangeRequest $change2</code>
-    ///   </para>
-    ///   <br></br>
-    ///   <para>Additions :</para>
-    ///   <para>Deletions : {gcloudexample1.com.}</para>
-    ///   <para>Id        : 4</para>
-    ///   <para>Kind      : dns#change</para>
-    ///   <para>StartTime : 2016-06-29T18:30:50.670Z</para> 
-    ///   <para>Status    : done</para> 
-    ///   <para>ETag      :</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/dns/monitoring)">[Monitoring Changes]</para>
     /// <para type="link" uri="(https://cloud.google.com/dns/troubleshooting)">[Troubleshooting]</para>
