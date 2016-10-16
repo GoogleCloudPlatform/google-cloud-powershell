@@ -19,28 +19,16 @@ namespace Google.PowerShell.Sql
     /// This is decided by if the "Id" parameter is filled or not.
     /// </para>
     /// <example>
-    ///   <para>
-    ///   Gets a list of backup runs for the instance "myInstance".
-    ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Get-GcSqlBackupRun "myInstance"
-    ///   </code></para>
-    ///   <br></br>
+    ///   <code>PS C:\> Get-GcSqlBackupRun "myInstance"</code>
+    ///   <para>Gets a list of backup runs for the instance "myInstance".</para>
     ///   <para>If successful, the command returns a list of backupruns the instance has.</para>
     /// </example>
     /// <example>
-    ///   <para>
-    ///   Gets the resource for the backup run with ID "1234" from instance "myInstance".
-    ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Get-GcSqlBackupRun "myInstance" "1234"
-    ///   </code></para>
-    ///   <br></br>
+    ///   <code>PS C:\> Get-GcSqlBackupRun "myInstance" "1234"</code></para>
+    ///   <para>Gets the resource for the backup run with ID "1234" from instance "myInstance".</para>
     ///   <para>If successful, the command returns the relevant backup run.</para>
     /// </example>
-    /// <para type="link" uri="(https://cloud.google.com/sql/docs/backup-recovery/backups)">
-    ///   [Overview of Backups]
-    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/sql/docs/backup-recovery/backups)">[Overview of Backups]</para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlBackupRun", DefaultParameterSetName = ParameterSetNames.GetList)]
     [OutputType(typeof(BackupRun))]
@@ -120,23 +108,13 @@ namespace Google.PowerShell.Sql
     /// Deletes a specified backup from a Cloud SQL instance.
     /// </para>
     /// <example>
-    ///   <para>
-    ///   Removes the backup with ID "1234" from the instance "myInstance".
-    ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Remove-GcSqlBackupRun "myInstance" "1234"
-    ///   </code></para>
-    ///   <br></br>
+    ///   <code>PS C:\> Remove-GcSqlBackupRun "myInstance" "1234"</code>
+    ///   <para>Removes the backup with ID "1234" from the instance "myInstance".</para>
     ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
     /// <example>
-    ///   <para>
-    ///   Removes the backup identified by the resource $myBackup.
-    ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Remove-GcSqlBackupRun $myBackup
-    ///   </code></para>
-    ///   <br></br>
+    ///   <code>PS C:\> Remove-GcSqlBackupRun $myBackup</code>
+    ///   <para>Removes the backup identified by the resource $myBackup.</para>
     ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/backup)">
