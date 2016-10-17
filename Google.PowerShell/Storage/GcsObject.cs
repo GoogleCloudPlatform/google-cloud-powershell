@@ -839,14 +839,14 @@ namespace Google.PowerShell.CloudStorage
     /// object that already exists. You will get a warning if the object does not exist.
     /// </para>
     /// <example>
+    ///   <code>PS C:\> "OK" | Write-GcsObject -Bucket "widget-co-logs" -ObjectName "status.txt"</code>
     ///   <para>Update the contents of the Storage Object with the string "OK".</para>
-    ///   <para><code>PS C:\> "OK" | Write-GcsObject -Bucket "widget-co-logs" -ObjectName "status.txt"</code></para>
     /// </example>
     /// <example>
-    ///   <para>Update the contents of the Storage Object piped from Get-GcsObject.</para>
-    ///   <para><code>
+    ///   <code>
     ///   PS C:\> Get-GcsObject -Bucket "widget-co-logs" -ObjectName "status.txt" | Write-GcsObject -Value "OK"
-    ///   </code></para>
+    ///   </code>
+    ///   <para>Update the contents of the Storage Object piped from Get-GcsObject.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommunications.Write, "GcsObject"), OutputType(typeof(Object))]
@@ -869,8 +869,10 @@ namespace Google.PowerShell.CloudStorage
         /// The Google Cloud Storage object to write to.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByObjectFromString, Mandatory = true, ValueFromPipeline = true)]
-        [Parameter(ParameterSetName = ParameterSetNames.ByObjectFromFile, Mandatory = true, ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByObjectFromString,
+            Position = 0, Mandatory = true, ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByObjectFromFile,
+            Position = 0, Mandatory = true, ValueFromPipeline = true)]
         [ValidateNotNull]
         public Object InputObject { get; set; }
 
@@ -899,7 +901,7 @@ namespace Google.PowerShell.CloudStorage
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByNameFromString, ValueFromPipeline = true, Mandatory = false)]
-        [Parameter(ParameterSetName = ParameterSetNames.ByObjectFromString, ValueFromPipeline = true, Mandatory = false)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByObjectFromString, ValueFromPipeline = false, Mandatory = false)]
         public string Value { get; set; }
 
         /// <summary>
@@ -989,7 +991,8 @@ namespace Google.PowerShell.CloudStorage
                     }
                     else
                     {
-                        // Set these variables so the call to UploadGcsObject at the end of the function will succeed.
+                        // Set these variables so the call to UploadGcsObject at the end of the function will succeed
+                        // when -Force is present and object does not exist.
                         Bucket = existingGcsObject.Bucket;
                         ObjectName = existingGcsObject.Name;
                     }

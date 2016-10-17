@@ -639,9 +639,17 @@ Describe "Write-GcsObject" {
         $objectContents | Write-GcsObject $bucket $objectName -Force
         Read-GcsObject $bucket $objectName | Should BeExactly $objectContents
 
-        # Exercise the explicit -Content parameter too.
+        # Exercise the explicit -Value parameter too.
         Write-GcsObject $bucket ($objectName + "2") -Value $objectContents -Force
         Read-GcsObject $bucket ($objectName + "2") | Should BeExactly $objectContents
+    }
+
+    It "will accept GCS Object from the pipeline" {
+        $objectName = "write-gcsobject-from-pipeline"
+        $objectContents = "This is some text from the PowerShell pipeline"
+
+        # Create the object
+        New-GcsObject -Bucket $bucket -ObjectName $objectName -Value "Wrong Value"
 
         # Using piped in GCS Object with -Value.
         $objectContents = "This is some text from the PowerShell pipeline using piped in GCS Object"
