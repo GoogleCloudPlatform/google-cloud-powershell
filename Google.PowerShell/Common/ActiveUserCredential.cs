@@ -13,20 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Auth.OAuth2.Flows;
+using Google.Apis.Http;
 using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Google.Apis.Auth.OAuth2.Flows;
-using Google.Apis.Auth.OAuth2.Responses;
-using Google.Apis.Http;
-using Google.Apis.Logging;
-using Google.PowerShell.Common;
-
-namespace Google.Apis.Auth.OAuth2
+namespace Google.PowerShell.Common
 {
     /// <summary>
     /// OAuth 2.0 credential for accessing protected resources using an access token.
@@ -51,13 +47,11 @@ namespace Google.Apis.Auth.OAuth2
                     }
                 });
 
-        /// <summary>
-        /// UserId is not important, it can be anything.
-        /// </summary>
+        /// <summary>UserId is not important, it can be anything.</summary>
         private readonly string userId = "userId";
 
         /// <summary>Gets or sets the token response which contains the access token.</summary>
-        public static ActiveUserToken Token
+        private static ActiveUserToken Token
         {
             get
             {
@@ -147,16 +141,10 @@ namespace Google.Apis.Auth.OAuth2
         #endregion
 
         /// <summary>
-        /// Refreshes the token by calling to
-        /// <see cref="Google.Apis.Auth.OAuth2.Flows.IAuthorizationCodeFlow.RefreshTokenAsync"/>.
-        /// Then it updates the <see cref="TokenResponse"/> with the new token instance.
+        /// Refreshes the token by calling to GCloudWrapper.GetAccessToken
         /// </summary>
-        /// <param name="taskCancellationToken">Cancellation token to cancel an operation.</param>
-        /// <returns><c>true</c> if the token was refreshed.</returns>
         public async Task<bool> RefreshTokenAsync(CancellationToken taskCancellationToken)
         {
-            // It's possible that two concurrent calls will be made to refresh the token, in that case the last one 
-            // will win.
             var newToken = await GCloudWrapper.GetAccessToken();
 
             Token = newToken;

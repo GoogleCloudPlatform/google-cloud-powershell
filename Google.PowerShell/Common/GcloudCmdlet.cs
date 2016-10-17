@@ -42,7 +42,7 @@ namespace Google.PowerShell.Common
         }
 
         /// <summary>
-        /// Returns an instance of the Google Client API initializer, using the machine's default credentials.
+        /// Returns an instance of the Google Client API initializer, using the active user's credentials.
         /// </summary>
         public static BaseClientService.Initializer GetBaseClientServiceInitializer()
         {

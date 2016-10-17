@@ -12,15 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Google.Apis.Auth.OAuth2.Responses;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Runtime.Remoting.Contexts;
 using System.Threading.Tasks;
 
 namespace Google.PowerShell.Common
@@ -83,7 +79,7 @@ namespace Google.PowerShell.Common
             {
                 // Throw exception at the end.
             }
-            catch (JsonException)
+            catch (Newtonsoft.Json.JsonException)
             {
                 // Throw exception at the end.
             }
