@@ -1,0 +1,21 @@
+﻿<div id="content-product-description">
+  <p>
+    Google Cloud Tools for PowerShell is a set of cmdlets for Windows
+    PowerShell that lets you manage Google Cloud Platform resources.
+  </p>
+</div>
+
+<table class="psr-contentTable">
+  <tr>
+    <th>Product</th>
+  </tr>
+  <tr ng-repeat="product in contentCtrl.cmdletDocumentation.products | orderBy:'name'">
+    <td>
+      <a href="/google-cloud-powershell/#/{{ product.name }}/">
+        <div>
+          {{ product.longName }}
+        </div>
+      </a>
+    </td>
+  </tr>
+</table>
