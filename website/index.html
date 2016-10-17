@@ -1,0 +1,84 @@
+﻿<!DOCTYPE html>
+<html lang="en" ng-app="powershellSite">
+<head>
+  <title>Google Cloud Tools for PowerShell Cmdlet Reference</title>
+  <meta charset="utf-8">
+  <meta content="initial-scale=1, minimum-scale=1, width=device-width" name="viewport">
+  <meta name="description" content="Google Cloud Tools for PowerShell cmdlet reference">
+  
+  <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
+  <link rel="canonical" href="//googlecloudplatform.github.io/google-cloud-powershell/">
+
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Open+Sans:100,300,400,600,700,800" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Roboto:100,300,400,500" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Roboto+Mono" />
+  <link rel="stylesheet" type="text/css" href="/google-cloud-powershell/css/style.css" />
+
+  <base href="/google-cloud-powershell/">
+
+  <script src="/google-cloud-powershell/js/angular.min.js"></script>
+  <script src="/google-cloud-powershell/js/angular-route.min.js"></script>
+  <script src="/google-cloud-powershell/js/angular-sanitize.min.js"></script>
+
+  <script src="/google-cloud-powershell/js/app/app.js"></script>
+  <script src="/google-cloud-powershell/js/app/controllers/content.js"></script>
+  <script src="/google-cloud-powershell/js/app/controllers/cmdlet-explorer.js"></script>
+  <script src="/google-cloud-powershell/js/app/controllers/parameters-widget.js"></script>
+  <script src="/google-cloud-powershell/js/app/controllers/syntax-widget.js"></script>
+</head>
+<body ng-app="powershellSite">
+  <div id="header">
+    <div class="psr-headerIcon"></div>
+    <a href="/google-cloud-powershell/#/">
+      <p class="psr-headerText">Cloud Tools for PowerShell</p>
+    </a>
+  </div>
+
+  <div class="psr-main" ng-controller="ContentController as contentCtrl">
+    <div id="left-nav">
+      <cmdlet-explorer documentation-obj="contentCtrl.cmdletDocumentation.products"></cmdlet-explorer>
+    </div>
+    <div id="content-container">
+
+      <div id="top-nav-container">
+        <div id="top-nav">
+          <div class="top-navSection psr-navText">
+            <a href="/google-cloud-powershell/#/">
+              <div>Home</div>
+            </a>
+          </div>
+          <div ng-if="contentCtrl.currentProduct" class="top-navSection psr-navText">
+            <div class="psr-navIcon collapsed"></div>
+            <a href="/google-cloud-powershell/#/{{ contentCtrl.currentProduct }}">
+              <div>{{ contentCtrl.productInfo.longName }}</div>
+            </a>
+          </div>
+          <div ng-if="contentCtrl.currentResource" class="top-navSection psr-navText">
+            <div class="psr-navIcon collapsed"></div>
+            <a href="/google-cloud-powershell/#/{{ contentCtrl.currentProduct }}/{{ contentCtrl.currentResource }}">
+              <div>{{ contentCtrl.currentResource }}</div>
+            </a>
+          </div>
+          <div ng-if="contentCtrl.currentCmdlet" class="top-navSection psr-navText">
+            <div class="psr-navIcon collapsed"></div>
+            <div>{{ contentCtrl.currentCmdlet }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="content-header">
+        <div class="psr-contentBlock psr-contentHeaderContainer">
+          <h1>{{ contentCtrl.contentHeader }}</p>
+        </div>
+      </div>
+      <div ng-if="!contentCtrl.errorMessage" class="psr-contentBlock">
+        <ng-view></ng-view>
+      </div>
+      <div ng-if="contentCtrl.errorMessage" class="psr-contentBlock">
+        <div id="content-product-description">
+          <p>{{ contentCtrl.errorMessage }}</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
