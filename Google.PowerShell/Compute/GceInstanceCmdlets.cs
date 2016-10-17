@@ -1,4 +1,4 @@
-﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
+// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
 using Google.Apis.Compute.v1;
@@ -16,15 +16,15 @@ namespace Google.PowerShell.ComputeEngine
     /// <summary>
     /// <para type="synopsis">
     /// Gets information about one or more Google Compute Engine VM instances.
-    ///</para>
+    /// </para>
     /// <para type="description">
     /// Gets information about all Google Compute Engine VM instances. Can get all instances of a project, or 
     /// all instances in a zone, or a specific instance by name. Can also get all instances of a managed
     /// instance group.
-    ///</para>
+    /// </para>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
     /// [Instance resource definition]
-    ///</para>
+    /// </para>
     /// <example>
     ///   <code>PS C:\> Get-GceInstance -Project "my-project"</code>
     ///   <para>Gets all instances of the project "my-project".</para>
@@ -63,7 +63,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.OfProject)]
         [Parameter(ParameterSetName = ParameterSetNames.OfZone)]
@@ -76,7 +76,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The zone in which the instance resides.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.OfZone, Mandatory = true)]
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
@@ -88,7 +88,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The name of the instance.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
@@ -97,7 +97,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The Instance object to get a new copy of.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
@@ -106,7 +106,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The name of the instance group manager to get the instances of.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.OfInstanceGroupManager, Mandatory = true)]
         public string ManagedGroupName { get; set; }
@@ -114,7 +114,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The InstanceGroupManager object to get the instances of.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.OfInstanceGroupManagerObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
@@ -124,7 +124,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <para type="description">
         /// When this switch is set, the cmdlet will output the string contents of the serial port of the
         /// instance rather than the normal data about the instance.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter]
         public SwitchParameter SerialPortOutput { get; set; }
@@ -133,7 +133,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <para type="description">
         /// The number of the serial port to read from. Defaults to 1. Has no effect if -SerialPortOutput is
         /// not set. Must be between 1 and 4, inclusive.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter]
         public int? PortNumber { get; set; } = 1;
@@ -312,12 +312,12 @@ namespace Google.PowerShell.ComputeEngine
     /// <summary>
     /// <para type="synopsis">
     /// Creates and starts a Google Compute Engine VM instance.
-    ///</para>
+    /// </para>
     /// <para type="description">
     /// Creates and starts a Google Compute Engine VM instance. You create a new instance by either using an 
     /// instance config created by New-GceInstanceConfig, or by specifying the parameters you want on this
     /// cmdlet.
-    ///</para>
+    /// </para>
     /// <example>
     ///   <code>
     ///   PS C:\> New-GceInstanceConfig -Name "new-instance" -BootDiskImage $image |
@@ -341,7 +341,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
     /// [Instance resource definition]
-    ///</para>
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GceInstance")]
     [OutputType(typeof(Instance))]
@@ -356,7 +356,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The project that will own the instance.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
@@ -366,7 +366,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The zone in which the instance will reside.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
@@ -376,7 +376,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The definition of the instance to create.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
@@ -385,7 +385,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The name of the instance to add.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true,
             ParameterSetName = ParameterSetNames.ByValues)]
@@ -395,7 +395,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <para type="description">
         /// The machine type of this instance. Can be a name, a URL or a MachineType object from
         /// Get-GceMachineType. Defaults to "n1-standard-1".
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(Position = 1, ParameterSetName = ParameterSetNames.ByValues)]
         [PropertyByTypeTransformation(TypeToTransform = typeof(MachineType),
@@ -407,7 +407,7 @@ namespace Google.PowerShell.ComputeEngine
         /// Enables instances to send and receive packets for IP addresses other than their own. Switch on if
         /// this instance will be used as an IP gateway or it will be set as the next-hop in a Route
         /// resource.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
         public override SwitchParameter CanIpForward { get; set; }
@@ -415,7 +415,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// Human readable description of this instance.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
         public override string Description { get; set; }
@@ -423,7 +423,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The persistant disk to use as a boot disk. Use Get-GceDisk to get one of these.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
         public override Disk BootDisk { get; set; }
@@ -431,7 +431,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The the image used to create the boot disk. Use Get-GceImage to get one of these.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
         [Alias("DiskImage")]
@@ -441,7 +441,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// An existing disk to attach. It will attach in read-only mode.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
         public override Disk[] ExtraDisk { get; set; }
@@ -450,7 +450,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <para type="description">
         /// An AttachedDisk object specifying a disk to attach. Do not specify `-BootDiskImage` or
         /// `-BootDiskSnapshot` if this is a boot disk. You can build one using New-GceAttachedDiskConfig.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
         public override AttachedDisk[] Disk { get; set; }
@@ -458,7 +458,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The keys and values of the Metadata of this instance.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
         public override IDictionary Metadata { get; set; }
@@ -467,7 +467,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <para type="description">
         /// The name of the network to use. If not specified, is default. This can be a Network object you get
         /// from Get-GceNetwork.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
         [PropertyByTypeTransformation(Property = nameof(Apis.Compute.v1.Data.Network.SelfLink),
@@ -477,7 +477,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// If set, the instance will not have an external ip address.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
         public override SwitchParameter NoExternalIp { get; set; }
@@ -485,7 +485,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// If set, the instance will be preemptible. If set, AutomaticRestart will be false.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
         public override SwitchParameter Preemptible { get; set; }
@@ -493,7 +493,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// If set, the instance will not restart when shut down by Google Compute Engine.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
         public override bool AutomaticRestart { get; set; } = true;
@@ -501,7 +501,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// If set, the instance will terminate rather than migrate when the host undergoes maintenance.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
         public override SwitchParameter TerminateOnMaintenance { get; set; }
@@ -509,7 +509,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The ServiceAccount used to specify access tokens. Use New-GceServiceAccountConfig to build one.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
         public override ServiceAccount[] ServiceAccount { get; set; }
@@ -517,7 +517,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// A tag of this instance.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
         public override string[] Tag { get; set; }
@@ -526,7 +526,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <para type="description">
         /// The static ip address this instance will have. Can be a string, or and Address object from
         /// Get-GceAddress.
-        ///</para>
+        /// </para>
         /// </summary>
         [PropertyByTypeTransformation(Property = nameof(Apis.Compute.v1.Data.Address.AddressValue),
             TypeToTransform = typeof(Address))]
@@ -577,10 +577,10 @@ namespace Google.PowerShell.ComputeEngine
     /// <summary>
     /// <para type="synopsis">
     /// Deletes a Google Compute Engine VM instance.
-    ///</para>
+    /// </para>
     /// <para type="description">
     /// Deletes a Google Compute Engine VM instance.
-    ///</para>
+    /// </para>
     /// <example>
     ///     <code>PS C:\> Remove-GceInstance "my-instance"</code>
     ///     <para>Removes the instance named "my-instance" in the default project and zone.</para>
@@ -595,7 +595,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
     /// [Instance resource definition]
-    ///</para>
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceInstance", SupportsShouldProcess = true)]
     public class RemoveGceInstanceCmdlet : GceConcurrentCmdlet
@@ -609,7 +609,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
@@ -618,7 +618,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The zone in which the instance resides.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
@@ -627,7 +627,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The name of the instance to delete.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
@@ -636,7 +636,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The instance object to delete.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
@@ -675,10 +675,10 @@ namespace Google.PowerShell.ComputeEngine
     /// <summary>
     /// <para type="synopsis">
     /// Starts a Google Compute Engine VM instance.
-    ///</para>
+    /// </para>
     /// <para type="description">
     /// Starts a Google Compute Engine VM instance.
-    ///</para>
+    /// </para>
     /// <example>
     ///   <code>PS C:\> Start-GceInstance "my-instance"</code>
     ///   <para>Starts the instance named "my-instance" in the default project and zone.</para>
@@ -693,7 +693,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
     /// [Instance resource definition]
-    ///</para>
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Start, "GceInstance")]
     [OutputType(typeof(Instance))]
@@ -708,7 +708,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
@@ -718,7 +718,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The zone in which the instance resides.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
@@ -728,7 +728,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The name of the instance to start.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
@@ -737,7 +737,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The instance object to start.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
@@ -775,10 +775,10 @@ namespace Google.PowerShell.ComputeEngine
     /// <summary>
     /// <para type="synopsis">
     /// Stops a Google Compute Engine VM instance.
-    ///</para>
+    /// </para>
     /// <para type="description">
     /// Stops a Google Compute Engine VM instance.
-    ///</para>
+    /// </para>
     /// <example>
     ///   <code>PS C:\> Stop-GceInstance "my-instance"</code>
     ///   <para>Stops the instance named "my-instance" in the default project and zone.</para>
@@ -793,7 +793,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
     /// [Instance resource definition]
-    ///</para>
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Stop, "GceInstance")]
     [OutputType(typeof(Instance))]
@@ -808,7 +808,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
@@ -818,7 +818,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The zone in which the instance resides.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
@@ -828,7 +828,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The name of the instance to stop.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
@@ -837,7 +837,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The instance object to stop.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
@@ -875,10 +875,10 @@ namespace Google.PowerShell.ComputeEngine
     /// <summary>
     /// <para type="synopsis">
     /// Resets a Google Compute Engine VM instance.
-    ///</para>
+    /// </para>
     /// <para type="description">
     /// Resets a Google Compute Engine VM instance.
-    ///</para>
+    /// </para>
     /// <example>
     ///   <code>PS C:\> Reset-GceInstance "my-instance"</code>
     ///   <para>Resets the instance named "my-instance" in the default project and zone.</para>
@@ -892,7 +892,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
     /// [Instance resource definition]
-    ///</para>
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Restart, "GceInstance")]
     [OutputType(typeof(Instance))]
@@ -907,7 +907,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
@@ -917,7 +917,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The zone in which the instance resides.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
@@ -927,7 +927,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The name of the instance to reset.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
@@ -936,7 +936,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The instance object to restart.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
@@ -974,14 +974,14 @@ namespace Google.PowerShell.ComputeEngine
     /// <summary>
     /// <para type="synopsis">
     /// Sets various attributes of a VM instance.
-    ///</para>
+    /// </para>
     /// <para type="description">
     /// With this cmdlet, you can update metadata, attach and detach disks, add and remove acces configs,
     /// or add and remove tags.
-    ///</para>
+    /// </para>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
     /// [Instance resource definition]
-    ///</para>
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GceInstance")]
     [OutputType(typeof(Instance))]
@@ -1002,7 +1002,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The project that owns the instance to update.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.AccessConfig)]
         [Parameter(ParameterSetName = ParameterSetNames.Disk)]
@@ -1017,7 +1017,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The zone in which the instance resides.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.AccessConfig)]
         [Parameter(ParameterSetName = ParameterSetNames.Disk)]
@@ -1032,7 +1032,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The name of the instance to update.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.AccessConfig, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
@@ -1049,7 +1049,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The instance object to update.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.AccessConfigByObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
@@ -1064,7 +1064,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The name of the network interface to add or remove access configs.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.AccessConfig)]
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.AccessConfigByObject)]
@@ -1075,7 +1075,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The new access config to add to a network interface.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.AccessConfig)]
         [Parameter(ParameterSetName = ParameterSetNames.AccessConfigByObject)]
@@ -1084,7 +1084,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The name of the access config to remove from the network interface.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.AccessConfig)]
         [Parameter(ParameterSetName = ParameterSetNames.AccessConfigByObject)]
@@ -1094,7 +1094,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <para type="description">
         /// The disk to attach. Can the name of a disk, a disk object from Get-GceDisk, or an attached disk
         /// object from New-GceAttachedDiskConfig.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Disk)]
         [Parameter(ParameterSetName = ParameterSetNames.DiskByObject)]
@@ -1103,7 +1103,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The name of the disk to detach.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Disk)]
         [Parameter(ParameterSetName = ParameterSetNames.DiskByObject)]
@@ -1113,7 +1113,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The keys and values of the metadata to add.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Metadata)]
         [Parameter(ParameterSetName = ParameterSetNames.MetadataByObject)]
@@ -1122,7 +1122,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The keys of the metadata to remove.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Metadata)]
         [Parameter(ParameterSetName = ParameterSetNames.MetadataByObject)]
@@ -1131,7 +1131,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The tag to add.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Tag)]
         [Parameter(ParameterSetName = ParameterSetNames.TagByObject)]
@@ -1140,7 +1140,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// <para type="description">
         /// The tag to remove.
-        ///</para>
+        /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Tag)]
         [Parameter(ParameterSetName = ParameterSetNames.TagByObject)]
