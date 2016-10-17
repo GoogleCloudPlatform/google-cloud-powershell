@@ -629,7 +629,7 @@ namespace Google.PowerShell.CloudStorage
     /// <example>
     ///   <code>PS C:\> Remove-GcsObject ppiper-prod text-files/14683615 -WhatIf</code>
     ///   <code>What if: Performing the operation "Delete Object" on target "[ppiper-prod]" text-files/14683615".</code>
-    ///   <para>Delete storage object named "text-files/14683615".
+    ///   <para>Delete storage object named "text-files/14683615".</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GcsObject",

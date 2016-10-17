@@ -25,6 +25,7 @@ namespace Google.PowerShell.Sql
     /// <example>
     ///   <code>PS C:\> Get-GcSqlOperation -Name "1d402..."</code>
     ///   <para>Gets a resource for the operation with ID "1d402...".</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlOperation")]
     [OutputType(typeof(Operation))]

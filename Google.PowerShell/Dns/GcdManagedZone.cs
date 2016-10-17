@@ -26,7 +26,7 @@ namespace Google.PowerShell.Dns
     ///   <para>Get the ManagedZones for the Project "testing."</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-GcdManagedZone -Project "testing" -Zone "test1" </code><
+    ///   <code>PS C:\> Get-GcdManagedZone -Project "testing" -Zone "test1" </code>
     ///   <para>Get the ManagedZone "test1" for the Project "testing."</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/dns/zones/)">[Managing Zones]</para>

@@ -32,6 +32,7 @@ namespace Google.PowerShell.Sql
     ///   <para>
     ///   Get a resource for the SSL Certificate identified by the Sha1Fingerprint "myFinger" for the instance "myInstance".
     ///   </para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlSslCert")]
     [OutputType(typeof(SslCert))]
