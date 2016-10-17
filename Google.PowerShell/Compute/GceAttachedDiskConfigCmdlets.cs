@@ -20,9 +20,9 @@ namespace Google.PowerShell.ComputeEngine
     /// </summary>
     /// <example>
     /// <code>
-    /// <para>PS C:\> $disks = (New-GceAttachedDiskConfig (Get-GceImage "windows-cloud" -Family "windows-2012-r2") -Boot -AutoDelete),</para>
-    /// <para>                 (New-GceAttachedDiskConfig (Get-GceDisk "persistant-disk-name") -ReadOnly)</para>
-    /// <para>PS C:\> Add-GceInstanceTemplate -Name "template-name" -Disk $disks</para>
+    /// PS C:\> $disks = (New-GceAttachedDiskConfig (Get-GceImage "windows-cloud" -Family "windows-2012-r2") -Boot -AutoDelete), `
+    ///                  (New-GceAttachedDiskConfig (Get-GceDisk "persistant-disk-name") -ReadOnly)
+    /// PS C:\> Add-GceInstanceTemplate -Name "template-name" -Disk $disks
     /// </code>
     /// <para>Creates two attached disk objects, and creates a new template using them.</para>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances/attachDisk#request-body)">

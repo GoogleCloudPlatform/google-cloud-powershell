@@ -13,32 +13,25 @@ namespace Google.PowerShell.Sql
     /// </para>
     /// <para type="description"> 
     /// Creates a settings configuration specified by the passed in parameters. 
-    /// Meant to be only for Second generation instances.
+    /// Meant to be only for Second generation instances. 
     /// Can be pipelined into New-GcSqlInstanceConfig.
-    /// 
-    /// WARNING: If any parameter is incorrect, this cmdlet will not error.
-    /// Instead it will error once you try to update or add an instance in your project.
-    /// Please be careful with inputs.
+    /// </para>
+    /// <para type="description">
+    /// NOTE: If any parameter is incorrect/invalid, this cmdlet not fail. You will only
+    /// receive an error once you try to update or add an instance with this configuration to your
+    /// project.
     /// </para>
     /// <example>
-    ///   <para>
-    ///   Creates a settings resource with tier "db-n1-standard-1".
-    ///   </para>
-    ///   <para><code>
-    ///     PS C:\> New-GcSqlSettingConfig "db-n1-standard-1"
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>(If successful, the command returns Settings resource containing the setting configuration.)</para>
+    ///   <code>PS C:\> New-GcSqlSettingConfig "db-n1-standard-1"</code>
+    ///   <para>Creates a settings resource with tier "db-n1-standard-1".</para>
     /// </example>
     /// <example>
+    ///   <code>
+    ///     PS C:\> New-GcSqlSettingConfig "db-n1-standard-1" -MaintenanceWindowDay 1 -MaintenanceWindowHour "22:00"
+    ///   </code>
     ///   <para>
     ///   Creates a settings resource with tier "db-n1-standard-1", and a maintenance window on monday at 22:00.
     ///   </para>
-    ///   <para><code>
-    ///     PS C:\> New-GcSqlSettingConfig "db-n1-standard-1" -MaintenanceWindowDay 1 -MaintenanceWindowHour "22:00"
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>(If successful, the command returns Settings resource containing the setting configuration.)</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/sql/docs/instance-settings)">
     ///   [Instance Settings]
@@ -58,7 +51,6 @@ namespace Google.PowerShell.Sql
         /// </summary>
         [Parameter(Position = 0, Mandatory = false)]
         public string TierConfig { get; set; } = "db-n1-standard-1";
-
 
         public enum ActivationPolicy
         {
@@ -89,7 +81,7 @@ namespace Google.PowerShell.Sql
         /// <summary>
         /// <para type="description">
         /// Whether the backup configuration is enabled or not.
-        /// Defaults to true for non replica instances.
+        /// Defaults to true for non-replica instances.
         /// </para>
         /// </summary>
         [Parameter]
@@ -107,13 +99,11 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// The size of data disk, in GB. The data disk size minimum is 10 GB. 
-        /// Applies only to Second generation instances.
-        /// Defaults to 10
+        /// The size of data disk, in GB. The data disk size minimum is 10 GB. (Defaults to 50). 
         /// </para>
         /// </summary>
         [Parameter]
-        public long DataDiskSizeGb { get; set; } = 10;
+        public long DataDiskSizeGb { get; set; } = 50;
 
         /// <summary>
         /// <para type="description">
@@ -127,7 +117,7 @@ namespace Google.PowerShell.Sql
         /// <summary>
         /// <para type="description">
         /// The list of external networks that are allowed to connect to the instance using the IP.
-        /// In CIDR notation, also known as 'slash' notation (e.g. 192.168.100.0/24).
+        /// In CIDR notation, also known as 'slash' notation (e.g. "192.168.100.0/24").
         /// May include other ipConfiguration params, but unsure.
         /// Defaults to an empty list.
         /// </para>
@@ -172,7 +162,6 @@ namespace Google.PowerShell.Sql
         /// <summary>
         /// <para type="description">
         /// Day of the week (1-7) starting monday that the instance may be restarted for maintenance purposes.
-        /// Applies only to Second Generation instances.
         /// Defaults to 5 (Friday).
         /// </para>
         /// </summary>
@@ -182,7 +171,6 @@ namespace Google.PowerShell.Sql
         /// <summary>
         /// <para type="description">
         /// Hour of day (0-23) that the instance may be restarted for maintenance purposes.
-        /// Applies only to Second Generation instances.
         /// Defaults to 22;
         /// </para>
         /// </summary>
@@ -193,7 +181,6 @@ namespace Google.PowerShell.Sql
         /// <para type="description">
         /// Configuration to increase storage size automatically.
         /// The default value is false.
-        /// Applies only to Second Generation instances.
         /// </para>
         /// </summary>
         [Parameter]
@@ -204,10 +191,10 @@ namespace Google.PowerShell.Sql
             PD_SSD,
             PD_HDD
         }
+
         /// <summary>
         /// <para type="description">
         /// The type of data disk: PD_SSD (default) or PD_HDD.
-        /// Applies only to Second Generation instances.
         /// </para>
         /// </summary>
         [Parameter]

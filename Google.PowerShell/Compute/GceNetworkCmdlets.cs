@@ -18,12 +18,12 @@ namespace Google.PowerShell.Compute
     /// Get data about the networks a project has. This includes its name, id, and subnetworks.
     /// </para>
     /// <example>
-    /// <code>PS C:\> Get-GceNetwork</code>
-    /// <para>Lists all networks in set up for the default project.</para>
+    ///   <code>PS C:\> Get-GceNetwork</code>
+    ///   <para>Lists all networks in set up for the default project.</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> Get-GceNetwork "default"</code>
-    /// <para>Gets the default network for the default project.</para>
+    ///   <code>PS C:\> Get-GceNetwork "default"</code>
+    ///   <para>Gets the default network for the default project.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/networks#resource)">
     /// [Network resource definition]

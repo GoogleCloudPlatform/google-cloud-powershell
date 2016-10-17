@@ -18,12 +18,12 @@ namespace Google.PowerShell.ComputeEngine
     /// Gets Google Compute Engine instance templates.
     /// </para>
     /// <example>
-    /// <code>PS C:\> Get-GceInstanceTemplate</code>
-    /// <para>Lists all instance templates in the default project.</para>
+    ///   <code>PS C:\> Get-GceInstanceTemplate</code>
+    ///   <para>Lists all instance templates in the default project.</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> Get-GceInstanceTemplate "my-template"</code>
-    /// <para>Gets the instance template naemd "my-template" in the default project.</para>
+    ///   <code>PS C:\> Get-GceInstanceTemplate "my-template"</code>
+    ///   <para>Gets the instance template naemd "my-template" in the default project.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instanceTemplates#resource)">
     /// [Instance Template resource definition]
@@ -143,20 +143,20 @@ namespace Google.PowerShell.ComputeEngine
     /// instance groups.
     /// </para>
     /// <example>
-    /// <code>
-    /// PS C:\> $image = Get-GceImage -Family "window-2012-r2"
-    /// PS C:\> Add-GceInstanceTemplate "my-template" -BootDiskImage $image
-    /// </code>
-    /// <para>Creates a new windows 2012 instance template with default settings.</para>
+    ///   <code>
+    ///   PS C:\> $image = Get-GceImage -Family "window-2012-r2"
+    ///   PS C:\> Add-GceInstanceTemplate "my-template" -BootDiskImage $image
+    ///   </code>
+    ///   <para>Creates a new windows 2012 instance template with default settings.</para>
     /// </example>
     /// <example>
-    /// <code>
-    /// PS C:\> $image = Get-GceImage -Family "window-2012-r2"
-    /// PS C:\> $serviceAccount = New-GceServiceAccountConfig default -BigQuery
-    /// PS C:\> Add-GceInstanceTemplate $name "n1-standard-4" -BootDiskImage $image `
+    ///   <code>
+    ///   PS C:\> $image = Get-GceImage -Family "window-2012-r2"
+    ///   PS C:\> $serviceAccount = New-GceServiceAccountConfig default -BigQuery
+    ///   PS C:\> Add-GceInstanceTemplate $name "n1-standard-4" -BootDiskImage $image `
     ///             -ServiceAccount $serviceAccount
-    /// </code>
-    /// <para>Creates a new instance template for a 4 core machine that has access to BigQuery.</para>
+    ///   </code>
+    ///   <para>Creates a new instance template for a 4 core machine that has access to BigQuery.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instanceTemplates#resource)">
     /// [Instance Template resource definition]
@@ -349,12 +349,12 @@ namespace Google.PowerShell.ComputeEngine
     /// not be deleted.
     /// </para>
     /// <example>
-    /// <code>PS C:\> Remove-GceInstanceTemplate "my-template"</code>
-    /// <para>Removes the instance template named "my-template" in the default project.</para>
+    ///   <code>PS C:\> Remove-GceInstanceTemplate "my-template"</code>
+    ///   <para>Removes the instance template named "my-template" in the default project.</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> Get-GceInstanceTemplate | Remove-GceInstanceTemplate</code>
-    /// <para>Removes all instance templates in the default project.</para>
+    ///   <code>PS C:\> Get-GceInstanceTemplate | Remove-GceInstanceTemplate</code>
+    ///   <para>Removes all instance templates in the default project.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instanceTemplates#resource)">
     /// [Instance Template resource definition]

@@ -22,51 +22,12 @@ namespace Google.PowerShell.Dns
     /// The filter ManagedZone can be provided to return that specific zone.
     /// </para>
     /// <example>
+    ///   <code>PS C:\> Get-GcdManagedZone -Project "testing" </code>
     ///   <para>Get the ManagedZones for the Project "testing."</para>
-    ///   <para><code>PS C:\> Get-GcdManagedZone -Project "testing" </code></para>
-    ///   <br></br>
-    ///   <para>CreationTime     : 2016-06-29T15:30:50.667Z</para>
-    ///   <para>Description   	 : testing description</para>
-    ///   <para>DnsName          : gcloudexample1.com.</para>
-    ///   <para>Id            	 : 4735311843662425164</para>
-    ///   <para>Kind          	 : dns#managedZone</para>
-    ///   <para>Name             : test1</para>
-    ///   <para>NameServerSet    :</para>
-    ///   <para>
-    ///   NameServers      : {ns-cloud-e1.googledomains.com., ns-cloud-e2.googledomains.com., 
-    ///   ns-cloud-e3.googledomains.com., ns-cloud-e4.googledomains.com.}
-    ///   </para>
-    ///   <para>ETag          	 :</para>
-    ///   <br></br>
-    ///   <para>CreationTime     : 2016-06-29T15:30:50.667Z</para>
-    ///   <para>Description   	 :</para>
-    ///   <para>DnsName          : gcloudexample2.com.</para>
-    ///   <para>Id            	 : 4484350849440060468</para>
-    ///   <para>Kind          	 : dns#managedZone</para>
-    ///   <para>Name             : testZone2</para>
-    ///   <para>NameServerSet    :</para>
-    ///   <para>
-    ///   NameServers      : {ns-cloud-e1.googledomains.com., ns-cloud-e2.googledomains.com., 
-    ///   ns-cloud-e3.googledomains.com., ns-cloud-e4.googledomains.com.}
-    ///   </para>
-    ///   <para>ETag          	 :</para>
     /// </example>
     /// <example>
+    ///   <code>PS C:\> Get-GcdManagedZone -Project "testing" -Zone "test1" </code>
     ///   <para>Get the ManagedZone "test1" for the Project "testing."</para>
-    ///   <para><code>PS C:\> Get-GcdManagedZone -Project "testing" -Zone "test1" </code></para>
-    ///   <br></br>
-    ///   <para>CreationTime     : 2016-06-29T15:30:50.667Z</para>
-    ///   <para>Description   	 : testing description</para>
-    ///   <para>DnsName          : gcloudexample1.com.</para>
-    ///   <para>Id            	 : 4735311843662425164</para>
-    ///   <para>Kind          	 : dns#managedZone</para>
-    ///   <para>Name             : test1</para>
-    ///   <para>NameServerSet    :</para>
-    ///   <para>
-    ///   NameServers      : {ns-cloud-e1.googledomains.com., ns-cloud-e2.googledomains.com., 
-    ///   ns-cloud-e3.googledomains.com., ns-cloud-e4.googledomains.com.}
-    ///   </para>
-    ///   <para>ETag          	 :</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/dns/zones/)">[Managing Zones]</para>
     /// <para type="link" uri="(https://cloud.google.com/dns/troubleshooting)">[Troubleshooting]</para>
@@ -123,30 +84,15 @@ namespace Google.PowerShell.Dns
     /// <para type="description">
     /// If a Project is specified, it will instead add the new ManagedZone to that project.
     /// </para>
-    /// <example>
+    /// <example>   
+    ///   <code>
+    ///     PS C:\> Add-GcdManagedZone -Project "testing" -Name "testzone1" `
+    ///         -DnsName "gcloudexample.com." -Description "test description"     
+    ///   </code>
     ///   <para>
     ///   Create a new ManagedZone in the DNSProject "testing" with the name "test1," DNS name "gcloudexample.com.,"
     ///   and description "test description."
     ///   </para>
-    ///   <para>
-    ///     <code>
-    ///     PS C:\> Add-GcdManagedZone -Project "testing" -Name "testzone1" -DnsName "gcloudexample.com." 
-    ///     -Description "test description"
-    ///     </code>
-    ///   </para>
-    ///   <br></br>
-    ///   <para>CreationTime     : 2016-06-29T15:30:50.667Z</para>
-    ///   <para>Description   	 : testing description</para>
-    ///   <para>DnsName          : gcloudexample.com.</para>
-    ///   <para>Id            	 : 4735311843662425164</para>
-    ///   <para>Kind          	 : dns#managedZone</para>
-    ///   <para>Name             : test1</para>
-    ///   <para>NameServerSet    :</para>
-    ///   <para>
-    ///   NameServers      : {ns-cloud-e1.googledomains.com., ns-cloud-e2.googledomains.com., 
-    ///   ns-cloud-e3.googledomains.com., ns-cloud-e4.googledomains.com.}
-    ///   </para>
-    ///   <para>ETag          	 :</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/dns/zones/)">[Managing Zones]</para>
     /// <para type="link" uri="(https://cloud.google.com/dns/troubleshooting)">[Troubleshooting]</para>
@@ -234,10 +180,8 @@ namespace Google.PowerShell.Dns
     /// switch -Force will force removal of even non-empty ManagedZones (e.g., zones with non-NS/SOA type records).
     /// </para>
     /// <example>
+    ///   <code>PS C:\> Remove-GcdManagedZone -Project "testing" -Zone "test1" -Force</code>
     ///   <para>Delete the (non-empty) ManagedZone "test1" from the Project "testing."</para>
-    ///   <para><code>PS C:\> Remove-GcdManagedZone -Project "testing" -Zone "test1" -Force</code></para>
-    ///   <br></br>
-    ///   <para>(If successful, the command returns nothing.)</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/dns/zones/)">[Managing Zones]</para>
     /// <para type="link" uri="(https://cloud.google.com/dns/troubleshooting)">[Troubleshooting]</para>

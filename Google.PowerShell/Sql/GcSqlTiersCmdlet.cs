@@ -22,14 +22,8 @@ namespace Google.PowerShell.Sql
     /// Pricing information is available at https://cloud.google.com/sql/pricing.
     /// </para>
     /// <example>
-    ///   <para>
-    ///   Gets a list of tiers available for the project set in gcloud config.
-    ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Get-GcSqlTiers
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns a list of tiers available for your project.</para>
+    ///   <code>PS C:\> Get-GcSqlTiers</code>
+    ///   <para>Gets a list of tiers available for the project set in gcloud config.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlTiers")]

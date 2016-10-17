@@ -18,9 +18,11 @@ namespace Google.PowerShell.ComputeEngine
     /// your instances access Google Cloud Platform resources.
     /// </para>
     /// <example>
-    /// <code>PS C:\> New-GceServiceAccountConfig default -BigQuery -BigtableData Read</code>
-    /// <para>Creates a scope on the default service account that can make BigQuery queries and read bigtable
-    /// data.</para>
+    ///   <code>PS C:\> New-GceServiceAccountConfig default -BigQuery -BigtableData Read</code>
+    ///   <para>
+    ///   Creates a scope on the default service account that can make BigQuery queries and read
+    ///   bigtable data.
+    ///   </para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
     /// [Instance resource definition]
@@ -243,7 +245,7 @@ namespace Google.PowerShell.ComputeEngine
                 {"ServiceControl", true},
                 {"ServiceManagement", true},
                 {"Storage", ReadWrite.Read}
-};
+            };
 
         /// <summary>
         /// Maps parameter names to a sub dictionary. each sub dictionary maps parameter values to their scope

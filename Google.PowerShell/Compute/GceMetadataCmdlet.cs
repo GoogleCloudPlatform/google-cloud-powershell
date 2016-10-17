@@ -22,27 +22,30 @@ namespace Google.PowerShell.ComputeEngine
     /// [Metadata Documentation]
     /// </para>
     /// <example>
-    /// <code>PS C:\> $allMetadata = Get-GceMetadata -Recurse | ConvertFrom-Json</code>
-    /// <para>Gets all of the metadata and converts it from the given JSON to a PSCustomObject.</para>
+    ///   <code>PS C:\> $allMetadata = Get-GceMetadata -Recurse | ConvertFrom-Json</code>
+    ///   <para>
+    ///   Gets all of the metadata and converts it from the given JSON to a
+    ///   PSCustomObject.
+    ///   </para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> $hostName = Get-GceMetadata -Path "instance/hostname" </code>
-    /// <para>Gets the hostname of the instance.</para>
+    ///   <code>PS C:\> $hostName = Get-GceMetadata -Path "instance/hostname"</code>
+    ///   <para>Gets the hostname of the instance.</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> $customProjectMetadata = Get-GceMetadata -Path "project/attributes/customKey" </code>
-    /// <para>Gets the value of the custom metadata with key "customKey" placed in the project .</para>
+    ///   <code>PS C:\> $customProjectMetadata = Get-GceMetadata -Path "project/attributes/customKey"</code>
+    ///   <para>Gets the value of the custom metadata with key "customKey" placed in the project .</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> $metadata, $etag = Get-GceMetadata -AppendETag -Recurse</code>
-    /// <para>Gets the entire metadata tree, and the ETag of the version retrieved.</para>
+    ///   <code>PS C:\> $metadata, $etag = Get-GceMetadata -AppendETag -Recurse</code>
+    ///   <para>Gets the entire metadata tree, and the ETag of the version retrieved.</para>
     /// </example>
     /// <example>
-    /// <code>
-    ///     PS C:\> $newTags, $newEtag = Get-GceMetadata -Path "instance/tags" -AppendETag -WaitUpdate `
+    ///   <code>
+    ///   PS C:\> $newTags, $newEtag = Get-GceMetadata -Path "instance/tags" -AppendETag -WaitUpdate `
     ///                                     -LastETag $oldETag
-    /// </code>
-    /// <para>Waits for the metadata "instance/tags" to be updated by the server.</para>
+    ///   </code>
+    ///   <para>Waits for the metadata "instance/tags" to be updated by the server.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/storing-retrieving-metadata)">
     /// [Metadata server documentation]
@@ -72,13 +75,11 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        ///   When set, the value of the respone ETag will be appended to the output pipeline after the content.
+        /// When set, the value of the respone ETag will be appended to the output pipeline after the content.
         /// </para>
         /// <para type="description">
-        /// <code>PS C:\> $metadata, $etag = Get-GceMetadata -AppendETag -Recurse</code>
-        /// </para>
-        /// <para type="description">
-        ///   Gets the entire metadata tree, and the ETag of the version retrieved.
+        /// "$metadata, $etag = Get-GceMetadata -AppendETag -Recurse" gets the entire metadata tree, and the
+        /// ETag of the version retrieved.
         /// </para>
         /// </summary>
         [Parameter]

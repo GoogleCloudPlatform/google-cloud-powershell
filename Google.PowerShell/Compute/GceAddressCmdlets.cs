@@ -20,7 +20,7 @@ namespace Google.PowerShell.ComputeEngine
     /// <example>
     /// <code>Get-GceAddress</code>
     /// <para>
-    /// List all global and region addresses:
+    /// List all global and region addresses.
     /// </para>
     /// </example>
     /// <example>
@@ -193,7 +193,7 @@ namespace Google.PowerShell.ComputeEngine
     /// </example>
     /// <example>
     /// <code>Add-GceAddress $addressName -Global</code>
-    /// <para>Adds a global address to the default project:</para>
+    /// <para>Adds a global address to the default project.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/addresses#resource)">
     /// [Address resource definition]
@@ -318,18 +318,18 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// <example>
     /// <code>Remove-GceAddress $addressName</code>
-    /// <para>Removes an address of the default project and region:</para>
+    /// <para>Removes an address of the default project and region</para>
     /// </example>
     /// <example>
     /// <code>Remove-GceAddress $addressName -Global</code>
     /// <para>
-    /// Removes a global address of the default project:
+    /// Removes a global address of the default project.
     /// </para>
     /// </example>
     /// <example>
     /// <code>Get-GceAddress | Remove-GceAddress</code>
     /// <para>
-    /// Removes all global and region specific addresses of the default project:
+    /// Removes all global and region specific addresses of the default project.
     /// </para>
     /// </example>
     /// </summary>
