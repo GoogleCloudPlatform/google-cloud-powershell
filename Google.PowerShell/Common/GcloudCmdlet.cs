@@ -48,7 +48,7 @@ namespace Google.PowerShell.Common
         {
             return new BaseClientService.Initializer()
             {
-                HttpClientInitializer = new ActiveUserCredential(),
+                HttpClientInitializer = new AuthenticateWithSdkCredentialsExecutor(),
                 ApplicationName = "google-cloud-powershell",
             };
         }

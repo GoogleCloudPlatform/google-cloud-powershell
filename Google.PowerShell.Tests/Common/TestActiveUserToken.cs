@@ -35,7 +35,7 @@ namespace Google.PowerShell.Tests.Common
 
             Assert.IsTrue(
                 token.IsExpired(SystemClock.Default),
-                "Token should expire when the active user is changed,");
+                "Token should have expired when the active user was changed,");
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace Google.PowerShell.Tests.Common
             Assert.IsFalse(token.IsExpired(SystemClock.Default), "Token should not expire yet.");
 
             token.Issued = DateTime.Now.AddSeconds(-3591);
-            Assert.IsTrue(token.IsExpired(SystemClock.Default), "Token should expire 1 minute before.");
+            Assert.IsTrue(token.IsExpired(SystemClock.Default), "Token should have expired 1 minute before.");
         }
     }
 }

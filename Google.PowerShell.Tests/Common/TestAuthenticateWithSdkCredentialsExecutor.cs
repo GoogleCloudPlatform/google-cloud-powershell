@@ -8,26 +8,22 @@ using System.Threading;
 namespace Google.PowerShell.Tests.Common
 {
     [TestFixture]
-    /// <summary>
-    /// Assumes that the Cloud SDK is installed on the local machine and initialized.
-    /// 
-    /// </summary>
-    internal class TestActiveUserCredential
+    internal class TestAuthenticateWithSdkCredentialsExecutor
     {
-        private PropertyInfo TokenProperty = typeof(ActiveUserCredential).GetProperty(
+        private PropertyInfo tokenProperty = typeof(AuthenticateWithSdkCredentialsExecutor).GetProperty(
                 "Token",
                 BindingFlags.NonPublic | BindingFlags.Static);
-        private CancellationToken CancelToken = new CancellationToken();
+        private CancellationToken cancelToken = new CancellationToken();
 
         /// <summary>
         /// This test checks that an ActiveUserToken is created when a new
-        /// ActiveUserCredential is created.
+        /// AuthenticateWithSdkCredentialsExecutor is created.
         /// </summary>
         [Test]
-        public void TestActiveUserCredentialConstructor()
+        public void TestAuthenticateWithSdkCredentialsExecutorConstructor()
         {
-            ActiveUserCredential activeUserCred = new ActiveUserCredential();
-            ActiveUserToken activeUserToken = TokenProperty.GetValue(null, null) as ActiveUserToken;
+            AuthenticateWithSdkCredentialsExecutor activeUserCred = new AuthenticateWithSdkCredentialsExecutor();
+            ActiveUserToken activeUserToken = tokenProperty.GetValue(null, null) as ActiveUserToken;
             Assert.IsNotNull(activeUserToken, "ActiveUserToken should be created.");
         }
 
@@ -37,14 +33,14 @@ namespace Google.PowerShell.Tests.Common
         [Test]
         public void TestRefreshTokenAsync()
         {
-            ActiveUserCredential activeUserCred = new ActiveUserCredential();
-            ActiveUserToken activeUserToken = TokenProperty.GetValue(null, null) as ActiveUserToken;
+            AuthenticateWithSdkCredentialsExecutor activeUserCred = new AuthenticateWithSdkCredentialsExecutor();
+            ActiveUserToken activeUserToken = tokenProperty.GetValue(null, null) as ActiveUserToken;
 
-            bool refreshed = activeUserCred.RefreshTokenAsync(CancelToken).Result;
+            bool refreshed = activeUserCred.RefreshTokenAsync(cancelToken).Result;
 
             Assert.IsTrue(refreshed, "RefreshTokenAsync should return true.");
 
-            ActiveUserToken refreshedActiveUserToken = TokenProperty.GetValue(null, null) as ActiveUserToken;
+            ActiveUserToken refreshedActiveUserToken = tokenProperty.GetValue(null, null) as ActiveUserToken;
 
             Assert.IsTrue(
                 !Equals(activeUserToken.AccessToken, refreshedActiveUserToken.AccessToken),
@@ -57,10 +53,10 @@ namespace Google.PowerShell.Tests.Common
         [Test]
         public void TestGetAccessTokenForRequestAsync()
         {
-            ActiveUserCredential activeUserCred = new ActiveUserCredential();
-            ActiveUserToken activeUserToken = TokenProperty.GetValue(null, null) as ActiveUserToken;
+            AuthenticateWithSdkCredentialsExecutor activeUserCred = new AuthenticateWithSdkCredentialsExecutor();
+            ActiveUserToken activeUserToken = tokenProperty.GetValue(null, null) as ActiveUserToken;
 
-            string accessToken = activeUserCred.GetAccessTokenForRequestAsync(null, CancelToken).Result;
+            string accessToken = activeUserCred.GetAccessTokenForRequestAsync(null, cancelToken).Result;
 
             // The access token returned by GetAccessTokenForRequestAsync should come from token.
             Assert.IsTrue(
@@ -68,7 +64,7 @@ namespace Google.PowerShell.Tests.Common
                 "GetAccessTokenForRefreshAsync returns the wrong access token.");
 
             // The next call to GetAccessTokenForRequestAsync should returns the same token.
-            accessToken = activeUserCred.GetAccessTokenForRequestAsync(null, CancelToken).Result;
+            accessToken = activeUserCred.GetAccessTokenForRequestAsync(null, cancelToken).Result;
             Assert.IsTrue(
                 Equals(activeUserToken.AccessToken, accessToken),
                 "GetAccessTokenForRefreshAsync returns the wrong access token.");
@@ -81,25 +77,23 @@ namespace Google.PowerShell.Tests.Common
         [Test]
         public void TestGetAccessTokenExpiredByTime()
         {
-            ActiveUserCredential activeUserCred = new ActiveUserCredential();
-            ActiveUserToken activeUserToken = TokenProperty.GetValue(null, null) as ActiveUserToken;
+            AuthenticateWithSdkCredentialsExecutor activeUserCred = new AuthenticateWithSdkCredentialsExecutor();
+            ActiveUserToken activeUserToken = tokenProperty.GetValue(null, null) as ActiveUserToken;
 
-            // Make the token expired by time.
+            // Force the access token to expire.
             activeUserToken.Issued = DateTime.Now.AddSeconds(-activeUserToken.ExpiresInSeconds.Value);
             Assert.IsTrue(activeUserToken.IsExpired(SystemClock.Default), "ActiveUserToken should be expired");
 
-            string newAccessToken = activeUserCred.GetAccessTokenForRequestAsync(null, CancelToken).Result;
+            string newAccessToken = activeUserCred.GetAccessTokenForRequestAsync(null, cancelToken).Result;
             Assert.IsFalse(
                 Equals(activeUserToken.AccessToken, newAccessToken),
-                "GetAccessTokenForRefreshAsync should returns a new access token when the old one expired due to time."
-                );
+                "GetAccessTokenForRefreshAsync should returns a new access token when the old one expired due to time.");
 
             // The next call to GetAccessTokenForRequestAsync should returns the same token.
-            string anotherNewAccessToken = activeUserCred.GetAccessTokenForRequestAsync(null, CancelToken).Result;
+            string anotherNewAccessToken = activeUserCred.GetAccessTokenForRequestAsync(null, cancelToken).Result;
             Assert.IsTrue(
                 Equals(anotherNewAccessToken, newAccessToken),
-                "GetAccessTokenForRefreshAsync should returns a new access token when the old one expired due to time."
-                );
+                "GetAccessTokenForRefreshAsync should returns a new access token when the old one expired due to time.");
         }
 
         /// <summary>
@@ -109,10 +103,10 @@ namespace Google.PowerShell.Tests.Common
         [Test]
         public void TestGetAcessTokenExpiredByChangingUser()
         {
-            ActiveUserCredential activeUserCred = new ActiveUserCredential();
-            ActiveUserToken activeUserToken = TokenProperty.GetValue(null, null) as ActiveUserToken;
+            AuthenticateWithSdkCredentialsExecutor activeUserCred = new AuthenticateWithSdkCredentialsExecutor();
+            ActiveUserToken activeUserToken = tokenProperty.GetValue(null, null) as ActiveUserToken;
 
-            // Make the token expired by changing the active user
+            // Invalidate the token by changing the active user.
             FieldInfo activeUserField = typeof(ActiveUserToken).GetField(
                 "activeUser",
                 BindingFlags.NonPublic | BindingFlags.Instance);
@@ -120,18 +114,16 @@ namespace Google.PowerShell.Tests.Common
 
             Assert.IsTrue(activeUserToken.IsExpired(SystemClock.Default), "ActiveUserToken should be expired");
 
-            string newAccessToken = activeUserCred.GetAccessTokenForRequestAsync(null, CancelToken).Result;
+            string newAccessToken = activeUserCred.GetAccessTokenForRequestAsync(null, cancelToken).Result;
             Assert.IsFalse(
                 Equals(activeUserToken.AccessToken, newAccessToken),
-                "GetAccessTokenForRefreshAsync should returns a new access token when the old one expired due to time."
-                );
+                "GetAccessTokenForRefreshAsync should returns a new access token when the old one is invalidated.");
 
             // The next call to GetAccessTokenForRequestAsync should returns the same token.
-            string anotherNewAccessToken = activeUserCred.GetAccessTokenForRequestAsync(null, CancelToken).Result;
+            string anotherNewAccessToken = activeUserCred.GetAccessTokenForRequestAsync(null, cancelToken).Result;
             Assert.IsTrue(
                 Equals(anotherNewAccessToken, newAccessToken),
-                "GetAccessTokenForRefreshAsync should returns a new access token when the old one expired due to time."
-                );
+                "GetAccessTokenForRefreshAsync should returns a new access token when the old one is invalidated.");
         }
     }
 }

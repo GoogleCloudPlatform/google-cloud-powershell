@@ -28,10 +28,15 @@ namespace Google.PowerShell.Common
     /// OAuth 2.0 credential for accessing protected resources using an access token.
     /// This class will get the access token from "gcloud auth print-access-token".
     /// </summary>
-    public class ActiveUserCredential : ICredential, IHttpExecuteInterceptor, IHttpUnsuccessfulResponseHandler
+    public class AuthenticateWithSdkCredentialsExecutor : ICredential, IHttpExecuteInterceptor, IHttpUnsuccessfulResponseHandler
     {
-        private static ActiveUserToken token;
-        private static object lockObject = new object();
+        /// <summary>
+        /// This is a cache of the last call to "gcloud auth print-access-token".
+        /// If the current user hasn't changed, and the token hasn't expired, we reuse it
+        /// rather than launching gcloud again.
+        /// </summary>
+        private static ActiveUserToken s_token;
+        private static object s_lockObject = new Object();
 
         /// <summary>
         /// We just need a default flow for things like flow.AccessMethod.Intercept
@@ -47,36 +52,27 @@ namespace Google.PowerShell.Common
                     }
                 });
 
-        /// <summary>UserId is not important, it can be anything.</summary>
-        private readonly string userId = "userId";
-
         /// <summary>Gets or sets the token response which contains the access token.</summary>
-        private static ActiveUserToken Token
+        internal static ActiveUserToken Token
         {
             get
             {
-                lock (lockObject)
+                lock (s_lockObject)
                 {
-                    return token;
+                    return s_token;
                 }
             }
             set
             {
-                lock (lockObject)
+                lock (s_lockObject)
                 {
-                    token = value;
+                    s_token = value;
                 }
             }
         }
 
-        /// <summary>Gets the authorization code flow.</summary>
-        public IAuthorizationCodeFlow Flow
-        {
-            get { return flow; }
-        }
-
         /// <summary>Constructs a new credential instance.</summary>
-        public ActiveUserCredential()
+        public AuthenticateWithSdkCredentialsExecutor()
         {
             if (Token == null)
             {
@@ -93,8 +89,9 @@ namespace Google.PowerShell.Common
         /// </summary>
         public async Task InterceptAsync(HttpRequestMessage request, CancellationToken taskCancellationToken)
         {
-            var accessToken = await GetAccessTokenForRequestAsync(request.RequestUri.ToString(), taskCancellationToken).ConfigureAwait(false);
-            flow.AccessMethod.Intercept(request, Token.AccessToken);
+            Task<string> getAccessTokenTask = GetAccessTokenForRequestAsync(request.RequestUri.ToString(), taskCancellationToken);
+            string accessToken = await getAccessTokenTask.ConfigureAwait(false);
+            flow.AccessMethod.Intercept(request, accessToken);
         }
 
         #endregion
@@ -135,7 +132,7 @@ namespace Google.PowerShell.Common
                     throw new InvalidOperationException("The access token has expired but we can't refresh it");
                 }
             }
-            return token.AccessToken;
+            return s_token.AccessToken;
         }
 
         #endregion
@@ -164,7 +161,7 @@ namespace Google.PowerShell.Common
                 return false;
             }
 
-            await flow.RevokeTokenAsync(userId, Token.AccessToken, taskCancellationToken).ConfigureAwait(false);
+            await flow.RevokeTokenAsync("userId", Token.AccessToken, taskCancellationToken).ConfigureAwait(false);
             // We don't set the token to null, cause we want that the next request (without reauthorizing) will fail).
             return true;
         }
