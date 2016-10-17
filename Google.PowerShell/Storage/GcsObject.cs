@@ -105,7 +105,7 @@ namespace Google.PowerShell.CloudStorage
     /// </para>
     /// <para type="description">
     /// Uploads a local file or folder into a Google Cloud Storage bucket. You can set the value of the new object
-    /// directly with -Contents, read it from a file with -File, or define neither to create an empty object. You
+    /// directly with -Value, read it from a file with -File, or define neither to create an empty object. You
     /// can also upload an entire folder by giving the folder path to -Folder. However, you will not be able to
     /// use -ObjectName or -ContentType parameter in this case.
     /// Use this instead of Write-GcsObject when creating a new Google Cloud Storage object. You will get
@@ -168,7 +168,7 @@ namespace Google.PowerShell.CloudStorage
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ContentsFromString,
             Position = 2, ValueFromPipeline = true)]
-        public string Contents { get; set; } = "";
+        public string Value { get; set; } = "";
 
         /// <summary>
         /// <para type="description">
@@ -205,7 +205,7 @@ namespace Google.PowerShell.CloudStorage
         /// <para type="description">
         /// For file uploads, the type will be inferred based on the file extension, defaulting to
         /// "application/octet-stream" if no match is found. When passing object content via the
-        /// -Contents parameter, the type will default to "text/plain; charset=utf-8".
+        /// -Value parameter, the type will default to "text/plain; charset=utf-8".
         /// </para>
         /// <para>
         /// If this parameter is specified, will take precedence over any "Content-Type" value
@@ -289,7 +289,7 @@ namespace Google.PowerShell.CloudStorage
                 // We store string data as UTF-8, which is different from .NET's default encoding
                 // (UTF-16). But this simplifies several other issues.
                 objContentType = GetContentType(ContentType, metadataDict, UTF8TextMimeType);
-                byte[] contentBuffer = Encoding.UTF8.GetBytes(Contents);
+                byte[] contentBuffer = Encoding.UTF8.GetBytes(Value);
                 contentStream = new MemoryStream(contentBuffer);
             }
 
@@ -839,8 +839,14 @@ namespace Google.PowerShell.CloudStorage
     /// object that already exists. You will get a warning if the object does not exist.
     /// </para>
     /// <example>
+    ///   <code>PS C:\> "OK" | Write-GcsObject -Bucket "widget-co-logs" -ObjectName "status.txt"</code>
     ///   <para>Update the contents of the Storage Object with the string "OK".</para>
-    ///   <para><code>PS C:\> "OK" | Write-GcsObject -Bucket "widget-co-logs" -ObjectName "status.txt"</code></para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Get-GcsObject -Bucket "widget-co-logs" -ObjectName "status.txt" | Write-GcsObject -Value "OK"
+    ///   </code>
+    ///   <para>Update the contents of the Storage Object piped from Get-GcsObject.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommunications.Write, "GcsObject"), OutputType(typeof(Object))]
@@ -848,16 +854,35 @@ namespace Google.PowerShell.CloudStorage
     {
         private class ParameterSetNames
         {
-            public const string FromString = "FromString";
-            public const string FromFile = "FromFile";
+            // Write the content of a string to a GCS Object supplied directory to the cmdlet.
+            public const string ByObjectFromString = "ByObjectFromString";
+            // Write the content of a file to a GCS Object supplied directory to the cmdlet.
+            public const string ByObjectFromFile = "ByObjectFromFile";
+            // Write the content of a string to a GCS Object found using Bucket and ObjectName parameter.
+            public const string ByNameFromString = "ByNameFromString";
+            // Write the content of a file to a GCS Object found using Bucket and ObjectName parameter.
+            public const string ByNameFromFile = "ByNameFromFile";
         }
+
+        /// <summary>
+        /// <para type="description">
+        /// The Google Cloud Storage object to write to.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByObjectFromString,
+            Position = 0, Mandatory = true, ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByObjectFromFile,
+            Position = 0, Mandatory = true, ValueFromPipeline = true)]
+        [ValidateNotNull]
+        public Object InputObject { get; set; }
 
         /// <summary>
         /// <para type="description">
         /// Name of the bucket containing the object. Will also accept a Bucket object.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByNameFromString, Position = 0, Mandatory = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByNameFromFile, Position = 0, Mandatory = true)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Bucket { get; set; }
 
@@ -866,7 +891,8 @@ namespace Google.PowerShell.CloudStorage
         /// Name of the object to write to.
         /// </para>
         /// </summary>
-        [Parameter(Position = 1, Mandatory = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByNameFromString, Position = 1, Mandatory = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByNameFromFile, Position = 1, Mandatory = true)]
         public string ObjectName { get; set; }
 
         /// <summary>
@@ -874,16 +900,17 @@ namespace Google.PowerShell.CloudStorage
         /// Text content to write to the Storage object. Ignored if File is specified.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.FromString,
-            Position = 2, ValueFromPipeline = true)]
-        public string Contents { get; set; }
+        [Parameter(ParameterSetName = ParameterSetNames.ByNameFromString, ValueFromPipeline = true, Mandatory = false)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByObjectFromString, ValueFromPipeline = false, Mandatory = false)]
+        public string Value { get; set; }
 
         /// <summary>
         /// <para type="description">
         /// Local file path to read, writing its contents into Cloud Storage.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.FromFile)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByNameFromFile, Mandatory = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByObjectFromFile, Mandatory = true)]
         public string File { get; set; }
 
         /// <summary>
@@ -893,7 +920,7 @@ namespace Google.PowerShell.CloudStorage
         /// <para type="description">
         /// For file uploads, the type will be inferred based on the file extension, defaulting to
         /// "application/octet-stream" if no match is found. When passing object content via the
-        /// -Contents parameter, the type will default to "text/plain; charset=utf-8".
+        /// -Value parameter, the type will default to "text/plain; charset=utf-8".
         /// </para>
         /// <para>
         /// If this parameter is specified, will take precedence over any "Content-Type" value
@@ -942,23 +969,34 @@ namespace Google.PowerShell.CloudStorage
                 // Get the underlying byte representation of the string using the same encoding (UTF-16).
                 // So the data will be written in the same format it is passed, rather than converting to
                 // UTF-8 or UTF-32 when writen to Cloud Storage.
-                byte[] contentBuffer = Encoding.Unicode.GetBytes(Contents ?? "");
+                byte[] contentBuffer = Encoding.Unicode.GetBytes(Value ?? "");
                 contentStream = new MemoryStream(contentBuffer);
             }
 
             // Get the existing storage object so we can use its metadata. (If it does not exist, we will fall back to
             // default values.)
-            Object existingGcsObject = null;
+            Object existingGcsObject = InputObject;
             Dictionary<string, string> existingObjectMetadata = null;
 
             using (contentStream)
             {
                 try
                 {
-                    ObjectsResource.GetRequest getReq = Service.Objects.Get(Bucket, ObjectName);
-                    getReq.Projection = ObjectsResource.GetRequest.ProjectionEnum.Full;
+                    if (existingGcsObject == null)
+                    {
+                        ObjectsResource.GetRequest getReq = Service.Objects.Get(Bucket, ObjectName);
+                        getReq.Projection = ObjectsResource.GetRequest.ProjectionEnum.Full;
 
-                    existingGcsObject = getReq.Execute();
+                        existingGcsObject = getReq.Execute();
+                    }
+                    else
+                    {
+                        // Set these variables so the call to UploadGcsObject at the end of the function will succeed
+                        // when -Force is present and object does not exist.
+                        Bucket = existingGcsObject.Bucket;
+                        ObjectName = existingGcsObject.Name;
+                    }
+
                     existingObjectMetadata = ConvertToDictionary(existingGcsObject.Metadata);
                     // If the object already has metadata associated with it, we first PATCH the new metadata into the
                     // existing object. Otherwise we would reimplement "metadata merging" logic, and probably get it wrong.
