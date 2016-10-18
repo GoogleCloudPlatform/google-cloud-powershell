@@ -1,13 +1,8 @@
 /**
-reset5 © 2011 opensource.736cs.com MIT
-https://code.google.com/archive/p/reset5/
-*/
-html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,article,aside,audio,canvas,details,figcaption,figure,footer,header,hgroup,mark,menu,meter,nav,output,progress,section,summary,time,video{border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent;margin:0;padding:0;}body{line-height:1;}article,aside,dialog,figure,footer,header,hgroup,nav,section,blockquote{display:block;}nav ul{list-style:none;}ol{list-style:decimal;}ul{list-style:disc;}ul ul{list-style:circle;}blockquote,q{quotes:none;}blockquote:before,blockquote:after,q:before,q:after{content:none;}ins{text-decoration:underline;}del{text-decoration:line-through;}mark{background:none;}abbr[title],dfn[title]{border-bottom:1px dotted #000;cursor:help;}table{border-collapse:collapse;border-spacing:0;}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0;}input[type=submit],input[type=button],button{margin:0!important;padding:0!important;}input,select,a img{vertical-align:middle;}
-
-/**
  * Global styles.
  */
 html,body {
+    /** Theme background base - Google Grey 50 */
     background-color: #FAFAFA;
     height: 100%;
 }
@@ -343,7 +338,7 @@ pre {
     line-height: 28px;
     color: rgba(0,0,0,.87);
 
-    padding: 12px 12px;
+    padding: 12px;
     background-color: rgba(0,0,0, 0.04);
     margin-bottom: 16px;
 
@@ -352,9 +347,17 @@ pre {
 
 
 /** The the applyHtmlStyling filter for more information. */
-code { font-family: "Roboto Mono"; }
-code.text   { color: rgba( 67, 160,  71, .87); }
-code.cmdlet { color: rgba( 59, 120, 231, .87); }
+code {
+    font-family: "Roboto Mono";
+}
+
+code.text {
+    color: rgba( 67, 160,  71, .87);
+}
+
+code.cmdlet {
+    color: rgba( 59, 120, 231, .87);
+}
 
 #content-container h2 {
     font-family: "Roboto";
@@ -362,202 +365,4 @@ code.cmdlet { color: rgba( 59, 120, 231, .87); }
     line-height: 36pt;
     font-weight: 300;
     color: rgba(0,0,0,.54);
-}
-
-/**
- * #cmdlet-list
- * The table showing cmdlet names and their descriptions. 
- */
-#cmdlet-list table, th, td {
-    border: 1px solid rgba(0,0,0,0.08);
-    padding: 16px 12px 16px 12px;
-    width: 50%; min-width: 50%;
-}
-
-#cmdlet-list th {
-    text-align: left;
-
-    font-family: "Roboto";
-    font-size: 14px;
-    line-height: 26px;
-    font-weight: 500;
-    color: rgba(0,0,0,.87);
-
-    background-color: rgba(0,0,0,.04);
-}
-
-#cmdlet-list tr:hover {
-    background-color: rgba(0,0,0,.04);
-}
-
-#cmdlet-list .psr-cmdletName {
-    font-family: "Roboto Mono";
-    font-size: 16px;
-    line-height: 28px;
-    color: rgba(0,0,0,.87);
-}
-
-#cmdlet-list .psr-cmdletDescription {
-    font-family: "Roboto";
-    font-size: 14pt;
-    line-height: 26pt;
-    color: rgba(0,0,0,.87);
-}
-
-/**
- * Syntax-widget related styles.
- */
-.psr-syntaxWidget {
-    padding: 8px 8px;
-    background-color: rgba(0,0,0, 0.04);
-
-    font-family: "Roboto Mono";
-    font-size: 16pt;
-    line-height: 28pt;
-
-    margin-bottom: 16px;
-}
-
-.psr-syntaxWidget.selected {
-    outline: 2px solid rgba( 59, 120, 231, .50); 
-}
-
-.psr-syntaxWidget:hover {
-    outline: 2px solid rgba( 55,  71 , 79, .50);
-}
-
-/** A better way to have the .selected override the :hover behavior? */
-.psr-syntaxWidget.selected {
-    outline: 2px solid rgba( 59, 120, 231, .50);
-    background-color: rgba(161, 194, 250,.06); 
-}
-
-/** Hide the parameter set name unless you hover over the syntax widget or it is selected. */
-.psr-syntaxWidget .parameterSetName {
-    font-family: "Roboto";
-    font-size: 12pt;
-    line-height: 16pt;
-    font-style: italic;
-    color: rgba(0,0,0,.54);
-    padding: 8px 8px;
-
-    float: right;
-    display: none;
-}
-
-.psr-syntaxWidget.selected .parameterSetName {
-    display: inline-block;
-}
-
-.psr-syntaxWidget:hover .parameterSetName {
-    display: inline-block;
-} 
-
-.psr-syntaxWidget .cmdletName   { color: rgba( 55,  71 , 79, .87); }
-.psr-syntaxWidget .reqParameter { color: rgba( 59, 120, 231, .87); }
-.psr-syntaxWidget .typeName     { color: rgba( 67, 160,  71, .87); }
-
-/**
- * #cmdlet-parameters
- * Table showing all of the cmdlet's parameters.
- */
-#cmdlet-parameters table, th, td {
-    border: 1px solid rgba(0,0,0,0.08);
-    padding: 16px 12px 16px 12px;
-}
-
-#cmdlet-parameters tr:hover {
-    background-color: rgba(0,0,0,.04);
-}
-
-#cmdlet-parameters tr.inSelectedParamSet {
-    /** Theme row active - Google Blue 200 */
-    background-color: rgba(161, 194, 250,.06);
-}
-
-#cmdlet-parameters tr.notInSelectedParamSet {
-    color: rgba(0,0,0,.47);
-}
-
-#cmdlet-parameters td.name {
-    font-family: "Roboto Mono";
-    font-size: 16px;
-    line-height: 28px;
-    color: rgba(0,0,0,.87);
-
-    width: 25%;
-    min-width: 75%;
-}
-
-#cmdlet-parameters td.name {
-    color: rgba(0,0,0,.65);
-}
-
-#cmdlet-parameters .notInSelectedParamSet td.name {
-    color: rgba(0,0,0,.25);
-}
-
-#cmdlet-parameters td.description {
-    font-family: "Roboto";
-    font-size: 14pt;
-    line-height: 26pt;
-    color: rgba(0,0,0,.87);
-
-    width: 80%;
-    min-width: 80%;
-}
-
-#cmdlet-parameters .notInSelectedParamSet td.description {
-    color: rgba(0,0,0,.25);
-}
-
-#cmdlet-parameters td.description .metadata {
-    font-style: italic;
-    color: rgba(0,0,0,.54);
-}
-
-/** We can't have both float, since the metadata div won't take up any space. */
-#cmdlet-parameters td.description .metadata .type     { text-align: left;  }
-#cmdlet-parameters td.description .metadata .optional { float: right; }
-
-/**
- * #cmdlet-examples
- * List of examples.
- */
-#cmdlet-examples .psr-exampleCodeContainer {
-    font-family: "Roboto Mono";
-    font-size: 16px;
-    line-height: 28px;
-    color: rgba(0,0,0,.87);
-
-    padding: 12px 12px;
-    background-color: rgba(0,0,0, 0.04);
-}
-
-#cmdlet-examples .psr-example {
-    padding-bottom: 16px;
-}
-
-/**
- * #cmdlet-links
- * Additional links relevant to the cmdlet.
- */
-#cmdlet-links {
-    font-family: "Roboto";
-    font-size: 14pt;
-    line-height: 26pt;
- 
-    /* Theme primary - Google Blue 600 */
-    color: #3B78E7;
-}
-
-#cmdlet-links a:hover {
-    text-decoration: underline;
-}
-
-#cmdlet-links a:active,
-#cmdlet-links a:visited {
-    /* Theme attribute, variable - Purple 500 */
-    /* color: #433944 -- looks off. Use default instead. */
-    color: #551A8B;
 }

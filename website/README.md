@@ -18,7 +18,7 @@ and then rerun the script. The JSON file will be edited in-place.
 The easiest way to run the website locally for testing is to launch it using
 the Google App Engine dev appserver. The `app.yaml` file contains the necessary
 URL handling schenanigans so that the website will work the same as when it is
-hosed on GitHub Pages.
+hosted on GitHub Pages.
 
 On Windows:
 

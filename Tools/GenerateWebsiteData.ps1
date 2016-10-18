@@ -19,11 +19,6 @@ if (-Not (Test-Path $modulePath)) {
 Import-Module $modulePath
 $cmdlets = Get-Command -Module "Google.PowerShell"
 
-function ConvertToString($obj)
-{
-    ($obj | Out-String).replace("`r`n","`n").Trim(@("`n"[0]))
-}
-
 # Collapses an array of objects with a Text property into an array of strings.
 # We return $null rather than @() to work around a quirk of PowerShell JSON conversion.
 function CollapseTextArray($textObjs) {
@@ -70,7 +65,11 @@ function GetLinks ($docObj) {
         $linkObj = @{ "text" = $link.linkText; "uri" = $uri }
         $links += $linkObj
     }
-    return $links
+
+    if ($links.Length -gt 0) {
+        return $links
+    }
+    return $null
 }
 
 # The PowerShell objects returned from Get-Help are missing a few, key pieces of data. This method
@@ -215,8 +214,8 @@ ForEach ($cmdlet in $cmdlets) {
         "description" = CollapseTextArray($helpObj.Description)
         "syntax"      = $helpObj.Syntax.syntaxItem
         "parameters"  = $helpObj.parameters.parameter
-        "inputs"      = ConvertToString($helpObj.inputTypes)
-        "outputs"     = ConvertToString($helpObj.returnValues)
+        "inputs"      = $helpObj.inputTypes
+        "outputs"     = $helpObj.returnValues
         "examples"    = GetExamples($helpObj.examples.example)
         "links"       = GetLinks($helpObj)
     }

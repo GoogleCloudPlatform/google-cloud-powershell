@@ -9,16 +9,17 @@ app.controller('ContentController', function($scope, $http, $routeParams) {
   // The header to be displayed on the content page. This isn't referenced in
   // .ng files because of a quirk of the current design. (How the header's
   // background spans the entire page, not just the "content" section.)
-  this.contentHeader = '';
+  var defaultContentHeader = "Google Cloud Tools for PowerShell";
+  this.contentHeader = null;
   // Error message to display in case of an error loading data.
   this.errorMessage = null;
 
   // Current product, resource, and cmdlet. Some may be null. e.g.
   // "Google Cloud Storage" > "GcsObject" > "Get-GcsObject". However, we always set the values,
   // because in the cases where they are not relevant, the .ng file won't require them.
-  this.currentProduct = '';
-  this.currentResource = '';
-  this.currentCmdlet = '';
+  this.currentProduct = null;
+  this.currentResource = null;
+  this.currentCmdlet = null;
 
   // Multi-level dictionary containing ALL cmdlet documentation. First keyed by product, then
   // keyed by resources, finally keyed by cmdlet names, mapping to cmdlet documentation objects.
@@ -117,7 +118,7 @@ app.controller('ContentController', function($scope, $http, $routeParams) {
     // Hierarchy of resources from Home > Product > Resource > Cmdlet.
     this.contentHeader =
         this.currentCmdlet || this.currentResource ||
-        this.currentProduct || "Google Cloud Tools for PowerShell";
+        this.currentProduct || defaultContentHeader;
 
     this.productInfo = null;
     this.resourceInfo = null;
@@ -163,6 +164,7 @@ app.controller('ContentController', function($scope, $http, $routeParams) {
             'products.resources.cmdlets.syntax.parameter',
             'products.resources.cmdlets.parameters',
             'products.resources.cmdlets.parameters.description',
+            'products.resources.cmdlets.links',
             'products.resources.cmdlets.examples'
         ];
         for (var i = 0; i < pathsToUpdate.length; i++) {
