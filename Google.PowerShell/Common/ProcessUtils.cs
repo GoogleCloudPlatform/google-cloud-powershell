@@ -74,8 +74,7 @@ namespace Google.PowerShell.Common
     }
 
     /// <summary>
-    /// This class defines helper methods for starting sub-processes and getting the output from
-    /// the processes, including a helper to parse the output as json.
+    /// This class defines helper methods for starting sub-processes and getting the output from the processes.
     /// </summary>
     public static class ProcessUtils
     {

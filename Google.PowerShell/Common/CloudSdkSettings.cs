@@ -23,13 +23,13 @@ namespace Google.PowerShell.Common
 
         /// <summary>
         /// Environment variable which points to the location of the current configuration file.
-        /// This overrides the user configuration file as well as the globa lcinstallation properties file.
+        /// This overrides the user configuration file as well as the global installation properties file.
         /// </summary>
         private const string CloudSdkConfigVariable = "CLOUDSDK_CONFIG";
 
         /// <summary>
         /// Environment variable which stores the current active config.
-        /// This overrides value found in active_config file.
+        /// This overrides value found in active_config file if present.
         /// </summary>
         private const string CloudSdkActiveConfigNameVariable = "CLOUDSDK_ACTIVE_CONFIG_NAME";
 
@@ -48,7 +48,7 @@ namespace Google.PowerShell.Common
         /// <summary>Name of the file containing the anonymous client ID.</summary>
         private const string ClientIDFileName = ".metricsUUID";
 
-        private static string _installationPropertiesPath;
+        private static string s_installationPropertiesPath;
 
         // Prevent instantiation. Should just be a static utility class.
         private CloudSdkSettings() { }
@@ -60,12 +60,12 @@ namespace Google.PowerShell.Common
         {
             get
             {
-                if (string.IsNullOrWhiteSpace(_installationPropertiesPath))
+                if (string.IsNullOrWhiteSpace(s_installationPropertiesPath))
                 {
-                    _installationPropertiesPath = GCloudWrapper.GetInstallationPropertiesPath().Result;
+                    s_installationPropertiesPath = GCloudWrapper.GetInstallationPropertiesPath().Result;
                 }
 
-                return _installationPropertiesPath;
+                return s_installationPropertiesPath;
             }
         }
 
@@ -103,20 +103,18 @@ namespace Google.PowerShell.Common
 
         /// <summary>
         /// Returns the current config directory.
-        /// If CLOUDSDK_CONFIG is set, we will use that as the config directory.
+        /// If CLOUDSDK_CONFIG environment variable is set, we will use that as the config directory.
         /// If not, we will use the config directory from AppData.
         /// </summary>
         public static string GetCurrentConfigurationDirectory()
         {
             string cloudConfigPath = Environment.GetEnvironmentVariable(CloudSdkConfigVariable);
-
             if (!string.IsNullOrWhiteSpace(cloudConfigPath))
             {
                 return cloudConfigPath;
             }
 
             cloudConfigPath = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
-
             if (!string.IsNullOrWhiteSpace(cloudConfigPath))
             {
                 cloudConfigPath = Path.Combine(cloudConfigPath, CloudSDKConfigDirectoryWindows);
@@ -132,7 +130,6 @@ namespace Google.PowerShell.Common
         public static string GetCurrentConfigurationFilePath()
         {
             string cloudConfigDir = GetCurrentConfigurationDirectory();
-
             if (cloudConfigDir == null || !Directory.Exists(cloudConfigDir))
             {
                 return null;
@@ -158,11 +155,11 @@ namespace Google.PowerShell.Common
         public static string GetSettingsValue(string settingName)
         {
             string userConfigFile = GetCurrentConfigurationFilePath();
-            string userConfigSetting = GetSettingsValueFromFile(settingName, userConfigFile);
+            string userConfigSetting = GetSettingsValueFromFile(userConfigFile, settingName);
 
             if (string.IsNullOrWhiteSpace(userConfigSetting))
             {
-                userConfigSetting = GetSettingsValueFromFile(settingName, InstallationPropertiesPath);
+                userConfigSetting = GetSettingsValueFromFile(InstallationPropertiesPath, settingName);
             }
 
             return userConfigSetting;
@@ -171,7 +168,7 @@ namespace Google.PowerShell.Common
         /// <summary>
         /// Retrieves the setting with the given name from a config file.
         /// </summary>
-        private static string GetSettingsValueFromFile(string settingName, string configFile)
+        private static string GetSettingsValueFromFile(string configFile, string settingName)
         {
             if (configFile == null)
             {

@@ -111,9 +111,10 @@
     <Compile Include="Common\GCloudCmdletTests.cs" />
     <Compile Include="Common\CloudSdkSettingsTests.cs" />
     <Compile Include="Common\MeasurementServiceProtocolTests.cs" />
-    <Compile Include="Common\TestActiveUserCredential.cs" />
+    <Compile Include="Common\TestAuthenticateWithSdkCredentialsExecutor.cs" />
     <Compile Include="Common\TestActiveUserToken.cs" />
     <Compile Include="Common\TestGCloudWrapper.cs" />
+    <Compile Include="Common\TestProcessUtils.cs" />
     <Compile Include="Compute\InstanceMetadataConverterTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

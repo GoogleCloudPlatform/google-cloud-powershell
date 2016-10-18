@@ -36,13 +36,14 @@ namespace Google.PowerShell.Common
         /// rather than launching gcloud again.
         /// </summary>
         private static ActiveUserToken s_token;
-        private static object s_lockObject = new Object();
+        private static readonly SemaphoreSlim s_tokenLock = new SemaphoreSlim(1);
 
         /// <summary>
-        /// We just need a default flow for things like flow.AccessMethod.Intercept
-        /// or flow.RevokeTokenAsync.
+        /// Returns the authorization code flow. 
+        /// This is used to revoke token (in RevokeTokenAsync)
+        /// and intercept request with the access token (in InterceptAsync).
         /// </summary>
-        private readonly IAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow(
+        public IAuthorizationCodeFlow Flow { get; } = new GoogleAuthorizationCodeFlow(
                 new GoogleAuthorizationCodeFlow.Initializer()
                 {
                     ClientSecrets = new ClientSecrets()
@@ -51,34 +52,6 @@ namespace Google.PowerShell.Common
                         ClientSecret = "clientSecrets"
                     }
                 });
-
-        /// <summary>Gets or sets the token response which contains the access token.</summary>
-        internal static ActiveUserToken Token
-        {
-            get
-            {
-                lock (s_lockObject)
-                {
-                    return s_token;
-                }
-            }
-            set
-            {
-                lock (s_lockObject)
-                {
-                    s_token = value;
-                }
-            }
-        }
-
-        /// <summary>Constructs a new credential instance.</summary>
-        public AuthenticateWithSdkCredentialsExecutor()
-        {
-            if (Token == null)
-            {
-                Token = GCloudWrapper.GetAccessToken().Result;
-            }
-        }
 
         #region IHttpExecuteInterceptor
 
@@ -91,7 +64,7 @@ namespace Google.PowerShell.Common
         {
             Task<string> getAccessTokenTask = GetAccessTokenForRequestAsync(request.RequestUri.ToString(), taskCancellationToken);
             string accessToken = await getAccessTokenTask.ConfigureAwait(false);
-            flow.AccessMethod.Intercept(request, accessToken);
+            Flow.AccessMethod.Intercept(request, accessToken);
         }
 
         #endregion
@@ -102,8 +75,7 @@ namespace Google.PowerShell.Common
         {
             if (args.Response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                return !Object.Equals(Token.AccessToken, flow.AccessMethod.GetAccessToken(args.Request))
-                    || await RefreshTokenAsync(args.CancellationToken).ConfigureAwait(false);
+                return await RefreshTokenAsync(args.CancellationToken).ConfigureAwait(false);
             }
 
             return false;
@@ -125,13 +97,20 @@ namespace Google.PowerShell.Common
 
         public virtual async Task<string> GetAccessTokenForRequestAsync(string authUri = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (Token.IsExpired(flow.Clock))
+            if (s_token == null)
+            {
+                await RefreshTokenAsync(cancellationToken).ConfigureAwait(false);
+                return s_token.AccessToken;
+            }
+
+            if (s_token.IsExpiredOrInvalid())
             {
                 if (!await RefreshTokenAsync(cancellationToken).ConfigureAwait(false))
                 {
                     throw new InvalidOperationException("The access token has expired but we can't refresh it");
                 }
             }
+
             return s_token.AccessToken;
         }
 
@@ -142,10 +121,16 @@ namespace Google.PowerShell.Common
         /// </summary>
         public async Task<bool> RefreshTokenAsync(CancellationToken taskCancellationToken)
         {
-            var newToken = await GCloudWrapper.GetAccessToken();
-
-            Token = newToken;
-            return true;
+            await s_tokenLock.WaitAsync();
+            try
+            {
+                s_token = await GCloudWrapper.GetAccessToken(taskCancellationToken);
+                return true;
+            }
+            finally
+            {
+                s_tokenLock.Release();
+            }
         }
 
         /// <summary>
@@ -156,12 +141,12 @@ namespace Google.PowerShell.Common
         /// <returns><c>true</c> if the token was revoked successfully.</returns>
         public async Task<bool> RevokeTokenAsync(CancellationToken taskCancellationToken)
         {
-            if (Token == null)
+            if (s_token == null)
             {
                 return false;
             }
 
-            await flow.RevokeTokenAsync("userId", Token.AccessToken, taskCancellationToken).ConfigureAwait(false);
+            await Flow.RevokeTokenAsync("userId", s_token.AccessToken, taskCancellationToken).ConfigureAwait(false);
             // We don't set the token to null, cause we want that the next request (without reauthorizing) will fail).
             return true;
         }

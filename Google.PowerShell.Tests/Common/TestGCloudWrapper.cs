@@ -1,5 +1,4 @@
 ﻿using NUnit.Framework;
-using Google.Apis.Util;
 using Google.PowerShell.Common;
 
 namespace Google.PowerShell.Tests.Common
@@ -9,7 +8,7 @@ namespace Google.PowerShell.Tests.Common
     /// Assumes that the Cloud SDK is installed on the local machine and initialized.
     /// 
     /// </summary>
-    internal class TestGCloudWrapper
+    public class TestGCloudWrapper
     {
         /// <summary>
         /// Test that GetInstallationPropertiesPath returns a correct path.
@@ -21,19 +20,6 @@ namespace Google.PowerShell.Tests.Common
             Assert.IsNotNullOrEmpty(installedPath);
 
             Assert.IsTrue(System.IO.File.Exists(installedPath), "Installation Path should points to a file");
-        }
-
-        /// <summary>
-        /// Test that GetAccessToken returns a valid token.
-        /// </summary>
-        [Test]
-        public void TestGetAccessToken()
-        {
-            ActiveUserToken token = GCloudWrapper.GetAccessToken().Result;
-            Assert.IsNotNull(token);
-            Assert.IsNotNullOrEmpty(token.AccessToken, "Token returned by GetAccessToken should have an access token.");
-            Assert.IsNotNull(token.Issued, "Token returned by GetAccessToken should have an Issued DateTime.");
-            Assert.IsFalse(token.IsExpired(SystemClock.Default), "Token returned by GetAccessToken should be valid.");
         }
     }
 }
