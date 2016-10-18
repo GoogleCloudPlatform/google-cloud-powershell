@@ -33,7 +33,7 @@ namespace Google.PowerShell.Tests.Common
             Assert.IsNotNull(token);
             Assert.IsNotNullOrEmpty(token.AccessToken, "Token returned by GetAccessToken should have an access token.");
             Assert.IsNotNull(token.ExpiredTime, "Token returned by GetAccessToken should have an Issued DateTime.");
-            Assert.IsFalse(token.IsExpiredOrInvalid(), "Token returned by GetAccessToken should be valid.");
+            Assert.IsFalse(token.IsExpired, "Token returned by GetAccessToken should be valid.");
         }
     }
 }

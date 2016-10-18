@@ -12,14 +12,9 @@ namespace Google.PowerShell.Common
     public class ActiveUserToken
     {
         /// <summary>
-        /// The current active user that corresponds to this token.
+        /// The user that this token corresponds to.
         /// </summary>
-        private string activeUser;
-
-        /// <summary>
-        /// This function will return the current active user.
-        /// </summary>
-        internal Func<string> getActiveUser;
+        public string User;
 
         /// <summary>The access token issued by the authorization server.</summary>
         public string AccessToken { get; internal set; }
@@ -32,35 +27,54 @@ namespace Google.PowerShell.Common
         public DateTime ExpiredTime { get; internal set; }
 
         /// <summary>
-        /// Constructs a new token by parsing the userTokenJson.
-        /// GetActiveUser will be using CloudSdkSettings.GetSettingsValue("account").
+        /// Returns <c>true</c> if the token is expired or it's going to be expired in the next minute.
         /// </summary>
-        public ActiveUserToken(string userTokenJson) : this(userTokenJson, () => CloudSdkSettings.GetSettingsValue("account"))
+        public bool IsExpired
+        {
+            get
+            {
+                if (AccessToken == null)
+                {
+                    return true;
+                }
+
+                if (ExpiredTime == DateTime.MaxValue)
+                {
+                    return false;
+                }
+
+                return ExpiredTime.AddSeconds(-60) <= DateTime.UtcNow;
+            }
+        }
+
+        /// <summary>
+        /// Constructs a new token by parsing userCredentialJson.
+        /// User will be set to the current active user.
+        /// </summary>
+        public ActiveUserToken(string userCredentialJson) :
+            this(userCredentialJson, CloudSdkSettings.GetSettingsValue("account"))
         {
         }
 
         /// <summary>
-        /// Construct a new token by parsing the userTokenJson.
-        /// The activeUser will be computed by calling getActiveUser.
+        /// Construct a new token by parsing userCredentialJson.
         /// </summary>
-        public ActiveUserToken(string userCredentialJson, Func<string> getActiveUser)
+        public ActiveUserToken(string userCredentialJson, string user)
         {
-            this.getActiveUser = getActiveUser;
-            activeUser = this.getActiveUser();
-
+            User = user;
             JToken parsedCredentialJson = JObject.Parse(userCredentialJson);
             JToken accessTokenJson = parsedCredentialJson.SelectToken("access_token");
 
             if (accessTokenJson == null || accessTokenJson.Type != JTokenType.String)
             {
-                throw new InvalidDataException("Credential Json should contain access token key.");
+                throw new InvalidDataException("Credential JSON should contain access token key.");
             }
 
             AccessToken = accessTokenJson.Value<string>();
 
             JToken tokenExpiryJson = parsedCredentialJson.SelectToken("token_expiry");
 
-            // Token from GCE does not have expiry.
+            // Service account credentials do not expire.
             if (tokenExpiryJson == null || tokenExpiryJson.Type == JTokenType.Null)
             {
                 ExpiredTime = DateTime.MaxValue;
@@ -71,7 +85,7 @@ namespace Google.PowerShell.Common
 
                 if (tokenExpiry == null)
                 {
-                    throw new InvalidDataException("Credential Json contains an invalid token_expiry.");
+                    throw new InvalidDataException("Credential JSON contains an invalid token_expiry.");
                 }
 
                 ExpiredTime = new DateTime(
@@ -87,58 +101,18 @@ namespace Google.PowerShell.Common
         }
 
         /// <summary>
-        /// Returns <c>true</c> if the token is expired or it's going to be expired in the next minute
-        /// or if the active user has changed.
+        /// Represents a token expiry object returned from gcloud auth print-access-token.
         /// </summary>
-        public bool IsExpiredOrInvalid()
+        private class TokenExpiry
         {
-            if (AccessToken == null)
-            {
-                return true;
-            }
-
-            string currentAccount = getActiveUser();
-            bool activeUserChanged = !string.Equals(currentAccount, activeUser);
-
-            if (activeUserChanged)
-            {
-                return true;
-            }
-
-            if (ExpiredTime == DateTime.MaxValue)
-            {
-                return false;
-            }
-
-            return ExpiredTime.AddSeconds(-60) <= DateTime.UtcNow;
+            [JsonProperty("microsecond")]  internal int MicroSecond { get; set; }
+            [JsonProperty("second")]       internal int Second { get; set; }
+            [JsonProperty("minute")]       internal int Minute { get; set; }
+            [JsonProperty("hour")]         internal int Hour { get; set; }
+            [JsonProperty("day")]          internal int Day { get; set; }
+            [JsonProperty("month")]        internal int Month { get; set; }
+            [JsonProperty("year")]         internal int Year { get; set; }
         }
-    }
-
-    /// <summary>
-    /// Represents a token expiry object returned from gcloud auth print-access-token.
-    /// </summary>
-    internal class TokenExpiry
-    {
-        [JsonProperty("microsecond")]
-        internal int MicroSecond { get; set; }
-
-        [JsonProperty("second")]
-        internal int Second { get; set; }
-
-        [JsonProperty("minute")]
-        internal int Minute { get; set; }
-
-        [JsonProperty("hour")]
-        internal int Hour { get; set; }
-
-        [JsonProperty("day")]
-        internal int Day { get; set; }
-
-        [JsonProperty("month")]
-        internal int Month { get; set; }
-
-        [JsonProperty("year")]
-        internal int Year { get; set; }
     }
 }
 

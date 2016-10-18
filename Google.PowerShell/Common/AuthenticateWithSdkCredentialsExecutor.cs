@@ -103,7 +103,8 @@ namespace Google.PowerShell.Common
                 return s_token.AccessToken;
             }
 
-            if (s_token.IsExpiredOrInvalid())
+            string currentCloudSdkUser = CloudSdkSettings.GetSettingsValue("account");
+            if (s_token.IsExpired || s_token.User != currentCloudSdkUser)
             {
                 if (!await RefreshTokenAsync(cancellationToken).ConfigureAwait(false))
                 {
@@ -126,6 +127,10 @@ namespace Google.PowerShell.Common
             {
                 s_token = await GCloudWrapper.GetAccessToken(taskCancellationToken);
                 return true;
+            }
+            catch (Exception)
+            {
+                return false;
             }
             finally
             {
