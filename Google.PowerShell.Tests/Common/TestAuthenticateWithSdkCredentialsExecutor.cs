@@ -18,7 +18,7 @@ namespace Google.PowerShell.Tests.Common
         /// Sets the s_token field to null before each test.
         /// </summary>
         [SetUp]
-        public void init()
+        public void Init()
         {
             tokenProperty.SetValue(null, null);
         }
