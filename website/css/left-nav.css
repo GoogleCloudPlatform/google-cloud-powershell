@@ -1,0 +1,101 @@
+/**
+ * CSS styles relating to the cmdlet-explorer directive. It is identified ruby
+ * the #left-nav ID.
+ */
+
+/**
+ * #left-nav, #left-nav-top, #left-nav-bottom
+ * The left nav pane, browsing cmdlets. Broken into two sections.
+ */
+#left-nav {
+    background: #FAFAFA;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    /** Can't specify "width" because #content-container has width at 100%. */
+    min-width: 336px; max-width: 336px;
+}
+
+/**
+ * When the screen is small, show #left-nav on top of the content. The user
+ * will be able to show/hide the nav by clicking a hamburger icon.
+ */
+@media only screen and (max-width: 1160px) {
+    #header #header-icon {
+        background-image: url("/google-cloud-powershell/img/menu-icon.png");
+    }
+
+    #left-nav {
+        float: left;
+        position: absolute;
+        left: 0;
+        top: 68px;
+
+        /* Because the #content-container 's border-left no longer applies. */
+        border-right: 1px solid rgba(0,0,0,0.08);
+    }
+}
+
+.psr-navRow {
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.psr-navRow {
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 24px;
+
+    display: flex;
+}
+
+.psr-navRow:hover {
+    background-color: rgba(0,0,0,0.04);
+}
+
+.psr-navRow.level2 {
+    padding-left: 48px;
+}
+
+.psr-navRow.level3 {
+    padding-left: 108px;
+}
+
+.psr-navRow.noBottomSeparator {
+    border-bottom: none;
+}
+
+/* But put a line for the next psr-navRow. */
+.psr-navRow-cmdlet:last-of-sequence {
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.psr-navRow.highlight {
+    background-color: rgba(0,0,0,0.04);
+}
+
+.psr-navIcon {
+    width: 24px;  min-width: 24px;
+    height: 24px; min-height: 24px;
+
+    background-repeat: no-repeat;
+    background-position: center; 
+}
+
+.psr-navIcon.collapsed     { background-image: url("/google-cloud-powershell/img/node-unexpended.png");    }
+.psr-navIcon.expanded      { background-image: url("/google-cloud-powershell/img/node-expanded.png");      }
+.psr-navIcon.sourcecode    { background-image: url("/google-cloud-powershell/img/github-logo.png");        }
+.psr-navIcon.feedback      { background-image: url("/google-cloud-powershell/img/feedback.png");           }
+.psr-navIcon.stackoverflow { background-image: url("/google-cloud-powershell/img/stackoverflow-logo.png"); }
+
+.psr-navText {
+    font-family: "Roboto";
+    font-size: 16px;
+    line-height: 28px;
+    font-weight: 400;
+    color: rgba(0, 0, 0, .54);
+
+    /** For overflow behavior on long cmdlet names. */
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    
+    padding-left: 12px;
+}
