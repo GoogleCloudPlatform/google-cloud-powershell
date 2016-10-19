@@ -1,0 +1,11 @@
+<div ng-if="syntax">
+  <div class="psr-syntaxWidget" ng-class="{selected: syntaxCtrl.isSelected}" ng-click="syntaxCtrl.onClick(syntax.parameterSet)">
+    <p class="parameterSetName">parameter set {{ syntax.parameterSet }}</<p>
+    <p class="cmdletName">{{ syntax.name }}</p>
+    <!-- All on one line to avoid spurrious spaces, e.g. "[ -Foo <Bar> ]" -->
+    <p ng-repeat="parameter in syntax.parameter">
+      &nbsp;&nbsp;<span ng-if="syntaxCtrl.showBracket(parameter, 'beforeName')">[</span><span ng-class="{reqParameter: parameter.required}">-{{ parameter.name }}</span><span ng-if="syntaxCtrl.showBracket(parameter, 'afterName')">]</span><span ng-if="parameter.type.name != 'System.Management.Automation.SwitchParameter'" class="typeName"> &lt;{{ parameter.type.name | stripNamespace }}&gt;</span><span ng-if="syntaxCtrl.showBracket(parameter, 'afterType')">]</span>
+    </p>
+    <p>&nbsp;&nbsp;[&lt;CommonParameters&gt;]</p>
+  </div>
+</div>

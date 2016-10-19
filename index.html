@@ -1,37 +1,64 @@
-<!doctype html>
-<html>
-
+﻿<!DOCTYPE html>
+<html lang="en" ng-app="powershellSite">
 <head>
+  <title>Google Cloud Tools for PowerShell Cmdlet Reference</title>
   <meta charset="utf-8">
-  <title>Google Cloud PowerShell</title>
-  <meta name="description" content="Documentation for Google Cloud Platform PowerShell cmdlets">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta content="initial-scale=1, minimum-scale=1, width=device-width" name="viewport">
+  <meta name="description" content="Google Cloud Tools for PowerShell cmdlet reference">
+  
   <link rel="shortcut icon" href="https://cloud.google.com/images/gcp-favicon.ico">
-  <link rel="stylesheet" href="src/vendor-d362a4bbd8.css">
-  <link rel="stylesheet" href="src/app-a103c713b2.css">
+  <link rel="canonical" href="//googlecloudplatform.github.io/google-cloud-powershell/">
+
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Open+Sans:100,300,400,600,700,800" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Roboto:100,300,400,500" />
+  <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Roboto+Mono" />
+
+  <link rel="stylesheet" type="text/css" href="/google-cloud-powershell/css/reset.css" />
+  <link rel="stylesheet" type="text/css" href="/google-cloud-powershell/css/base.css" />
+  <link rel="stylesheet" type="text/css" href="/google-cloud-powershell/css/left-nav.css" />
+  <link rel="stylesheet" type="text/css" href="/google-cloud-powershell/css/cmdlet.css" />
+
+  <base href="/google-cloud-powershell/">
+
+  <script src="/google-cloud-powershell/js/angular.min.js"></script>
+  <script src="/google-cloud-powershell/js/angular-route.min.js"></script>
+  <script src="/google-cloud-powershell/js/angular-sanitize.min.js"></script>
+
+  <script src="/google-cloud-powershell/js/app/app.js"></script>
+  <script src="/google-cloud-powershell/js/app/controllers/content-controller.js"></script>
+  <script src="/google-cloud-powershell/js/app/controllers/cmdlet-explorer-controller.js"></script>
+  <script src="/google-cloud-powershell/js/app/controllers/parameters-widget-controller.js"></script>
+  <script src="/google-cloud-powershell/js/app/controllers/syntax-widget-controller.js"></script>
 </head>
+<body ng-app="powershellSite">
+  <div id="header">
+    <div id="header-icon"></div>
+    <a href="/google-cloud-powershell/#/">
+      <p class="psr-headerText">Cloud Tools for PowerShell</p>
+    </a>
+  </div>
 
-<body>
-  <!--[if lt IE 10]>
- <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
- <![endif]-->
-  <main ui-view="" autoscroll="true"></main><script src="src/vendor-d6198d67f2.js"></script><script src="src/app-780bf1f09e.js"></script><script>
-      (function() {
-        var $injector = angular.injector(['ng']);
-        var $http = $injector.get('$http');
+  <div class="psr-main" ng-controller="ContentController as contentCtrl">
+    <div id="left-nav">
+      <cmdlet-explorer documentation-obj="contentCtrl.cmdletDocumentation.products"></cmdlet-explorer>
+    </div>
+    <div id="content-container">
+      <div id="content-header">
+        <div class="psr-contentHeaderContainer psr-contentBlock">
+          <h1>{{ contentCtrl.contentHeader }}</p>
+        </div>
+      </div>
+      <div id="content" class="psr-contentBlock">
+        <div ng-if="!contentCtrl.errorMessage">
+          <ng-view></ng-view>
+        </div>
+        <div ng-if="contentCtrl.errorMessage">
+          <p>{{ contentCtrl.errorMessage }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        $http.get('manifest.json')
-          .then(function(response) {
-            angular
-              .module('gcloud.manifest', [])
-              .constant('manifest', response.data);
-
-            angular.element(document)
-              .ready(function() {
-                angular.bootstrap(document, ['gcloud']);
-              });
-          });
-      }());
-    </script></body>
-
+  <script src="/google-cloud-powershell/js/app/small-screen-menu-behavior.js"></script>
+</body>
 </html>
