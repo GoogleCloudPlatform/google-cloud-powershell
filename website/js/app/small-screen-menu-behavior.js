@@ -31,29 +31,31 @@
     // Register the toggle show/hide behavior.
     headerIcon.addEventListener('click', function() {
         if (isScreenSmall()) {
-        var navVisibility = isNavVisible();
-        setNavDisplay(!navVisibility);
+            var navVisibility = isNavVisible();
+            setNavDisplay(!navVisibility);
         }      
     });
 
     // Handle window resize so the nav is always visible when possible.
     window.addEventListener('resize', function() {
         if (!isScreenSmall()) {
-        setNavDisplay(true);
+            setNavDisplay(true);
         }
     });
 
     // Start in the collapsed state if the window starts small (e.g. on mobile).
     window.addEventListener('load', function() {
         if (isScreenSmall()) {
-        setNavDisplay(false);
+            setNavDisplay(false);
         }
     });
 
     // Enable clicking outside of the nav (e.g. content) to close it.
+    // TODO(chrsmith): Also hide the nav when the user selects a content page
+    // to view. e.g. they click text on #left-nav but not the arrow icon.
     contentContainer.addEventListener('click', function() {
         if (isScreenSmall()) {
-        setNavDisplay(false);
+            setNavDisplay(false);
         }
     });
 
