@@ -54,6 +54,57 @@
         };
     });
 
+    // Directive for referencing a known cmdlet. The result has the expected CSS styling and a
+    // link to the cmdlet's documentation. e.g. <cmdlet-ref name="Get-GceInstance"></cmdlet-ref>
+    app.directive('cmdletRef', function() {
+        return {
+            restrict: 'E',
+            template: '<span ng-bind-html="name | cmdletRef"></span>',
+            scope: {
+                name: '@'
+            }
+        };
+    });
+
+    // Filter for converting a cmdletname into reference HTML, e.g. "Get-GcsObject" into
+    // <a href="..."><code class="cmdlet">Get-GcsObject</code></a>. Only useful if used in
+    // conjunction with ng-bind-html. See the cmdletRef directive.
+    function getGenerateCmdletRefFn($rootScope) {
+        return function(cmdletName) {
+            // Replace '-' with a non-breaking hyphen.
+            var revisedCmdletName = cmdletName.replace('-', '&#8209;');
+            var cmdletRefHtml = '<code class="cmdlet">' + revisedCmdletName + '</code>';
+            // If the cmdlet documentation has been attached to $rootScope, see if we can
+            // create a link to the actual cmdlet. (See content-controller.js.) Note: This
+            // is a no-op if the element with applyHtmlStyling being applied is housed
+            // within another anchor element.
+            if (!$rootScope.cmdletDocumentation) {
+                return cmdletRefHtml;
+            }
+
+            var docs = $rootScope.cmdletDocumentation;
+            for (var prodIdx = 0; prodIdx < docs.products.length; prodIdx++) {
+                var product = docs.products[prodIdx];
+                for (var resIdx = 0; resIdx < product.resources.length; resIdx++) {
+                    var resource = docs.products[prodIdx].resources[resIdx];
+                    for (var cIdx = 0; cIdx < resource.cmdlets.length; cIdx++) {
+                        var cmdlet = docs.products[prodIdx].resources[resIdx].cmdlets[cIdx];
+                        if (cmdlet.name == cmdletName) {
+                            return (
+                                '<a href="/google-cloud-powershell/#/'
+                                    + product.name
+                                    + '/' + resource.name
+                                    + '/' + cmdlet.name + '">'
+                                    + cmdletRefHtml + '</a>');
+                        }
+                    }
+                }
+            }
+            return cmdletRefHtml;
+        };
+    };
+    app.filter('cmdletRef', getGenerateCmdletRefFn);
+
     // Filter to extract the simplified name from a full-qualified .NET type name. e.g.
     // "System.String" to "String".
     app.filter('stripNamespace', function() {
@@ -90,7 +141,7 @@
         var cmdletReferencePattern = /[A-Z]([\w]+)-[A-Z]([\w]+)/g
 
         return function(rawInput) {
-            if (rawInput == undefined) return;
+            if (rawInput == undefined ) return;
             var lines = rawInput;
             if (!Array.isArray(rawInput)) {
                 lines = [ rawInput ];
@@ -111,40 +162,7 @@
             }
 
             // Use regular expressions to find/modify cmdlet references.
-            // TODO(chrsmith): Go for the gold and create a link to the actual cmdlet.
-            // This will require that we have a search capability on the site.
-            html = html.replace(cmdletReferencePattern, function(cmdletName) {
-                // Replace '-' with a non-breaking hyphen.
-                var revisedCmdletName = cmdletName.replace('-', '&#8209;');
-                var cmdletRefHtml = '<code class="cmdlet">' + revisedCmdletName + '</code>';
-                // If the cmdlet documentation has been attached to $rootScope, see if we can
-                // create a link to the actual cmdlet. (See content-controller.js.) Note: This
-                // is a no-op if the element with applyHtmlStyling being applied is housed
-                // within another anchor element.
-                if (!$rootScope.cmdletDocumentation) {
-                    return cmdletRefHtml;
-                } else {
-                    var docs = $rootScope.cmdletDocumentation;
-                    for (var prodIdx = 0; prodIdx < docs.products.length; prodIdx++) {
-                        var product = docs.products[prodIdx];
-                        for (var resIdx = 0; resIdx < product.resources.length; resIdx++) {
-                            var resource = docs.products[prodIdx].resources[resIdx];
-                            for (var cIdx = 0; cIdx < resource.cmdlets.length; cIdx++) {
-                                var cmdlet = docs.products[prodIdx].resources[resIdx].cmdlets[cIdx];
-                                if (cmdlet.name == cmdletName) {
-                                    return (
-                                        '<a href="/google-cloud-powershell/#/'
-                                            + product.name
-                                            + '/' + resource.name
-                                            + '/' + cmdlet.name + '">'
-                                            + cmdletRefHtml + '</a>');
-                                }
-                            }
-                        }
-                    }
-                    return cmdletRefHtml;
-                }
-            });
+            html = html.replace(cmdletReferencePattern, getGenerateCmdletRefFn($rootScope));
             return html;
         };
     });
