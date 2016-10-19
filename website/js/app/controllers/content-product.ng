@@ -34,13 +34,12 @@
       project and zone, then those parameters are optional.
     </p>
     <pre>
-# Define the project name you want to create the instance in
-# NOTE: if this is not defined, the command will attempt to use the default project
-# entered in the gcloud initalization, if any.
+# Define the project name you want to create the instance in. If not set, the
+# command will use the current default project specified by gcloud config.
 $project = "&lt;your-project-name&gt;"
 
-# Define the configuration for an instance called "instance-name"
-$config = New-GceInstanceConfig "instance-name" -MachineType "n1-standard-4" `
+# Define the configuration for an instance called "webserver-1"
+$config = New-GceInstanceConfig "webserver-1" -MachineType "n1-standard-4" `
           -DiskImage (Get-GceImage -Family "windows-2012-r2")
 
 # Attempt to create the instance based on the configuration
@@ -158,8 +157,8 @@ Get-GcdManagedZone -Project $project</pre>
       a change request to the zone using the <code>Add-GcdChange</code> cmdlet. 
     </p>
     <pre>
-# Create a new A-type resource record for dnsexample.com.
-# You should have an IPv4 address (e.g., "107.1.23.134") to point the domain to. 
+# Create a new A-type resource record for "dnsexample.com." and point it to
+# an IPv4 address.
 $ipv4 = "107.1.23.134"
 $ARecord = New-GcdResourceRecordSet -Name $dnsSuffix -Rrdata $ipv4 -Type "A"
 

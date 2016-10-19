@@ -99,9 +99,11 @@ namespace Google.PowerShell.Dns
     /// </para>
     /// <example>   
     ///   <code>
-    ///     $newARecord = New-GcdResourceRecordSet -Name "gcloudexample1.com." -Rrdata "104.1.34.167"
+    ///     $newARecord = New-GcdResourceRecordSet -Name "gcloudexample1.com." `
+    ///         -Rrdata "104.1.34.167"
     ///     $oldCNAMERecord = (Get-GcdResourceRecordSet -Zone "test1" -Filter "CNAME")[0]
-    ///     Add-GcdChange -Project "testing" -Zone "test1" -Add $newARecord -Remove $oldCNAMERecord
+    ///     Add-GcdChange -Project "proj" -Zone "test1" `
+    ///         -Add $newARecord -Remove $oldCNAMERecord
     ///   </code>
     ///   <para> 
     ///   Add a new Change that adds a new A-type ResourceRecordSet, $newARecord, and removes an existing CNAME-type 
@@ -112,7 +114,7 @@ namespace Google.PowerShell.Dns
     /// <example>
     ///   <code>
     ///   PS C:\> $change2 = Get-GcdChange -Project "testing" -Zone "test1" -ChangeId 2
-    ///   PS C:\> Add-GcdChange -Project "testing" -Zone "test1" -ChangeRequest $change2
+    ///   PS C:\> Add-GcdChange -Project "proj" -Zone "test1" -ChangeRequest $change2
     ///   </code>
     ///   <para>
     ///   Add the Change request $change2 to the ManagedZone "test1" in the Project "testing," where $change2 is a 

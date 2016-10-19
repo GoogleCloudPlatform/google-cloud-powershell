@@ -16,10 +16,6 @@ h {
     font-weight: inherit;
 }
 
-pre {
-    overflow: auto;
-}
-
 /**
  * Main content.
  */
@@ -170,7 +166,7 @@ pre {
     background-color: rgba(0,0,0, 0.04);
     margin-bottom: 16px;
 
-    overflow: auto;
+    white-space:pre-wrap;
 }
 
 /* .psr-linkTable - A table containing singular rows of links. */
