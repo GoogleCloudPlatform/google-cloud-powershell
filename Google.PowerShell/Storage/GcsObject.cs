@@ -114,15 +114,16 @@ namespace Google.PowerShell.CloudStorage
     /// </para>
     /// <example>
     ///   <code>
-    ///   PS C:\> New-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt" `
-    ///   >>    -File "C:\logs\log-000.txt"
+    ///   PS C:\> New-GcsObject -Bucket "widget-co-logs" -File "C:\logs\log-000.txt"
     ///   </code>
-    ///   <para>Upload a local log file to GCS.</para>
+    ///   <para>
+    ///   Upload a local file to GCS. The -ObjectName parameter will default to the file name, "log-000.txt".
+    ///   </para>
     /// </example>
     /// <example>
     ///   <code>
     ///   PS C:\> "Hello, World!" | New-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt" `
-    ///   >> -Metadata @{ "logsource" = $env:computername }
+    ///       -Metadata @{ "logsource" = $env:computername }
     ///   </code>
     ///   <para>Pipe a string to a a file on GCS. Sets a custom metadata value.</para>
     /// </example>
@@ -140,7 +141,7 @@ namespace Google.PowerShell.CloudStorage
         {
             public const string ContentsFromString = "ContentsFromString";
             public const string ContentsFromFile = "ContentsFromFile";
-            public const string ContentsFromFolder = "ContentsFromFolder";
+            public const string UploadFolder = "UploadFolder";
         }
 
         /// <summary>
@@ -155,11 +156,14 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
-        /// The name of the created Cloud Storage object. Ignored if Folder is specified.
+        /// The name of the created Cloud Storage object.
+        /// </para>
+        /// <para type="description">
+        /// If uploading a file, will default to the name of the file if not set.
         /// </para>
         /// </summary>
         [Parameter(Position = 1, Mandatory = true, ParameterSetName = ParameterSetNames.ContentsFromString)]
-        [Parameter(Position = 1, Mandatory = true, ParameterSetName = ParameterSetNames.ContentsFromFile)]
+        [Parameter(Position = 1, Mandatory = false, ParameterSetName = ParameterSetNames.ContentsFromFile)]
         public string ObjectName { get; set; }
 
         /// <summary>
@@ -185,7 +189,7 @@ namespace Google.PowerShell.CloudStorage
         /// Local path to the folder to upload.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = true, ParameterSetName = ParameterSetNames.ContentsFromFolder)]
+        [Parameter(Position = 2, Mandatory = true, ParameterSetName = ParameterSetNames.UploadFolder)]
         [ValidateNotNullOrEmpty]
         public string Folder { get; set; }
 
@@ -195,7 +199,7 @@ namespace Google.PowerShell.CloudStorage
         /// applied to every object which is uploaded.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ContentsFromFolder)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UploadFolder)]
         [ValidateNotNullOrEmpty]
         public string ObjectNamePrefix { get; set; }
 
@@ -208,9 +212,9 @@ namespace Google.PowerShell.CloudStorage
         /// "application/octet-stream" if no match is found. When passing object content via the
         /// -Value parameter, the type will default to "text/plain; charset=utf-8".
         /// </para>
-        /// <para>
+        /// <para type="description">
         /// If this parameter is specified, will take precedence over any "Content-Type" value
-        /// specifed by the Metadata parameter.
+        /// specifed by the -Metadata parameter.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ContentsFromFile)]
@@ -229,8 +233,8 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
-        /// Provide metadata for the Cloud Storage object. Some values, such as Content-Type, Content-MD5, ETag have a
-        /// special meaning. You can also specify custom values that have application-specific meaning.
+        /// Provide metadata for the Cloud Storage object(s). Note that some values, such as "Content-Type", "Content-MD5",
+        /// "ETag" have a special meaning to Cloud Storage.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
@@ -254,7 +258,7 @@ namespace Google.PowerShell.CloudStorage
             string objContentType = null;
             Stream contentStream = null;
 
-            if (ParameterSetName == ParameterSetNames.ContentsFromFolder)
+            if (ParameterSetName == ParameterSetNames.UploadFolder)
             {
                 // User gives us the path to a folder, we will resolve the path and upload the contents of that folder.
                 // Have to take care of / and \ in the end of the directory path because Path.GetFileName will return
@@ -270,11 +274,11 @@ namespace Google.PowerShell.CloudStorage
                 {
                     gcsObjectNamePrefix = Path.Combine(ObjectNamePrefix, gcsObjectNamePrefix);
                 }
-                // TODO(quoct): Add a progress indicator if there are too many files.
                 UploadDirectory(resolvedFolderPath, metadataDict, ConvertLocalToGcsFolderPath(gcsObjectNamePrefix));
                 return;
             }
 
+            // ContentsFromFile and ContentsFromString case.
             if (ParameterSetName == ParameterSetNames.ContentsFromFile)
             {
                 objContentType = GetContentType(ContentType, metadataDict, InferContentType(File));
@@ -283,6 +287,7 @@ namespace Google.PowerShell.CloudStorage
                 {
                     throw new FileNotFoundException("File not found.", qualifiedPath);
                 }
+                ObjectName = ObjectName ?? Path.GetFileName(File);
                 contentStream = new FileStream(qualifiedPath, FileMode.Open);
             }
             else
@@ -326,6 +331,7 @@ namespace Google.PowerShell.CloudStorage
             Stream contentStream = new MemoryStream();
             UploadStreamToGcsObject(contentStream, objContentType, metadataDict, gcsObjectNamePrefix);
 
+            // TODO(quoct): Add a progress indicator if there are too many files.
             foreach (string file in Directory.EnumerateFiles(directory))
             {
                 string fileName = Path.GetFileName(file);

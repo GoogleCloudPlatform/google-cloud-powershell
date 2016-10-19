@@ -123,17 +123,19 @@ Describe "New-GcsObject" {
     }
 
     It "will not overwrite existing objects without -Force" {
-        $objectName = "existing-object"
-
         $tempFile = [System.IO.Path]::GetTempFileName()
         "existing-gcs-object" | Out-File $tempFile -Encoding ascii -NoNewline
 
         # Create
-        New-GcsObject $bucket $objectName -File $tempFile
+        $newObj = New-GcsObject $bucket -File $tempFile
+
+        # Verify that the -ObjectName will default to the file name if not specified (only for file upload case).
+        $objectName = Split-Path -Leaf $tempFile
+        $newObj.Name | Should BeExactly $objectName
 
         # Confirm we won't clobber
         { New-GcsObject $bucket $objectName -File $tempFile } `
-            | Should Throw "Storage object 'existing-object' already exists"
+            | Should Throw "Storage object '$objectName' already exists"
 
         # Confirm -Force works
         "updated-object-contents" | Out-File $tempFile -Encoding ascii -NoNewline
@@ -800,8 +802,8 @@ Describe "Test-GcsObject" {
 }
 
 Describe "Copy-GcsObject" {
-    $bucket = "gcps-copy-object-testing"
     $r = Get-Random
+    $bucket = "gcps-copy-object-testing-$r"
 
     It "Should fail to read non-existant bucket" {
         { Copy-GcsObject -SourceBucket $bucket -SourceObject "test-source" $bucket "test-dest" } |
