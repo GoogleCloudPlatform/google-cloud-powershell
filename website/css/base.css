@@ -183,11 +183,11 @@ table.psr-linkTable,
 
 table.psr-linkTable,
 .psr-linkTable th {
-    padding: 16px 12px 16px 12px;
+    padding: 16px 12px;
 }
 
 .psr-linkTable td > a {
-    padding: 16px 12px 16px 12px;
+    padding: 16px 12px;
     display: block;
     height: 100%;
 }
