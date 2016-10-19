@@ -1,6 +1,11 @@
 // When the window is small, #header-icon becomes a toggleable menu icon which will show/hide
 // #left-nav. (Which will then float on top of #content-container.) This file implements the
 // behavior of the menu icon.
+//
+// TODO(chrsmith): If this file gets any more complicated, consider moving it into a proper
+// Angular controller. (e.g. ContentController or a new NavigationController.) Registering
+// a watch on document.body.clientWidth should be sufficient to obviating a lot of the code
+// here.
 (function() {
     var headerIcon = document.getElementById('header-icon');
     var leftNav = document.getElementById('left-nav');
