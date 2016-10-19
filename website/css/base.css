@@ -210,3 +210,7 @@ code { font-family: "Roboto Mono"; }
 code.code   { color: rgba(  0,   0,  60, .87); }
 code.cmdlet { color: rgba( 59, 120, 231, .87); }
 code.text   { color: rgba( 67, 160,  71, .87); }
+
+a > code.cmdlet:hover {
+    text-decoration: underline;
+}

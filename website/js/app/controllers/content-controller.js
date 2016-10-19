@@ -5,7 +5,7 @@ var app = angular.module('powershellSite');
  * We load all cmdlet documentation (a giant JSON file) and populate fields based what is currently
  * being displayed.
  */
-app.controller('ContentController', function($scope, $http, $routeParams) {
+app.controller('ContentController', function($scope, $rootScope, $http, $routeParams) {
   // The header to be displayed on the content page. This isn't referenced in
   // .ng files because of a quirk of the current design. (How the header's
   // background spans the entire page, not just the "content" section.)
@@ -27,6 +27,8 @@ app.controller('ContentController', function($scope, $http, $routeParams) {
   // TODO(chrsmith): As this file gets larger and larger, break it into multiple pieces. Perhaps
   // loading cmdlet-specific JSON objects.
   this.cmdletDocumentation = null;
+  // We also attach the documentation object to $rootScope.cmdletDocumentation once loaded. This
+  // way we don't need to redo all the parsing/processing of the JSON.
 
   // Information about the product, resource, or cmdlet. To be set in _loadContent after both
   // cmdletDocumentation and $routeParams have been set.
@@ -114,6 +116,9 @@ app.controller('ContentController', function($scope, $http, $routeParams) {
   // Call this after this.cmdletDocumentation has been set.
   this._loadContent = function() {
     if (!this.cmdletDocumentation) return;
+    // Attach the cmdlet documentation to the $rootScope so we can access it from filters. This
+    // enables us to create hyperlinks whenever we see reference to cmdlets.
+    $rootScope.cmdletDocumentation = this.cmdletDocumentation;
 
     // Hierarchy of resources from Home > Product > Resource > Cmdlet.
     this.contentHeader =
@@ -143,42 +148,47 @@ app.controller('ContentController', function($scope, $http, $routeParams) {
     this.cmdletInfo = this.resourceInfo.cmdlets.find(findElementWithName(this.currentCmdlet));
   };
 
-  // TODO(chrsmith): Add "loading" and "error" objects for printing error messages.
-  // Register with promise.then(onSuccess, onError).
-  var promise = $http.get('/google-cloud-powershell/data/cmdletsFull.json');
-  promise.then(
-      function(res) {
-        this.cmdletDocumentation = res.data;
-        // Products have a name "Google Cloud Storage" and shortName "google-cloud-storage".
-        // To simplify our own usage, use shortName as name, and name as longName.
-        for (var i = 0; i < this.cmdletDocumentation.products.length; i++) {
-          var product = this.cmdletDocumentation.products[i];
-          product['longName'] = product.name;
-          product['name'] = product.shortName;
-        }    
+  // After we load the cmdlet doc, we cache it in $rootScope. So even through controller reloads we
+  // don't need to reissue the HTTP request, parse the JSON, update the objects, etc.
+  if ($rootScope.cmdletDocumentation) {
+    this.cmdletDocumentation = $rootScope.cmdletDocumentation;
+    this._loadContent();
+  } else {
+    var promise = $http.get('/google-cloud-powershell/data/cmdletsFull.json', { cache: true });
+    promise.then(
+        function(res) {
+          this.cmdletDocumentation = res.data;
+          // Products have a name "Google Cloud Storage" and shortName "google-cloud-storage".
+          // To simplify our own usage, use shortName as name, and name as longName.
+          for (var i = 0; i < this.cmdletDocumentation.products.length; i++) {
+            var product = this.cmdletDocumentation.products[i];
+            product['longName'] = product.name;
+            product['name'] = product.shortName;
+          }
 
-        // PowerShell is dropping single-element arrays, which causes problems in controllers.
-        // We we explicitly force the following fields to be arrays or null if empty.
-        var pathsToUpdate = [
-            'products.resources.cmdlets.syntax',
-            'products.resources.cmdlets.syntax.parameter',
-            'products.resources.cmdlets.parameters',
-            'products.resources.cmdlets.parameters.description',
-            'products.resources.cmdlets.links',
-            'products.resources.cmdlets.examples'
-        ];
-        for (var i = 0; i < pathsToUpdate.length; i++) {
-          this._makeArray(pathsToUpdate[i], this.cmdletDocumentation);
-        }
+          // PowerShell is dropping single-element arrays, which causes problems in controllers.
+          // We we explicitly force the following fields to be arrays or null if empty.
+          var pathsToUpdate = [
+              'products.resources.cmdlets.syntax',
+              'products.resources.cmdlets.syntax.parameter',
+              'products.resources.cmdlets.parameters',
+              'products.resources.cmdlets.parameters.description',
+              'products.resources.cmdlets.links',
+              'products.resources.cmdlets.examples'
+          ];
+          for (var i = 0; i < pathsToUpdate.length; i++) {
+            this._makeArray(pathsToUpdate[i], this.cmdletDocumentation);
+          }
 
-        this._loadContent();
-      }.bind(this),
-      function(errRes) {
-        this.cmdletDocumentation = null;
-        // Ensure class members are nulled out.
-        this._loadContent();
+          this._loadContent();
+        }.bind(this),
+        function(errRes) {
+          this.cmdletDocumentation = null;
+          // Ensure class members are nulled out.
+          this._loadContent();
 
-        this.contentHeader = 'Error';
-        this.errorMessage = 'There was an error loading the cmdlet documentation.';
-      }.bind(this));
+          this.contentHeader = 'Error';
+          this.errorMessage = 'There was an error loading the cmdlet documentation.';
+        }.bind(this));
+  };
 });

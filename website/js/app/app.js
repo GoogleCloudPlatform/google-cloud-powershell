@@ -84,7 +84,7 @@
     // - Converts arrays of strings to separate <p> elements.
     // - Puts quoted strings in <code class="text"> elements.
     // - Puts references to cmdlets in <code class="cmdlet"> elements.
-    app.filter('applyHtmlStyling', function() {
+    app.filter('applyHtmlStyling', function($rootScope) {
         // Outside of the function to avoid recompiling them every time the filter is invoked.
         var quotedStringPattern = /([^"]*)"([^"]+)"([^"]*)/g;
         var cmdletReferencePattern = /[A-Z]([\w]+)-[A-Z]([\w]+)/g
@@ -116,7 +116,34 @@
             html = html.replace(cmdletReferencePattern, function(cmdletName) {
                 // Replace '-' with a non-breaking hyphen.
                 var revisedCmdletName = cmdletName.replace('-', '&#8209;');
-                return '<code class="cmdlet">' + revisedCmdletName + '</code>';
+                var cmdletRefHtml = '<code class="cmdlet">' + revisedCmdletName + '</code>';
+                // If the cmdlet documentation has been attached to $rootScope, see if we can
+                // create a link to the actual cmdlet. (See content-controller.js.) Note: This
+                // is a no-op if the element with applyHtmlStyling being applied is housed
+                // within another anchor element.
+                if (!$rootScope.cmdletDocumentation) {
+                    return cmdletRefHtml;
+                } else {
+                    var docs = $rootScope.cmdletDocumentation;
+                    for (var prodIdx = 0; prodIdx < docs.products.length; prodIdx++) {
+                        var product = docs.products[prodIdx];
+                        for (var resIdx = 0; resIdx < product.resources.length; resIdx++) {
+                            var resource = docs.products[prodIdx].resources[resIdx];
+                            for (var cIdx = 0; cIdx < resource.cmdlets.length; cIdx++) {
+                                var cmdlet = docs.products[prodIdx].resources[resIdx].cmdlets[cIdx];
+                                if (cmdlet.name == cmdletName) {
+                                    return (
+                                        '<a href="/google-cloud-powershell/#/'
+                                            + product.name
+                                            + '/' + resource.name
+                                            + '/' + cmdlet.name + '">'
+                                            + cmdletRefHtml + '</a>');
+                                }
+                            }
+                        }
+                    }
+                    return cmdletRefHtml;
+                }
             });
             return html;
         };
