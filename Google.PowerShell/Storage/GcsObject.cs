@@ -115,14 +115,14 @@ namespace Google.PowerShell.CloudStorage
     /// <example>
     ///   <code>
     ///   PS C:\> New-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt" `
-    ///   >>    -File "C:\logs\log-000.txt"
+    ///       -File "C:\logs\log-000.txt"
     ///   </code>
     ///   <para>Upload a local log file to GCS.</para>
     /// </example>
     /// <example>
     ///   <code>
     ///   PS C:\> "Hello, World!" | New-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt" `
-    ///   >> -Metadata @{ "logsource" = $env:computername }
+    ///       -Metadata @{ "logsource" = $env:computername }
     ///   </code>
     ///   <para>Pipe a string to a a file on GCS. Sets a custom metadata value.</para>
     /// </example>
@@ -208,9 +208,9 @@ namespace Google.PowerShell.CloudStorage
         /// "application/octet-stream" if no match is found. When passing object content via the
         /// -Value parameter, the type will default to "text/plain; charset=utf-8".
         /// </para>
-        /// <para>
+        /// <para type="description">
         /// If this parameter is specified, will take precedence over any "Content-Type" value
-        /// specifed by the Metadata parameter.
+        /// specifed by the -Metadata parameter.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ContentsFromFile)]
@@ -229,8 +229,8 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
-        /// Provide metadata for the Cloud Storage object. Some values, such as Content-Type, Content-MD5, ETag have a
-        /// special meaning. You can also specify custom values that have application-specific meaning.
+        /// Provide metadata for the Cloud Storage object. Note that some values, such as "Content-Type", "Content-MD5",
+        /// "ETag" have a special meaning to Cloud Storage.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
