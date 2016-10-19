@@ -19,29 +19,29 @@
   <div ng-show="cmdletExplorerCtrl.isProductSelected(product.name)" ng-repeat="resource in product.resources | orderBy:'name'">
 
     <a href="/google-cloud-powershell/#/{{ product.name }}/{{ resource.name }}">
-    <div
+      <div
           class="psr-navRow level2"
           ng-class="{highlight: cmdletExplorerCtrl.isHighlighted('resource', resource.name)}"
           ng-click="cmdletExplorerCtrl.selectResource(resource.name)">      
-      <div
-          class="psr-navIcon"
-          ng-class="{collapsed: !cmdletExplorerCtrl.isResourceSelected(resource.name), expanded: cmdletExplorerCtrl.isResourceSelected(resource.name)}">
+        <div
+            class="psr-navIcon"
+            ng-class="{collapsed: !cmdletExplorerCtrl.isResourceSelected(resource.name), expanded: cmdletExplorerCtrl.isResourceSelected(resource.name)}">
+        </div>
+        <div class="psr-navText">
+          {{ resource.name }}
+        </div>
       </div>
-      <div class="psr-navText">
-        {{ resource.name }}
-      </div>
-    </div>
     </a>
 
     <!-- Individual cmdlets. -->
     <div ng-show="cmdletExplorerCtrl.isResourceSelected(resource.name)" ng-repeat="cmdlet in resource.cmdlets | orderBy:'name'">
-      <div
-          class="psr-navRow level3"
-          ng-class="{highlight: cmdletExplorerCtrl.isHighlighted('cmdlet', cmdlet.name), noBottomSeparator: !$last}">
-        <div class="psr-navText">
-          <a href="/google-cloud-powershell/#/{{ product.name }}/{{ resource.name }}/{{ cmdlet.name }}">{{ cmdlet.name }}</a>
+      <a href="/google-cloud-powershell/#/{{ product.name }}/{{ resource.name }}/{{ cmdlet.name }}">
+        <div
+            class="psr-navRow level3"
+            ng-class="{highlight: cmdletExplorerCtrl.isHighlighted('cmdlet', cmdlet.name), noBottomSeparator: !$last}">
+          <div class="psr-navText">{{ cmdlet.name }}</div>
         </div>
-      </div>
+      </a>
     </div>
   </div>
 </div>
@@ -56,7 +56,7 @@
   </div>
   <div class="psr-navRow noBottomSeparator">
     <div class="psr-navIcon feedback"></div>
-      <a href="https://github.com/GoogleCloudPlatform/gcloud-powershell/issues">
+    <a href="https://github.com/GoogleCloudPlatform/gcloud-powershell/issues">
       <div class="psr-navText">Feedback</div>
     </a>
   </div>
