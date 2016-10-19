@@ -68,11 +68,6 @@ table#cmdlet-list {
 
     margin-bottom: 16px;
 }
- 
-.psr-syntaxWidget p {
-    /* Override style inherited from #content p.*/
-    margin-bottom: 0 !important;
-}
 
 .psr-syntaxWidget.selected {
     outline: 2px solid rgba( 59, 120, 231, .50); 

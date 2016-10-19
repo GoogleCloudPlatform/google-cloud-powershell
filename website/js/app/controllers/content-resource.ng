@@ -1,6 +1,6 @@
 <div ng-if="!contentCtrl.resourceInfo">
   <h2>Error</h2>
-  <p>
+  <p class="text">
     No information for product {{ contentCtrl.currentProduct }} and resource 
     {{ contentCtrl.currentResource }}.
   </p>
@@ -20,7 +20,7 @@
     </td>
     <td class="psr-cmdletDescription">
       <a href="/google-cloud-powershell/#/{{ contentCtrl.currentProduct }}/{{ contentCtrl.currentResource }}/{{ cmdlet.name }}">
-        {{ cmdlet.synopsis }}
+        <div ng-bind-html="cmdlet.synopsis | applyHtmlStyling"></div>
       </a>
     </td>
   </tr>

@@ -142,8 +142,12 @@ pre {
     color: rgba(0,0,0,.87);
 }
 
-#content p {
-    margin-bottom: 16px;
+#content .text {
+    margin-bottom: 14px;
+}
+
+#content .psr-textBlock p {
+    margin-bottom: 14px;
 }
 
 #content h2 {

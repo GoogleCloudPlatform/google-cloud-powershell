@@ -1,9 +1,7 @@
-﻿<div>
-  <p>
-    Google Cloud Tools for PowerShell is a set of cmdlets for Windows
-    PowerShell that lets you manage Google Cloud Platform resources.
-  </p>
-</div>
+﻿<p class="text">
+  Google Cloud Tools for PowerShell is a set of cmdlets for Windows
+  PowerShell that lets you manage Google Cloud Platform resources.
+</p>
 
 <table class="psr-linkTable">
   <tr>

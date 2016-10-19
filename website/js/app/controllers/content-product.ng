@@ -1,10 +1,11 @@
 ﻿<div ng-if="!contentCtrl.productInfo">
   <h2>Error</h2>
-  <p>No information for product {{ contentCtrl.currentProduct }}.</p>
+  <p class="text">No information for product {{ contentCtrl.currentProduct }}.</p>
 </div>
 
 <!-- Product-specific copy. Usually cribbed from the marketing page. -->
 <div
+    class="psr-textBlock"
     ng-if="contentCtrl.productInfo"
     ng-switch="contentCtrl.currentProduct">
   

@@ -1,17 +1,17 @@
 ﻿<div ng-if="!contentCtrl.cmdletInfo">
   <h2>Error</h2>
-  <p>
+  <p class="text">
     Cmdlet {{ currentCmdlet }} not found.
   </p>
 </div>
 
 <div ng-if="contentCtrl.cmdletInfo">
-  <div class="psr-contentText">
+  <div class="psr-textBlock">
     <div ng-bind-html="contentCtrl.cmdletInfo.synopsis | applyHtmlStyling"></div>
   </div>
 
   <h2>Description</h2>
-  <div class="psr-contentText">
+  <div class="psr-textBlock">
     <div ng-bind-html="contentCtrl.cmdletInfo.description | applyHtmlStyling"></div>
   </div>
 
@@ -29,11 +29,11 @@
   <h2 ng-if="contentCtrl.cmdletInfo.examples.length > 0">Examples</h2>
   <div id="cmdlet-examples" ng-if="contentCtrl.cmdletInfo.examples.length > 0">
     <div class="psr-example" ng-repeat="example in contentCtrl.cmdletInfo.examples">
-      <div class="psr-contentText" ng-bind-html="example.introduction | applyHtmlStyling"></div>
+      <div class="psr-textBlock" ng-bind-html="example.introduction | applyHtmlStyling"></div>
       <div ng-if="example.code" class="psr-exampleCodeContainer">
         <pre>{{ example.code }}</pre>
       </div>
-      <div class="psr-contentText" ng-bind-html="example.remarks | applyHtmlStyling"></div>
+      <div class="psr-textBlock" ng-bind-html="example.remarks | applyHtmlStyling"></div>
     </div>
   </div>
 
