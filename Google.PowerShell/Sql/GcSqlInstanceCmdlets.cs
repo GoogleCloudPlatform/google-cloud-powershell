@@ -25,24 +25,12 @@ namespace Google.PowerShell.Sql
     /// This is determined by if Instance is specified or not.
     /// </para>
     /// <example>
-    ///   <para>
-    ///   Gets a list of instances in the project set in gcloud config.
-    ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Get-GcSqlInstance
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns all instances in the project.</para>
+    ///   <code>PS C:\> Get-GcSqlInstance</code>
+    ///   <para>Gets a list of instances in the project set in gcloud config.</para>
     /// </example>
     /// <example>
-    ///   <para>
-    ///   Gets a resource for the instance named "myInstance" in our project.
-    ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Get-GcSqlInstance "myInstance"
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns a resource for the instance.</para>
+    ///   <code>PS C:\> Get-GcSqlInstance "myInstance"</code>
+    ///   <para>Gets a resource for the instance named "myInstance" in our project.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.GetList)]
@@ -117,24 +105,13 @@ namespace Google.PowerShell.Sql
     /// Creates the Cloud SQL instance resource in the specified project.
     /// </para>
     /// <example>
-    ///   <para>
-    ///   Adds the instance represented by $myInstance to our project set in gcloud config.
-    ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Add-GcSqlInstance $myInstance
-    ///   </code></para>
-    ///   <br></br>
+    ///   <code>PS C:\> Add-GcSqlInstance $myInstance</code>
+    ///   <para>Adds the instance represented by $myInstance to our project set in gcloud config.</para>
     ///   <para>If successful, the command returns a resource for the added instance.</para>
     /// </example>
     /// <example>
-    ///   <para>
-    ///   Adds a default instance named "gootoso" to the project "myproject"
-    ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Add-GcSqlInstance "gootoso" -Project "myproject"
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns a resource for the added instance.</para>
+    ///   <code>PS C:\> Add-GcSqlInstance "gootoso" -Project "myproject"</code>
+    ///   <para>Adds a default instance named "gootoso" to the project "myproject"</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/setup)">
     ///   [Setting up Instances]
@@ -160,8 +137,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// The instance resource. 
-        /// Can be created with New-GcSqlInstanceConfig.
+        /// The instance resource, which can be created with New-GcSqlInstanceConfig.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
@@ -170,8 +146,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// The instance resource. 
-        /// Can be created with New-GcSqlInstanceConfig.
+        /// The instance resource, which can be created with New-GcSqlInstanceConfig.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0, 
@@ -181,8 +156,9 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// Creates a default Google Cloud SQL Database instance.
+        /// The defaults here are hard-coded, and might become out of date with
+        /// the defaults provided by Pantheon the Cloud SDK, etc.
         /// </summary>
-        /// <returns> A SQL instance object. </returns>
         private DatabaseInstance CreateDefaultInstance()
         {
             return new DatabaseInstance
@@ -217,7 +193,7 @@ namespace Google.PowerShell.Sql
                 Region = "us-central1",
                 BackendType = "SECOND_GEN",
                 Project = Project,
-                DatabaseVersion = "MYSQL_5_6",
+                DatabaseVersion = "MYSQL_5_7",
                 InstanceType = "CLOUD_SQL_INSTANCE",
                 State = "RUNNABLE"
             };
@@ -242,8 +218,8 @@ namespace Google.PowerShell.Sql
             WriteVerbose($"Adding instance '{instance.Name}' to Project '{Project}'.");
             Operation result = request.Execute();
             WaitForSqlOperation(result);
-            // We get the instance that was just added
-            // so that the returned DatabaseInstance is as accurate as possible.
+            // We get the instance that was just added so that the returned DatabaseInstance is as
+            // accurate as possible.
             InstancesResource.GetRequest instanceRequest = Service.Instances.Get(Project, instance.Name);
             WriteObject(instanceRequest.Execute());
         }
@@ -255,30 +231,16 @@ namespace Google.PowerShell.Sql
     /// Deletes a Cloud SQL instance.
     /// </para>
     /// <para type="description">
-    /// Deletes the specified Cloud SQL instance.
-    /// <para>
-    /// Warning: This deletes all data inside of it as well.
-    /// </para>
+    /// Deletes the specified Cloud SQL instance. Warning: This deletes all data inside of it as
+    /// well.
     /// </para>
     /// <example>
-    ///   <para>
-    ///   Removes the instance called "myInstance" from our project.
-    ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Remove-GcSqlInstance "myInstance"
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command doesn't return anything.</para>
+    ///   <code>PS C:\> Remove-GcSqlInstance "myInstance"</code>
+    ///   <para>Removes the instance called "myInstance" from our project.</para>
     /// </example>
     /// <example>
-    ///   <para>
-    ///   Removes the instance represented by the resource $myInstance from our project.
-    ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Remove-GcSqlInstance $myInstance
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command doesn't return anything.</para>
+    ///   <code>PS C:\> Remove-GcSqlInstance $myInstance</code>
+    ///   <para>Removes the instance represented by the resource $myInstance from our project.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GcSqlInstance", SupportsShouldProcess = true,
@@ -357,37 +319,29 @@ namespace Google.PowerShell.Sql
     /// a CSV file.
     /// </para>
     /// <example>
+    ///   <code>PS C:\> Export-GcSqlInstance "myInstance" "gs://bucket/file.gz"</code>
     ///   <para>
     ///   Exports the databases inside the instance "myInstance" to the Cloud Storage bucket file "gs://bucket/file.gz"
     ///   as a MySQL dump file.
     ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Export-GcSqlInstance "myInstance" "gs://bucket/file.gz"
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
     /// <example>
+    ///   <code>
+    ///     PS C:\> Export-GcSqlInstance "myInstance" "gs://bucket/file.csv" "SELECT * FROM data.table"
+    ///   </code>
+    ///   <br></br>
     ///   <para>
     ///   Exports the databases inside the instance "myInstance" to the Cloud Storage bucket file "gs://bucket/file.csv"
     ///   as a CSV file with the select query "SELECT * FROM data.table"
     ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Export-GcSqlInstance "myInstance" "gs://bucket/file.csv" "SELECT * FROM data.table"
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
     /// <example>
+    ///   <code>PS C:\> Export-GcSqlInstance "myInstance" "gs://bucket/file.csv" -Database "myData","myData2"</code>
+    ///   <br></br>
     ///   <para>
     ///   Exports the databases "myData" and "myData2" inside the instance "myInstance"
     ///   to the Cloud Storage bucket file "gs://bucket/file.gz" as a MySQL dump file.
     ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Export-GcSqlInstance "myInstance" "gs://bucket/file.csv" -Database "myData","myData2"
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/import-export)">
     ///   [How-To: Importing and Exporting]
@@ -471,7 +425,6 @@ namespace Google.PowerShell.Sql
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.Sql)]
         public string[] Table { get; set; }
 
-
         protected override void ProcessRecord()
         {
             InstancesExportRequest body = new InstancesExportRequest
@@ -528,43 +481,37 @@ namespace Google.PowerShell.Sql
     /// Only one database may be imported from a MySQL file,
     /// and only one table may be imported from a CSV file.
     /// </para>
-    /// <para>
+    /// <para type="description">
     /// WARNING: Standard charging rates apply if a file is imported from your local machine.
     /// A Google Cloud Storage bucket will be set up, uploaded to, and imported from during the import process.
     /// It is deleted after the upload and/or import process fails or is completed
     /// </para>
     /// <example>
+    ///   <code>
+    ///     PS C:\> Import-GcSqlInstance "myInstance" "gs://bucket/file" "myData"
+    ///   </code>
     ///   <para>
     ///   Imports the MySQL dump file at "gs://bucket/file" into the already
     ///   existing database "myData" in the instance "myInstance".
     ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Import-GcSqlInstance "myInstance" "gs://bucket/file" "myData"
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
     /// <example>
+    ///   <code>
+    ///     PS C:\> Import-GcSqlInstance "myInstance" "gs://bucket/file.csv" "myData" "myTable"
+    ///   </code>
     ///   <para>
     ///   Imports the CSV file at "gs://bucket/file.csv" into the table "myTable" in the already
     ///   existing database "myData" in the instance "myInstance".
     ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Import-GcSqlInstance "myInstance" "gs://bucket/file.csv" "myData" "myTable"
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
     /// <example>
+    ///   <code>
+    ///     PS C:\> Import-GcSqlInstance "myInstance" "C:\Users\Bob\file.csv" "myData" "myTable" 
+    ///   </code>
     ///   <para>
     ///   Imports the CSV file at "C:\Users\Bob\file.csv" into the table "myTable" in the already
     ///   existing database "myData" in the instance "myInstance".
     ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Import-GcSqlInstance "myInstance" "C:\Users\Bob\file.csv" "myData" "myTable" 
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command doesn't return anything.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/import-export)">
     ///   [How-To: Importing and Exporting]
@@ -612,9 +559,10 @@ namespace Google.PowerShell.Sql
         /// <para type="description">
         ///  The database inside of the Instance (for example, "guestbook" or "orders") to which the import is made.
         ///  It must already exist.
-        ///  If filetype is SQL and no database is specified,
-        ///  it is assumed that the database is specified in the file to be imported.
-        ///  The filetype of the file is assumed to be the corresponding parameter set.
+        /// </para>
+        /// <para type="description">
+        ///  If filetype is SQL and no database is specified, it is assumed that the database is specified in the
+        ///  file to be imported. The filetype of the file is assumed to be the corresponding parameter set.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 2)]
@@ -663,11 +611,9 @@ namespace Google.PowerShell.Sql
             }
 
             /// <summary>
-            /// Uploads a local file to a bucket.
+            /// Uploads a local file to a given bucket. The object's name will be the same as
+            /// provided file path. (e.g. "C:\foo\bar.txt".)
             /// </summary>
-            /// <param name="filePath"></param>
-            /// <param name="bucketName"></param>
-            /// <returns></returns>
             public Apis.Storage.v1.Data.Object UploadLocalFile(string filePath, string bucketName)
             {
                 string fileName = "toImport";
@@ -693,8 +639,6 @@ namespace Google.PowerShell.Sql
             /// <summary>
             /// Adjusts the ACL for an uploaded object so that a SQL instance can access it.
             /// </summary>
-            /// <param name="bucketObject"></param>
-            /// <param name="instanceEmail"></param>
             public void AdjustAcl(Apis.Storage.v1.Data.Object bucketObject, string instanceEmail)
             {
                 ObjectAccessControl body = new ObjectAccessControl();
@@ -719,7 +663,6 @@ namespace Google.PowerShell.Sql
             /// <summary>
             /// Deletes the bucket object from the Google Cloud Storage bucket.
             /// </summary>
-            /// <param name="bucketObject"></param>
             public void DeleteObject(Apis.Storage.v1.Data.Object bucketObject)
             {
                 _bucketService.Objects.Delete(bucketObject.Bucket, bucketObject.Name).Execute();
@@ -728,7 +671,6 @@ namespace Google.PowerShell.Sql
             /// <summary>
             /// Deletes a Google Cloud Storage bucket.
             /// </summary>
-            /// <param name="bucket"></param>
             public void DeleteBucket(Bucket bucket)
             {
                 _bucketService.Buckets.Delete(bucket.Name).Execute();
@@ -822,10 +764,8 @@ namespace Google.PowerShell.Sql
     /// defaults to the Cloud SDK config for properties. 
     /// </para>
     /// <example>
-    ///   <para> Restart the SQL instance "test1" from the Project "testing."</para>
-    ///   <para><code>PS C:\> Restart-GcSqlInstance -Project "testing" -Instance "test1"</code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns nothing.</para>
+    ///   <code>PS C:\> Restart-GcSqlInstance -Project "testing" -Instance "test1"</code>
+    ///   <para>Restart the SQL instance "test1" from the Project "testing."</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsLifecycle.Restart, "GcSqlInstance")]
@@ -902,10 +842,8 @@ namespace Google.PowerShell.Sql
     /// in the Cloud SDK config project. 
     /// </para>
     /// <example>
+    ///   <code>PS C:\> Start-GcSqlReplica -Project "testing" -Replica "testRepl1"</code>
     ///   <para>Start the SQL Replica "testRepl1" from the Project "testing."</para>
-    ///   <para><code>PS C:\> Start-GcSqlReplica -Project "testing" -Replica "testRepl1"</code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns nothing.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/replica)">[Replica Instances]</para>
     /// </summary>
@@ -983,10 +921,8 @@ namespace Google.PowerShell.Sql
     /// in the Cloud SDK config project. 
     /// </para>
     /// <example>
+    ///   <code>PS C:\> Stop-GcSqlReplica -Project "testing" -Replica "testRepl1"</code>
     ///   <para>Stop the SQL Replica "testRepl1" from the Project "testing."</para>
-    ///   <para><code>PS C:\> Stop-GcSqlReplica -Project "testing" -Replica "testRepl1"</code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns nothing.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/replica)">[Replica Instances]</para>
     /// </summary>
@@ -1067,10 +1003,8 @@ namespace Google.PowerShell.Sql
     /// replica in the Cloud SDK config project. 
     /// </para>
     /// <example>
+    ///   <code>PS C:\> Promote-GcSqlReplica -Project "testing" -Replica "testRepl1"</code>
     ///   <para>Promote the SQL Replica "testRepl1" from the Project "testing."</para>
-    ///   <para><code>PS C:\> Promote-GcSqlReplica -Project "testing" -Replica "testRepl1"</code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns nothing.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/replica)">[Replica Instances]</para>
     /// </summary>
@@ -1152,27 +1086,23 @@ namespace Google.PowerShell.Sql
     /// backup in the Cloud SDK config project. 
     /// </para>
     /// <example>
+    ///   <code>
+    ///     PS C:\> Restore-GcSqlInstanceBackup -Project "testing" -BackupRunId 1243244 -Instance "testRepl1"
+    ///   </code>
     ///   <para>
     ///   Restores backup run with id 0 of the SQL Instance "testRepl1" from the Project "testing" to the same SQL
     ///   Instance.
     ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Restore-GcSqlInstanceBackup -Project "testing" -BackupRunId 1243244 -Instance "testRepl1"
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns nothing.</para>
     /// </example>
     /// <example>
+    ///   <code>
+    ///     PS C:\> Restore-GcSqlInstanceBackup -Project "testing" -BackupRunId 0 -Instance "testRepl1"
+    ///     -BackupInstance "testRepl2"
+    ///   </code>
     ///   <para>
     ///   Restores backup run with id 0 of the SQL Instance "testRepl2" from the Project "testing" to the SQL Instance 
     ///   "testRepl1" (which must be in the same project).
     ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Restore-GcSqlInstanceBackup -Project "testing" -BackupRunId 0 -Instance "testRepl1"
-    ///     -BackupInstance "testRepl2"
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns nothing.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/backup)">
     ///   [Managing Backups]
@@ -1291,27 +1221,23 @@ namespace Google.PowerShell.Sql
     /// Caution: If "Update" is true, this is not a partial update, so you must include values for all the settings that you want to retain.
     /// </para>
     /// <example>
+    ///   <code>
+    ///     PS C:\> Update-GcSqlInstance "myInstance" `
+    ///         15 -MaintenanceWindowDay 1 -MaintenanceWindowHour "22:00" -Project "testing" 
+    ///   </code>
     ///   <para>
     ///   Patches the SQL Instance "myInstance" (with setting version of 15)
     ///   so that it can have maintenance on Monday at 22:00.
     ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Update-GcSqlInstance "myInstance" `
-    ///         15 -MaintenanceWindowDay 1 -MaintenanceWindowHour "22:00" -Project "testing" 
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns the resource for the updated instance.</para>
     /// </example>
     /// <example>
+    ///   <code>
+    ///     PS C:\> Update-GcSqlInstance "myInstance" 18 -Update
+    ///   </code>
     ///   <para>
     ///   Updates the SQL Instance "myInstance" (with and setting version of 18)
     ///   so that its settings default.
     ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Update-GcSqlInstance "myInstance" 18 -Update
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns the resource for the updated instance.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsData.Update, "GcSqlInstance", DefaultParameterSetName = ParameterSetNames.ByName)]
@@ -1344,8 +1270,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// The version of instance settings. 
-        /// This is a required field to make sure concurrent updates are handled properly.
+        /// The version of instance settings. Required field to make sure concurrent updates are handled properly.
         /// During update, use the most recent settingsVersion value for the instance and do not try to update this value.
         /// </para>
         /// </summary>
@@ -1407,8 +1332,8 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// Whether binary log is enabled.
-        /// If backup configuration is disabled, binary log must be disabled as well.
+        /// Whether binary log is enabled. If backup configuration is disabled, binary log must be
+        /// disabled as well.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
@@ -1432,8 +1357,7 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        /// The size of data disk, in GB. The data disk size minimum is 10 GB. 
-        /// Applies only to Second generation instances.
+        /// The size of data disk, in GB. The data disk size minimum is 10 GB.
         /// </para>
         /// </summary>
         [Parameter]
@@ -1447,11 +1371,11 @@ namespace Google.PowerShell.Sql
         [Parameter]
         public DatabaseFlags[] DatabaseFlag { get; set; }
 
+        // TODO(chrsmith): From marcel: "May include other ipConfiguration params, but unsure."
         /// <summary>
         /// <para type="description">
         /// The list of external networks that are allowed to connect to the instance using the IP.
-        /// In CIDR notation, also known as 'slash' notation (e.g. 192.168.100.0/24).
-        /// May include other ipConfiguration params, but unsure.
+        /// In CIDR notation, also known as 'slash' notation (e.g. "192.168.100.0/24").
         /// </para>
         /// </summary>
         [Parameter]
@@ -1681,18 +1605,12 @@ namespace Google.PowerShell.Sql
     /// Instance in the Cloud SDK config project. 
     /// </para>
     /// <example>
+    ///   <code>PS C:\> Failover-GcSqlReplica -Project "testing" -Instance "test1"</code>
     ///   <para>Failover the SQL Instance "test1" in the Project "testing."</para>
-    ///   <para><code>PS C:\> Failover-GcSqlReplica -Project "testing" -Instance "test1"</code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns nothing.</para>
     /// </example>
     /// <example>
+    ///   <code>PS C:\> Failover-GcSqlReplica -Project "testing" -Instance "test1" - SettingsVersion 3</code>
     ///   <para>Failover the SQL Instance "test1" with current settings version 3 in the Project "testing."</para>
-    ///   <para>
-    ///     <code>PS C:\> Failover-GcSqlReplica -Project "testing" -Instance "test1" - SettingsVersion 3</code>
-    ///   </para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns nothing.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/replica)">[Replica Instances]</para>
     /// </summary>

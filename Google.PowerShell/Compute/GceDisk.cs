@@ -316,6 +316,7 @@ namespace Google.PowerShell.ComputeEngine
             public const string ByName = "ByName";
             public const string ByObject = "ByObject";
         }
+
         /// <summary>
         /// <para type="description">
         /// The project to associate the new Compute Engine disk.
@@ -407,12 +408,12 @@ namespace Google.PowerShell.ComputeEngine
     /// Deletes a Compute Engine disk.
     /// </para>
     /// <example>
-    /// <code> PS C:\> Remove-GceDisk "my-disk"</code>
-    /// <para>Removes the disk in the default project and zone named "my-disk".</para>
+    ///   <code> PS C:\> Remove-GceDisk "my-disk"</code>
+    ///   <para>Removes the disk in the default project and zone named "my-disk".</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> Get-GceDisk "my-disk" | Remove-GceDisk</code>
-    /// <para>Removes the disk in the default project and zone named "my-disk".</para>
+    ///   <code>PS C:\> Get-GceDisk "my-disk" | Remove-GceDisk</code>
+    ///   <para>Removes the disk in the default project and zone named "my-disk".</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/disks#resource)">
     /// [Disk resource definition]

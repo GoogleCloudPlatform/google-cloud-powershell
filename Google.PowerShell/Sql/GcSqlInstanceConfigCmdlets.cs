@@ -25,24 +25,15 @@ namespace Google.PowerShell.Sql
     /// Use Add-GcSqlInstance to instantiate the instance within a project.
     /// </para>
     /// <example>
-    ///   <para>
-    ///   Creates an instance resource with name "myInstance" and settings $mySettings
-    ///   </para>
-    ///   <para><code>
-    ///     PS C:\> New-GcSqlInstanceConfig "myInstance" $mySettings
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns the populated Instance resource with the name "myInstance".</para>
+    ///   <code>PS C:\> New-GcSqlInstanceConfig "myInstance" $mySettings</code>
+    ///   <para>Creates an instance resource with name "myInstance" and settings $mySettings</para>
     /// </example>
     /// <example>
+    ///   <code>PS C:\> New-GcSqlInstanceConfig "myInstance" $mySettings -ReplicaConfig $myRepl</code>
     ///   <para>
-    ///   Creates an instance resource with name "myInstance", settings $mySettings, and replica configuration $myRepl
+    ///   Creates an instance resource with name "myInstance", settings $mySettings, and replica
+    ///   configuration $myRepl
     ///   </para>
-    ///   <para><code>
-    ///     PS C:\> New-GcSqlInstanceConfig "myInstance" $mySettings -ReplicaConfig $myRepl
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns the populated Instance resource with the name "myInstance".</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/setup)">
     ///   [How-To: Setting up Instances]
@@ -80,18 +71,16 @@ namespace Google.PowerShell.Sql
         [Parameter(Mandatory = true, ValueFromPipeline = true)]
         public Settings SettingConfig { get; set; }
 
-
         /// <summary>
         /// <para type="description">
-        /// The database engine type and version.
-        /// The databaseVersion can not be changed after instance creation.
-        /// Can be MYSQL_5_5, MYSQL_5_6 or MYSQL_5_7.
-        /// Defaults to MYSQL_5_6.
-        /// MYSQL_5_7 is applicable only to Second Generation instances.
+        /// The database engine type and version. This cannot be changed after instance creation.
+        /// </para>
+        /// <para type="description">
+        /// e.g. "MYSQL_5_6" or "MYSQL_5_7". Defaults to "MYSQL_5_7".
         /// </para>
         /// </summary>
         [Parameter]
-        public string DatabaseVer { get; set; } = "MYSQL_5_6";
+        public string DatabaseVer { get; set; } = "MYSQL_5_7";
 
         /// <summary>
         /// <para type="description">
@@ -121,14 +110,10 @@ namespace Google.PowerShell.Sql
 
         /// <summary>
         /// <para type="description">
-        ///  The geographical region.
-        ///  Can be us-central(FIRST_GEN instances only),
-        ///  us-central1(SECOND_GEN instances only), asia-east1 or europe-west1.
-        ///  Defaults to 
-        ///  us-central1 depending on the instance type.
-        ///  The region can not be changed after instance creation.
-        ///  
-        /// Defaults to us-central1
+        ///  The geographical region. Can be us-central1, asia-east1, or europe-west1.
+        /// </para>
+        /// <para type="description">
+        ///  Defaults to us-central1 and cannot be changed after instance creation.
         /// </para>
         /// </summary>
         [Parameter]

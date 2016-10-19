@@ -19,17 +19,8 @@ namespace Google.PowerShell.Dns
     /// If a Project is specified, will instead return the DNS quota for that project. 
     /// </para>
     /// <example>
+    ///   <code>PS C:\> Get-GcdQuota -Project "testing" </code>
     ///   <para>Get the DNS quota of the Project "testing"</para>
-    ///   <para><code>PS C:\> Get-GcdQuota -Project "testing" </code></para>
-    ///   <br></br>
-    ///   <para>Kind                     : dns#quota</para>
-    ///   <para>ManagedZones             : 100</para>
-    ///   <para>ResourceRecordsPerRrset  : 100</para>
-    ///   <para>RrsetAdditionsPerChange  : 100</para>
-    ///   <para>RrsetDeletionsPerChange  : 100</para>
-    ///   <para>RrsetsPerManagedZone     : 10000</para>
-    ///   <para>TotalRrdataSizePerChange : 10000</para>
-    ///   <para>ETag                     :</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/dns/quota)">[Quotas]</para>
     /// <para type="link" uri="(https://cloud.google.com/dns/troubleshooting)">[Troubleshooting]</para>

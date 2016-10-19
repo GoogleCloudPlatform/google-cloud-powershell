@@ -17,9 +17,9 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// <example>
     /// <code>
-    /// <para> PS C:\> New-GceFirewallProtocol tcp -Ports 80, 443 |</para>
-    /// <para>         New-GceFirewallProtocol esp |</para>
-    /// <para>         Add-GceFirewall -Project "your-project" -Name "firewall-name"</para>
+    /// New-GceFirewallProtocol tcp -Ports 80, 443 |
+    ///     New-GceFirewallProtocol esp |
+    ///     Add-GceFirewall -Project "your-project" -Name "firewall-name"
     /// </code>
     /// <para>Creates two GceFirewallProtocol objects, and sends them to the Add-GceFirewall cmdlet.</para>
     /// </example>

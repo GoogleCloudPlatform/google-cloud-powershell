@@ -16,12 +16,12 @@ namespace Google.PowerShell.ComputeEngine
     /// Lists url maps of a project, or gets a specific one.
     /// </para>
     /// <example>
-    /// <code>PS C:\> Get-GceUrlMap</code>
-    /// <para>This command lists all url maps for the default project.</para>
+    ///   <code>PS C:\> Get-GceUrlMap</code>
+    ///   <para>This command lists all url maps for the default project.</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> Get-GceUrlMap "my-url-map"</code>
-    /// <para>This command gets the url map named "my-url-map"</para>
+    ///   <code>PS C:\> Get-GceUrlMap "my-url-map"</code>
+    ///   <para>This command gets the url map named "my-url-map"</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/urlMaps#resource)">
     /// [Url Map resource definition]

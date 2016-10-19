@@ -16,24 +16,24 @@ namespace Google.PowerShell.ComputeEngine
     /// Lists forwarding rules of a project, or gets a specific one.
     /// </para>
     /// <example>
-    /// <code>PS C:\> Get-GceForwardingRule</code>
-    /// <para>This command lists all forwarding rules for the default project.</para>
+    ///   <code>PS C:\> Get-GceForwardingRule</code>
+    ///   <para>This command lists all forwarding rules for the default project.</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> Get-GceForwardingRule -Region us-central1</code>
-    /// <para>This command lists all forwarding rules in region "us-central1" for the default project.</para>
+    ///   <code>PS C:\> Get-GceForwardingRule -Region us-central1</code>
+    ///   <para>This command lists all forwarding rules in region "us-central1" for the default project.</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> Get-GceForwardingRule "my-forwarding-rule"</code>
-    /// <para>This command gets the forwarding rule named "my-forwarding-rule" in the default project and region.</para>
+    ///   <code>PS C:\> Get-GceForwardingRule "my-forwarding-rule"</code>
+    ///   <para>This command gets the forwarding rule named "my-forwarding-rule" in the default project and region.</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> Get-GceForwardingRule -Project my-project -Global</code>
-    /// <para>This command lists all global forwarding rules for the project named "my-project".</para>
+    ///   <code>PS C:\> Get-GceForwardingRule -Project my-project -Global</code>
+    ///   <para>This command lists all global forwarding rules for the project named "my-project".</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> Get-GceForwardingRule "my-forwarding-rule" -Gobal</code>
-    /// <para>This command gets the global forwarding rule named "my-forwarding-rule" in the default project.</para>
+    ///   <code>PS C:\> Get-GceForwardingRule "my-forwarding-rule" -Gobal</code>
+    ///   <para>This command gets the global forwarding rule named "my-forwarding-rule" in the default project.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/forwardingRules#resource)">
     /// [Forwarding Rule resource definition]

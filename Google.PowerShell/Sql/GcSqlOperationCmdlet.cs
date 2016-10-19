@@ -19,24 +19,12 @@ namespace Google.PowerShell.Sql
     /// or a list of operations used on the instance. This is decided by if you provide a Name or not.
     /// </para>
     /// <example>
-    ///   <para>
-    ///   Gets a list of operations done on the instance "myInstance".
-    ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Get-GcSqlOperation -Instance "myInstance"
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns a list of operations done on "myInstance".</para>
+    ///   <code>PS C:\> Get-GcSqlOperation -Instance "myInstance"</code>
+    ///   <para>Gets a list of operations done on the instance "myInstance".</para>
     /// </example>
     /// <example>
-    ///   <para>
-    ///   Gets a resource for the operation with ID "1d402..."
-    ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Get-GcSqlOperation -Name "1d402..."
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns an Operation resource for the specified operation.</para>
+    ///   <code>PS C:\> Get-GcSqlOperation -Name "1d402..."</code>
+    ///   <para>Gets a resource for the operation with ID "1d402...".</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlOperation")]

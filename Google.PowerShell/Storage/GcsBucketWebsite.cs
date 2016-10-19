@@ -16,8 +16,8 @@ namespace Google.PowerShell.CloudStorage
     /// Removes the website associated with a Cloud Storage Bucket.
     /// </para>
     /// <example>
+    ///   <code>PS C:\> Remove-GcsBucketWebsite $bucket</code>
     ///   <para>Remove the website data for $bucket.</para>
-    ///   <para><code>PS C:\> Remove-GcsBucketWebsite $bucket</code></para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/storage/docs/hosting-static-website)">[Static Website Hosting]</para>
     /// <para type="link" uri="(https://cloud.google.com/storage/docs/static-website)">[Static Website Troubleshooting]</para>
@@ -61,9 +61,10 @@ namespace Google.PowerShell.CloudStorage
     /// Updates the website associated with a Cloud Storage Bucket.
     /// </para>
     /// <example>
+    ///   <code>Write-GcsBucketWebsite $bucket -MainPageSuffix "main.html" -NotFoundPage "error.html"</code>   
     ///   <para>Host http://example.com from the contents of $bucket.</para>
-    ///   <para><code>PS C:\> Write-GcsBucketWebsite $bucket -MainPageSuffix "main.html" -NotFoundPage "error.html"</code></para>
-    ///   <para>Next, set the domains DNS records to point to Cloud Storage. See the "Static WebsiteHosting" help topic for more information.</para>
+    ///   <para>Next, set the domains DNS records to point to Cloud Storage. See the "Static WebsiteHosting"
+    ///   help topic for more information.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/storage/docs/hosting-static-website)">[Static Website Hosting]</para>
     /// <para type="link" uri="(https://cloud.google.com/storage/docs/static-website)">[Static Website Troubleshooting]</para>

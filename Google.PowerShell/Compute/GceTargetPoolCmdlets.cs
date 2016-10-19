@@ -18,16 +18,16 @@ namespace Google.PowerShell.ComputeEngine
     /// This command lists target pools of a project, or gets a specific one.
     /// </para>
     /// <example>
-    /// <code>PS C:\> Get-GceTargetPool</code>
-    /// <para>This command lists all target pools for the default project.</para>
+    ///   <code>PS C:\> Get-GceTargetPool</code>
+    ///   <para>This command lists all target pools for the default project.</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> Get-GceTargetPool -Region us-central1</code>
-    /// <para>This command lists all target pools in region "us-central1" for the default project.</para>
+    ///   <code>PS C:\> Get-GceTargetPool -Region us-central1</code>
+    ///   <para>This command lists all target pools in region "us-central1" for the default project.</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> Get-GceTargetPool "my-target-pool"</code>
-    /// <para>This command gets the target pool named "my-target-pool" in the default project and zone</para>
+    ///   <code>PS C:\> Get-GceTargetPool "my-target-pool"</code>
+    ///   <para>This command gets the target pool named "my-target-pool" in the default project and zone</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/targetPools#resource)">
     /// [Target Pool resource definition]
@@ -167,17 +167,17 @@ namespace Google.PowerShell.ComputeEngine
     /// Set-GceTargetPool adds and removes instance to and from target pools
     /// </para>
     /// <example>
-    /// <code>
-    ///     PS C:\> $instance = Get-GceInstance "my-instance"
-    ///     PS C:\> Get-GceTargetPool "my-pool" | Set-GceTargetPool -AddInstance $instance
-    /// </code>
-    /// <para>This command adds instance "my-instance" to the target pool "my-pool"</para>
+    ///   <code>
+    ///   PS C:\> $instance = Get-GceInstance "my-instance"
+    ///   PS C:\> Get-GceTargetPool "my-pool" | Set-GceTargetPool -AddInstance $instance
+    ///   </code>
+    ///   <para>This command adds instance "my-instance" to the target pool "my-pool"</para>
     /// </example>
     /// <example>
-    /// <code>
-    ///     PS C:\> Set-GceTargetPool "my-pool" -RemoveInstance $instanceUrl
-    /// </code>
-    /// <para>This command removes the instance pointed to by $instanceUrl from target pool "my-pool".</para>
+    ///   <code>
+    ///   PS C:\> Set-GceTargetPool "my-pool" -RemoveInstance $instanceUrl
+    ///   </code>
+    ///   <para>This command removes the instance pointed to by $instanceUrl from target pool "my-pool".</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/targetPools#resource)">
     /// [Target Pool resource definition]

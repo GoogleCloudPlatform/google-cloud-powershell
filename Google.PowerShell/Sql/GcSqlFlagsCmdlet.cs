@@ -26,14 +26,8 @@ namespace Google.PowerShell.Sql
     /// Lists all available database flags for instances.
     /// </para>
     /// <example>
-    ///   <para>
-    ///   Gets a list of database flags available for instances.
-    ///   </para>
-    ///   <para><code>
-    ///     PS C:\> Get-GcSqlFlags
-    ///   </code></para>
-    ///   <br></br>
-    ///   <para>If successful, the command returns a list of database flags available for instances.</para>
+    ///   <code>PS C:\> Get-GcSqlFlags</code>
+    ///   <para>Gets a list of database flags available for instances.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcSqlFlags")]

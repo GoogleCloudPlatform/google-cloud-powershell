@@ -1,4 +1,4 @@
-﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
+// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
 using Google.Apis.Compute.v1;
@@ -26,24 +26,24 @@ namespace Google.PowerShell.ComputeEngine
     /// [Instance resource definition]
     /// </para>
     /// <example>
-    ///     <code> PS C:\> Get-GceInstance -Project "my-project" </code>
-    ///     <para> Gets all instances of the project "my-project".</para>
+    ///   <code>PS C:\> Get-GceInstance -Project "my-project"</code>
+    ///   <para>Gets all instances of the project "my-project".</para>
     /// </example>
     /// <example>
-    ///     <code> PS C:\> Get-GceInstance -Zone "us-west1-a" </code>
-    ///     <para> Gets all instances in the zone "us-west1-a" in the default project.</para>
+    ///   <code>PS C:\> Get-GceInstance -Zone "us-west1-a"</code>
+    ///   <para>Gets all instances in the zone "us-west1-a" in the default project.</para>
     /// </example>
     /// <example>
-    ///     <code> PS C:\> Get-GceInstance "my-instance" </code>
-    ///     <para> Gets the instance named "my-instance" in the default project and zone </para>
+    ///   <code>PS C:\> Get-GceInstance "my-instance"</code>
+    ///   <para>Gets the instance named "my-instance" in the default project and zone</para>
     /// </example>
     /// <example>
-    ///     <code> PS C:\> Get-GceInstance -ManagedGroupName "my-group" </code>
-    ///     <para> Gets all instances that are members of the managed instance group named "my-group".</para>
+    ///   <code>PS C:\> Get-GceInstance -ManagedGroupName "my-group"</code>
+    ///   <para>Gets all instances that are members of the managed instance group named "my-group".</para>
     /// </example>
     /// <example>
-    ///     <code> PS C:\> Get-GceInstance "my-instance" -SerialPortOutput -Port 4.</code>
-    ///     <para> Returns the data from serial port 4 of "my-instance".</para>
+    ///   <code>PS C:\> Get-GceInstance "my-instance" -SerialPortOutput -Port 4.</code>
+    ///   <para>Returns the data from serial port 4 of "my-instance".</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceInstance", DefaultParameterSetName = ParameterSetNames.OfProject)]
@@ -319,20 +319,22 @@ namespace Google.PowerShell.ComputeEngine
     /// cmdlet.
     /// </para>
     /// <example>
-    ///     <code>
-    ///     PS C:\> New-GceInstanceConfig -Name "new-instance" -BootDiskImage $image |
-    ///             Add-GceInstance -Project "my-project" -Zone "us-central1-a"
+    ///   <code>
+    ///   PS C:\> New-GceInstanceConfig -Name "new-instance" -BootDiskImage $image |
+    ///           Add-GceInstance -Project "my-project" -Zone "us-central1-a"
     ///   </code>
-    ///   <para> Creates a new instance from an instance config.</para>
+    ///   <para>Creates a new instance from an instance config.</para>
     /// </example>
     /// <example>
-    ///     <code> PS C:\> Add-GceInstance -Name "new-instance" -BootDisk $disk `
-    ///                     -MachineType "n1-standard-4" `
-    ///                     -Tag http, https `
-    ///                     -Metadata @{"windows-startup-script-ps1" =
-    ///                                 "Read-GcsObject bucket object -OutFile temp.txt"}
-    ///     </code>
-    ///     <para> Creates a new instance in the default project and zone. The boot disk is the prexisting disk
+    ///   <code>
+    ///     PS C:\> Add-GceInstance -Name "new-instance" -BootDisk $disk `
+    ///         -MachineType "n1-standard-4" `
+    ///         -Tag http, https `
+    ///         -Metadata @{"windows-startup-script-ps1" =
+    ///                 "Read-GcsObject bucket object -OutFile temp.txt"}
+    ///   </code>
+    ///   <para>
+    ///     Creates a new instance in the default project and zone. The boot disk is the prexisting disk
     ///     stored in $disk, the machine type has 4 cores, it runs a script on startup, and it is tagged as an
     ///     http and https server.
     ///   </para>
@@ -580,16 +582,16 @@ namespace Google.PowerShell.ComputeEngine
     /// Deletes a Google Compute Engine VM instance.
     /// </para>
     /// <example>
-    ///     <code> PS C:\> Remove-GceInstance "my-instance"</code>
+    ///     <code>PS C:\> Remove-GceInstance "my-instance"</code>
     ///     <para>Removes the instance named "my-instance" in the default project and zone.</para>
     /// </example>
     /// <example>
-    ///     <code>
-    ///     PS C:\> Get-GceInstance -Project "my-project"|
-    ///                 where Status -eq Stopped |
-    ///                 Remove-GceInstance
-    ///     </code>
-    ///     <para>Removes all instances in project "my-project" that are currently stopped.</para>
+    ///   <code>
+    ///   PS C:\> Get-GceInstance -Project "my-project"|
+    ///       where Status -eq Stopped |
+    ///       Remove-GceInstance
+    ///   </code>
+    ///   <para>Removes all instances in project "my-project" that are currently stopped.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
     /// [Instance resource definition]
@@ -603,6 +605,7 @@ namespace Google.PowerShell.ComputeEngine
             public const string ByName = "ByName";
             public const string ByObject = "ByObject";
         }
+
         /// <summary>
         /// <para type="description">
         /// The project that owns the instances.
@@ -677,16 +680,16 @@ namespace Google.PowerShell.ComputeEngine
     /// Starts a Google Compute Engine VM instance.
     /// </para>
     /// <example>
-    ///     <code> PS C:\> Start-GceInstance "my-instance"</code>
-    ///     <para>Starts the instance named "my-instance" in the default project and zone.</para>
+    ///   <code>PS C:\> Start-GceInstance "my-instance"</code>
+    ///   <para>Starts the instance named "my-instance" in the default project and zone.</para>
     /// </example>
     /// <example>
-    ///     <code>
-    ///     PS C:\> Get-GceInstance -Project "my-project"|
-    ///                 where Status -eq Stopped |
-    ///                 Start-GceInstance
-    ///     </code>
-    ///     <para>Starts all instances in project "my-project" that are currently stopped.</para>
+    ///   <code>
+    ///   PS C:\> Get-GceInstance -Project "my-project"|
+    ///       where Status -eq Stopped |
+    ///       Start-GceInstance
+    ///   </code>
+    ///   <para>Starts all instances in project "my-project" that are currently stopped.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
     /// [Instance resource definition]
@@ -777,16 +780,16 @@ namespace Google.PowerShell.ComputeEngine
     /// Stops a Google Compute Engine VM instance.
     /// </para>
     /// <example>
-    ///     <code> PS C:\> Stop-GceInstance "my-instance"</code>
-    ///     <para>Stops the instance named "my-instance" in the default project and zone.</para>
+    ///   <code>PS C:\> Stop-GceInstance "my-instance"</code>
+    ///   <para>Stops the instance named "my-instance" in the default project and zone.</para>
     /// </example>
     /// <example>
-    ///     <code>
-    ///     PS C:\> Get-GceInstance -Project "my-project"|
-    ///                 where Status -eq Running |
-    ///                 Stop-GceInstance
-    ///     </code>
-    ///     <para>Stops all instances in project "my-project" that are currently running.</para>
+    ///   <code>
+    ///   PS C:\> Get-GceInstance -Project "my-project"|
+    ///       where Status -eq Running |
+    ///       Stop-GceInstance
+    ///   </code>
+    ///   <para>Stops all instances in project "my-project" that are currently running.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
     /// [Instance resource definition]
@@ -877,15 +880,15 @@ namespace Google.PowerShell.ComputeEngine
     /// Resets a Google Compute Engine VM instance.
     /// </para>
     /// <example>
-    ///     <code> PS C:\> Reset-GceInstance "my-instance"</code>
-    ///     <para>Resets the instance named "my-instance" in the default project and zone.</para>
+    ///   <code>PS C:\> Reset-GceInstance "my-instance"</code>
+    ///   <para>Resets the instance named "my-instance" in the default project and zone.</para>
     /// </example>
     /// <example>
-    ///     <code>
-    ///     PS C:\> Get-GceInstance -Project "my-project"|
-    ///                 Reset-GceInstance
-    ///     </code>
-    ///     <para>Removes all instances in project "my-project".</para>
+    ///   <code>
+    ///   PS C:\> Get-GceInstance -Project "my-project"|
+    ///       Reset-GceInstance
+    ///   </code>
+    ///   <para>Removes all instances in project "my-project".</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
     /// [Instance resource definition]

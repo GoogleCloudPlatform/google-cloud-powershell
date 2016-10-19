@@ -17,12 +17,12 @@ namespace Google.PowerShell.ComputeEngine
     /// Gets firewall rules for a project.
     /// </para>
     /// <example>
-    /// <code>PS C:\> Get-GceFirewall</code>
-    /// <para>Lists all firewall rules in the default project.</para>
+    ///   <code>PS C:\> Get-GceFirewall</code>
+    ///   <para>Lists all firewall rules in the default project.</para>
     /// </example>
     /// <example>
-    /// <code>PS C:\> Get-GceFirewall "my-firewall"</code>
-    /// <para>Gets the information of the firewall rule in the default project named "my-firewall".</para>
+    ///   <code>PS C:\> Get-GceFirewall "my-firewall"</code>
+    ///   <para>Gets the information of the firewall rule in the default project named "my-firewall".</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/firewalls#resource)">
     /// [Firewall resource definition]
@@ -95,9 +95,9 @@ namespace Google.PowerShell.ComputeEngine
     /// </para>
     /// <example>
     /// <code>
-    /// <para> PS C:\> New-GceFirewallProtocol tcp -Ports 80, 443 |</para>
-    /// <para>         New-GceFirewallProtocol esp |</para>
-    /// <para>         Add-GceFirewall -Name "my-firewall" -SourceTag my-source -TargetTag my-target</para>
+    /// PS C:\> New-GceFirewallProtocol tcp -Ports 80, 443 |
+    ///     New-GceFirewallProtocol esp |
+    ///     Add-GceFirewall -Name "my-firewall" -SourceTag my-source -TargetTag my-target
     /// </code>
     /// <para>Creates a new firewall rule in the default project named "my-firewall". The firewall allows
     /// traffic using tcp on ports 80 and 443 as well as the esp protocol from servers tagged my-source to
@@ -226,8 +226,8 @@ namespace Google.PowerShell.ComputeEngine
     /// Removes a firewall rule from a project.
     /// </para>
     /// <example>
-    /// <code>PS C:\> Remove-GceFirewall "my-firewall"</code>
-    /// <para>Removes the firewall named "my-firewall" in the default project.</para>
+    ///   <code>PS C:\> Remove-GceFirewall "my-firewall"</code>
+    ///   <para>Removes the firewall named "my-firewall" in the default project.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/firewalls#resource)">
     /// [Firewall resource definition]
