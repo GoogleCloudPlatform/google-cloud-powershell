@@ -14,10 +14,10 @@ namespace Google.PowerShell.Common
         /// <summary>
         /// The user that this token corresponds to.
         /// </summary>
-        public string User;
+        public string User { get; private set; }
 
         /// <summary>The access token issued by the authorization server.</summary>
-        public string AccessToken { get; internal set; }
+        public string AccessToken { get; private set; }
 
         /// <summary>
         /// The date and time that this token was issued.
@@ -45,15 +45,6 @@ namespace Google.PowerShell.Common
 
                 return ExpiredTime.AddSeconds(-60) <= DateTime.UtcNow;
             }
-        }
-
-        /// <summary>
-        /// Constructs a new token by parsing userCredentialJson.
-        /// User will be set to the current active user.
-        /// </summary>
-        public ActiveUserToken(string userCredentialJson) :
-            this(userCredentialJson, CloudSdkSettings.GetSettingsValue("account"))
-        {
         }
 
         /// <summary>

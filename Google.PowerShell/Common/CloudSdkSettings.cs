@@ -48,6 +48,9 @@ namespace Google.PowerShell.Common
         /// <summary>Name of the file containing the anonymous client ID.</summary>
         private const string ClientIDFileName = ".metricsUUID";
 
+        /// <summary>
+        /// Backing field for the InstallationPropertiesPath property.
+        /// </summary>
         private static string s_installationPropertiesPath;
 
         // Prevent instantiation. Should just be a static utility class.
@@ -64,7 +67,6 @@ namespace Google.PowerShell.Common
                 {
                     s_installationPropertiesPath = GCloudWrapper.GetInstallationPropertiesPath().Result;
                 }
-
                 return s_installationPropertiesPath;
             }
         }

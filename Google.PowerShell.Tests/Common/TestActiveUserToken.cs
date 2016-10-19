@@ -59,8 +59,6 @@ namespace Google.PowerShell.Tests.Common
         public void TestTokenExpiredByTime()
         {
             ActiveUserToken token = new ActiveUserToken(credentialJson, "user");
-            // If we don't set the access token, the token will be treated as expired.
-            token.AccessToken = "Random Access Token";
             token.ExpiredTime = DateTime.UtcNow.AddHours(1);
 
             Assert.IsFalse(token.IsExpired, "Token should not expire yet.");

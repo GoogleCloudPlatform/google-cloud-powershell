@@ -5,10 +5,6 @@ using Google.PowerShell.Common;
 namespace Google.PowerShell.Tests.Common
 {
     [TestFixture]
-    /// <summary>
-    /// Assumes that the Cloud SDK is installed on the local machine and initialized.
-    /// 
-    /// </summary>
     public class TestGCloudWrapper
     {
         /// <summary>

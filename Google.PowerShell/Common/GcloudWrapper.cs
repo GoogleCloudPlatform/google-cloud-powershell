@@ -59,8 +59,8 @@ namespace Google.PowerShell.Common
 
             string userCredentialJson = await GetGCloudCommandOutput("auth print-access-token");
             cancellationToken.ThrowIfCancellationRequested();
-
-            return new ActiveUserToken(userCredentialJson);
+            string currentUser = CloudSdkSettings.GetSettingsValue("account");
+            return new ActiveUserToken(userCredentialJson, currentUser);
         }
 
         /// <summary>

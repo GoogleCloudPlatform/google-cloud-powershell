@@ -43,15 +43,15 @@ namespace Google.PowerShell.Common
         /// This is used to revoke token (in RevokeTokenAsync)
         /// and intercept request with the access token (in InterceptAsync).
         /// </summary>
-        public IAuthorizationCodeFlow Flow { get; } = new GoogleAuthorizationCodeFlow(
-                new GoogleAuthorizationCodeFlow.Initializer()
+        private IAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow(
+            new GoogleAuthorizationCodeFlow.Initializer()
+            {
+                ClientSecrets = new ClientSecrets()
                 {
-                    ClientSecrets = new ClientSecrets()
-                    {
-                        ClientId = "clientId",
-                        ClientSecret = "clientSecrets"
-                    }
-                });
+                    ClientId = "clientId",
+                    ClientSecret = "clientSecrets"
+                }
+            });
 
         #region IHttpExecuteInterceptor
 
@@ -64,13 +64,18 @@ namespace Google.PowerShell.Common
         {
             Task<string> getAccessTokenTask = GetAccessTokenForRequestAsync(request.RequestUri.ToString(), taskCancellationToken);
             string accessToken = await getAccessTokenTask.ConfigureAwait(false);
-            Flow.AccessMethod.Intercept(request, accessToken);
+            flow.AccessMethod.Intercept(request, accessToken);
         }
 
         #endregion
 
         #region IHttpUnsuccessfulResponseHandler
 
+        /// <summary>
+        /// Handles an abnormal response when sending a HTTP request.
+        /// A simple rule must be followed, if you modify the request object in a way that the abnormal response can
+        /// be resolved, you must return <c>true</c>.
+        /// </summary>
         public async Task<bool> HandleResponseAsync(HandleUnsuccessfulResponseArgs args)
         {
             if (args.Response.StatusCode == HttpStatusCode.Unauthorized)
@@ -108,7 +113,8 @@ namespace Google.PowerShell.Common
             {
                 if (!await RefreshTokenAsync(cancellationToken).ConfigureAwait(false))
                 {
-                    throw new InvalidOperationException("The access token has expired but we can't refresh it");
+                    throw new InvalidOperationException(
+                        "The access token has expired or the user has changed, but we can't refresh it.");
                 }
             }
 
@@ -151,7 +157,7 @@ namespace Google.PowerShell.Common
                 return false;
             }
 
-            await Flow.RevokeTokenAsync("userId", s_token.AccessToken, taskCancellationToken).ConfigureAwait(false);
+            await flow.RevokeTokenAsync("userId", s_token.AccessToken, taskCancellationToken).ConfigureAwait(false);
             // We don't set the token to null, cause we want that the next request (without reauthorizing) will fail).
             return true;
         }
