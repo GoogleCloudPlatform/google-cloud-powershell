@@ -21,6 +21,18 @@ namespace Google.PowerShell.Common
             public const string Region = "region";
         }
 
+        /// <summary>
+        /// Environment variable which points to the location of the current configuration file.
+        /// This overrides the user configuration file as well as the global installation properties file.
+        /// </summary>
+        private const string CloudSdkConfigVariable = "CLOUDSDK_CONFIG";
+
+        /// <summary>
+        /// Environment variable which stores the current active config.
+        /// This overrides value found in active_config file if present.
+        /// </summary>
+        private const string CloudSdkActiveConfigNameVariable = "CLOUDSDK_ACTIVE_CONFIG_NAME";
+
         /// <summary>Environment variable which contains the Application Data settings.</summary>
         private const string AppdataEnvironmentVariable = "APPDATA";
 
@@ -36,25 +48,49 @@ namespace Google.PowerShell.Common
         /// <summary>Name of the file containing the anonymous client ID.</summary>
         private const string ClientIDFileName = ".metricsUUID";
 
+        /// <summary>
+        /// Backing field for the InstallationPropertiesPath property.
+        /// </summary>
+        private static string s_installationPropertiesPath;
+
         // Prevent instantiation. Should just be a static utility class.
         private CloudSdkSettings() { }
+
+        /// <summary>
+        /// Returns path to the properties file where GoogleCloud SDK is installed.
+        /// </summary>
+        public static string InstallationPropertiesPath
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(s_installationPropertiesPath))
+                {
+                    s_installationPropertiesPath = GCloudWrapper.GetInstallationPropertiesPath().Result;
+                }
+                return s_installationPropertiesPath;
+            }
+        }
 
         /// <summary>
         /// Returns the name of the current configuration. See `gcloud config configurations` for more information.
         /// Returns null on any sort of error. For example, before gcloud runs for the first time no configuration
         /// file is set.
+        /// If CLOUDSDK_ACTIVE_CONFIG_NAME is set, we will use that as the active config.
+        /// If not, we look into the active_config file to determine the active config.
         /// </summary>
         public static string GetCurrentConfigurationName()
         {
-            string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
-            if (appDataFolder == null || !Directory.Exists(appDataFolder))
+            string activeConfigName = Environment.GetEnvironmentVariable(CloudSdkActiveConfigNameVariable);
+
+            if (!string.IsNullOrWhiteSpace(activeConfigName))
             {
-                return null;
+                return activeConfigName;
             }
 
+            string cloudConfigDir = GetCurrentConfigurationDirectory();
+
             string activeconfigFilePath = Path.Combine(
-                appDataFolder,
-                CloudSDKConfigDirectoryWindows,
+                cloudConfigDir,
                 ActiveConfigFileName);
             try
             {
@@ -67,21 +103,42 @@ namespace Google.PowerShell.Common
             }
         }
 
+        /// <summary>
+        /// Returns the current config directory.
+        /// If CLOUDSDK_CONFIG environment variable is set, we will use that as the config directory.
+        /// If not, we will use the config directory from AppData.
+        /// </summary>
+        public static string GetCurrentConfigurationDirectory()
+        {
+            string cloudConfigPath = Environment.GetEnvironmentVariable(CloudSdkConfigVariable);
+            if (!string.IsNullOrWhiteSpace(cloudConfigPath))
+            {
+                return cloudConfigPath;
+            }
+
+            cloudConfigPath = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
+            if (!string.IsNullOrWhiteSpace(cloudConfigPath))
+            {
+                cloudConfigPath = Path.Combine(cloudConfigPath, CloudSDKConfigDirectoryWindows);
+            }
+
+            return cloudConfigPath;
+        }
+
         /// <summary> 
         /// Returns the file path to the current Cloud SDK configuration set's property file. Returns null on any
         /// sort of error.
         /// </summary>
         public static string GetCurrentConfigurationFilePath()
         {
-            string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
-            if (appDataFolder == null || !Directory.Exists(appDataFolder))
+            string cloudConfigDir = GetCurrentConfigurationDirectory();
+            if (cloudConfigDir == null || !Directory.Exists(cloudConfigDir))
             {
                 return null;
             }
 
             string defaultConfigFile = Path.Combine(
-                appDataFolder,
-                CloudSDKConfigDirectoryWindows,
+                cloudConfigDir,
                 ConfigurationsFolderName,
                 String.Format("config_{0}", GetCurrentConfigurationName()));
 
@@ -94,10 +151,27 @@ namespace Google.PowerShell.Common
 
         /// <summary>
         /// Returns the setting with the given name from the currently active gcloud configuration.
+        /// We first look into the user config file. If we cannot find anything, we look
+        /// into the global properties file.
         /// </summary>
         public static string GetSettingsValue(string settingName)
         {
-            string configFile = GetCurrentConfigurationFilePath();
+            string userConfigFile = GetCurrentConfigurationFilePath();
+            string userConfigSetting = GetSettingsValueFromFile(userConfigFile, settingName);
+
+            if (string.IsNullOrWhiteSpace(userConfigSetting))
+            {
+                userConfigSetting = GetSettingsValueFromFile(InstallationPropertiesPath, settingName);
+            }
+
+            return userConfigSetting;
+        }
+
+        /// <summary>
+        /// Retrieves the setting with the given name from a config file.
+        /// </summary>
+        private static string GetSettingsValueFromFile(string configFile, string settingName)
+        {
             if (configFile == null)
             {
                 return null;
