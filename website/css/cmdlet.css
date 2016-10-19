@@ -23,7 +23,12 @@ table#cmdlet-list {
 #cmdlet-list td {
     border: 1px solid rgba(0,0,0,0.08);
     width: 50%; min-width: 50%;
-}
+    /**
+     * CSS Hack: The td > a selector below won't use height 100% unless the td has
+     * a specified height. (Will obviously grow to be more than 1px.)
+     */
+    height: 1px;
+ }
 
 /* Make full cell selectable. */
 #cmdlet-list td > a {
