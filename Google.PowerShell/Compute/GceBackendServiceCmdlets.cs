@@ -9,6 +9,7 @@ using System.Management.Automation;
 
 namespace Google.PowerShell.ComputeEngine
 {
+    /// <summary>
     /// <para type="synopsis">
     /// Gets Google Compute Engine backend services.
     /// </para>
@@ -22,10 +23,11 @@ namespace Google.PowerShell.ComputeEngine
     /// <example>
     /// <code>PS C:\> Get-GceBackendService "my-backendservice"</code>
     /// <para>This command gets the backend service named "my-backendservice".</para>
+    /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/backendServices#resource-representations)">
     /// [Backend resource definition]
     /// </para>
-    /// </example>
+    /// </summary>
     [Cmdlet(VerbsCommon.Get, "GceBackendService", DefaultParameterSetName = ParameterSetNames.OfProject)]
     [OutputType(typeof(BackendService))]
     public class GetGceBackendServiceCmdlet : GceCmdlet
