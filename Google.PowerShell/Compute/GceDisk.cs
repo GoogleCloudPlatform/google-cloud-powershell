@@ -145,7 +145,7 @@ namespace Google.PowerShell.ComputeEngine
     ///   </para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-GceImage -Family "windows-2012-r2 | New-GceDisk "disk-from-image"</code>
+    ///   <code>PS C:\> Get-GceImage -Family "windows-2012-r2" | New-GceDisk "disk-from-image"</code>
     ///   <para>Creates a new persistant disk from the latest windows-2012-r2 image.</para>
     /// </example>
     /// <example>

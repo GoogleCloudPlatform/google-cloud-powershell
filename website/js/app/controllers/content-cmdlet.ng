@@ -1,0 +1,48 @@
+﻿<div ng-if="!contentCtrl.cmdletInfo">
+  <h2>Error</h2>
+  <p class="text">
+    Cmdlet {{ currentCmdlet }} not found.
+  </p>
+</div>
+
+<div ng-if="contentCtrl.cmdletInfo">
+  <div class="psr-textBlock">
+    <div ng-bind-html="contentCtrl.cmdletInfo.synopsis | applyHtmlStyling"></div>
+  </div>
+
+  <h2>Description</h2>
+  <div class="psr-textBlock">
+    <div ng-bind-html="contentCtrl.cmdletInfo.description | applyHtmlStyling"></div>
+  </div>
+
+  <h2>Syntax</h2>
+  <div ng-if="contentCtrl.cmdletInfo.syntax.length == 0">
+    <syntax-widget syntax="{ name: contentCtrl.cmdletInfo.name, parameterSet: 'Default', parameter: [] }"></syntax-widget>
+  </div>
+  <div ng-repeat="syntaxInfo in contentCtrl.cmdletInfo.syntax">
+    <syntax-widget syntax="syntaxInfo"></syntax-widget>
+  </div>
+
+  <h2 ng-if="contentCtrl.cmdletInfo.parameters.length > 0">Parameters</h2>
+  <parameters-widget parameters="contentCtrl.cmdletInfo.parameters"></parameters-widget>
+
+  <h2 ng-if="contentCtrl.cmdletInfo.examples.length > 0">Examples</h2>
+  <div id="cmdlet-examples" ng-if="contentCtrl.cmdletInfo.examples.length > 0">
+    <div class="psr-example" ng-repeat="example in contentCtrl.cmdletInfo.examples">
+      <div class="psr-textBlock" ng-bind-html="example.introduction | applyHtmlStyling"></div>
+      <div ng-if="example.code" class="psr-exampleCodeContainer">
+        <pre>{{ example.code }}</pre>
+      </div>
+      <div class="psr-textBlock" ng-bind-html="example.remarks | applyHtmlStyling"></div>
+    </div>
+  </div>
+
+  <div ng-show="contentCtrl.cmdletInfo.links.length > 0">
+    <h2>Related Links</h2>
+    <div id="cmdlet-links">
+      <div ng-repeat="linkObj in contentCtrl.cmdletInfo.links">
+        <a href="{{ linkObj.uri }}">{{ linkObj.text.replace('[', '').replace(']', '') }}</a>
+      </div>
+    </div>
+  </div>
+</div>

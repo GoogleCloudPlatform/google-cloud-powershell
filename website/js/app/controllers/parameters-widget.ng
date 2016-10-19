@@ -1,0 +1,26 @@
+<div>
+  <table id="cmdlet-parameters">
+    <tr
+        ng-repeat="parameter in parameters | orderBy: orderByParamSet(parametersCtrl.selectedParameterSet)"
+        ng-class="{ inSelectedParamSet: parametersCtrl.inSelectedParamSet(parameter), notInSelectedParamSet: parametersCtrl.selectedParameterSet && !parametersCtrl.inSelectedParamSet(parameter) }"
+        ng-hide="(parameter.aliases && parameter.aliases.split(',').indexOf(parameter.name) != -1)">
+      <!-- &#8209; is the HTML character for "non-breaking hyphen". -->
+      <td class="name">
+        <p>&#8209;{{ parameter.name }}<span ng-if="parameter.aliases"> or</span></p>
+        <div class="aliases" ng-if="parameter.aliases">
+          <p ng-repeat="alias in parameter.aliases.split(',') | orderBy:'toString()'">
+            &nbsp;&nbsp;&#8209;{{ alias }}
+          </p>
+        </div>
+      </td>
+      <td class="description">
+        <div class="metadata">
+            <span class="type">{{ parameter.type.name | stripNamespace }}</span>
+            <span ng-if="parameter.required == 'false'" class="optional">Optional</span>
+        </div>
+        <!-- Pre-processed in CTRL to be formatted as HTML. -->
+        <div ng-bind-html="parameter.description | applyHtmlStyling"></div>
+      </td>
+    </tr>
+  </table>
+</div>
