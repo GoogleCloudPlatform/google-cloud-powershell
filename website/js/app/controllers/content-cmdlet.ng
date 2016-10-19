@@ -1,6 +1,4 @@
-﻿<div
-    id="content-product-description"
-    ng-if="!contentCtrl.cmdletInfo">
+﻿<div ng-if="!contentCtrl.cmdletInfo">
   <h2>Error</h2>
   <p>
     Cmdlet {{ currentCmdlet }} not found.

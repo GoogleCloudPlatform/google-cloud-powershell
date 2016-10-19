@@ -44,16 +44,17 @@
     </div>
     <div id="content-container">
       <div id="content-header">
-        <div class="psr-contentBlock psr-contentHeaderContainer">
+        <div class="psr-contentHeaderContainer psr-contentBlock">
           <h1>{{ contentCtrl.contentHeader }}</p>
         </div>
       </div>
-      <div ng-if="!contentCtrl.errorMessage" class="psr-contentBlock">
-        <ng-view></ng-view>
-      </div>
-      <div ng-if="contentCtrl.errorMessage" class="psr-contentBlock">
-        <div id="content-product-description">
+      <div id="content" class="psr-contentBlock">
+        <div ng-if="!contentCtrl.errorMessage">
+          <ng-view></ng-view>
+        </div>
+        <div ng-if="contentCtrl.errorMessage">
           <p>{{ contentCtrl.errorMessage }}</p>
+        </div>
       </div>
     </div>
   </div>

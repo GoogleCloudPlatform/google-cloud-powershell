@@ -1,6 +1,4 @@
-<div
-    id="content-product-description"
-    ng-if="!contentCtrl.resourceInfo">
+<div ng-if="!contentCtrl.resourceInfo">
   <h2>Error</h2>
   <p>
     No information for product {{ contentCtrl.currentProduct }} and resource 
@@ -17,17 +15,13 @@
   <tr ng-repeat="cmdlet in contentCtrl.resourceInfo.cmdlets | orderBy:'name'">
     <td class="psr-cmdletName">
       <a href="/google-cloud-powershell/#/{{ contentCtrl.currentProduct }}/{{ contentCtrl.currentResource }}/{{ cmdlet.name }}">
-        <div>
-          {{ cmdlet.name }}
-        </div>
+        {{ cmdlet.name }}
       </a>
     </td>
-      <td class="psr-cmdletDescription">
-        <a href="/google-cloud-powershell/#/{{ contentCtrl.currentProduct }}/{{ contentCtrl.currentResource }}/{{ cmdlet.name }}">
-          <div>
-            {{ cmdlet.synopsis }}
-          </div>
-        </a>
+    <td class="psr-cmdletDescription">
+      <a href="/google-cloud-powershell/#/{{ contentCtrl.currentProduct }}/{{ contentCtrl.currentResource }}/{{ cmdlet.name }}">
+        {{ cmdlet.synopsis }}
+      </a>
     </td>
   </tr>
 </table>

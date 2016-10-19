@@ -6,21 +6,37 @@
  * #cmdlet-list
  * The table showing cmdlet names and their descriptions. 
  */
-#cmdlet-list table, th, td {
+table#cmdlet-list {
+    font-family: "Roboto";
+    color: rgba(0,0,0,.87);
+
+    border: 1px solid rgba(0,0,0,0.08);
+    min-width: 100%;
+}
+
+#cmdlet-list th {
     border: 1px solid rgba(0,0,0,0.08);
     padding: 16px 12px 16px 12px;
     width: 50%; min-width: 50%;
 }
 
+#cmdlet-list td {
+    border: 1px solid rgba(0,0,0,0.08);
+    width: 50%; min-width: 50%;
+}
+
+/* Make full cell selectable. */
+#cmdlet-list td > a {
+    padding: 16px 12px 16px 12px;
+    display: block;
+    height: 100%;
+}
+
 #cmdlet-list th {
     text-align: left;
-
-    font-family: "Roboto";
     font-size: 14px;
     line-height: 26px;
     font-weight: 500;
-    color: rgba(0,0,0,.87);
-
     background-color: rgba(0,0,0,.04);
 }
 
@@ -28,18 +44,15 @@
     background-color: rgba(0,0,0,.04);
 }
 
-#cmdlet-list .psr-cmdletName {
+#cmdlet-list td.psr-cmdletName {
     font-family: "Roboto Mono";
     font-size: 16px;
     line-height: 28px;
-    color: rgba(0,0,0,.87);
 }
 
-#cmdlet-list .psr-cmdletDescription {
-    font-family: "Roboto";
-    font-size: 14pt;
-    line-height: 26pt;
-    color: rgba(0,0,0,.87);
+#cmdlet-list td.psr-cmdletDescription {
+    font-size: 16px;
+    line-height: 28px;
 }
 
 /**
@@ -50,10 +63,15 @@
     background-color: rgba(0,0,0, 0.04);
 
     font-family: "Roboto Mono";
-    font-size: 16pt;
-    line-height: 28pt;
+    font-size: 16px;
+    line-height: 28px;
 
     margin-bottom: 16px;
+}
+ 
+.psr-syntaxWidget p {
+    /* Override style inherited from #content p.*/
+    margin-bottom: 0 !important;
 }
 
 .psr-syntaxWidget.selected {
@@ -73,8 +91,8 @@
 /** Hide the parameter set name unless you hover over the syntax widget or it is selected. */
 .psr-syntaxWidget .parameterSetName {
     font-family: "Roboto";
-    font-size: 12pt;
-    line-height: 16pt;
+    font-size: 14px;
+    line-height: 16px;
     font-style: italic;
     color: rgba(0,0,0,.54);
     padding: 8px 8px;
@@ -107,7 +125,9 @@
  * #cmdlet-parameters
  * Table showing all of the cmdlet's parameters.
  */
-#cmdlet-parameters table, th, td {
+#cmdlet-parameters table,
+#cmdlet-parameters th,
+#cmdlet-parameters td {
     border: 1px solid rgba(0,0,0,0.08);
     padding: 16px 12px 16px 12px;
 }
@@ -145,8 +165,8 @@
 
 #cmdlet-parameters td.description {
     font-family: "Roboto";
-    font-size: 14pt;
-    line-height: 26pt;
+    font-size: 14px;
+    line-height: 26px;
     color: rgba(0,0,0,.87);
 
     width: 80%;
@@ -170,7 +190,7 @@
  * #cmdlet-examples
  * List of examples.
  */
-#cmdlet-examples .psr-exampleCodeContainer {
+#cmdlet-examples pre {
     font-family: "Roboto Mono";
     font-size: 16px;
     line-height: 28px;
@@ -178,10 +198,12 @@
 
     padding: 12px;
     background-color: rgba(0,0,0, 0.04);
+
+    margin-bottom: 0;
 }
 
 #cmdlet-examples .psr-example {
-    padding-bottom: 16px;
+    margin-bottom: 16px;
 }
 
 /**
@@ -190,8 +212,8 @@
  */
 #cmdlet-links {
     font-family: "Roboto";
-    font-size: 14pt;
-    line-height: 26pt;
+    font-size: 14px;
+    line-height: 26px;
  
     /* Theme primary - Google Blue 600 */
     color: #3B78E7;

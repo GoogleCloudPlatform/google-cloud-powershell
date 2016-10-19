@@ -132,69 +132,31 @@ pre {
 }
 
 /**
- * Content page styles.
+ * #content
+ * Parent element for all content pages.
  */
-.psr-contentText {
+#content {
     font-family: "Roboto";
-    font-size: 16pt;
-    line-height: 28pt;
+    font-size: 16px;
+    line-height: 28px;
     color: rgba(0,0,0,.87);
 }
 
-.psr-contentText p {
+#content p {
     margin-bottom: 16px;
 }
 
-/**
- * .psr-contentTable
- * Basic one-column table. 
- */
-.psr-contentTable {
+#content h2 {
     font-family: "Roboto";
-    font-size: 14pt;
-    line-height: 26pt;
-    color: rgba(0,0,0,.87);
-    min-width: 100%;
+    font-size: 20px;
+    line-height: 36px;
+    font-weight: 300;
+    color: rgba(0,0,0,.54);
+    margin-top: 16px;
 }
 
-.psr-contentTable table, th, td {
-    border: 1px solid rgba(0,0,0,0.08);
-    padding: 16px 12px 16px 12px;
-    min-width: 100%;
-}
 
-.psr-contentTable th {
-    text-align: left;
-
-    font-family: "Roboto";
-    font-size: 14px;
-    line-height: 26px;
-    font-weight: 500;
-    color: rgba(0,0,0,.87);
-
-    background-color: rgba(0,0,0,.04);
-}
-
-.psr-contentTable tr:hover {
-    background-color: rgba(0,0,0,.04);
-}
-
-/**
- * #content-product-description
- * Generic HTML content descripting a GCP product.
- */
-#content-product-description {
-    font-family: "Roboto";
-    font-size: 14pt;
-    line-height: 26pt;
-    color: rgba(0,0,0,.87);
-}
-
-#content-product-description p {
-    margin-bottom: 16px;
-}
-
-#content-product-description pre {
+#content pre {
     font-family: "Roboto Mono";
     font-size: 16px;
     line-height: 28px;
@@ -207,24 +169,40 @@ pre {
     overflow: auto;
 }
 
-
-/** The the applyHtmlStyling filter for more information. */
-code {
-    font-family: "Roboto Mono";
+/* .psr-linkTable - A table containing singular rows of links. */
+table.psr-linkTable,
+.psr-linkTable th,
+.psr-linkTable td {
+    border: 1px solid rgba(0,0,0,0.08);
+    min-width: 100%;
 }
 
-code.text {
-    color: rgba( 67, 160,  71, .87);
+table.psr-linkTable,
+.psr-linkTable th {
+    padding: 16px 12px 16px 12px;
 }
 
-code.cmdlet {
-    color: rgba( 59, 120, 231, .87);
+.psr-linkTable td > a {
+    padding: 16px 12px 16px 12px;
+    display: block;
+    height: 100%;
 }
 
-#content-container h2 {
-    font-family: "Roboto";
-    font-size: 20pt;
-    line-height: 36pt;
-    font-weight: 300;
-    color: rgba(0,0,0,.54);
+.psr-linkTable th {
+    text-align: left;
+    font-size: 14px;
+    line-height: 26px;
+    font-weight: 500;
+    color: rgba(0,0,0,.87);
+    background-color: rgba(0,0,0,.04);
 }
+
+.psr-linkTable tr:hover {
+    background-color: rgba(0,0,0,.04);
+}
+
+/** See the applyHtmlStyling filter for more information. */
+code { font-family: "Roboto Mono"; }
+code.code   { color: rgba(  0,   0,  60, .87); }
+code.cmdlet { color: rgba( 59, 120, 231, .87); }
+code.text   { color: rgba( 67, 160,  71, .87); }

@@ -1,13 +1,10 @@
-﻿<div
-    id="content-product-description"
-    ng-if="!contentCtrl.productInfo">
+﻿<div ng-if="!contentCtrl.productInfo">
   <h2>Error</h2>
   <p>No information for product {{ contentCtrl.currentProduct }}.</p>
 </div>
 
 <!-- Product-specific copy. Usually cribbed from the marketing page. -->
 <div
-    id="content-product-description"
     ng-if="contentCtrl.productInfo"
     ng-switch="contentCtrl.currentProduct">
   
@@ -31,7 +28,7 @@
     </p>
     <p>
       Once you have your configuration object, you can send them to the
-      <code class="cmdlet">Add-GceInstance</code> cmdlet to build them of a
+      <code class="cmdlet">Add&#8209;GceInstance</code> cmdlet to build them of a
       particular project and zone. If your active gcloud configuration has a
       project and zone, then those parameters are optional.
     </p>
@@ -51,7 +48,7 @@ $config | Add-GceInstance -Project $project -Zone "us-central1-b"</pre>
     <p>
       In addition to basic cmdlets to start, stop, or restart an instance,
       You can set tags, disks, access configs or metadata after creating
-      your VM with the <code class="cmdlet">Set-GceInstance</code> cmdlet.
+      your VM with the <code class="cmdlet">Set&#8209;GceInstance</code> cmdlet.
     </p>
     <pre>
 $instance = "&lt;your-instance-name&gt;"
@@ -133,8 +130,8 @@ Read-GcsObject $bucket "object-name" -OutFile "output-file.png"</pre>
     <h2>Managed Zones</h2>
     <p>
       In Cloud DNS, a managed zone models a DNS zone and holds DNS records for  
-      the same DNS name suffix (e.g., <code>dnsexample.com.</code>). You can add a zone 
-      to your Google Cloud Console project using the <code class="cmdlet">Add-GcdManagedZone</code>
+      the same DNS name suffix (e.g., <code class="code">dnsexample.com.</code>). You can add a zone 
+      to your Google Cloud Console project using the <code class="cmdlet">Add&#8209;GcdManagedZone</code>
       cmdlet. Each zone in your project must have a unique name and a unique 
       DNS name to specify its associated DNS name suffix.  
     </p>
@@ -151,8 +148,8 @@ Get-GcdManagedZone -Project $project</pre>
     <h2>Resource Record Sets</h2>
     <p>
       <a href="https://cloud.google.com/dns/records/json-record">ResourceRecordSets</a> in Cloud  
-      DNS are DNS records that you can create using the <code class="cmdlet">New-GcdResourceRecordSet</code> 
-      cmdlet and retrieve from a managed zone using the <code class="cmdlet">Get-GcdResourceRecordSet</code> 
+      DNS are DNS records that you can create using the <code class="cmdlet">New&#8209;GcdResourceRecordSet</code> 
+      cmdlet and retrieve from a managed zone using the <code class="cmdlet">Get&#8209;GcdResourceRecordSet</code> 
       cmdlet.
     </p>
     <p>
@@ -191,7 +188,7 @@ Add-GcdChange -Project $project -Zone $zone -Remove $ARecord</pre>
       which doesn't require anything.
     </p>
     <p>
-      After the configuration object has been made, the <code class="cmdlet">Add-GcSqlInstance</code>
+      After the configuration object has been made, the <code class="cmdlet">Add&#8209;GcSqlInstance</code>
       cmdlet can be called to create that instance in a particular project.
       If your active gcloud configuration has a project, the parameter is optional.
     </p>
@@ -205,7 +202,7 @@ $instance | Add-GcSqlInstance -Project $myProjectName</pre>
     <p>
       MySQL dump filles and CSV files on either your local machine
       or on a Google Cloud Storage Bucket can be imported to your instance's
-      databases with the <code class="cmdlet">Import-GcSqlInstance</code>.
+      databases with the <code class="cmdlet">Import&#8209;GcSqlInstance</code>.
     </p>
     <pre>
 Import-GcSqlInstance "my-instance-name" "C:\Users\User\file.csv" `
@@ -218,7 +215,7 @@ Import-GcSqlInstance "my-instance-name" "C:\Users\User\file.csv" `
   </div>
 
   <h2>All Resources</h2>
-  <table class="psr-contentTable">
+  <table class="psr-linkTable">
     <tr>
       <th>Resource</th>
     </tr>

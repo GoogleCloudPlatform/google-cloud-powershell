@@ -114,7 +114,9 @@
             // TODO(chrsmith): Go for the gold and create a link to the actual cmdlet.
             // This will require that we have a search capability on the site.
             html = html.replace(cmdletReferencePattern, function(cmdletName) {
-                return '<code class="cmdlet">' + cmdletName + '</code>';
+                // Replace '-' with a non-breaking hyphen.
+                var revisedCmdletName = cmdletName.replace('-', '&#8209;');
+                return '<code class="cmdlet">' + revisedCmdletName + '</code>';
             });
             return html;
         };
