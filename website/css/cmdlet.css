@@ -154,7 +154,7 @@ table#cmdlet-list {
     color: rgba(0,0,0,.65);
 }
 
-#cmdlet-parameters .notInSelectedParamSet td.name {
+#cmdlet-parameters tr.notInSelectedParamSet td.name {
     color: rgba(0,0,0,.25);
 }
 
@@ -168,13 +168,17 @@ table#cmdlet-list {
     min-width: 80%;
 }
 
-#cmdlet-parameters .notInSelectedParamSet td.description {
+#cmdlet-parameters tr.notInSelectedParamSet td.description {
     color: rgba(0,0,0,.25);
 }
 
 #cmdlet-parameters td.description .metadata {
     font-style: italic;
     color: rgba(0,0,0,.54);
+}
+
+#cmdlet-parameters tr.notInSelectedParamSet td.description .metadata {
+    color: rgba(0,0,0,.15);
 }
 
 /** We can't have both float, since the metadata div won't take up any space. */
@@ -190,6 +194,8 @@ table#cmdlet-list {
     font-size: 16px;
     line-height: 28px;
     color: rgba(0,0,0,.87);
+
+    white-space:pre-wrap;
 
     padding: 12px;
     background-color: rgba(0,0,0, 0.04);
