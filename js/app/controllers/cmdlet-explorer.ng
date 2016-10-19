@@ -50,19 +50,19 @@
 <div id="left-nav-bottom">
   <div class="psr-navRow noBottomSeparator">
     <div class="psr-navIcon sourcecode"></div>
-    <a href="http://stackoverflow.com/questions/tagged/gcloud-powershell">
+    <a href="https://github.com/GoogleCloudPlatform/google-cloud-powershell">
       <div class="psr-navText">Source Code</div>
     </a>
   </div>
   <div class="psr-navRow noBottomSeparator">
     <div class="psr-navIcon feedback"></div>
-    <a href="https://github.com/GoogleCloudPlatform/gcloud-powershell/issues">
+    <a href="https://github.com/GoogleCloudPlatform/google-cloud-powershell/issues">
       <div class="psr-navText">Feedback</div>
     </a>
   </div>
   <div class="psr-navRow noBottomSeparator">
     <div class="psr-navIcon stackoverflow"></div>
-    <a href="https://github.com/GoogleCloudPlatform/gcloud-powershell">
+    <a href="http://stackoverflow.com/questions/tagged/google-cloud-powershell">
       <div class="psr-navText">Stack Overflow</div>
     </a>
   </div>
