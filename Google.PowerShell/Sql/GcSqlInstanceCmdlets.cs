@@ -993,23 +993,23 @@ namespace Google.PowerShell.Sql
 
     /// <summary>
     /// <para type="synopsis">
-    /// Promotes a Cloud SQL Replica.
+    /// Convert a Cloud SQL Replica to an SQL Instance.
     /// </para>
     /// <para type="description">
-    /// Promotes the specified Cloud SQL Replica to a stand-alone Instance.
+    /// Convert the specified Cloud SQL Replica to a stand-alone Instance.
     /// </para>
     /// <para type="description">
     /// If a Project is specified, it will promote the specified Replica in that Project. Otherwise, promotes the 
     /// replica in the Cloud SDK config project. 
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Promote-GcSqlReplica -Project "testing" -Replica "testRepl1"</code>
-    ///   <para>Promote the SQL Replica "testRepl1" from the Project "testing."</para>
+    ///   <code>PS C:\> ConvertTo-GcSqlInstance -Project "testing" -Replica "testRepl1"</code>
+    ///   <para>Convert the SQL Replica "testRepl1" from the Project "testing."</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/replica)">[Replica Instances]</para>
     /// </summary>
-    [Cmdlet("Promote", "GcSqlReplica")]
-    public class PromoteGcSqlReplicaCmdlet : GcSqlCmdlet
+    [Cmdlet(VerbsData.ConvertTo, "GcSqlInstance")]
+    public class ConvertToGcSqlInstanceCmdlet : GcSqlCmdlet
     {
         private class ParameterSetNames
         {
@@ -1605,17 +1605,17 @@ namespace Google.PowerShell.Sql
     /// Instance in the Cloud SDK config project. 
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Failover-GcSqlReplica -Project "testing" -Instance "test1"</code>
+    ///   <code>PS C:\> Invoke-GcSqlInstanceFailover -Project "testing" -Instance "test1"</code>
     ///   <para>Failover the SQL Instance "test1" in the Project "testing."</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Failover-GcSqlReplica -Project "testing" -Instance "test1" - SettingsVersion 3</code>
+    ///   <code>PS C:\> Invoke-GcSqlInstanceFailover -Project "testing" -Instance "test1" - SettingsVersion 3</code>
     ///   <para>Failover the SQL Instance "test1" with current settings version 3 in the Project "testing."</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/tools/powershell/docs/sql/replica)">[Replica Instances]</para>
     /// </summary>
-    [Cmdlet("Failover", "GcSqlInstance")]
-    public class FailoverGcSqlInstanceCmdlet : GcSqlCmdlet
+    [Cmdlet(VerbsLifecycle.Invoke, "GcSqlInstanceFailover")]
+    public class InvokeGcSqlInstanceFailoverCmdlet : GcSqlCmdlet
     {
         private class ParameterSetNames
         {
