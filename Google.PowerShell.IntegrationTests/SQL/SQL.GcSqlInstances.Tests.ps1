@@ -448,18 +448,18 @@ Describe "Stop-GcSqlReplica" {
      }
 }
 
-Describe "Promote-GcSqlReplica" {
+Describe "ConvertTo-GcSqlInstance" {
     # For these tests, test-db2 was used because an instance must have a database and a binarylog for it to be 
     # replicated. This kind of instance cannot be easily/quickly instantiated like those in other tests.
     $masterInstance = "test-db2"
     $2ndGenTier = "db-n1-standard-1"
 
-    It "should work and promote a test replica (replica name as positional param)" {
+    It "should work and convert a test replica (replica name as positional param) to an instance" {
         # A random number is used to avoid collisions with the speed of creating and deleting instances/replicas.
         $r = Get-Random
         $replica = "test-repl$r"
         gcloud sql instances create $replica --master-instance-name $masterInstance --tier $2ndGenTier --replication SYNCHRONOUS --quiet 2>$null
-        Promote-GcSqlReplica $replica
+        ConvertTo-GcSqlInstance $replica
 
         $operations = Get-GcSqlOperation -Instance $replica
         $operations.Count | Should Be 2
@@ -476,7 +476,7 @@ Describe "Promote-GcSqlReplica" {
         $r = Get-Random
         $replica = "test-repl$r"
         gcloud sql instances create $replica --master-instance-name $masterInstance --tier $2ndGenTier --replication SYNCHRONOUS --quiet 2>$null
-        Get-GcSqlInstance -Name $replica | Promote-GcSqlReplica
+        Get-GcSqlInstance -Name $replica | ConvertTo-GcSqlInstance
 
         $operations = Get-GcSqlOperation -Instance $replica
         $operations.Count | Should Be 2
@@ -499,7 +499,7 @@ Describe "Promote-GcSqlReplica" {
         $r = Get-Random
         $replica = "test-repl$r"
         gcloud sql instances create $replica --master-instance-name $masterInstance --tier $2ndGenTier --replication SYNCHRONOUS --project $defaultProject --quiet 2>$null
-        Get-GcSqlInstance -Project $defaultProject -Name $replica | Promote-GcSqlReplica
+        Get-GcSqlInstance -Project $defaultProject -Name $replica | ConvertTo-GcSqlInstance
 
         $operations = Get-GcSqlOperation -Project $defaultProject -Instance $replica
         $operations.Count | Should Be 2
@@ -658,7 +658,7 @@ Describe "Update-GcSqlInstance" {
     gcloud sql instances delete $instance --quiet 2>$null
 }
 
-Describe "Failover-GcSqlInstance" {
+Describe "Invoke-GcSqlInstanceFailover" {
     # For these tests, test0 (which has a failover, test0-failover) was used because this kind of instance with a
     # failover cannot be easily/quickly instantiated like those in other tests.
     $instance = "test0"
@@ -671,7 +671,7 @@ Describe "Failover-GcSqlInstance" {
 
     It "should failover a test instance with a correct settings version specified" {
         $currentSettingsVersion = (Get-GcSqlInstance -Name $instance).Settings.SettingsVersion
-        Failover-GcSqlInstance $instance $currentSettingsVersion
+        Invoke-GcSqlInstanceFailover $instance $currentSettingsVersion
 
         $operations = Get-GcSqlOperation -Instance $instance | where { $_.OperationType -eq "FAILOVER" }
         $operations.Count | Should Be ($numFailoverOps + 1)
@@ -680,7 +680,7 @@ Describe "Failover-GcSqlInstance" {
     }
 
      It "should failover a pipelined instance (instance and default projects same)" {
-        Get-GcSqlInstance -Name $instance | Failover-GcSqlInstance
+        Get-GcSqlInstance -Name $instance | Invoke-GcSqlInstanceFailover
 
         $operations = Get-GcSqlOperation -Instance $instance | where { $_.OperationType -eq "FAILOVER" }
         $operations.Count | Should Be ($numFailoverOps + 2)
@@ -695,7 +695,7 @@ Describe "Failover-GcSqlInstance" {
         # Set gcloud config to a non-default project (not gcloud-powershell-testing)
         gcloud config set project $nonDefaultProject
 
-        Get-GcSqlInstance -Project $defaultProject -Name $instance | Failover-GcSqlInstance
+        Get-GcSqlInstance -Project $defaultProject -Name $instance | Invoke-GcSqlInstanceFailover
 
         $operations = Get-GcSqlOperation -Project $defaultProject -Instance $instance | where { $_.OperationType -eq "FAILOVER" }
         $operations.Count | Should Be ($numFailoverOps + 3)
@@ -710,8 +710,9 @@ Describe "Failover-GcSqlInstance" {
     It "should fail to failover a test instance with an incorrect settings version specified" {
         $wrongSettingsVersion = (Get-GcSqlInstance -Name $instance).Settings.SettingsVersion + 50
 
-        { Failover-GcSqlInstance $instance $wrongSettingsVersion } | Should Throw "412"
-        { Failover-GcSqlInstance $instance $wrongSettingsVersion } | Should Throw "Input or retrieved settings version does not match current settings version for this instance."
+        { Invoke-GcSqlInstanceFailover $instance $wrongSettingsVersion } | Should Throw "412"
+        { Invoke-GcSqlInstanceFailover $instance $wrongSettingsVersion } |
+            Should Throw "Input or retrieved settings version does not match current settings version for this instance."
     }
 }
 

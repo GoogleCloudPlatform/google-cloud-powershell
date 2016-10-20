@@ -1,12 +1,12 @@
 Remove-GcSqlBackupRun
 Export-GcSqlInstance
-Failover-GcSqlInstance
+Invoke-GcSqlInstanceFailover
 Restart-GcSqlInstance
 Import-GcSqlInstance
 Remove-GcSqlInstance
 Restore-GcSqlInstanceBackup
 Stop-GcSqlReplica
-Promote-GcSqlReplica
+ConvertTo-GcSqlInstance
 Start-GcSqlReplica
 Remove-GcSqlSslCert
 Remove-GcdManagedZone
