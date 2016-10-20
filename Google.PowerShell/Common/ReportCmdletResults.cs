@@ -133,7 +133,8 @@ namespace Google.PowerShell.Common
         // Application name to report to GA.
         private const string ApplicationName = "google-cloud-powershell";
         // Version of the Google.PowerShell assembly.
-        private static readonly Lazy<string> s_appVersion = new Lazy<string>(() => Assembly.GetExecutingAssembly().GetName().Version.ToString());
+        private static readonly Lazy<string> s_appVersion =
+            new Lazy<string>(() => typeof(GoogleAnalyticsCmdletReporter).GetTypeInfo().Assembly.GetName().Version.ToString());
 
         /// <summary>
         /// Singleton instance of the event reporter object, wrapping the actual calls to Google Analytics.
