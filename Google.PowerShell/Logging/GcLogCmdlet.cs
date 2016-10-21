@@ -89,7 +89,7 @@ namespace Google.PowerShell.Logging
         /// <summary>
         /// Converts a hashtable to a dictionary
         /// </summary>
-        protected Dictionary<K,V> ConvertToDictionary<K,V>(Hashtable hashTable)
+        protected Dictionary<K, V> ConvertToDictionary<K, V>(Hashtable hashTable)
         {
             return hashTable.Cast<DictionaryEntry>().ToDictionary(kvp => (K)kvp.Key, kvp => (V)kvp.Value);
         }
