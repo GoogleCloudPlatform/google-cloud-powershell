@@ -84,3 +84,12 @@ function Install-CloudSdk() {
         [System.Environment]::SetEnvironmentVariable("Path", "$envPath;$cloudBinPath")
     }
 }
+
+# Run pester test in folder $env:test_folder.
+# Throw error if any test fails.
+function Start-PesterTest() {
+    $testResult = Invoke-Pester "$PSScriptRoot\$env:test_folder" -PassThru
+    if ($testResult.FailedCount -gt 0) {
+        throw "$($testResult.FailedCount) tests failed."
+    }
+}

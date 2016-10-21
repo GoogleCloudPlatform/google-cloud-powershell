@@ -563,7 +563,7 @@ Describe "Read-GcsObject" {
 
     It "fails if it doesn't have write access" {
         { Read-GcsObject $bucket $testObjectName "C:\windows\helloworld.txt" } `
-            | Should Throw "is denied" 
+            | Should Throw "is denied"
     }
 
     It "will write contents to pipeline if no -OutFile is set" {
