@@ -561,7 +561,8 @@ Describe "Read-GcsObject" {
             | Should Throw "Not Found"
     }
 
-    It "fails if it doesn't have write access" {
+    # This test can only be run in non-admin PowerShell.
+    It "fails if it doesn't have write access" -Skip {
         { Read-GcsObject $bucket $testObjectName "C:\windows\helloworld.txt" } `
             | Should Throw "is denied"
     }

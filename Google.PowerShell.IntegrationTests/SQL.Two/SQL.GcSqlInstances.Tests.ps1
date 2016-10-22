@@ -103,7 +103,7 @@ Describe "Add-GcSqlInstance" {
         }
     }
 
-    It "should be able to create a read-replica instance" {
+    It "should be able to create a read-replica instance" -Pending {
         $r = Get-Random
         # A random number is used to avoid collisions with the speed of creating
         # and deleting instances.
@@ -357,7 +357,7 @@ Describe "ConvertTo-GcSqlInstance" {
     $masterInstance = "test-db2"
     $2ndGenTier = "db-n1-standard-1"
 
-    It "should work and convert a test replica (replica name as positional param) to an instance" {
+    It "should work and convert a test replica (replica name as positional param) to an instance" -Pending {
         # A random number is used to avoid collisions with the speed of creating and deleting instances/replicas.
         $r = Get-Random
         $replica = "test-repl$r"
@@ -377,7 +377,7 @@ Describe "ConvertTo-GcSqlInstance" {
         }
     }
 
-     It "should work and promote a pipelined replica (replica and default projects same)" {
+     It "should work and promote a pipelined replica (replica and default projects same)" -Pending {
          # A random number is used to avoid collisions with the speed of creating and deleting instances/replicas.
         $r = Get-Random
         $replica = "test-repl$r"
@@ -397,7 +397,7 @@ Describe "ConvertTo-GcSqlInstance" {
         }
      }
 
-    It "should work and promote a pipelined replica (replica and default projects differ)" {
+    It "should work and promote a pipelined replica (replica and default projects differ)" -Pending {
         $nonDefaultProject = "asdf"
         $defaultProject = "gcloud-powershell-testing"
 
@@ -579,9 +579,9 @@ Describe "Update-GcSqlInstance" {
 }
 
 Describe "Invoke-GcSqlInstanceFailover" {
-    # For these tests, test0 (which has a failover, test0-failover) was used because this kind of instance with a
+    # For these tests, test-failover (which has a failover, test-failover-failover) was used because this kind of instance with a
     # failover cannot be easily/quickly instantiated like those in other tests.
-    $instance = "test0"
+    $instance = "test-failover"
     $numFailoverOps = (Get-GcSqlOperation -Instance $instance | where { $_.OperationType -eq "FAILOVER" }).Count
 
     <#
