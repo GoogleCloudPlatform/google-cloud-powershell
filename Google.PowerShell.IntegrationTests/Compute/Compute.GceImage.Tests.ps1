@@ -5,11 +5,9 @@ $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Get-GceImage -Project $project | Remove-GceImage
 
-$r = Get-Random
-
-$diskName = "test-image-disk-$r"
-
 Describe "Add-GceImage" {
+    $r = Get-Random
+    $diskName = "test-image-disk-$r"
     $disk = New-GceDisk -DiskName $diskName -SizeGb 1
     $imageName = "test-add-image-$r"
 
@@ -53,6 +51,8 @@ Describe "Add-GceImage" {
 }
 
 Describe "Get-GceImage" {
+    $r = Get-Random
+    $diskName = "test-image-disk-$r"
     $disk = New-GceDisk -DiskName $diskName -SizeGb 1
     $imageName1 = "test-get-image1-$r"
     $imageName2 = "test-get-image2-$r"
@@ -126,6 +126,8 @@ Describe "Get-GceImage" {
 }
 
 Describe "Disable-GceImage" {
+    $r = Get-Random
+    $diskName = "test-image-disk-$r"
     $disk = New-GceDisk -DiskName $diskName -SizeGb 1
     $imageName1 = "test-add-image1-$r"
     $imageName2 = "test-add-image2-$r"
@@ -166,6 +168,8 @@ Describe "Disable-GceImage" {
 }
 
 Describe "Remove-GceImage" {
+    $r = Get-Random
+    $diskName = "test-image-disk-$r"
     $disk = New-GceDisk -DiskName $diskName -SizeGb 1
     $imageName = "test-remove-image-$r"
 

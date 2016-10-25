@@ -7,10 +7,10 @@ environment:
     - test_folder: "Storage"
     - test_folder: "Dns"
     - test_folder: "Provider"
-    - test_folder: "Compute.One"
-    - test_folder: "Compute.Two"
-    - test_folder: "SQL.One"
-    - test_folder: "SQL.Two"
+    - test_folder: "Compute"
+    - test_folder: "Compute2"
+    - test_folder: "SQL"
+    - test_folder: "SQL2"
 before_build:
   - nuget restore
   - nuget install secure-file -ExcludeVersion
