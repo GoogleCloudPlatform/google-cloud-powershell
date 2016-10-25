@@ -60,10 +60,10 @@ function Reset-GCloudConfig($oldConfig, $configName) {
     gcloud config configurations delete $configName -q 2>$null
 }
 
-# Install Cloud SDK non-interactively.
+# Installs Cloud SDK non-interactively.
 function Install-CloudSdk() {
-    Invoke-WebRequest -Uri "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-129.0.0-windows-x86_64-bundled-python.zip" `
-                      -OutFile "$env:APPDATA\gcloudsdk.zip"
+    $cloudSdkUri = "https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.zip"
+    Invoke-WebRequest -Uri $cloudSdkUri -OutFile "$env:APPDATA\gcloudsdk.zip"
     Add-Type -AssemblyName System.IO.Compression.FileSystem
 
     # This will extract it to a folder $env:APPDATA\google-cloud-sdk.
@@ -85,8 +85,7 @@ function Install-CloudSdk() {
     }
 }
 
-# Run pester test in folder $env:test_folder.
-# Throw error if any test fails.
+# Runs pester test in folder $env:test_folder and throws error if any test fails.
 function Start-PesterTest() {
     $testResult = Invoke-Pester "$PSScriptRoot\$env:test_folder" -PassThru
     if ($testResult.FailedCount -gt 0) {

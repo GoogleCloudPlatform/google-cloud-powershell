@@ -15,7 +15,7 @@ Describe "New-GcsObject" {
 
     AfterEach {
         if (Test-GcsBucket $bucket) {
-            Remove-GcsBucket -Name $bucket -Force
+            Remove-GcsBucket -Name $bucket -Force -ErrorAction SilentlyContinue
         }
     }
 
@@ -464,7 +464,7 @@ Describe "Remove-GcsObject" {
 
     AfterEach {
         if (Test-GcsBucket $bucket) {
-            Remove-GcsBucket -Name $bucket -Force
+            Remove-GcsBucket -Name $bucket -Force -ErrorAction SilentlyContinue
         }
     }
 
@@ -599,7 +599,7 @@ Describe "Write-GcsObject" {
 
     AfterEach {
         if (Test-GcsBucket $bucket) {
-            Remove-GcsBucket -Name $bucket -Force
+            Remove-GcsBucket -Name $bucket -Force -ErrorAction SilentlyContinue
         }
     }
 
