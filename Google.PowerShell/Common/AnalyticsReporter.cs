@@ -1,4 +1,4 @@
-﻿// Copyright 2016 Google Inc. All Rights Reserved.
+// Copyright 2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
 // Forked from https://github.com/GoogleCloudPlatform/google-cloud-visualstudio
@@ -380,11 +380,11 @@ namespace Google.PowerShell.Common
 
         // The custom dimension index for the various properties sent to Google Analytics.
 
-        // IsUserSignedIn (cd16): true if a user is signed on, false otherwise.
-        private const int IsUserSignedInIndex = 16;
+        // IsInternalUser (cd16): true if the user is internal to Google, false otherwise.
+        private const int IsInternalUserIndex = 16;
 
-        // IsInternalUser (cd17): true if the user is internal to Google, false otherwise.
-        private const int IsInternalUserIndex = 17;
+        // IsUserSignedIn (cd17): true if a user is signed on, false otherwise.
+        private const int IsUserSignedInIndex = 17;
 
         // EventType (cd19): the event type.
         private const int EventTypeIndex = 19;
