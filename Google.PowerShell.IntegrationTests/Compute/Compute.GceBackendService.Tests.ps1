@@ -4,7 +4,7 @@ Install-GcloudCmdlets
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Describe "Get-GceBackendService" {
-    
+    $r = Get-Random
     $serviceName1 = "backend-service1-$r"
     $serviceName2 = "backend-service2-$r"
 
@@ -12,7 +12,7 @@ Describe "Get-GceBackendService" {
         { Get-GceBackendService -Project "asdf" } | Should Throw 403
     }
 
-    It "should fail to get non-existant proxy" {
+    It "should fail to get non-existent proxy" {
         { Get-GceBackendService $serviceName1 } | Should Throw 404
     }
 

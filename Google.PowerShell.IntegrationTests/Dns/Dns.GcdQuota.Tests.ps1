@@ -1,4 +1,5 @@
 ﻿. $PSScriptRoot\..\Dns\GcdCmdlets.ps1
+$project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Describe "Get-GcdQuota" {
 
@@ -37,3 +38,5 @@ Describe "Get-GcdQuota" {
         $quotaInfo.TotalRrdataSizePerChange -ge 9000 | Should Be $true
     }
 }
+
+Reset-GCloudConfig $oldActiveConfig $configName

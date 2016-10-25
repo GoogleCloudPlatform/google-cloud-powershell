@@ -3,7 +3,7 @@ Install-GcloudCmdlets
 
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
-Get-GceFirewall -Project $project | Remove-GceFirewall -Project $project
+Get-GceFirewall -Project $project | Remove-GceFirewall
 
 Describe "Get-GceFirewall" {
     $r = Get-Random

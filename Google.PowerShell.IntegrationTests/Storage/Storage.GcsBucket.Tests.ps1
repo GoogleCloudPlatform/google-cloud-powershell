@@ -23,8 +23,8 @@ Describe "Get-GcsBucket" {
         gsutil rb gs://gcps-testbucket 2>$null
     }
 
-    It "should contain ACL information" {
-        (Get-GcsBucket -Project $project)[0].ACL.Length -gt 0 | Should Be $true
+    It "should contain ACL information" -Pending {
+        (Get-GcsBucket -Project $project)[0].Acl.Count -gt 0 | Should Be $true
     }
 
     It "should list all buckets in a project" {

@@ -10,6 +10,13 @@ function Remove-ProjectDisks($project) {
     foreach ($disk in $disks) {
         gcloud compute disks delete --project $project $disk.Name --zone $disk.Zone --quiet 2>$null
     }
+
+    $disks = Get-GceDisk -Project $project
+    # If there are disks attached to VMs that didn't get cleaned up properly,
+    # those disks won't be removed unless we remove the VMs.
+    if ($null -ne $disks) {
+        Get-GceInstance -Project $project | Remove-GceInstance
+    }
 }
 
 Describe "Get-GceDisk" {
