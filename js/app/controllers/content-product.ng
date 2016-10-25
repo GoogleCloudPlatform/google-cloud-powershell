@@ -53,7 +53,7 @@ $config | Add-GceInstance -Project $project -Zone "us-central1-b"</pre>
     <pre>
 $instance = "&lt;your-instance-name&gt;"
 
-# Fecth information about the instance
+# Fetch information about the instance
 Get-GceInstance $instance
 
 # Stop, start, restart the instance
