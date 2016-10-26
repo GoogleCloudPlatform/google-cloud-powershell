@@ -1,3 +1,8 @@
+[CmdletBinding()]
+Param(
+    [Parameter(Mandatory=$true, Position=0)]
+    [version]$publishVersion
+)
 # Builds the Google Cloud Tools for PowerShell project, and packages the output so it can be
 # integrated into the Google Cloud SDK. This is really of only use to Googlers doing the
 # official releases of the PowerShell module.
@@ -5,6 +10,13 @@
 Clear-Host
 Write-Host -ForegroundColor Yellow "Building and Packaging Google Cloud Tools for PowerShell"
 Write-Host
+
+# Change version like 0.1.3 to 0.1.3.0 or 0.1 to 0.1.0.0.
+$normalizedVersion = [version]::new(
+                        $publishVersion.Major,
+                        $publishVersion.Minor,
+                        [math]::Max($publishVersion.Build, 0),
+                        [math]::Max($publishVersion.Revision, 0))
 
 # Root of the repo. Assuming ran from the Tools folder.
 $projectRoot = Join-Path $PSScriptRoot ".." -Resolve
@@ -14,17 +26,32 @@ $slnFile = Join-Path $projectRoot "gcloud-powershell.sln"
 $binDir = Join-Path $projectRoot "Google.PowerShell\bin\"
 $debugDir = Join-Path $binDir "Debug"
 
+
 # Folders where the build artifacts are stored, the things to be packaged up.
 $packageDir = Join-Path $binDir "Packaged"
 $powerShellDir = Join-Path $packageDir "PowerShell"
 $gcpsDir = Join-Path $packageDir "GoogleCloudPowerShell"
-$archivePath = Join-Path $packageDir "powershell-0.1.9.zip"
+$archivePath = Join-Path $packageDir "powershell-$normalizedVersion.zip"
 
 # Purge the existing bin directory.
 Write-Host -ForegroundColor Cyan "*** Purging the bindir***"
 if (Test-Path $binDir) {
     Remove-Item $binDir -Recurse -Force
 }
+
+# Change the module manifest version
+$moduleManifestFile = Join-Path $projectRoot "Google.PowerShell\ReleaseFiles\GoogleCloud.psd1"
+$moduleManifestContent = Get-Content $moduleManifestFile -Raw
+$moduleManifestContent = $moduleManifestContent -replace "ModuleVersion\s*=\s*'[0-9\.]*'",
+                                                         "ModuleVersion = '$normalizedVersion'"
+$moduleManifestContent | Out-File -Encoding utf8 -FilePath $moduleManifestFile -NoNewline
+
+# Change version in AssemblyInfo file.
+$assemblyInfoFile = Join-Path $projectRoot "Google.PowerShell\Properties\AssemblyInfo.cs"
+$assemblyInfoContent = Get-Content -Raw $assemblyInfoFile
+# Replace Version("oldversion") to Version("$normalizedVersion")
+$assemblyInfoContent = $assemblyInfoContent -replace "Version\(`"[0-9\.]*`"\)", "Version(`"$normalizedVersion`")"
+$assemblyInfoContent | Out-File -Encoding utf8 -FilePath $assemblyInfoFile -NoNewline
 
 # Build the project.
 Write-Host -ForegroundColor Cyan "*** Building the project ***"
@@ -81,3 +108,11 @@ Compress-Archive -Path @($powerShellDir, $gcpsDir) $archivePath
 Write-Host -ForegroundColor Cyan "*** Complete ***"
 Write-Host "The latest build is at:"
 Write-Host $archivePath
+
+Write-Host "Generating Website"
+$generateWebsiteFile = (Get-ChildItem "$PSScriptRoot\GenerateWebsiteData.ps1").FullName
+# We do this on another process because the GenerateWebSiteData script will load the module, so in case we want to
+# run this script again, we won't have a problem with removing the assemblies.
+$process = Start-Process powershell.exe -NoNewWindow -ArgumentList "-file `"$generateWebsiteFile`"" -PassThru
+$process.WaitForExit()
+$process.Dispose()
