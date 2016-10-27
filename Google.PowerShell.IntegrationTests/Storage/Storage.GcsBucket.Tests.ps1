@@ -74,6 +74,38 @@ Describe "New-GcsBucket" {
         $bucket.StorageClass | Should Match "NEARLINE"
     }
 
+    It "supports Coldline storage class" {
+        $bucket = New-GcsBucket -Name "gcps-bucket-creation" `
+                                -Project $project `
+                                -StorageClass COLDLINE
+        $bucket.GetType().FullName | Should Match "Google.Apis.Storage.v1.Data.Bucket"
+        $bucket.StorageClass | Should Match "COLDLINE"
+    }
+
+    It "supports Multi Regional storage class" {
+        $bucket = New-GcsBucket -Name "gcps-bucket-creation" `
+                                -Project $project `
+                                -StorageClass MULTI_REGIONAL
+        $bucket.GetType().FullName | Should Match "Google.Apis.Storage.v1.Data.Bucket"
+        $bucket.StorageClass | Should Match "MULTI_REGIONAL"
+    }
+
+    It "supports Durable Reduced Availability storage class" {
+        $bucket = New-GcsBucket -Name "gcps-bucket-creation" `
+                                -Project $project `
+                                -StorageClass DURABLE_REDUCED_AVAILABILITY
+        $bucket.GetType().FullName | Should Match "Google.Apis.Storage.v1.Data.Bucket"
+        $bucket.StorageClass | Should Match "DURABLE_REDUCED_AVAILABILITY"
+    }
+
+    It "throws error for Regional storage class" {
+        # This test will throw error because gcloud-powershell-testing has Multi-Regional Storage
+        # and so it does not support creating Regional buckets.
+        { New-GcsBucket -Name "gcps-bucket-creation" `
+                                -Project $project `
+                                -StorageClass REGIONAL } | Should Throw "not supported"
+    }
+
     It "supports setting default ACLs" {
         # "authenticatedRead" means it is only accessible to users authenticated with a
         # Google address. So a blind HTTP GET won't work, but if you have the right cookies
