@@ -107,12 +107,19 @@ namespace Google.PowerShell.CloudStorage
 
             /// <summary>
             /// <para type="description">
-            /// Storage class for the bucket. STANDARD, NEARLINE, or DURABLE_REDUCED_AVAILABILITY. See
-            /// https://cloud.google.com/storage/docs/storage-classes for more information.
+            /// Storage class for the bucket. COLDLINE, DURABLE_REDUCED_AVAILABILITY, MULTI_REGIONAL, NEARLINE,
+            /// REGIONAL or STANDARD. See https://cloud.google.com/storage/docs/storage-classes for more information.
             /// </para>
             /// </summary>
             [Parameter]
-            [ValidateSet("DURABLE_REDUCED_AVAILABILITY", "NEARLINE", "STANDARD", IgnoreCase = true)]
+            [ValidateSet(
+                "COLDLINE",
+                "DURABLE_REDUCED_AVAILABILITY",
+                "MULTI_REGIONAL",
+                "NEARLINE",
+                "REGIONAL",
+                "STANDARD",
+                IgnoreCase = true)]
             public string StorageClass { get; set; }
 
             /// <summary>
