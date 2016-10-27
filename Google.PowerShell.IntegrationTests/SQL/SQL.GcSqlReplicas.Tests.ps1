@@ -3,9 +3,9 @@ Install-GcloudCmdlets
 $project, $_, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Describe "Start-GcSqlReplica" {
-    # For these tests, test-db2 was used because an instance must have a database and a binarylog for it to be 
+    # For these tests, test-db4 was used because an instance must have a database and a binarylog for it to be
     # replicated. This kind of instance cannot be easily/quickly instantiated like those in other tests.
-    $masterInstance = "test-db2"
+    $masterInstance = "test-db4"
     $2ndGenTier = "db-n1-standard-1"
 
     It "should work and start a test replica" {
@@ -70,9 +70,9 @@ Describe "Start-GcSqlReplica" {
 }
 
 Describe "Stop-GcSqlReplica" {
-    # For these tests, test-db2 was used because an instance must have a database and a binarylog for it to be 
+    # For these tests, test-db4 was used because an instance must have a database and a binarylog for it to be
     # replicated. This kind of instance cannot be easily/quickly instantiated like those in other tests.
-    $masterInstance = "test-db2"
+    $masterInstance = "test-db4"
     $2ndGenTier = "db-n1-standard-1"
 
     It "should work and stop a test replica" {

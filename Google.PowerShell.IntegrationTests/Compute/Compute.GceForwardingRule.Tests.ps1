@@ -20,7 +20,7 @@ Describe "Get-GceForwardingRule"{
     Context "with data" {
         BeforeAll {
             gcloud compute http-health-checks create "health-check-$r" 2>$null
-            gcloud compute backend-services create "backend-$r" --http-health-check "health-check-$r" 2>$null
+            gcloud compute backend-services create "backend-$r" --http-health-checks "health-check-$r" 2>$null
             gcloud compute url-maps create "url-map-$r" --default-service "backend-$r" 2>$null
             gcloud compute target-http-proxies create "proxy-$r" --url-map "url-map-$r" 2>$null
             gcloud compute forwarding-rules create $globalRuleName --target-http-proxy "proxy-$r" --global --ports 8080 2>$null

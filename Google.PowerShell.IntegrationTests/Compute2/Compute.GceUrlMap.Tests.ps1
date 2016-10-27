@@ -17,7 +17,7 @@ Describe "Get-GceUrlMap" {
     }
 
     gcloud compute http-health-checks create "health-check-$r" 2>$null
-    gcloud compute backend-services create "backend-$r" --http-health-check "health-check-$r" 2>$null
+    gcloud compute backend-services create "backend-$r" --http-health-checks "health-check-$r" 2>$null
     gcloud compute url-maps create $urlMapName1 --default-service "backend-$r" 2>$null
     gcloud compute url-maps create $urlMapName2 --default-service "backend-$r" 2>$null
 

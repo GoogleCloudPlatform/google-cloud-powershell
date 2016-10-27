@@ -1,5 +1,7 @@
 # Cloud Tools for PowerShell (Beta)
 
+[![Build status](https://ci.appveyor.com/api/projects/status/r11ovv4348852ktt?svg=true)](https://ci.appveyor.com/project/GoogleCloudPowerShell/google-cloud-powershell)
+
 This repository contains PowerShell cmdlets for interacting with the Google
 Cloud Platform. You can use Cloud Tools for PowerShell to manage your existing
 cloud resources or create new ones.
