@@ -182,6 +182,7 @@
     <Compile Include="Sql\GcSqlSettingConfigCmdlet.cs" />
     <Compile Include="Sql\GcSqlSslCmdlets.cs" />
     <Compile Include="Sql\GcSqlTiersCmdlet.cs" />
+    <Compile Include="Storage\GcsAcl.cs" />
     <Compile Include="Storage\GcsBucket.cs" />
     <Compile Include="Storage\GcsBucketLogging.cs" />
     <Compile Include="Storage\GcsBucketWebsite.cs" />
