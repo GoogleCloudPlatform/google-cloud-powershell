@@ -13,30 +13,8 @@ using System.Threading.Tasks;
 namespace Google.PowerShell.CloudStorage
 {
     /// <summary>
-    /// <para type="synopsis">
-    /// Gets Google Cloud Storage buckets
-    /// </para>
-    /// <para type="description">
-    /// If a name is specified, gets the Google Cloud Storage bucket with the given name. The gcloud user must
-    /// have access to view the bucket.
-    /// </para>
-    /// <para type="description">
-    /// If a name is not specified, gets all Google Cloud Storage buckets owned by a project. The project can
-    /// be specifed. If it is not, the project in the active Cloud SDK configuration will be used. The gcloud
-    /// user must have access to view the project.
-    /// </para>
-    /// <example>
-    ///   <code>PS C:\> Get-GcsBucket "widget-co-logs"</code>
-    ///   <para>Get the bucket named "widget-co-logs".</para>
-    /// </example>
-    /// <example>
-    ///   <code>PS C:\> Get-GcsBucket -Project "widget-co"</code>
-    ///   <para>Get all buckets for project "widget-co".</para>
-    /// </example>
-    /// <example>
-    ///   <code>Get-GcsBucket</code>
-    ///   <para>Get all buckets for current project in the active gcloud configuration.</para>
-    /// </example>
+    /// Base class for GcsAclCmdlet. This set of cmdlet is used to manage
+    /// custom access controls for Google Cloud Storage.
     /// </summary>
     public abstract class GcsAclCmdlet : GcsCmdlet
     {
@@ -48,7 +26,6 @@ namespace Google.PowerShell.CloudStorage
             public const string Domain = "Team";
             public const string AllUsers = "AllUsers";
             public const string AllAuthenticatedUsers = "AllAuthenticatedUsers";
-            public const string Default = "Default";
         }
 
         /// <summary>
@@ -57,7 +34,8 @@ namespace Google.PowerShell.CloudStorage
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
-        public virtual string BucketName { get; set; }
+        [Alias("Bucket")]
+        public string BucketName { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -122,6 +100,11 @@ namespace Google.PowerShell.CloudStorage
         [Parameter(ParameterSetName = ParameterSetNames.AllAuthenticatedUsers)]
         public SwitchParameter AllAuthenticatedUsers { get; set; }
 
+        /// <summary>
+        /// Returns the entity holding the access control based on the arguments given.
+        /// Entity will be of the form user-userId, user-emailAddress, group-groupId,
+        /// group-emailAddress, project-role-projectNumber, allUsers or allAuthenticatedUsers.
+        /// </summary>
         protected string GetAclEntity()
         {
             switch (ParameterSetName)
@@ -146,32 +129,40 @@ namespace Google.PowerShell.CloudStorage
 
     /// <summary>
     /// <para type="synopsis">
-    /// Gets Google Cloud Storage buckets
+    /// Add an access control to a Google Cloud Storage bucket.
     /// </para>
     /// <para type="description">
-    /// If a name is specified, gets the Google Cloud Storage bucket with the given name. The gcloud user must
-    /// have access to view the bucket.
-    /// </para>
-    /// <para type="description">
-    /// If a name is not specified, gets all Google Cloud Storage buckets owned by a project. The project can
-    /// be specifed. If it is not, the project in the active Cloud SDK configuration will be used. The gcloud
-    /// user must have access to view the project.
+    /// Add an access control to a Google Cloud Storage bucket for an entity.
+    /// Entity can be user ID, user email address, project team, group ID,
+    /// group email address, all users or all authenticated users.
+    /// The roles that can be assigned to an entity are Reader, Writer and Owner.
+    /// User must have access to the bucket.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Get-GcsBucket "widget-co-logs"</code>
-    ///   <para>Get the bucket named "widget-co-logs".</para>
+    ///   <code>PS C:\> Add-GcsBucketAcl -Role Reader -BucketName "my-bucket" -User user@example.com</code>
+    ///   <para>Adds reader access control to bucket "my-bucket" for user user@example.com.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-GcsBucket -Project "widget-co"</code>
-    ///   <para>Get all buckets for project "widget-co".</para>
+    ///   <code>PS C:\> Add-GcsBucketAcl -Role Writer -BucketName "my-bucket" -Domain example.com</code>
+    ///   <para>Adds writer access control to bucket "my-bucket" for the domain example.com.</para>
     /// </example>
     /// <example>
-    ///   <code>Get-GcsBucket</code>
-    ///   <para>Get all buckets for current project in the active gcloud configuration.</para>
+    ///   <code>PS C:\> Add-GcsBucketAcl -Role Owner -BucketName "my-bucket" -AllUsers</code>
+    ///   <para>Adds owner access control to bucket "my-bucket" for all users.</para>
     /// </example>
+    /// <example>
+    ///   <code>PS C:\> Add-GcsBucketAcl -Role Owner -BucketName "my-bucket" -ProjectRole Owners -ProjectNumber 3423432</code>
+    ///   <para>Adds owner access control to bucket "my-bucket" for all owners of project 3423432.</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/access-control/lists)">
+    /// [Access Control Lists (ACLs)]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/json_api/v1/bucketAccessControls)">
+    /// [Bucket Access Controls]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GcsBucketAcl", DefaultParameterSetName = ParameterSetNames.User)]
-    [OutputType(typeof(Bucket))]
+    [OutputType(typeof(BucketAccessControl))]
     public class AddGcsBucketAcl : GcsAclCmdlet
     {
         /// <summary>
@@ -200,32 +191,25 @@ namespace Google.PowerShell.CloudStorage
 
     /// <summary>
     /// <para type="synopsis">
-    /// Gets Google Cloud Storage buckets
+    /// Gets all the access controls of a Google Cloud Storage bucket.
     /// </para>
     /// <para type="description">
-    /// If a name is specified, gets the Google Cloud Storage bucket with the given name. The gcloud user must
-    /// have access to view the bucket.
-    /// </para>
-    /// <para type="description">
-    /// If a name is not specified, gets all Google Cloud Storage buckets owned by a project. The project can
-    /// be specifed. If it is not, the project in the active Cloud SDK configuration will be used. The gcloud
-    /// user must have access to view the project.
+    /// Gets all the access controls of a Google Cloud Storage bucket. 
+    /// User must have access to the bucket.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Get-GcsBucket "widget-co-logs"</code>
-    ///   <para>Get the bucket named "widget-co-logs".</para>
+    ///   <code>PS C:\> Get-GetGcsBucketAcl -BucketName "my-bucket"</code>
+    ///   <para>Gets all access controls of bucket "my-bucket".</para>
     /// </example>
-    /// <example>
-    ///   <code>PS C:\> Get-GcsBucket -Project "widget-co"</code>
-    ///   <para>Get all buckets for project "widget-co".</para>
-    /// </example>
-    /// <example>
-    ///   <code>Get-GcsBucket</code>
-    ///   <para>Get all buckets for current project in the active gcloud configuration.</para>
-    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/access-control/lists)">
+    /// [Access Control Lists (ACLs)]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/json_api/v1/bucketAccessControls)">
+    /// [Bucket Access Controls]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcsBucketAcl")]
-    [OutputType(typeof(Bucket))]
+    [OutputType(typeof(BucketAccessControls))]
     public class GetGcsBucketAcl : GcsCmdlet
     {
         /// <summary>
@@ -248,32 +232,40 @@ namespace Google.PowerShell.CloudStorage
 
     /// <summary>
     /// <para type="synopsis">
-    /// Gets Google Cloud Storage buckets
+    /// Removes an access control from a Google Cloud Storage bucket.
     /// </para>
     /// <para type="description">
-    /// If a name is specified, gets the Google Cloud Storage bucket with the given name. The gcloud user must
-    /// have access to view the bucket.
+    /// Removes an access control from a Google Cloud Storage bucket for an entity.
+    /// Entity can be user ID, user email address, project team, group ID,
+    /// group email address, all users or all authenticated users.
+    /// The roles that can be assigned to an entity are Reader, Writer and Owner.
+    /// User must have access to the bucket. Assumes the entity already
+    /// have an access control for the bucket.
     /// </para>
-    /// <para type="description">
-    /// If a name is not specified, gets all Google Cloud Storage buckets owned by a project. The project can
-    /// be specifed. If it is not, the project in the active Cloud SDK configuration will be used. The gcloud
-    /// user must have access to view the project.
+    /// <example>
+    ///   <code>PS C:\> Remove-GcsBucketAcl -BucketName "my-bucket" -User user@example.com</code>
+    ///   <para>Removes access control to bucket "my-bucket" for user user@example.com.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Remove-GcsBucketAcl -BucketName "my-bucket" -Domain example.com</code>
+    ///   <para>Removes access control to bucket "my-bucket" for the domain example.com.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Remove-GcsBucketAcl -BucketName "my-bucket" -AllUsers</code>
+    ///   <para>Removes access control to bucket "my-bucket" for all users.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Remove-GcsBucketAcl -BucketName "my-bucket" -ProjectRole Owners -ProjectNumber 3423432</code>
+    ///   <para>Removes access control to bucket "my-bucket" for all owners of project 3423432.</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/access-control/lists)">
+    /// [Access Control Lists (ACLs)]
     /// </para>
-    /// <example>
-    ///   <code>PS C:\> Get-GcsBucket "widget-co-logs"</code>
-    ///   <para>Get the bucket named "widget-co-logs".</para>
-    /// </example>
-    /// <example>
-    ///   <code>PS C:\> Get-GcsBucket -Project "widget-co"</code>
-    ///   <para>Get all buckets for project "widget-co".</para>
-    /// </example>
-    /// <example>
-    ///   <code>Get-GcsBucket</code>
-    ///   <para>Get all buckets for current project in the active gcloud configuration.</para>
-    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/json_api/v1/bucketAccessControls)">
+    /// [Bucket Access Controls]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GcsBucketAcl", DefaultParameterSetName = ParameterSetNames.User)]
-    [OutputType(typeof(Bucket))]
     public class RemoveGcsBucketAcl : GcsAclCmdlet
     {
         protected override void ProcessRecord()
@@ -288,32 +280,44 @@ namespace Google.PowerShell.CloudStorage
 
     /// <summary>
     /// <para type="synopsis">
-    /// Gets Google Cloud Storage buckets
+    /// Add an access control to a Google Cloud Storage object.
     /// </para>
     /// <para type="description">
-    /// If a name is specified, gets the Google Cloud Storage bucket with the given name. The gcloud user must
-    /// have access to view the bucket.
-    /// </para>
-    /// <para type="description">
-    /// If a name is not specified, gets all Google Cloud Storage buckets owned by a project. The project can
-    /// be specifed. If it is not, the project in the active Cloud SDK configuration will be used. The gcloud
-    /// user must have access to view the project.
+    /// Add an access control to a Google Cloud Storage object for an entity.
+    /// Entity can be user ID, user email address, project team, group ID,
+    /// group email address, all users or all authenticated users.
+    /// The roles that can be assigned to an entity are Reader, Writer and Owner.
+    /// User must have access to the object.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Get-GcsBucket "widget-co-logs"</code>
-    ///   <para>Get the bucket named "widget-co-logs".</para>
+    ///   <code>PS C:\> Add-GcsObjectAcl -Role Reader -BucketName "my-bucket" -ObjectName "my-object" -User user@example.com</code>
+    ///   <para>Adds reader access control to the object "my-object" in bucket "my-bucket" for user user@example.com.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-GcsBucket -Project "widget-co"</code>
-    ///   <para>Get all buckets for project "widget-co".</para>
+    ///   <code>PS C:\> Add-GcsObjectAcl -Role Writer -BucketName "my-bucket" -ObjectName "my-object"  -Domain example.com</code>
+    ///   <para>Adds writer access control to the object "my-object" in bucket "my-bucket" for the domain example.com.</para>
     /// </example>
     /// <example>
-    ///   <code>Get-GcsBucket</code>
-    ///   <para>Get all buckets for current project in the active gcloud configuration.</para>
+    ///   <code>PS C:\> Add-GcsObjectAcl -Role Owner -BucketName "my-bucket" -ObjectName "my-object"  -AllUsers</code>
+    ///   <para>Adds owner access control to the object "my-object" in bucket "my-bucket" for all users.</para>
     /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Add-GcsObjectAcl -Role Owner -BucketName "my-bucket" -ObjectName "my-object"  -ProjectRole Owners -ProjectNumber 3423432
+    ///   </code>
+    ///   <para>
+    ///   Adds owner access control to the object "my-object" in bucket "my-bucket" for all owners of project 3423432.
+    ///   </para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/access-control/lists)">
+    /// [Access Control Lists (ACLs)]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/json_api/v1/objectAccessControls)">
+    /// [Object Access Controls]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GcsObjectAcl", DefaultParameterSetName = ParameterSetNames.User)]
-    [OutputType(typeof(Bucket))]
+    [OutputType(typeof(ObjectAccessControl))]
     public class AddGcsObjectAcl : GcsAclCmdlet
     {
         /// <summary>
@@ -351,32 +355,25 @@ namespace Google.PowerShell.CloudStorage
 
     /// <summary>
     /// <para type="synopsis">
-    /// Gets Google Cloud Storage buckets
+    /// Gets all the access controls of a Google Cloud Storage object.
     /// </para>
     /// <para type="description">
-    /// If a name is specified, gets the Google Cloud Storage bucket with the given name. The gcloud user must
-    /// have access to view the bucket.
-    /// </para>
-    /// <para type="description">
-    /// If a name is not specified, gets all Google Cloud Storage buckets owned by a project. The project can
-    /// be specifed. If it is not, the project in the active Cloud SDK configuration will be used. The gcloud
-    /// user must have access to view the project.
+    /// Gets all the access controls of a Google Cloud Storage object. 
+    /// User must have access to the object.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Get-GcsBucket "widget-co-logs"</code>
-    ///   <para>Get the bucket named "widget-co-logs".</para>
+    ///   <code>PS C:\> Get-GcsObjectAcl -BucketName "my-bucket" -ObjectName "my-object"</code>
+    ///   <para>Gets all access controls of the object "my-object" in bucket "my-bucket".</para>
     /// </example>
-    /// <example>
-    ///   <code>PS C:\> Get-GcsBucket -Project "widget-co"</code>
-    ///   <para>Get all buckets for project "widget-co".</para>
-    /// </example>
-    /// <example>
-    ///   <code>Get-GcsBucket</code>
-    ///   <para>Get all buckets for current project in the active gcloud configuration.</para>
-    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/access-control/lists)">
+    /// [Access Control Lists (ACLs)]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/json_api/v1/objectAccessControls)">
+    /// [Object Access Controls]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcsObjectAcl")]
-    [OutputType(typeof(Bucket))]
+    [OutputType(typeof(ObjectAccessControls))]
     public class GetGcsObjectAcl : GcsCmdlet
     {
         /// <summary>
@@ -408,29 +405,40 @@ namespace Google.PowerShell.CloudStorage
 
     /// <summary>
     /// <para type="synopsis">
-    /// Gets Google Cloud Storage buckets
+    /// Removes an access control from a Google Cloud Storage object.
     /// </para>
     /// <para type="description">
-    /// If a name is specified, gets the Google Cloud Storage bucket with the given name. The gcloud user must
-    /// have access to view the bucket.
+    /// Removes an access control from a Google Cloud Storage object for an entity.
+    /// Entity can be user ID, user email address, project team, group ID,
+    /// group email address, all users or all authenticated users.
+    /// The roles that can be assigned to an entity are Reader, Writer and Owner.
+    /// User must have access to the bucket. Assumes the entity already
+    /// have an access control for the bucket.
     /// </para>
-    /// <para type="description">
-    /// If a name is not specified, gets all Google Cloud Storage buckets owned by a project. The project can
-    /// be specifed. If it is not, the project in the active Cloud SDK configuration will be used. The gcloud
-    /// user must have access to view the project.
+    /// <example>
+    ///   <code>PS C:\> Remove-GcsObjectAcl -BucketName "my-bucket" -ObjectName "my-object" -User user@example.com</code>
+    ///   <para>Removes access control to the object "my-object" in bucket "my-bucket" for user user@example.com.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Remove-GcsObjectAcl -BucketName "my-bucket" -ObjectName "my-object" -Domain example.com</code>
+    ///   <para>Removes access control to the object "my-object" in bucket "my-bucket" for the domain example.com.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Remove-GcsObjectAcl -BucketName "my-bucket" -ObjectName "my-object" -AllUsers</code>
+    ///   <para>Removes access control to the object "my-object" in bucket "my-bucket" for all users.</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Remove-GcsObjectAcl -BucketName "my-bucket" -ObjectName "my-object" -ProjectRole Owners -ProjectNumber 3423432
+    ///   </code>
+    ///   <para>Removes access control to the object "my-object" in bucket "my-bucket" for all owners of project 3423432.</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/access-control/lists)">
+    /// [Access Control Lists (ACLs)]
     /// </para>
-    /// <example>
-    ///   <code>PS C:\> Get-GcsBucket "widget-co-logs"</code>
-    ///   <para>Get the bucket named "widget-co-logs".</para>
-    /// </example>
-    /// <example>
-    ///   <code>PS C:\> Get-GcsBucket -Project "widget-co"</code>
-    ///   <para>Get all buckets for project "widget-co".</para>
-    /// </example>
-    /// <example>
-    ///   <code>Get-GcsBucket</code>
-    ///   <para>Get all buckets for current project in the active gcloud configuration.</para>
-    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/json_api/v1/objectAccessControls)">
+    /// [Object Access Controls]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GcsObjectAcl", DefaultParameterSetName = ParameterSetNames.User)]
     [OutputType(typeof(Bucket))]
@@ -457,32 +465,41 @@ namespace Google.PowerShell.CloudStorage
 
     /// <summary>
     /// <para type="synopsis">
-    /// Gets Google Cloud Storage buckets
+    /// Add a default access control to a Google Cloud Storage bucket.
     /// </para>
     /// <para type="description">
-    /// If a name is specified, gets the Google Cloud Storage bucket with the given name. The gcloud user must
-    /// have access to view the bucket.
+    /// Add a default access control to a Google Cloud Storage bucket for an entity.
+    /// The default access control will be aplied to a new object when no access control is provided.
+    /// Entity can be user ID, user email address, project team, group ID,
+    /// group email address, all users or all authenticated users.
+    /// The roles that can be assigned to an entity are Reader, Writer and Owner.
+    /// User must have access to the bucket.
     /// </para>
-    /// <para type="description">
-    /// If a name is not specified, gets all Google Cloud Storage buckets owned by a project. The project can
-    /// be specifed. If it is not, the project in the active Cloud SDK configuration will be used. The gcloud
-    /// user must have access to view the project.
+    /// <example>
+    ///   <code>PS C:\> Add-DefaultObjectAcl -Role Reader -BucketName "my-bucket" -User user@example.com</code>
+    ///   <para>Adds reader default access control to bucket "my-bucket" for user user@example.com.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Add-DefaultObjectAcl -Role Writer -BucketName "my-bucket" -Domain example.com</code>
+    ///   <para>Adds writer default access control to bucket "my-bucket" for the domain example.com.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Add-DefaultObjectAcl -Role Owner -BucketName "my-bucket" -AllUsers</code>
+    ///   <para>Adds owner default access control to bucket "my-bucket" for all users.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Add-DefaultObjectAcl -Role Owner -BucketName "my-bucket" -ProjectRole Owners -ProjectNumber 3423432</code>
+    ///   <para>Adds owner default access control to bucket "my-bucket" for all owners of project 3423432.</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/access-control/lists)">
+    /// [Access Control Lists (ACLs)]
     /// </para>
-    /// <example>
-    ///   <code>PS C:\> Get-GcsBucket "widget-co-logs"</code>
-    ///   <para>Get the bucket named "widget-co-logs".</para>
-    /// </example>
-    /// <example>
-    ///   <code>PS C:\> Get-GcsBucket -Project "widget-co"</code>
-    ///   <para>Get all buckets for project "widget-co".</para>
-    /// </example>
-    /// <example>
-    ///   <code>Get-GcsBucket</code>
-    ///   <para>Get all buckets for current project in the active gcloud configuration.</para>
-    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/json_api/v1/defaultObjectAccessControls)">
+    /// [Default Access Controls]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "DefaultObjectAcl", DefaultParameterSetName = ParameterSetNames.User)]
-    [OutputType(typeof(Bucket))]
+    [OutputType(typeof(ObjectAccessControl))]
     public class AddDefaultObjectAcl : GcsAclCmdlet
     {
         /// <summary>
@@ -511,32 +528,25 @@ namespace Google.PowerShell.CloudStorage
 
     /// <summary>
     /// <para type="synopsis">
-    /// Gets Google Cloud Storage buckets
+    /// Gets all the default access controls of a Google Cloud Storage object.
     /// </para>
     /// <para type="description">
-    /// If a name is specified, gets the Google Cloud Storage bucket with the given name. The gcloud user must
-    /// have access to view the bucket.
-    /// </para>
-    /// <para type="description">
-    /// If a name is not specified, gets all Google Cloud Storage buckets owned by a project. The project can
-    /// be specifed. If it is not, the project in the active Cloud SDK configuration will be used. The gcloud
-    /// user must have access to view the project.
+    /// Gets all the default access controls of a Google Cloud Storage object. 
+    /// User must have access to the object.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Get-GcsBucket "widget-co-logs"</code>
-    ///   <para>Get the bucket named "widget-co-logs".</para>
+    ///   <code>PS C:\> Get-DefaultObjectAcl -BucketName "my-bucket" -ObjectName "my-object"</code>
+    ///   <para>Gets all default access controls of the object "my-object" in bucket "my-bucket".</para>
     /// </example>
-    /// <example>
-    ///   <code>PS C:\> Get-GcsBucket -Project "widget-co"</code>
-    ///   <para>Get all buckets for project "widget-co".</para>
-    /// </example>
-    /// <example>
-    ///   <code>Get-GcsBucket</code>
-    ///   <para>Get all buckets for current project in the active gcloud configuration.</para>
-    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/access-control/lists)">
+    /// [Access Control Lists (ACLs)]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/json_api/v1/defaultObjectAccessControls)">
+    /// [Default Access Controls]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "DefaultObjectAcl")]
-    [OutputType(typeof(Bucket))]
+    [OutputType(typeof(ObjectAccessControls))]
     public class GetDefaultObjectAcl : GcsCmdlet
     {
         /// <summary>
@@ -560,32 +570,40 @@ namespace Google.PowerShell.CloudStorage
 
     /// <summary>
     /// <para type="synopsis">
-    /// Gets Google Cloud Storage buckets
+    /// Removes a default access control from a Google Cloud Storage bucket.
     /// </para>
     /// <para type="description">
-    /// If a name is specified, gets the Google Cloud Storage bucket with the given name. The gcloud user must
-    /// have access to view the bucket.
+    /// Removes a default access control from a Google Cloud Storage bucket for an entity.
+    /// Entity can be user ID, user email address, project team, group ID,
+    /// group email address, all users or all authenticated users.
+    /// The roles that can be assigned to an entity are Reader, Writer and Owner.
+    /// User must have access to the bucket. Assumes the entity already
+    /// have an access control for the bucket.
     /// </para>
-    /// <para type="description">
-    /// If a name is not specified, gets all Google Cloud Storage buckets owned by a project. The project can
-    /// be specifed. If it is not, the project in the active Cloud SDK configuration will be used. The gcloud
-    /// user must have access to view the project.
+    /// <example>
+    ///   <code>PS C:\> Remove-DefaultObjectAcl -BucketName "my-bucket" -User user@example.com</code>
+    ///   <para>Removes default access control to bucket "my-bucket" for user user@example.com.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Remove-DefaultObjectAcl -BucketName "my-bucket" -Domain example.com</code>
+    ///   <para>Removes default access control to bucket "my-bucket" for the domain example.com.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Remove-DefaultObjectAcl -BucketName "my-bucket" -AllUsers</code>
+    ///   <para>Removes default access control to bucket "my-bucket" for all users.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Remove-DefaultObjectAcl -BucketName "my-bucket" -ProjectRole Owners -ProjectNumber 3423432</code>
+    ///   <para>Removes default access control to bucket "my-bucket" for all owners of project 3423432.</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/access-control/lists)">
+    /// [Access Control Lists (ACLs)]
     /// </para>
-    /// <example>
-    ///   <code>PS C:\> Get-GcsBucket "widget-co-logs"</code>
-    ///   <para>Get the bucket named "widget-co-logs".</para>
-    /// </example>
-    /// <example>
-    ///   <code>PS C:\> Get-GcsBucket -Project "widget-co"</code>
-    ///   <para>Get all buckets for project "widget-co".</para>
-    /// </example>
-    /// <example>
-    ///   <code>Get-GcsBucket</code>
-    ///   <para>Get all buckets for current project in the active gcloud configuration.</para>
-    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/storage/docs/json_api/v1/defaultObjectAccessControls)">
+    /// [Default Access Controls]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "DefaultObjectAcl", DefaultParameterSetName = ParameterSetNames.User)]
-    [OutputType(typeof(Bucket))]
     public class RemoveDefaultObjectAcl : GcsAclCmdlet
     {
         protected override void ProcessRecord()
