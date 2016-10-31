@@ -3,12 +3,10 @@
 
 using Google.Apis.Storage.v1;
 using Google.Apis.Storage.v1.Data;
-using Google.PowerShell.Common;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Management.Automation;
-using System.Net;
-using System.Threading.Tasks;
 
 namespace Google.PowerShell.CloudStorage
 {
@@ -27,15 +25,6 @@ namespace Google.PowerShell.CloudStorage
             public const string AllUsers = "AllUsers";
             public const string AllAuthenticatedUsers = "AllAuthenticatedUsers";
         }
-
-        /// <summary>
-        /// <para type="description">
-        /// The name of the bucket that the access control will be applied to.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
-        [Alias("Bucket")]
-        public string BucketName { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -69,6 +58,7 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// <para type="description">
         /// The project number of the project holding the access control.
+        /// This is used in conjunction with -ProjectRole parameter to specify a project team.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.Project)]
@@ -125,6 +115,20 @@ namespace Google.PowerShell.CloudStorage
                     throw UnknownParameterSetException;
             }
         }
+
+        /// <summary>
+        /// Helper function that converts a list of object of the type JObject to a list of ObjectAccessControl.
+        /// </summary>
+        public static IEnumerable<ObjectAccessControl> ConvertJObjectList(IList<object> jObjects)
+        {
+            foreach (object item in jObjects)
+            {
+                if (item is JObject)
+                {
+                    yield return (item as JObject).ToObject<ObjectAccessControl>();
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -139,19 +143,19 @@ namespace Google.PowerShell.CloudStorage
     /// User must have access to the bucket.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Add-GcsBucketAcl -Role Reader -BucketName "my-bucket" -User user@example.com</code>
+    ///   <code>PS C:\> Add-GcsBucketAcl -Role Reader -Bucket "my-bucket" -User user@example.com</code>
     ///   <para>Adds reader access control to bucket "my-bucket" for user user@example.com.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Add-GcsBucketAcl -Role Writer -BucketName "my-bucket" -Domain example.com</code>
+    ///   <code>PS C:\> Add-GcsBucketAcl -Role Writer -Bucket "my-bucket" -Domain example.com</code>
     ///   <para>Adds writer access control to bucket "my-bucket" for the domain example.com.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Add-GcsBucketAcl -Role Owner -BucketName "my-bucket" -AllUsers</code>
+    ///   <code>PS C:\> Add-GcsBucketAcl -Role Owner -Bucket "my-bucket" -AllUsers</code>
     ///   <para>Adds owner access control to bucket "my-bucket" for all users.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Add-GcsBucketAcl -Role Owner -BucketName "my-bucket" -ProjectRole Owners -ProjectNumber 3423432</code>
+    ///   <code>PS C:\> Add-GcsBucketAcl -Role Owner -Bucket "my-bucket" -ProjectRole Owners -ProjectNumber 3423432</code>
     ///   <para>Adds owner access control to bucket "my-bucket" for all owners of project 3423432.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/storage/docs/access-control/lists)">
@@ -165,6 +169,16 @@ namespace Google.PowerShell.CloudStorage
     [OutputType(typeof(BucketAccessControl))]
     public class AddGcsBucketAcl : GcsAclCmdlet
     {
+        /// <summary>
+        /// <para type="description">
+        /// The name of the bucket that the access control will be applied to.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true)]
+        [Alias("Bucket")]
+        [ValidateNotNullOrEmpty]
+        public string Name { get; set; }
+
         /// <summary>
         /// <para type="description">
         /// The role of the access control.
@@ -183,7 +197,7 @@ namespace Google.PowerShell.CloudStorage
                 Entity = GetAclEntity()
             };
             BucketAccessControlsResource.InsertRequest request =
-                Service.BucketAccessControls.Insert(bucketAcl, BucketName);
+                Service.BucketAccessControls.Insert(bucketAcl, Name);
             BucketAccessControl response = request.Execute();
             WriteObject(response);
         }
@@ -198,7 +212,7 @@ namespace Google.PowerShell.CloudStorage
     /// User must have access to the bucket.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Get-GetGcsBucketAcl -BucketName "my-bucket"</code>
+    ///   <code>PS C:\> Get-GetGcsBucketAcl -Bucket "my-bucket"</code>
     ///   <para>Gets all access controls of bucket "my-bucket".</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/storage/docs/access-control/lists)">
@@ -218,13 +232,14 @@ namespace Google.PowerShell.CloudStorage
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
+        [Alias("Bucket")]
         [ValidateNotNullOrEmpty]
-        public virtual string BucketName { get; set; }
+        public string Name { get; set; }
 
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            BucketAccessControlsResource.ListRequest request = Service.BucketAccessControls.List(BucketName);
+            BucketAccessControlsResource.ListRequest request = Service.BucketAccessControls.List(Name);
             BucketAccessControls response = request.Execute();
             WriteObject(response.Items, true);
         }
@@ -243,19 +258,19 @@ namespace Google.PowerShell.CloudStorage
     /// have an access control for the bucket.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Remove-GcsBucketAcl -BucketName "my-bucket" -User user@example.com</code>
+    ///   <code>PS C:\> Remove-GcsBucketAcl -Bucket "my-bucket" -User user@example.com</code>
     ///   <para>Removes access control to bucket "my-bucket" for user user@example.com.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Remove-GcsBucketAcl -BucketName "my-bucket" -Domain example.com</code>
+    ///   <code>PS C:\> Remove-GcsBucketAcl -Bucket "my-bucket" -Domain example.com</code>
     ///   <para>Removes access control to bucket "my-bucket" for the domain example.com.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Remove-GcsBucketAcl -BucketName "my-bucket" -AllUsers</code>
+    ///   <code>PS C:\> Remove-GcsBucketAcl -Bucket "my-bucket" -AllUsers</code>
     ///   <para>Removes access control to bucket "my-bucket" for all users.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Remove-GcsBucketAcl -BucketName "my-bucket" -ProjectRole Owners -ProjectNumber 3423432</code>
+    ///   <code>PS C:\> Remove-GcsBucketAcl -Bucket "my-bucket" -ProjectRole Owners -ProjectNumber 3423432</code>
     ///   <para>Removes access control to bucket "my-bucket" for all owners of project 3423432.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/storage/docs/access-control/lists)">
@@ -268,12 +283,22 @@ namespace Google.PowerShell.CloudStorage
     [Cmdlet(VerbsCommon.Remove, "GcsBucketAcl", DefaultParameterSetName = ParameterSetNames.User)]
     public class RemoveGcsBucketAcl : GcsAclCmdlet
     {
+        /// <summary>
+        /// <para type="description">
+        /// The name of the bucket that the access control will be removed from.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true)]
+        [Alias("Bucket")]
+        [ValidateNotNullOrEmpty]
+        public string Name { get; set; }
+
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
             string entity = GetAclEntity();
             BucketAccessControlsResource.DeleteRequest request =
-                Service.BucketAccessControls.Delete(BucketName, entity);
+                Service.BucketAccessControls.Delete(Name, entity);
             request.Execute();
         }
     }
@@ -290,20 +315,20 @@ namespace Google.PowerShell.CloudStorage
     /// User must have access to the object.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Add-GcsObjectAcl -Role Reader -BucketName "my-bucket" -ObjectName "my-object" -User user@example.com</code>
+    ///   <code>PS C:\> Add-GcsObjectAcl -Role Reader -Bucket "my-bucket" -ObjectName "my-object" -User user@example.com</code>
     ///   <para>Adds reader access control to the object "my-object" in bucket "my-bucket" for user user@example.com.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Add-GcsObjectAcl -Role Writer -BucketName "my-bucket" -ObjectName "my-object"  -Domain example.com</code>
+    ///   <code>PS C:\> Add-GcsObjectAcl -Role Writer -Bucket "my-bucket" -ObjectName "my-object"  -Domain example.com</code>
     ///   <para>Adds writer access control to the object "my-object" in bucket "my-bucket" for the domain example.com.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Add-GcsObjectAcl -Role Owner -BucketName "my-bucket" -ObjectName "my-object"  -AllUsers</code>
+    ///   <code>PS C:\> Add-GcsObjectAcl -Role Owner -Bucket "my-bucket" -ObjectName "my-object"  -AllUsers</code>
     ///   <para>Adds owner access control to the object "my-object" in bucket "my-bucket" for all users.</para>
     /// </example>
     /// <example>
     ///   <code>
-    ///   PS C:\> Add-GcsObjectAcl -Role Owner -BucketName "my-bucket" -ObjectName "my-object"  -ProjectRole Owners -ProjectNumber 3423432
+    ///   PS C:\> Add-GcsObjectAcl -Role Owner -Bucket "my-bucket" -ObjectName "my-object"  -ProjectRole Owners -ProjectNumber 3423432
     ///   </code>
     ///   <para>
     ///   Adds owner access control to the object "my-object" in bucket "my-bucket" for all owners of project 3423432.
@@ -322,10 +347,19 @@ namespace Google.PowerShell.CloudStorage
     {
         /// <summary>
         /// <para type="description">
-        /// The name of the object that the access control will be applied to.
+        /// The name of the bucket that the access control will be applied to.
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
+        [ValidateNotNullOrEmpty]
+        public string Bucket { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the object that the access control will be applied to.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 1, Mandatory = true)]
         [ValidateNotNullOrEmpty]
         public string ObjectName { get; set; }
 
@@ -347,7 +381,7 @@ namespace Google.PowerShell.CloudStorage
                 Entity = GetAclEntity(),
             };
             ObjectAccessControlsResource.InsertRequest request =
-                Service.ObjectAccessControls.Insert(bucketAcl, BucketName, ObjectName);
+                Service.ObjectAccessControls.Insert(bucketAcl, Bucket, ObjectName);
             ObjectAccessControl response = request.Execute();
             WriteObject(response);
         }
@@ -362,7 +396,7 @@ namespace Google.PowerShell.CloudStorage
     /// User must have access to the object.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Get-GcsObjectAcl -BucketName "my-bucket" -ObjectName "my-object"</code>
+    ///   <code>PS C:\> Get-GcsObjectAcl -Bucket "my-bucket" -ObjectName "my-object"</code>
     ///   <para>Gets all access controls of the object "my-object" in bucket "my-bucket".</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/storage/docs/access-control/lists)">
@@ -378,28 +412,29 @@ namespace Google.PowerShell.CloudStorage
     {
         /// <summary>
         /// <para type="description">
-        /// The name of the object that the access control will be applied to.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
-        [ValidateNotNullOrEmpty]
-        public string ObjectName { get; set; }
-
-        /// <summary>
-        /// <para type="description">
         /// The name of the bucket that we retrieves the access controls from.
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
         [ValidateNotNullOrEmpty]
-        public virtual string BucketName { get; set; }
+        public string Bucket { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the object that we retrieves the access controls from.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 1, Mandatory = true)]
+        [ValidateNotNullOrEmpty]
+        public string ObjectName { get; set; }
 
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            ObjectAccessControlsResource.ListRequest request = Service.ObjectAccessControls.List(BucketName, ObjectName);
+            ObjectAccessControlsResource.ListRequest request = Service.ObjectAccessControls.List(Bucket, ObjectName);
             ObjectAccessControls response = request.Execute();
-            WriteObject(response.Items, true);
+            IEnumerable<ObjectAccessControl> accessControls = GcsAclCmdlet.ConvertJObjectList(response.Items);
+            WriteObject(accessControls, true);
         }
     }
 
@@ -416,20 +451,20 @@ namespace Google.PowerShell.CloudStorage
     /// have an access control for the bucket.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Remove-GcsObjectAcl -BucketName "my-bucket" -ObjectName "my-object" -User user@example.com</code>
+    ///   <code>PS C:\> Remove-GcsObjectAcl -Bucket "my-bucket" -ObjectName "my-object" -User user@example.com</code>
     ///   <para>Removes access control to the object "my-object" in bucket "my-bucket" for user user@example.com.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Remove-GcsObjectAcl -BucketName "my-bucket" -ObjectName "my-object" -Domain example.com</code>
+    ///   <code>PS C:\> Remove-GcsObjectAcl -Bucket "my-bucket" -ObjectName "my-object" -Domain example.com</code>
     ///   <para>Removes access control to the object "my-object" in bucket "my-bucket" for the domain example.com.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Remove-GcsObjectAcl -BucketName "my-bucket" -ObjectName "my-object" -AllUsers</code>
+    ///   <code>PS C:\> Remove-GcsObjectAcl -Bucket "my-bucket" -ObjectName "my-object" -AllUsers</code>
     ///   <para>Removes access control to the object "my-object" in bucket "my-bucket" for all users.</para>
     /// </example>
     /// <example>
     ///   <code>
-    ///   PS C:\> Remove-GcsObjectAcl -BucketName "my-bucket" -ObjectName "my-object" -ProjectRole Owners -ProjectNumber 3423432
+    ///   PS C:\> Remove-GcsObjectAcl -Bucket "my-bucket" -ObjectName "my-object" -ProjectRole Owners -ProjectNumber 3423432
     ///   </code>
     ///   <para>Removes access control to the object "my-object" in bucket "my-bucket" for all owners of project 3423432.</para>
     /// </example>
@@ -446,7 +481,16 @@ namespace Google.PowerShell.CloudStorage
     {
         /// <summary>
         /// <para type="description">
-        /// The name of the object that the access control will be applied to.
+        /// The name of the bucket that the access control will be removed from.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true)]
+        [ValidateNotNullOrEmpty]
+        public string Bucket { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the object that the access control will be removed from.
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
@@ -458,7 +502,7 @@ namespace Google.PowerShell.CloudStorage
             base.ProcessRecord();
             string entity = GetAclEntity();
             ObjectAccessControlsResource.DeleteRequest request =
-                Service.ObjectAccessControls.Delete(BucketName, ObjectName, entity);
+                Service.ObjectAccessControls.Delete(Bucket, ObjectName, entity);
             request.Execute();
         }
     }
@@ -476,19 +520,21 @@ namespace Google.PowerShell.CloudStorage
     /// User must have access to the bucket.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Add-DefaultObjectAcl -Role Reader -BucketName "my-bucket" -User user@example.com</code>
+    ///   <code>PS C:\> Add-GcsDefaultObjectAcl -Role Reader -Bucket "my-bucket" -User user@example.com</code>
     ///   <para>Adds reader default access control to bucket "my-bucket" for user user@example.com.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Add-DefaultObjectAcl -Role Writer -BucketName "my-bucket" -Domain example.com</code>
+    ///   <code>PS C:\> Add-GcsDefaultObjectAcl -Role Writer -Bucket "my-bucket" -Domain example.com</code>
     ///   <para>Adds writer default access control to bucket "my-bucket" for the domain example.com.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Add-DefaultObjectAcl -Role Owner -BucketName "my-bucket" -AllUsers</code>
+    ///   <code>PS C:\> Add-GcsDefaultObjectAcl -Role Owner -Bucket "my-bucket" -AllUsers</code>
     ///   <para>Adds owner default access control to bucket "my-bucket" for all users.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Add-DefaultObjectAcl -Role Owner -BucketName "my-bucket" -ProjectRole Owners -ProjectNumber 3423432</code>
+    ///   <code>
+    ///   PS C:\> Add-GcsDefaultObjectAcl -Role Owner -Bucket "my-bucket" -ProjectRole Owners -ProjectNumber 3423432
+    ///   </code>
     ///   <para>Adds owner default access control to bucket "my-bucket" for all owners of project 3423432.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/storage/docs/access-control/lists)">
@@ -498,10 +544,20 @@ namespace Google.PowerShell.CloudStorage
     /// [Default Access Controls]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Add, "DefaultObjectAcl", DefaultParameterSetName = ParameterSetNames.User)]
+    [Cmdlet(VerbsCommon.Add, "GcsDefaultObjectAcl", DefaultParameterSetName = ParameterSetNames.User)]
     [OutputType(typeof(ObjectAccessControl))]
-    public class AddDefaultObjectAcl : GcsAclCmdlet
+    public class AddGcsDefaultObjectAcl : GcsAclCmdlet
     {
+        /// <summary>
+        /// <para type="description">
+        /// The name of the bucket that the access control will be applied to.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true)]
+        [Alias("Bucket")]
+        [ValidateNotNullOrEmpty]
+        public string Name { get; set; }
+
         /// <summary>
         /// <para type="description">
         /// The role of the access control.
@@ -520,7 +576,7 @@ namespace Google.PowerShell.CloudStorage
                 Entity = GetAclEntity(),
             };
             DefaultObjectAccessControlsResource.InsertRequest request =
-                Service.DefaultObjectAccessControls.Insert(newDefaultAcl, BucketName);
+                Service.DefaultObjectAccessControls.Insert(newDefaultAcl, Name);
             ObjectAccessControl response = request.Execute();
             WriteObject(response);
         }
@@ -535,7 +591,7 @@ namespace Google.PowerShell.CloudStorage
     /// User must have access to the object.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Get-DefaultObjectAcl -BucketName "my-bucket" -ObjectName "my-object"</code>
+    ///   <code>PS C:\> Get-GcsDefaultObjectAcl -Bucket "my-bucket" -ObjectName "my-object"</code>
     ///   <para>Gets all default access controls of the object "my-object" in bucket "my-bucket".</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/storage/docs/access-control/lists)">
@@ -545,9 +601,9 @@ namespace Google.PowerShell.CloudStorage
     /// [Default Access Controls]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Get, "DefaultObjectAcl")]
+    [Cmdlet(VerbsCommon.Get, "GcsDefaultObjectAcl")]
     [OutputType(typeof(ObjectAccessControls))]
-    public class GetDefaultObjectAcl : GcsCmdlet
+    public class GetGcsDefaultObjectAcl : GcsCmdlet
     {
         /// <summary>
         /// <para type="description">
@@ -555,16 +611,18 @@ namespace Google.PowerShell.CloudStorage
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true)]
+        [Alias("Bucket")]
         [ValidateNotNullOrEmpty]
-        public virtual string BucketName { get; set; }
+        public string Name { get; set; }
 
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
             DefaultObjectAccessControlsResource.ListRequest request =
-                Service.DefaultObjectAccessControls.List(BucketName);
+                Service.DefaultObjectAccessControls.List(Name);
             ObjectAccessControls response = request.Execute();
-            WriteObject(response.Items, true);
+            IEnumerable<ObjectAccessControl> accessControls = GcsAclCmdlet.ConvertJObjectList(response.Items);
+            WriteObject(accessControls, true);
         }
     }
 
@@ -581,19 +639,19 @@ namespace Google.PowerShell.CloudStorage
     /// have an access control for the bucket.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Remove-DefaultObjectAcl -BucketName "my-bucket" -User user@example.com</code>
+    ///   <code>PS C:\> Remove-GcsDefaultObjectAcl -Bucket "my-bucket" -User user@example.com</code>
     ///   <para>Removes default access control to bucket "my-bucket" for user user@example.com.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Remove-DefaultObjectAcl -BucketName "my-bucket" -Domain example.com</code>
+    ///   <code>PS C:\> Remove-GcsDefaultObjectAcl -Bucket "my-bucket" -Domain example.com</code>
     ///   <para>Removes default access control to bucket "my-bucket" for the domain example.com.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Remove-DefaultObjectAcl -BucketName "my-bucket" -AllUsers</code>
+    ///   <code>PS C:\> Remove-GcsDefaultObjectAcl -Bucket "my-bucket" -AllUsers</code>
     ///   <para>Removes default access control to bucket "my-bucket" for all users.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Remove-DefaultObjectAcl -BucketName "my-bucket" -ProjectRole Owners -ProjectNumber 3423432</code>
+    ///   <code>PS C:\> Remove-GcsDefaultObjectAcl -Bucket "my-bucket" -ProjectRole Owners -ProjectNumber 3423432</code>
     ///   <para>Removes default access control to bucket "my-bucket" for all owners of project 3423432.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/storage/docs/access-control/lists)">
@@ -603,15 +661,25 @@ namespace Google.PowerShell.CloudStorage
     /// [Default Access Controls]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Remove, "DefaultObjectAcl", DefaultParameterSetName = ParameterSetNames.User)]
-    public class RemoveDefaultObjectAcl : GcsAclCmdlet
+    [Cmdlet(VerbsCommon.Remove, "GcsDefaultObjectAcl", DefaultParameterSetName = ParameterSetNames.User)]
+    public class RemoveGcsDefaultObjectAcl : GcsAclCmdlet
     {
+        /// <summary>
+        /// <para type="description">
+        /// The name of the bucket that the access control will be removed from.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true)]
+        [Alias("Bucket")]
+        [ValidateNotNullOrEmpty]
+        public string Name { get; set; }
+
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
             string entity = GetAclEntity();
             DefaultObjectAccessControlsResource.DeleteRequest request =
-                Service.DefaultObjectAccessControls.Delete(BucketName, entity);
+                Service.DefaultObjectAccessControls.Delete(Name, entity);
             request.Execute();
         }
     }
