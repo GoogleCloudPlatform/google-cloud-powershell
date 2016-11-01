@@ -196,8 +196,7 @@ namespace Google.PowerShell.CloudStorage
                 Role = Role.ToUpper(),
                 Entity = GetAclEntity()
             };
-            BucketAccessControlsResource.InsertRequest request =
-                Service.BucketAccessControls.Insert(bucketAcl, Name);
+            BucketAccessControlsResource.InsertRequest request = Service.BucketAccessControls.Insert(bucketAcl, Name);
             BucketAccessControl response = request.Execute();
             WriteObject(response);
         }
@@ -297,8 +296,7 @@ namespace Google.PowerShell.CloudStorage
         {
             base.ProcessRecord();
             string entity = GetAclEntity();
-            BucketAccessControlsResource.DeleteRequest request =
-                Service.BucketAccessControls.Delete(Name, entity);
+            BucketAccessControlsResource.DeleteRequest request = Service.BucketAccessControls.Delete(Name, entity);
             request.Execute();
         }
     }
@@ -375,13 +373,12 @@ namespace Google.PowerShell.CloudStorage
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            ObjectAccessControl bucketAcl = new ObjectAccessControl()
+            ObjectAccessControl objAcl = new ObjectAccessControl()
             {
                 Role = Role.ToUpper(),
                 Entity = GetAclEntity(),
             };
-            ObjectAccessControlsResource.InsertRequest request =
-                Service.ObjectAccessControls.Insert(bucketAcl, Bucket, ObjectName);
+            ObjectAccessControlsResource.InsertRequest request = Service.ObjectAccessControls.Insert(objAcl, Bucket, ObjectName);
             ObjectAccessControl response = request.Execute();
             WriteObject(response);
         }
@@ -501,8 +498,7 @@ namespace Google.PowerShell.CloudStorage
         {
             base.ProcessRecord();
             string entity = GetAclEntity();
-            ObjectAccessControlsResource.DeleteRequest request =
-                Service.ObjectAccessControls.Delete(Bucket, ObjectName, entity);
+            ObjectAccessControlsResource.DeleteRequest request = Service.ObjectAccessControls.Delete(Bucket, ObjectName, entity);
             request.Execute();
         }
     }
@@ -570,13 +566,12 @@ namespace Google.PowerShell.CloudStorage
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            ObjectAccessControl newDefaultAcl = new ObjectAccessControl()
+            ObjectAccessControl defaultAcl = new ObjectAccessControl()
             {
                 Role = Role.ToUpper(),
                 Entity = GetAclEntity(),
             };
-            DefaultObjectAccessControlsResource.InsertRequest request =
-                Service.DefaultObjectAccessControls.Insert(newDefaultAcl, Name);
+            DefaultObjectAccessControlsResource.InsertRequest request = Service.DefaultObjectAccessControls.Insert(defaultAcl, Name);
             ObjectAccessControl response = request.Execute();
             WriteObject(response);
         }
@@ -618,8 +613,7 @@ namespace Google.PowerShell.CloudStorage
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
-            DefaultObjectAccessControlsResource.ListRequest request =
-                Service.DefaultObjectAccessControls.List(Name);
+            DefaultObjectAccessControlsResource.ListRequest request = Service.DefaultObjectAccessControls.List(Name);
             ObjectAccessControls response = request.Execute();
             IEnumerable<ObjectAccessControl> accessControls = GcsAclCmdlet.ConvertJObjectList(response.Items);
             WriteObject(accessControls, true);
@@ -678,8 +672,7 @@ namespace Google.PowerShell.CloudStorage
         {
             base.ProcessRecord();
             string entity = GetAclEntity();
-            DefaultObjectAccessControlsResource.DeleteRequest request =
-                Service.DefaultObjectAccessControls.Delete(Name, entity);
+            DefaultObjectAccessControlsResource.DeleteRequest request = Service.DefaultObjectAccessControls.Delete(Name, entity);
             request.Execute();
         }
     }

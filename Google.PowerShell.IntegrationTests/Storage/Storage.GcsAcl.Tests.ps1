@@ -80,7 +80,7 @@ Describe "Add-GcsBucketAcl" {
         ($objectAcl | Where-Object {$_.Entity -match "allUsers"}) | Should BeNullOrEmpty
     }
 
-    It "should work for -AllAuthenticatedUser" {
+    It "should work for -AllAuthenticatedUsers" {
         $addedAcl = Add-GcsBucketAcl -Name $bucketName -Role Reader -AllAuthenticatedUsers
         $acl = Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "allAuthenticatedUsers"} | Select -First 1
         CompareAcl $addedAcl $acl | Should Be $true
@@ -154,37 +154,47 @@ Describe "Remove-GcsBucketAcl" {
 
     It "should work for -AllUsers" {
         Add-GcsBucketAcl -Name $bucketName -Role Reader -AllUsers
-        (Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "allUsers"}) | Should Not BeNullOrEmpty
+        $allUsersAcl = (Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "allUsers"})
+        $allUsersAcl | Should Not BeNullOrEmpty
         Remove-GcsBucketAcl -Name $bucketName -AllUsers
-        (Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "allUsers"}) | Should BeNullOrEmpty
+        $allUsersAcl = (Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "allUsers"})
+        $allUsersAcl | Should BeNullOrEmpty
     }
 
-    It "should work for -AllAuthenticatedUser" {
+    It "should work for -AllAuthenticatedUsers" {
         Add-GcsBucketAcl -Name $bucketName -Role Reader -AllAuthenticatedUsers
-        (Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "allAuthenticatedUsers"}) | Should Not BeNullOrEmpty
+        $allAuthenticatedUsersAcl = Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "allAuthenticatedUsers"}
+        $allAuthenticatedUsersAcl | Should Not BeNullOrEmpty
         Remove-GcsBucketAcl -Name $bucketName -AllAuthenticatedUsers
-        (Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "allAuthenticatedUsers"}) | Should BeNullOrEmpty
+        $allAuthenticatedUsersAcl = Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "allAuthenticatedUsers"}
+        $allAuthenticatedUsersAcl | Should BeNullOrEmpty
     }
 
     It "should work for user" {
         Add-GcsBucketAcl -Name $bucketName -Role Owner -User $userEmail
-        (Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "user-$userEmail"}) | Should Not BeNullOrEmpty
+        $userAcl = Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "user-$userEmail"}
+        $userAcl | Should Not BeNullOrEmpty
         Remove-GcsBucketAcl -Name $bucketName -User $userEmail
-        (Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "user-$userEmail"}) | Should BeNullOrEmpty
+        $userAcl = Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "user-$userEmail"}
+        $userAcl | Should BeNullOrEmpty
     }
 
     It "should work for group" {
         Add-GcsBucketAcl -Name $bucketName -Role Owner -Group $groupEmail
-        (Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "group-$groupEmail"}) | Should Not BeNullOrEmpty
+        $groupAcl = Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "group-$groupEmail"}
+        $groupAcl | Should Not BeNullOrEmpty
         Remove-GcsBucketAcl -Name $bucketName -Group $groupEmail
-        (Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "group-$groupEmail"}) | Should BeNullOrEmpty
+        $groupAcl = Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "group-$groupEmail"}
+        $groupAcl | Should BeNullOrEmpty
     }
 
     It "should work for domain" {
         Add-GcsBucketAcl -Name $bucketName -Role Owner -Domain $domain
-        (Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "domain-$domain"}) | Should Not BeNullOrEmpty
+        $domainAcl = Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "domain-$domain"}
+        $domainAcl | Should Not BeNullOrEmpty
         Remove-GcsBucketAcl -Name $bucketName -Domain $domain
-        (Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "domain-$domain"}) | Should BeNullOrEmpty
+        $domainAcl = Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "domain-$domain"}
+        $domainAcl | Should BeNullOrEmpty
     }
 }
 
@@ -255,7 +265,7 @@ Describe "Add-GcsObjectAcl" {
         CompareAcl $addedAcl $acl | Should Be $true
     }
 
-    It "should work for -AllAuthenticatedUser" {
+    It "should work for -AllAuthenticatedUsers" {
         $addedAcl = Add-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName -Role Reader -AllAuthenticatedUsers
         $acl = Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName |
             Where-Object {$_.Entity -match "allAuthenticatedUsers"} | Select -First 1
@@ -319,57 +329,47 @@ Describe "Remove-GcsObjectAcl" {
 
     It "should work for -AllUsers" {
         Add-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName -Role Reader -AllUsers
-        (Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName |
-            Where-Object {$_.Entity -match "allUsers"}) |
-            Should Not BeNullOrEmpty
+        $allUsersAcl = Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName | Where-Object {$_.Entity -match "allUsers"}
+        $allUsersAcl = Should Not BeNullOrEmpty
         Remove-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName -AllUsers
-        (Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName |
-            Where-Object {$_.Entity -match "allUsers"}) |
-            Should BeNullOrEmpty
+        $allUsersAcl = Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName | Where-Object {$_.Entity -match "allUsers"}
+        $allUsersAcl | Should BeNullOrEmpty
     }
 
-    It "should work for -AllAuthenticatedUser" {
+    It "should work for -AllAuthenticatedUsers" {
         Add-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName -Role Reader -AllAuthenticatedUsers
-        (Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName |
-            Where-Object {$_.Entity -match "allAuthenticatedUsers"}) |
-            Should Not BeNullOrEmpty
+        $allAuthenticatedUsersAcl = Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName | Where-Object {$_.Entity -match "allAuthenticatedUsers"}
+        $allAuthenticatedUsersAcl | Should Not BeNullOrEmpty
         Remove-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName -AllAuthenticatedUsers
-        (Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName |
-            Where-Object {$_.Entity -match "allAuthenticatedUsers"}) |
-            Should BeNullOrEmpty
+        $allAuthenticatedUsersAcl = Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName | Where-Object {$_.Entity -match "allAuthenticatedUsers"}
+        $allAuthenticatedUsersAcl | Should BeNullOrEmpty
     }
 
     It "should work for user" {
         Add-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName -Role Owner -User $userEmail
-        (Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName |
-            Where-Object {$_.Entity -match "user-$userEmail"}) |
-            Should Not BeNullOrEmpty
+        $userAcl = Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName | Where-Object {$_.Entity -match "user-$userEmail"}
+        $userAcl | Should Not BeNullOrEmpty
         Remove-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName -User $userEmail
-        (Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName |
-            Where-Object {$_.Entity -match "user-$userEmail"}) |
-            Should BeNullOrEmpty
+        $userAcl = Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName | Where-Object {$_.Entity -match "user-$userEmail"}
+        $userAcl | Should BeNullOrEmpty
     }
 
     It "should work for group" {
         Add-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName -Role Owner -Group $groupEmail
-        (Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName |
-            Where-Object {$_.Entity -match "group-$groupEmail"}) |
-            Should Not BeNullOrEmpty
+        $groupAcl = Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName | Where-Object {$_.Entity -match "group-$groupEmail"}
+        $groupAcl | Should Not BeNullOrEmpty
         Remove-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName -Group $groupEmail
-        (Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName |
-            Where-Object {$_.Entity -match "group-$groupEmail"}) |
-            Should BeNullOrEmpty
+        $groupAcl = Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName | Where-Object {$_.Entity -match "group-$groupEmail"}
+        $groupAcl | Should BeNullOrEmpty
     }
 
     It "should work for domain" {
         Add-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName -Role Owner -Domain $domain
-        (Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName |
-            Where-Object {$_.Entity -match "domain-$domain"}) |
-            Should Not BeNullOrEmpty
+        $domainAcl = Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName | Where-Object {$_.Entity -match "domain-$domain"}
+        $domainAcl | Should Not BeNullOrEmpty
         Remove-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName -Domain $domain
-        (Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName |
-            Where-Object {$_.Entity -match "domain-$domain"}) |
-            Should BeNullOrEmpty
+        $domainAcl = Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName | Where-Object {$_.Entity -match "domain-$domain"}
+        $domainAcl | Should BeNullOrEmpty
     }
 }
 
@@ -439,7 +439,7 @@ Describe "Add-GcsDefaultObjectAcl" {
         ($objectAcl | Where-Object {$_.Entity -match "allUsers" -and $_.Role -eq "Reader"}) | Should Not BeNullOrEmpty
     }
 
-    It "should work for -AllAuthenticatedUser" {
+    It "should work for -AllAuthenticatedUsers" {
         $addedAcl = Add-GcsDefaultObjectAcl -Name $bucketName -Role Reader -AllAuthenticatedUsers
         $acl = Get-GcsDefaultObjectAcl -Name $bucketName |
             Where-Object {$_.Entity -match "allAuthenticatedUsers"} |
@@ -517,24 +517,24 @@ Describe "Remove-GcsDefaultObjectAcl" {
 
     It "should work for -AllUsers" {
         Add-GcsDefaultObjectAcl -Name $bucketName -Role Reader -AllUsers
-        (Get-GcsDefaultObjectAcl -Name $bucketName | Where-Object {$_.Entity -match "allUsers"}) | Should Not BeNullOrEmpty
+        $allUsersAcl = Get-GcsDefaultObjectAcl -Name $bucketName | Where-Object {$_.Entity -match "allUsers"}
+        $allUsersAcl | Should Not BeNullOrEmpty
         Remove-GcsDefaultObjectAcl -Name $bucketName -AllUsers
-        (Get-GcsDefaultObjectAcl -Name $bucketName | Where-Object {$_.Entity -match "allUsers"}) | Should BeNullOrEmpty
+        $allUsersAcl = Get-GcsDefaultObjectAcl -Name $bucketName | Where-Object {$_.Entity -match "allUsers"}
+        $allUsersAcl | Should BeNullOrEmpty
 
         # Test that the newly created object doesn't have the ACL we just add.
         $objectAcl = (New-GcsObject -Bucket $bucketName -ObjectName "test-object-$r" -Value "blah" -Force).Acl
         ($objectAcl | Where-Object {$_.Entity -match "allUsers" -and $_.Role -eq "Reader"}) | Should BeNullOrEmpty
     }
 
-    It "should work for -AllAuthenticatedUser" {
+    It "should work for -AllAuthenticatedUsers" {
         Add-GcsDefaultObjectAcl -Name $bucketName -Role Reader -AllAuthenticatedUsers
-        (Get-GcsDefaultObjectAcl -Name $bucketName |
-            Where-Object {$_.Entity -match "allAuthenticatedUsers"}) |
-            Should Not BeNullOrEmpty
+        $allAuthenticatedUsersAcl = Get-GcsDefaultObjectAcl -Name $bucketName | Where-Object {$_.Entity -match "allAuthenticatedUsers"}
+        $allAuthenticatedUsersAcl | Should Not BeNullOrEmpty
         Remove-GcsDefaultObjectAcl -Name $bucketName -AllAuthenticatedUsers
-        (Get-GcsDefaultObjectAcl -Name $bucketName |
-            Where-Object {$_.Entity -match "allAuthenticatedUsers"}) |
-            Should BeNullOrEmpty
+        $allAuthenticatedUsersAcl = Get-GcsDefaultObjectAcl -Name $bucketName | Where-Object {$_.Entity -match "allAuthenticatedUsers"}
+        $allAuthenticatedUsersAcl | Should BeNullOrEmpty
 
         # Test that the newly created object doesn't have the ACL we just add.
         $objectAcl = (New-GcsObject -Bucket $bucketName -ObjectName "test-object-$r" -Value "blah" -Force).Acl
@@ -544,13 +544,11 @@ Describe "Remove-GcsDefaultObjectAcl" {
 
     It "should work for user" {
         Add-GcsDefaultObjectAcl -Name $bucketName -Role Owner -User $userEmail
-        (Get-GcsDefaultObjectAcl -Name $bucketName |
-            Where-Object {$_.Entity -match "user-$userEmail"}) |
-                Should Not BeNullOrEmpty
+        $userAcl = Get-GcsDefaultObjectAcl -Name $bucketName | Where-Object {$_.Entity -match "user-$userEmail"}
+        $userAcl | Should Not BeNullOrEmpty
         Remove-GcsDefaultObjectAcl -Name $bucketName -User $userEmail
-        (Get-GcsDefaultObjectAcl -Name $bucketName |
-            Where-Object {$_.Entity -match "user-$userEmail"}) |
-            Should BeNullOrEmpty
+        $userAcl = Get-GcsDefaultObjectAcl -Name $bucketName | Where-Object {$_.Entity -match "user-$userEmail"}
+        $userAcl | Should BeNullOrEmpty
 
         # Test that the newly created object doesn't have the ACL we just add.
         $objectAcl = (New-GcsObject -Bucket $bucketName -ObjectName "test-object-$r" -Value "blah" -Force).Acl
@@ -559,13 +557,11 @@ Describe "Remove-GcsDefaultObjectAcl" {
 
     It "should work for group" {
         Add-GcsDefaultObjectAcl -Name $bucketName -Role Owner -Group $groupEmail
-        (Get-GcsDefaultObjectAcl -Name $bucketName |
-            Where-Object {$_.Entity -match "group-$groupEmail"}) |
-            Should Not BeNullOrEmpty
+        $groupAcl = Get-GcsDefaultObjectAcl -Name $bucketName | Where-Object {$_.Entity -match "group-$groupEmail"}
+        $groupAcl | Should Not BeNullOrEmpty
         Remove-GcsDefaultObjectAcl -Name $bucketName -Group $groupEmail
-        (Get-GcsDefaultObjectAcl -Name $bucketName |
-            Where-Object {$_.Entity -match "group-$groupEmail"}) |
-            Should BeNullOrEmpty
+        $groupAcl = Get-GcsDefaultObjectAcl -Name $bucketName | Where-Object {$_.Entity -match "group-$groupEmail"}
+        $groupAcl | Should BeNullOrEmpty
 
         # Test that the newly created object doesn't have the ACL we just add.
         $objectAcl = (New-GcsObject -Bucket $bucketName -ObjectName "test-object-$r" -Value "blah" -Force).Acl
@@ -574,13 +570,11 @@ Describe "Remove-GcsDefaultObjectAcl" {
 
     It "should work for domain" {
         Add-GcsDefaultObjectAcl -Name $bucketName -Role Owner -Domain $domain
-        (Get-GcsDefaultObjectAcl -Name $bucketName |
-            Where-Object {$_.Entity -match "domain-$domain"}) |
-            Should Not BeNullOrEmpty
+        $domainAcl = Get-GcsDefaultObjectAcl -Name $bucketName | Where-Object {$_.Entity -match "domain-$domain"}
+        $domainAcl | Should Not BeNullOrEmpty
         Remove-GcsDefaultObjectAcl -Name $bucketName -Domain $domain
-        (Get-GcsDefaultObjectAcl -Name $bucketName |
-            Where-Object {$_.Entity -match "domain-$domain"}) |
-            Should BeNullOrEmpty
+        $domainAcl = Get-GcsDefaultObjectAcl -Name $bucketName | Where-Object {$_.Entity -match "domain-$domain"}
+        $domainAcl | Should BeNullOrEmpty
 
         # Test that the newly created object doesn't have the ACL we just add.
         $objectAcl = (New-GcsObject -Bucket $bucketName -ObjectName "test-object-$r" -Value "blah" -Force).Acl
