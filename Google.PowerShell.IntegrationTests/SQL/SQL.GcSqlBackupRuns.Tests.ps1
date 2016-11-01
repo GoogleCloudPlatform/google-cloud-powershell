@@ -3,8 +3,8 @@ Install-GcloudCmdlets
 $project, $_, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Describe "Get-GcSqlBackupRun" {
-    #An instance to test cannot be ceated for these tests because it will not have a backuprun upon creation.
-    $instance = "test-db2"
+    # An instance to test cannot be created for these tests because it will not have a backuprun upon creation.
+    $instance = "test-db4"
 
     It "should get a reasonable response" {
         $backups = Get-GcSqlBackupRun -Project $project -Instance $instance

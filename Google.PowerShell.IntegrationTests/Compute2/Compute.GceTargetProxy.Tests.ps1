@@ -20,7 +20,7 @@ Describe "Get-GceTargetPool"{
     Context "with data" {
         BeforeAll {
             gcloud compute http-health-checks create "health-check-$r" 2>$null
-            gcloud compute backend-services create "backend-$r" --http-health-check "health-check-$r" 2>$null
+            gcloud compute backend-services create "backend-$r" --http-health-checks "health-check-$r" 2>$null
             gcloud compute url-maps create "url-map-$r" --default-service "backend-$r" 2>$null
             gcloud compute target-http-proxies create $httpProxyName --url-map "url-map-$r" 2>$null
             # TODO(jimwp): Make this a target-https-proxy by creating a self signed certificate.

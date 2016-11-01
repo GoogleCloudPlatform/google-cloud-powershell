@@ -17,8 +17,8 @@ Describe "Get-GceBackendService" {
     }
 
     gcloud compute http-health-checks create "health-check-$r" 2>$null
-    gcloud compute backend-services create $serviceName1 --http-health-check "health-check-$r" 2>$null
-    gcloud compute backend-services create $serviceName2 --http-health-check "health-check-$r" 2>$null
+    gcloud compute backend-services create $serviceName1 --http-health-checks "health-check-$r" 2>$null
+    gcloud compute backend-services create $serviceName2 --http-health-checks "health-check-$r" 2>$null
 
     It "should get all maps" {
         $maps = Get-GceBackendService

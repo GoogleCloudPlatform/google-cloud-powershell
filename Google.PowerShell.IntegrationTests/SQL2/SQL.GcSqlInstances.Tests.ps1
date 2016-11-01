@@ -112,13 +112,13 @@ Describe "Add-GcSqlInstance" {
             $setting = New-GcSqlSettingConfig "db-n1-standard-1" 
             $replicaConfig = New-GcSqlInstanceReplicaConfig
             $config = New-GcSqlInstanceConfig $instance -SettingConfig $setting `
-                -ReplicaConfig $replicaConfig -MasterInstanceName "test-db2"
+                -ReplicaConfig $replicaConfig -MasterInstanceName "test-db4"
             Add-GcSqlInstance $config
 
             $newInstances = Get-GcSqlInstance
             ($newInstances.Name -contains $instance) | Should Be true
             $myInstance = Get-GcSqlInstance $instance
-            $myInstance.MasterInstanceName | Should Be "gcloud-powershell-testing:test-db2"
+            $myInstance.MasterInstanceName | Should Be "gcloud-powershell-testing:test-db4"
             $myInstance.InstanceType | Should Be "READ_REPLICA_INSTANCE"
         }
         finally {
@@ -172,18 +172,18 @@ Describe "Export-GcSqlInstance" {
         gsutil -q rm gs://gcsql-instance-testing/*
     }
 
-    # For these tests, test-db2 was used because an instance must have a populated database for it to work.
+    # For these tests, test-db4 was used because an instance must have a populated database for it to work.
     # A specific nondescript bucket was also used because the permissions have to be set correctly
     $r = Get-Random
     # A random number is used to avoid collisions with the speed of creating
     # and deleting instances.
-    $instance = "test-db2"
+    $instance = "test-db4"
 
 
     It "should export an applicable SQL file" {
         $beforeObjects = gsutil ls gs://gcsql-instance-testing
         ($beforeObjects -contains "gs://gcsql-instance-testing/testsql$r.gz") | Should Be false
-        Export-GcSqlInstance "test-db2" "gs://gcsql-instance-testing/testsql$r.gz"
+        Export-GcSqlInstance $instance "gs://gcsql-instance-testing/testsql$r.gz"
         $afterObjects = gsutil ls gs://gcsql-instance-testing
         ($afterObjects -contains "gs://gcsql-instance-testing/testsql$r.gz") | Should Be true
     }
@@ -191,7 +191,7 @@ Describe "Export-GcSqlInstance" {
     It "should export an applicable CSV file" {
         $beforeObjects = gsutil ls gs://gcsql-instance-testing
         ($beforeObjects -contains "gs://gcsql-instance-testing/testcsv$r.csv") | Should Be false
-        Export-GcSqlInstance "test-db2" "gs://gcsql-instance-testing/testcsv$r.csv" "SELECT * FROM guestbook.entries"
+        Export-GcSqlInstance $instance "gs://gcsql-instance-testing/testcsv$r.csv" "SELECT * FROM guestbook.entries"
         $afterObjects = gsutil ls gs://gcsql-instance-testing
         ($afterObjects -contains "gs://gcsql-instance-testing/testcsv$r.csv") | Should Be true
     }
@@ -199,7 +199,7 @@ Describe "Export-GcSqlInstance" {
     It "should be able to export a specific SQL file" {
         $beforeObjects = gsutil ls gs://gcsql-instance-testing
         ($beforeObjects -contains "gs://gcsql-instance-testing/testothersql$r.gz") | Should Be false
-        Export-GcSqlInstance "test-db2" "gs://gcsql-instance-testing/testothersql$r.gz" -Database "guestbook","guestbook2" 
+        Export-GcSqlInstance $instance "gs://gcsql-instance-testing/testothersql$r.gz" -Database "guestbook","guestbook2" 
         $afterObjects = gsutil ls gs://gcsql-instance-testing
         ($afterObjects -contains "gs://gcsql-instance-testing/testothersql$r.gz") | Should Be true
     }
@@ -207,7 +207,7 @@ Describe "Export-GcSqlInstance" {
     It "should be able to export a specific CSV file" {
         $beforeObjects = gsutil ls gs://gcsql-instance-testing
         ($beforeObjects -contains "gs://gcsql-instance-testing/testothercsv$r.csv") | Should Be false
-        Export-GcSqlInstance "test-db2" "gs://gcsql-instance-testing/testothercsv$r.csv" -Database "guestbook" "SELECT * FROM entries"
+        Export-GcSqlInstance $instance "gs://gcsql-instance-testing/testothercsv$r.csv" -Database "guestbook" "SELECT * FROM entries"
         $afterObjects = gsutil ls gs://gcsql-instance-testing
         ($afterObjects -contains "gs://gcsql-instance-testing/testothercsv$r.csv") | Should Be true
     }
@@ -215,10 +215,10 @@ Describe "Export-GcSqlInstance" {
 }
 
 Describe "Import-GcSqlInstance" {
-    # For these tests, test-db2 was used because an instance must have a database for it to work.
+    # For these tests, test-db4 was used because an instance must have a database for it to work.
     # A specific nondescript bucket with nondescript files was also used 
     # because the permissions have to be set correctly.
-    $instance = "test-db2"
+    $instance = "test-db4"
 
     # Ordinarily for these tests to work, you would do something similar to the following:
    
@@ -241,21 +241,21 @@ Describe "Import-GcSqlInstance" {
 
     
     It "should be able to import a regular SQL file" {
-        { Import-GcSqlInstance "test-db2" "gs://gcsql-csharp-import-testing/testsqlS3" "newguestbook" } | Should not Throw
+        { Import-GcSqlInstance $instance "gs://gcsql-csharp-import-testing/testsqlS3" "newguestbook" } | Should not Throw
     }
 
     It "should be able to import a regular CSV file" {
-        { Import-GcSqlInstance "test-db2" "gs://gcsql-csharp-import-testing/testsql.csv" "newguestbook" "entries" } | Should not Throw
+        { Import-GcSqlInstance $instance "gs://gcsql-csharp-import-testing/testsql.csv" "newguestbook" "entries" } | Should not Throw
     }
 
     It "should throw an error if something's wrong" {
-        { Import-GcSqlInstance "test-db2" "gs://gcsql-csharp-import-testing/testsqlS" "newguestbook" } | Should Throw `
+        { Import-GcSqlInstance $instance "gs://gcsql-csharp-import-testing/testsqlS" "newguestbook" } | Should Throw `
         "ERROR 1227 (42000) at line 18: Access denied; you need (at least one of) the SUPER privilege(s) for this operation"
     }
 
     It "should import a local file by uploading it to GCS for a local file upon completion" {
         $oldBuckets = Get-GcsBucket
-        { Import-GcSqlInstance "test-db2" "$PSScriptRoot\sample-table.csv" "newguestbook" "entries" } |
+        { Import-GcSqlInstance $instance "$PSScriptRoot\sample-table.csv" "newguestbook" "entries" } |
             Should not Throw
         # The cmdlet creates a new Google Cloud Storage bucket so that the data can be imported. 
         # We want to make sure this bucket is deleted after.
@@ -265,7 +265,7 @@ Describe "Import-GcSqlInstance" {
 
     It "should delete the bucket for a local file upon a file error" {
         $oldBuckets = Get-GcsBucket
-        { Import-GcSqlInstance "test-db2" "$PSScriptRoot\filenotexist" "newguestbook" "entries" } | 
+        { Import-GcSqlInstance $instance "$PSScriptRoot\filenotexist" "newguestbook" "entries" } | 
         Should Throw "Could not find file '$PSScriptRoot\filenotexist'"
         $newBuckets = Get-GcsBucket
         $oldBuckets.Count | Should Be $newBuckets.Count
@@ -273,7 +273,7 @@ Describe "Import-GcSqlInstance" {
 
     It "should delete the bucket for a local file upon a instance error" {
         $oldBuckets = Get-GcsBucket
-        { Import-GcSqlInstance "test-db2" "$PSScriptRoot\sample-table.csv" "newguestbook" "tablenotexist" } | 
+        { Import-GcSqlInstance $instance "$PSScriptRoot\sample-table.csv" "newguestbook" "tablenotexist" } | 
         Should Throw "Error 1146: Table 'newguestbook.tablenotexist' doesn't exist"
         $newBuckets = Get-GcsBucket
         $oldBuckets.Count | Should Be $newBuckets.Count
@@ -352,9 +352,9 @@ Describe "Restart-GcSqlInstance" {
 }
 
 Describe "ConvertTo-GcSqlInstance" {
-    # For these tests, test-db2 was used because an instance must have a database and a binarylog for it to be 
+    # For these tests, test-db4 was used because an instance must have a database and a binarylog for it to be 
     # replicated. This kind of instance cannot be easily/quickly instantiated like those in other tests.
-    $masterInstance = "test-db2"
+    $masterInstance = "test-db4"
     $2ndGenTier = "db-n1-standard-1"
 
     It "should work and convert a test replica (replica name as positional param) to an instance" -Pending {
@@ -428,9 +428,9 @@ Describe "ConvertTo-GcSqlInstance" {
 }
 
 Describe "Restore-GcSqlInstanceBackup" {
-    # For these tests, test-db2 and mynewinstance were used because an instance must have backups enabled and a 
+    # For these tests, test-db4 and mynewinstance were used because an instance must have backups enabled and a 
     # binarylog to be backed up. This kind of instance cannot be easily/quickly instantiated like those in other tests.
-    $backupInstance1 = "test-db2"
+    $backupInstance1 = "test-db4"
     $backupInstance2 = "mynewinstance"
 
     $backupRunIds1 = (Get-GcSqlBackupRun -Instance $backupInstance1).Id
@@ -439,10 +439,10 @@ Describe "Restore-GcSqlInstanceBackup" {
     $numRestoreOps1 = (Get-GcSqlOperation -Instance $backupInstance1 | where { $_.OperationType -eq "RESTORE_VOLUME" }).Count
     $numRestoreOps2 = (Get-GcSqlOperation -Instance $backupInstance2 | where { $_.OperationType -eq "RESTORE_VOLUME" }).Count
 
-    It "should backup test-db2 to its own backup" {
+    It "should backup test-db4 to its own backup" {
         $backupRunId = $backupRunIds1[0]
 
-        Restore-GcSqlInstanceBackup $backupRunId $backupInstance1 
+        Restore-GcSqlInstanceBackup $backupRunId $backupInstance1
 
         $operations = Get-GcSqlOperation -Instance $backupInstance1
         ($operations | where { $_.OperationType -eq "RESTORE_VOLUME" }).Count | Should Be ($numRestoreOps1 + 1)
@@ -451,7 +451,7 @@ Describe "Restore-GcSqlInstanceBackup" {
         $operations[0].Error | Should Match ""
     }
 
-     It "should backup pipelined test-db2 to its own backup (test-db2 and default projects same)" {
+     It "should backup pipelined test-db4 to its own backup (test-db4 and default projects same)" {
          $backupRunId = $backupRunIds1[1]
 
         Get-GcSqlInstance -Name $backupInstance1 | Restore-GcSqlInstanceBackup $backupRunId
@@ -463,7 +463,7 @@ Describe "Restore-GcSqlInstanceBackup" {
         $operations[0].Error | Should Match ""
      }
 
-    It "should backup pipelined test-db2 to its own backup (test-db2 and default projects differ)" {
+    It "should backup pipelined test-db4 to its own backup (test-db4 and default projects differ)" {
         $nonDefaultProject = "asdf"
         $defaultProject = "gcloud-powershell-testing"
 
@@ -487,7 +487,7 @@ Describe "Restore-GcSqlInstanceBackup" {
         }
      }
 
-    It "should backup pipelined mynewinstance to test-db2's backup" {
+    It "should backup pipelined mynewinstance to test-db4's backup" -Pending {
         $backupRunId = $backupRunIds1[0]
 
         Get-GcSqlInstance -Name $backupInstance2 | Restore-GcSqlInstanceBackup $backupRunId -BackupInstance $backupInstance1
@@ -525,7 +525,7 @@ Describe "Update-GcSqlInstance" {
         ($after.SelfLink) | Should Be $before.SelfLink
     }
 
-    It "should patch maintenance windows" {
+    It "should patch maintenance windows" -Pending {
         $day = Get-Random -Minimum 1 -Maximum 10
         $hour = Get-Random -Minimum 1 -Maximum 10
         $before = Get-GcSqlInstance -Name $instance
