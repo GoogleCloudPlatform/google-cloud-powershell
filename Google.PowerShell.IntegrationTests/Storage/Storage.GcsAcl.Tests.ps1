@@ -1,6 +1,7 @@
 ﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
+
 $userEmail = "powershelltesting@gmail.com"
 $groupEmail = "test-group-for-google-cloud-powershell@google.com"
 $domain = "example.com"
@@ -75,16 +76,29 @@ Describe "Add-GcsBucketAcl" {
         $acl = Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "allUsers"} | Select -First 1
         CompareAcl $addedAcl $acl | Should Be $true
 
-        # Test that the newly created object doesn't have the ACL we just add.
-        $objectAcl = (New-GcsObject -Bucket $bucketName -ObjectName "test-object-$r" -Value "blah" -Force).Acl
+        # Test that any user has access to the bucket now.
+        $link = (Get-GcsBucket -Name $bucketName).SelfLink
+        $response = Invoke-WebRequest $link
+        $response.StatusCode | Should Be 200
+
+        # Test that the newly created object doesn't have the ACL we just added. This is because we
+        # modified the ACLs for the Bucket but not the default ACLs applied to every new object created in this bucket.
+        $objectName = "test-object-$r"
+        $objectAcl = (New-GcsObject -Bucket $bucketName -ObjectName $objectName -Value "blah" -Force).Acl
         ($objectAcl | Where-Object {$_.Entity -match "allUsers"}) | Should BeNullOrEmpty
+
+        # If we try to download this object, we should not be able to.
+        $link = (Get-GcsObject -Bucket $bucketName -ObjectName $objectName).SelfLink
+        { Invoke-WebRequest $link } | Should Throw "401"
     }
 
     It "should work for -AllAuthenticatedUsers" {
         $addedAcl = Add-GcsBucketAcl -Name $bucketName -Role Reader -AllAuthenticatedUsers
         $acl = Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "allAuthenticatedUsers"} | Select -First 1
         CompareAcl $addedAcl $acl | Should Be $true
-        # Test that the newly created object doesn't have the ACL we just add.
+
+        # Test that the newly created object doesn't have the ACL we just added. This is because we
+        # modified the ACLs for the Bucket but not the default ACLs applied to every new object created in this bucket.
         $objectAcl = (New-GcsObject -Bucket $bucketName -ObjectName "test-object-$r" -Value "blah" -Force).Acl
         ($objectAcl | Where-Object {$_.Entity -match "allAuthenticatedUsers"}) | Should BeNullOrEmpty
     }
@@ -99,7 +113,8 @@ Describe "Add-GcsBucketAcl" {
         $acl = Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "user-$userEmail"} | Select -First 1
         CompareAcl $addedAcl $acl | Should Be $true
 
-        # Test that the newly created object doesn't have the ACL we just add.
+        # Test that the newly created object doesn't have the ACL we just added. This is because we
+        # modified the ACLs for the Bucket but not the default ACLs applied to every new object created in this bucket.
         $objectAcl = (New-GcsObject -Bucket $bucketName -ObjectName "test-object-$r" -Value "blah" -Force).Acl
         ($objectAcl | Where-Object {$_.Entity -match "user-$userEmail"}) | Should BeNullOrEmpty
     }
@@ -114,7 +129,8 @@ Describe "Add-GcsBucketAcl" {
         $acl = Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "group-$groupEmail"} | Select -First 1
         CompareAcl $addedAcl $acl | Should Be $true
 
-        # Test that the newly created object doesn't have the ACL we just add.
+        # Test that the newly created object doesn't have the ACL we just added. This is because we
+        # modified the ACLs for the Bucket but not the default ACLs applied to every new object created in this bucket.
         $objectAcl = (New-GcsObject -Bucket $bucketName -ObjectName "test-object-$r" -Value "blah" -Force).Acl
         ($objectAcl | Where-Object {$_.Entity -match "group-$groupEmail"}) | Should BeNullOrEmpty
     }
@@ -129,7 +145,8 @@ Describe "Add-GcsBucketAcl" {
         $acl = Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "domain-$domain"} | Select -First 1
         CompareAcl $addedAcl $acl | Should Be $true
 
-        # Test that the newly created object doesn't have the ACL we just add.
+        # Test that the newly created object doesn't have the ACL we just added. This is because we
+        # modified the ACLs for the Bucket but not the default ACLs applied to every new object created in this bucket.
         $objectAcl = (New-GcsObject -Bucket $bucketName -ObjectName "test-object-$r" -Value "blah" -Force).Acl
         ($objectAcl | Where-Object {$_.Entity -match "domain-$domain"}) | Should BeNullOrEmpty
     }
@@ -159,6 +176,10 @@ Describe "Remove-GcsBucketAcl" {
         Remove-GcsBucketAcl -Name $bucketName -AllUsers
         $allUsersAcl = (Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "allUsers"})
         $allUsersAcl | Should BeNullOrEmpty
+
+        # Test that non-authenticated user does not have access to the bucket now.
+        $link = (Get-GcsBucket -Name $bucketName).SelfLink
+        { Invoke-WebRequest $link } | Should Throw "401"
     }
 
     It "should work for -AllAuthenticatedUsers" {
@@ -263,6 +284,11 @@ Describe "Add-GcsObjectAcl" {
         $addedAcl = Add-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName -Role Reader -AllUsers
         $acl = Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName | Where-Object {$_.Entity -match "allUsers"} | Select -First 1
         CompareAcl $addedAcl $acl | Should Be $true
+
+        # Test that any user has access to the object now.
+        $link = (Get-GcsObject -Bucket $bucketName -ObjectName $objectName).SelfLink
+        $response = Invoke-WebRequest $link
+        $response.StatusCode | Should Be 200
     }
 
     It "should work for -AllAuthenticatedUsers" {
@@ -330,10 +356,14 @@ Describe "Remove-GcsObjectAcl" {
     It "should work for -AllUsers" {
         Add-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName -Role Reader -AllUsers
         $allUsersAcl = Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName | Where-Object {$_.Entity -match "allUsers"}
-        $allUsersAcl = Should Not BeNullOrEmpty
+        $allUsersAcl | Should Not BeNullOrEmpty
         Remove-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName -AllUsers
         $allUsersAcl = Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName | Where-Object {$_.Entity -match "allUsers"}
         $allUsersAcl | Should BeNullOrEmpty
+
+        # Test that non-authenticated user does not have access to the object now.
+        $link = (Get-GcsObject -Bucket $bucketName -ObjectName $objectName).SelfLink
+        { Invoke-WebRequest $link } | Should Throw "401"
     }
 
     It "should work for -AllAuthenticatedUsers" {
@@ -435,8 +465,14 @@ Describe "Add-GcsDefaultObjectAcl" {
         CompareAcl $addedAcl $acl | Should Be $true
 
         # Test that the newly created object has the ACL we just add.
-        $objectAcl = (New-GcsObject -Bucket $bucketName -ObjectName "test-object-$r" -Value "blah" -Force).Acl
+        $objectName = "test-object-$r"
+        $objectAcl = (New-GcsObject -Bucket $bucketName -ObjectName $objectName -Value "blah" -Force).Acl
         ($objectAcl | Where-Object {$_.Entity -match "allUsers" -and $_.Role -eq "Reader"}) | Should Not BeNullOrEmpty
+
+        # Test that any user can at least have access to the object now.
+        $link = (Get-GcsObject -Bucket $bucketName -ObjectName $objectName).SelfLink
+        $response = Invoke-WebRequest $link
+        $response.StatusCode | Should Be 200
     }
 
     It "should work for -AllAuthenticatedUsers" {
@@ -524,8 +560,13 @@ Describe "Remove-GcsDefaultObjectAcl" {
         $allUsersAcl | Should BeNullOrEmpty
 
         # Test that the newly created object doesn't have the ACL we just add.
-        $objectAcl = (New-GcsObject -Bucket $bucketName -ObjectName "test-object-$r" -Value "blah" -Force).Acl
+        $objectName = "test-object-$r"
+        $objectAcl = (New-GcsObject -Bucket $bucketName -ObjectName $objectName -Value "blah" -Force).Acl
         ($objectAcl | Where-Object {$_.Entity -match "allUsers" -and $_.Role -eq "Reader"}) | Should BeNullOrEmpty
+
+        # Test that non-authenticated user does not have access to the object now.
+        $link = (Get-GcsObject -Bucket $bucketName -ObjectName $objectName).SelfLink
+        { Invoke-WebRequest $link } | Should Throw "401"
     }
 
     It "should work for -AllAuthenticatedUsers" {

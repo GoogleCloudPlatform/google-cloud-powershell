@@ -11,8 +11,9 @@ using System.Management.Automation;
 namespace Google.PowerShell.CloudStorage
 {
     /// <summary>
-    /// Base class for GcsAclCmdlet. This set of cmdlet is used to manage
-    /// custom access controls for Google Cloud Storage.
+    /// Base class for ACL-related Cloud Storage cmdlets. Contains inherited parameters to be used in derived classes.
+    /// Derived classes are expected to have 6 different parameter sets, corresponding to the scope of the ACL being
+    /// added/removed. e.g. User, Group, Team, etc.
     /// </summary>
     public abstract class GcsAclCmdlet : GcsCmdlet
     {
@@ -91,7 +92,7 @@ namespace Google.PowerShell.CloudStorage
         public SwitchParameter AllAuthenticatedUsers { get; set; }
 
         /// <summary>
-        /// Returns the entity holding the access control based on the arguments given.
+        /// Returns the entity holding the access control based on the cmdlet parameters.
         /// Entity will be of the form user-userId, user-emailAddress, group-groupId,
         /// group-emailAddress, project-role-projectNumber, allUsers or allAuthenticatedUsers.
         /// </summary>
