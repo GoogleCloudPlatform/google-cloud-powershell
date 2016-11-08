@@ -73,44 +73,7 @@ NestedModules = @()
 # FunctionsToExport = @()
 
 # Cmdlets to export from this module
-CmdletsToExport = @('Add-GcdChange', 'Add-GcdManagedZone', 'Add-GceAddress',
-               'Add-GceFirewall', 'Add-GceHealthCheck', 'Add-GceImage',
-               'Add-GceInstance', 'Add-GceInstanceTemplate',
-               'Add-GceManagedInstanceGroup', 'Add-GceRoute', 'Add-GceSnapshot',
-               'Add-GcSqlInstance', 'Add-GcSqlSslCert', 'Add-GcSqlSslEphemeral',
-               'ConvertTo-GcSqlInstance', 'Copy-GcsObject', 'Disable-GceImage',
-               'Export-GcSqlInstance', 'Find-GcsObject', 'Get-GcdChange',
-               'Get-GcdManagedZone', 'Get-GcdQuota', 'Get-GcdResourceRecordSet',
-               'Get-GceAddress', 'Get-GceBackendService', 'Get-GceDisk',
-               'Get-GceFirewall', 'Get-GceForwardingRule', 'Get-GceHealthCheck',
-               'Get-GceImage', 'Get-GceInstance', 'Get-GceInstanceTemplate',
-               'Get-GceMachineType', 'Get-GceManagedInstanceGroup',
-               'Get-GceMetadata', 'Get-GceNetwork', 'Get-GceRoute', 'Get-GceSnapshot',
-               'Get-GceTargetPool', 'Get-GceTargetProxy', 'Get-GceUrlMap',
-               'Get-GcsBucket', 'Get-GcsObject', 'Get-GcSqlBackupRun',
-               'Get-GcSqlFlags', 'Get-GcSqlInstance', 'Get-GcSqlOperation',
-               'Get-GcSqlSslCert', 'Get-GcSqlTiers', 'Import-GcSqlInstance',
-               'Invoke-GcSqlInstanceFailover', 'New-GcdResourceRecordSet',
-               'New-GceAttachedDiskConfig', 'New-GceDisk', 'New-GceFirewallProtocol',
-               'New-GceInstanceConfig', 'New-GceServiceAccountConfig',
-               'New-GcsBucket', 'New-GcsObject', 'New-GcSqlInstanceConfig',
-               'New-GcSqlInstanceReplicaConfig', 'New-GcSqlSettingConfig',
-               'Read-GcsObject', 'Remove-GcdManagedZone', 'Remove-GceAddress',
-               'Remove-GceDisk', 'Remove-GceFirewall', 'Remove-GceHealthCheck',
-               'Remove-GceImage', 'Remove-GceInstance', 'Remove-GceInstanceTemplate',
-               'Remove-GceManagedInstanceGroup', 'Remove-GceRoute',
-               'Remove-GceSnapshot', 'Remove-GcsBucket', 'Remove-GcsBucketLogging',
-               'Remove-GcsBucketWebsite', 'Remove-GcsObject',
-               'Remove-GcSqlBackupRun', 'Remove-GcSqlInstance',
-               'Remove-GcSqlSslCert', 'Reset-GcSqlSslConfig', 'Resize-GceDisk',
-               'Restart-GceInstance', 'Restart-GcSqlInstance',
-               'Restore-GcSqlInstanceBackup', 'Set-GceFirewall',
-               'Set-GceHealthCheck', 'Set-GceInstance',
-               'Set-GceManagedInstanceGroup', 'Set-GceTargetPool', 'Set-GcsObject',
-               'Start-GceInstance', 'Start-GcSqlReplica', 'Stop-GceInstance',
-               'Stop-GcSqlReplica', 'Test-GcsBucket', 'Test-GcsObject',
-               'Update-GcSqlInstance', 'Wait-GceManagedInstanceGroup',
-               'Write-GcsBucketLogging', 'Write-GcsBucketWebsite', 'Write-GcsObject')
+CmdletsToExport = '*'
 
 # Variables to export from this module
 # VariablesToExport = @()
