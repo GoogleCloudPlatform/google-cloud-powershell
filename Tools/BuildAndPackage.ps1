@@ -60,7 +60,7 @@ function Remove-PrivateData($moduleManifest) {
     $moduleManifest.Remove("PrivateData")
 }
 
-# Change the module manifest version
+# Change the module manifest version.
 $moduleManifestFile = Join-Path $projectRoot "Google.PowerShell\ReleaseFiles\GoogleCloud.psd1"
 $moduleManifestContent = Import-PowerShellDataFile $moduleManifestFile
 Remove-PrivateData $moduleManifestContent
@@ -102,7 +102,7 @@ if ($null -ne $betaCmdlets) {
     $cmdletsList = $cmdletsList | Where-Object { $betaCmdlets -notcontains $_ }
 }
 
-# Modify the list of exported cmdlets
+# Modify the list of exported cmdlets.
 $gCloudManifestPath = Join-Path $debugDir "GoogleCloud.psd1"
 $gCloudManifest = Import-PowerShellDataFile $gCloudManifestPath
 Remove-PrivateData $gCloudManifest
@@ -121,7 +121,7 @@ Write-Host -ForegroundColor Cyan "*** HACK: Creating GoogleCloudPowerShell modul
 New-Item -ItemType Directory $packageDir
 New-Item -ItemType Directory $gcpsDir
 
-# Add the version folder in front of Google.PowerShell.dll and GoogleCloudPlatform.Format.ps1xml
+# Add the version folder in front of Google.PowerShell.dll and GoogleCloudPlatform.Format.ps1xml.
 $gCloudPowerShellManifest = Import-PowerShellDataFile (Join-Path $debugDir "GoogleCloudPowerShell.psd1")
 Remove-PrivateData $gCloudPowerShellManifest
 $gCloudPowerShellManifest.RootModule = $gCloudPowerShellManifest.RootModule -replace "Google.PowerShell.dll", `
@@ -137,7 +137,7 @@ Write-Host -ForegroundColor Cyan "*** Packaging the bits ***"
 New-Item -ItemType Directory $powerShellDir
 Copy-Item -Recurse $debugDir $powerShellDir
 
-# The binaries in a folder named "Debug". Move them to GoogleCloud\$normalizedVersion folder.
+# The binaries are in a folder named "Debug". Move them to GoogleCloud\$normalizedVersion folder.
 $moduleDir = Join-Path $powerShellDir "Debug"
 $googleCloudDir = Join-Path $powerShellDir "GoogleCloud\$normalizedVersion"
 New-Item -ItemType Directory $googleCloudDir
