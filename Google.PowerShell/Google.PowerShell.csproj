@@ -76,6 +76,10 @@
       <HintPath>..\packages\Google.Apis.1.17.0\lib\net45\Google.Apis.PlatformServices.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Google.Apis.Pubsub.v1, Version=1.17.0.641, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.Pubsub.v1.1.17.0.641\lib\net45\Google.Apis.Pubsub.v1.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Google.Apis.SQLAdmin.v1beta4, Version=1.17.0.643, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
       <HintPath>..\packages\Google.Apis.SQLAdmin.v1beta4.1.17.0.643\lib\net45\Google.Apis.SQLAdmin.v1beta4.dll</HintPath>
       <Private>True</Private>
@@ -177,6 +181,8 @@
     <Compile Include="Logging\GcLogCmdlet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Provider\CacheItem.cs" />
+    <Compile Include="PubSub\GcpsCmdlet.cs" />
+    <Compile Include="PubSub\GcpsTopic.cs" />
     <Compile Include="Sql\GcSqlBackupRunCmdlets.cs" />
     <Compile Include="Sql\GcSqlCmdlet.cs" />
     <Compile Include="Sql\GcSqlFlagsCmdlet.cs" />

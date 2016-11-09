@@ -1,16 +1,16 @@
 ﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
-using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using Microsoft.PowerShell.Commands;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Management.Automation;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Google.PowerShell.Common
 {
@@ -96,6 +96,14 @@ namespace Google.PowerShell.Common
 
             // Default with the input path in case we cannot resolve it.
             return filePath;
+        }
+
+        /// <summary>
+        /// Converts a hashtable to a dictionary
+        /// </summary>
+        protected static Dictionary<K, V> ConvertToDictionary<K, V>(Hashtable hashTable)
+        {
+            return hashTable.Cast<DictionaryEntry>().ToDictionary(kvp => (K)kvp.Key, kvp => (V)kvp.Value);
         }
 
         /// <summary>

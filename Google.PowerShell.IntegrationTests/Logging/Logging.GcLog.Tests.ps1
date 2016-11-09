@@ -11,23 +11,15 @@ Describe "Get-GcLogEntry" {
     $secondTextPayload = "Second test entry"
     $jsonPayload = "{\`"Key\`":\`"Value\`"}"
     $timeBeforeCreatingLogs = [DateTime]::Now
-<<<<<<< HEAD
     gcloud beta logging write $logName $textPayload --severity=ALERT 2>$null
     gcloud beta logging write $logName $jsonPayload --severity=INFO --payload-type=json 2>$null
     gcloud beta logging write $secondLogName $secondTextPayload --severity=ALERT 2>$null
     gcloud beta logging write $secondLogName $jsonPayload --severity=INFO --payload-type=json 2>$null
-=======
-    gcloud beta logging write $logName $textPayload --severity=ALERT > $null
-    gcloud beta logging write $logName $jsonPayload --severity=INFO --payload-type=json
-    gcloud beta logging write $secondLogName $secondTextPayload --severity=ALERT
-    gcloud beta logging write $secondLogName $jsonPayload --severity=INFO --payload-type=json
->>>>>>> Add remove-gclog and new-gclogmonitoredresource
     # We add 2 minutes to account for delay in log creation
     $timeAfterCreatingLogs = [DateTime]::Now.AddMinutes(2)
 
     AfterAll {
         gcloud beta logging logs delete $logName --quiet
-<<<<<<< HEAD
         $logs = Get-GcLogEntry -LogName $logName
         if ($null -ne $logs)
         {
@@ -43,13 +35,6 @@ Describe "Get-GcLogEntry" {
 
     It "should work without any parameters" {
         # There are a lot of logs so we just want to get the first 10.
-=======
-        gcloud beta logging logs delete $secondLogName --quiet
-    }
-
-    It "should work without any parameters" {
-        # There are a lot of logs so we just want to get the first 10
->>>>>>> Add remove-gclog and new-gclogmonitoredresource
         $logEntries = Get-GcLogEntry | Select -First 10
         $logEntries.Count | Should Be 10
     }
@@ -61,34 +46,22 @@ Describe "Get-GcLogEntry" {
         $textLogEntry.TextPayload | Should BeExactly $textPayload
         $jsonLogEntry = $logEntries | Where-Object { $null -ne $_.JsonPayload }
         $jsonLogEntry.JsonPayload["Key"] | Should BeExactly "Value"
-<<<<<<< HEAD
     }
 
     It "should not return anything for non-existent log" {
-=======
-
-        # Should not return anything for non-existent parameter
->>>>>>> Add remove-gclog and new-gclogmonitoredresource
         (Get-GcLogEntry -LogName "non-existent-log-name") | Should BeNullOrEmpty
     }
 
     It "should work with -Severity parameter" {
         $logEntries = Get-GcLogEntry -Severity Alert
-<<<<<<< HEAD
         # We can't use exact value here because this will include entries from other logs.
-=======
->>>>>>> Add remove-gclog and new-gclogmonitoredresource
         $logEntries.Count -ge 2 | Should Be $true
         $logEntries | Where-Object { $_.TextPayload -eq $textPayload } | Should Not BeNullOrEmpty
         $logEntries | Where-Object { $_.TextPayload -eq $secondTextPayload } | Should Not BeNullOrEmpty
         $logEntries | ForEach-Object { $_.Severity | Should Be ALERT }
-<<<<<<< HEAD
     }
 
     It "should work with -Severity and -LogName parameters" {
-=======
-        
->>>>>>> Add remove-gclog and new-gclogmonitoredresource
         # Tests with -LogName parameter too.
         $logEntries = Get-GcLogEntry -LogName $secondLogName -Severity INFO
         $logEntries.Count | Should Be 1
@@ -98,22 +71,14 @@ Describe "Get-GcLogEntry" {
     It "should work with -After and -Before parameter" {
         # We should get the logs we created in the test.
         $logEntries = Get-GcLogEntry -After $timeBeforeCreatingLogs
-<<<<<<< HEAD
         # We can't use exact value here because this will include entries from other logs.
-=======
->>>>>>> Add remove-gclog and new-gclogmonitoredresource
         $logEntries.Count -ge 4 | Should Be $true
         $textLogEntries = $logEntries | Where-Object { -not [string]::IsNullOrWhiteSpace($_.TextPayload) }
         $textLogEntries.Count -ge 2 | Should Be $true
         $jsonLogEntries = $logEntries | Where-Object { $null -ne $_.JsonPayload }
         $jsonLogEntries.Count -ge 2 | Should Be $true
-<<<<<<< HEAD
     }
     It "should work with -LogName and -After and -Before parameters" {
-=======
-
-        # Tests with -LogName parameter.
->>>>>>> Add remove-gclog and new-gclogmonitoredresource
         $logEntries = Get-GcLogEntry -After $timeAfterCreatingLogs -LogName $logName
         $logEntries | Should BeNullOrEmpty
         $logEntries = Get-GcLogEntry -Before $timeBeforeCreatingLogs -LogName $secondLogName
@@ -214,11 +179,7 @@ Describe "New-GcLogEntry" {
             $logEntriesProtoPayloads.Count | Should Be 2
         }
         finally {
-<<<<<<< HEAD
             gcloud beta logging logs delete $logName --quiet 2>$null
-=======
-            gcloud beta logging logs delete $logName --quiet
->>>>>>> Add remove-gclog and new-gclogmonitoredresource
         }
     }
 
@@ -239,11 +200,7 @@ Describe "New-GcLogEntry" {
             $logEntriesJsonPayload.JsonPayload["Key"] | Should BeExactly "Value"
         }
         finally {
-<<<<<<< HEAD
             gcloud beta logging logs delete $logName --quiet 2>$null
-=======
-            gcloud beta logging logs delete $logName --quiet
->>>>>>> Add remove-gclog and new-gclogmonitoredresource
         }
     }
 
@@ -265,11 +222,7 @@ Describe "New-GcLogEntry" {
             $logEntry.Resource.Labels["database_id"] | Should BeExactly $resourceLabels["database_id"]
         }
         finally {
-<<<<<<< HEAD
             gcloud beta logging logs delete $logName --quiet 2>$null
-=======
-            gcloud beta logging logs delete $logName --quiet
->>>>>>> Add remove-gclog and new-gclogmonitoredresource
         }
     }
 }
@@ -283,11 +236,7 @@ Describe "Remove-GcLog" {
         $r = Get-Random
         $logName = "gcp-testing-new-gclogentry-$r"
         $textPayload = "This is the text payload."
-<<<<<<< HEAD
         New-GcLogEntry -LogName $logName -TextPayload $textPayload
-=======
-        New-GcLogEntry -LogName $logName -MonitoredResource $monitoredResource -TextPayload $textPayload
->>>>>>> Add remove-gclog and new-gclogmonitoredresource
         Start-Sleep 5
         (Get-GcLogEntry -LogName $logName) | Should Not BeNullOrEmpty
         Remove-GcLog -LogName $logName
