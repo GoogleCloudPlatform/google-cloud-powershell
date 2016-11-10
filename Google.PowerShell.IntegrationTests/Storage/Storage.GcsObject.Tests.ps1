@@ -486,7 +486,7 @@ Describe "Remove-GcsObject" {
     }
 
     It "should fail for non existing objects" {
-        { Remove-GcsObject -Bucket $bucket -ObjectName "file-404.txt" } | Should Throw "'testfile.txt' does not exist""
+        { Remove-GcsObject -Bucket $bucket -ObjectName "file-404.txt" } | Should Throw "'file-404.txt' does not exist""
     }
 }
 
