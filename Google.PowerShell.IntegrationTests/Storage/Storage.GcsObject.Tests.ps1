@@ -367,7 +367,7 @@ Describe "Get-GcsObject" {
     }
 
     It "should fail for non existing objects" {
-        { Get-GcsObject -Bucket $bucket -ObjectName "file-404.txt" } | Should Throw "404"
+        { Get-GcsObject -Bucket $bucket -ObjectName "file-404.txt" } | Should Throw "'file-404.txt' does not exist"
     }
 }
 
@@ -471,7 +471,7 @@ Describe "Remove-GcsObject" {
     It "should work" {
         Add-TestFile $bucket "testfile.txt"
         $obj = Remove-GcsObject $bucket "testfile.txt"
-        { Get-GcsObject $bucket "testfile.txt" } | Should Throw "404"
+        { Get-GcsObject $bucket "testfile.txt" } | Should Throw "'testfile.txt' does not exist"
     }
 
     It "should accept objects from the pipeline" {
@@ -486,7 +486,7 @@ Describe "Remove-GcsObject" {
     }
 
     It "should fail for non existing objects" {
-        { Remove-GcsObject -Bucket $bucket -ObjectName "file-404.txt" } | Should Throw "404"
+        { Remove-GcsObject -Bucket $bucket -ObjectName "file-404.txt" } | Should Throw "'testfile.txt' does not exist""
     }
 }
 
@@ -558,7 +558,7 @@ Describe "Read-GcsObject" {
              [System.IO.Path]::GetTempPath(),
              [System.IO.Path]::GetRandomFileName())
         { Read-GcsObject $bucket "random-file" $tempFileName } `
-            | Should Throw "Not Found"
+            | Should Throw "'random-file' does not exist"
     }
 
     # This test can only be run in non-admin PowerShell.

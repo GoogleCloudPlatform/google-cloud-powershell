@@ -437,8 +437,20 @@ namespace Google.PowerShell.CloudStorage
 
             ObjectsResource.GetRequest getReq = Service.Objects.Get(Bucket, ObjectName);
             getReq.Projection = ObjectsResource.GetRequest.ProjectionEnum.Full;
-            Object gcsObject = getReq.Execute();
-            WriteObject(gcsObject);
+            try
+            {
+                Object gcsObject = getReq.Execute();
+                WriteObject(gcsObject);
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+            {
+                ErrorRecord errorRecord = new ErrorRecord(
+                    new ItemNotFoundException($"Storage object '{ObjectName}' does not exist."),
+                    "ObjectNotFound",
+                    ErrorCategory.ObjectNotFound,
+                    ObjectName);
+                ThrowTerminatingError(errorRecord);
+            }
         }
     }
 
@@ -803,10 +815,7 @@ namespace Google.PowerShell.CloudStorage
                 using (var memStream = new MemoryStream(1024 * 1024))
                 {
                     var result = downloader.Download(uri, memStream);
-                    if (result.Status == DownloadStatus.Failed || result.Exception != null)
-                    {
-                        throw result.Exception;
-                    }
+                    CheckForError(result);
 
                     // Stream cursor is at the end (data just written).
                     memStream.Position = 0;
@@ -832,10 +841,25 @@ namespace Google.PowerShell.CloudStorage
             using (var writer = new FileStream(qualifiedPath, FileMode.Create))
             {
                 var result = downloader.Download(uri, writer);
-                if (result.Status == DownloadStatus.Failed || result.Exception != null)
+                CheckForError(result);
+            }
+        }
+
+        private void CheckForError(IDownloadProgress downloadProgress)
+        {
+            if (downloadProgress.Status == DownloadStatus.Failed || downloadProgress.Exception != null)
+            {
+                string exceptionMessage = downloadProgress.Exception.Message;
+                if (exceptionMessage != null && exceptionMessage.IndexOf("Not Found", System.StringComparison.OrdinalIgnoreCase) >= 0)
                 {
-                    throw result.Exception;
+                    ErrorRecord errorRecord = new ErrorRecord(
+                        new ItemNotFoundException($"Storage object '{ObjectName}' does not exist."),
+                        "ObjectNotFound",
+                        ErrorCategory.ObjectNotFound,
+                        ObjectName);
+                    ThrowTerminatingError(errorRecord);
                 }
+                throw downloadProgress.Exception;
             }
         }
     }
