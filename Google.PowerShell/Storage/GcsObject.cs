@@ -417,9 +417,12 @@ namespace Google.PowerShell.CloudStorage
     /// </para>
     /// <para type="description">
     /// An optional delimiter may be provided. If used, will return results in a
-    /// directory-like mode, delimited by the given string. e.g. with objects "1,
-    /// "2", "subdir/3" and delimited "/"; "subdir/3" would not be returned.
-    /// (There is no way to just return "subdir" in the previous example.)
+    /// directory-like mode, delimited by the given string. This means that the names
+    /// of all objects returned will not, aside from the prefix, contain the delimiter.
+    /// For example, with objects "1", "2", "subdir/3", "subdir/subdir/4",
+    /// if the delimiter is "/", only "1" and "2" will be returned.
+    /// If the delimiter is "/" and the prefix is "subdir/", only "subdir/3"
+    /// will be returned.
     /// </para>
     /// <para type="description">
     /// To gets a specific Cloud Storage Object by name, use the -ObjectName parameter.
