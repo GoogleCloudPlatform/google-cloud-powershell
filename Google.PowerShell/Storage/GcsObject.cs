@@ -849,8 +849,8 @@ namespace Google.PowerShell.CloudStorage
         {
             if (downloadProgress.Status == DownloadStatus.Failed || downloadProgress.Exception != null)
             {
-                string exceptionMessage = downloadProgress.Exception.Message;
-                if (exceptionMessage != null && exceptionMessage.IndexOf("Not Found", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                GoogleApiException googleApiException = downloadProgress.Exception as GoogleApiException;
+                if (googleApiException != null && googleApiException.HttpStatusCode == HttpStatusCode.NotFound)
                 {
                     ErrorRecord errorRecord = new ErrorRecord(
                         new ItemNotFoundException($"Storage object '{ObjectName}' does not exist."),
@@ -859,6 +859,7 @@ namespace Google.PowerShell.CloudStorage
                         ObjectName);
                     ThrowTerminatingError(errorRecord);
                 }
+                // Default to just throwing the exception we get.
                 throw downloadProgress.Exception;
             }
         }
