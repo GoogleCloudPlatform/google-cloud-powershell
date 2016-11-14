@@ -39,12 +39,33 @@ if (Test-Path $binDir) {
     Remove-Item $binDir -Recurse -Force
 }
 
-# Change the module manifest version
+# Helper function to remove PrivateData from module manifest.
+# If we do not do this, when we splat $moduleManifest to New-ModuleManifest,
+# PrivateData will have 2 PSDaTa keys. Also, the key value pairs from PSData will
+# also be lost.
+function Remove-PrivateData($moduleManifest) {
+    $privateData = $moduleManifest["PrivateData"]
+    if ($null -ne $privateData -and $privateData.ContainsKey("PSData")) {
+        $psData = $privateData["PSData"]
+        if ($null -ne $psData) {
+            $fieldNeededFromPSData = @("Tags", "LicenseUri", "ProjectUri", "IconUri", "ReleaseNotes")
+            foreach ($field in $fieldNeededFromPSData) {
+                if ($psData.ContainsKey($field)) {
+                    $moduleManifest[$field] = $psData[$field]
+                }
+            }
+        }
+    }
+
+    $moduleManifest.Remove("PrivateData")
+}
+
+# Change the module manifest version.
 $moduleManifestFile = Join-Path $projectRoot "Google.PowerShell\ReleaseFiles\GoogleCloud.psd1"
-$moduleManifestContent = Get-Content $moduleManifestFile -Raw
-$moduleManifestContent = $moduleManifestContent -replace "ModuleVersion\s*=\s*'[0-9\.]*'",
-                                                         "ModuleVersion = '$normalizedVersion'"
-$moduleManifestContent | Out-File -Encoding utf8 -FilePath $moduleManifestFile -NoNewline
+$moduleManifestContent = Import-PowerShellDataFile $moduleManifestFile
+Remove-PrivateData $moduleManifestContent
+$moduleManifestContent.ModuleVersion = $normalizedVersion
+New-ModuleManifest -Path $moduleManifestFile @moduleManifestContent
 
 # Change version in AssemblyInfo file.
 $assemblyInfoFile = Join-Path $projectRoot "Google.PowerShell\Properties\AssemblyInfo.cs"
@@ -64,6 +85,30 @@ if (-Not (Test-Path $debugDir)) {
     Exit
 }
 
+# Get all cmdlets available in GoogleCloud module.
+$googlePowerShellAssemblyPath = Resolve-Path (Join-Path $debugDir GoogleCloud.psd1)
+$getCmdletsScriptBlock = {
+    param($modulePath)
+    Import-Module $modulePath | Out-Null
+    (Get-Module GoogleCloud).ExportedCmdlets.Keys
+}
+$job = Start-Job -ScriptBlock $getCmdletsScriptBlock -ArgumentList $googlePowerShellAssemblyPath
+$cmdletsList = $job | Wait-Job | Receive-Job
+Remove-Job $job
+
+# Remove the cmdlets that we do not want to be public yet.
+$betaCmdlets = & (Join-Path $PSScriptRoot "BetaCmdlets.ps1")
+if ($null -ne $betaCmdlets) {
+    $cmdletsList = $cmdletsList | Where-Object { $betaCmdlets -notcontains $_ }
+}
+
+# Modify the list of exported cmdlets.
+$gCloudManifestPath = Join-Path $debugDir "GoogleCloud.psd1"
+$gCloudManifest = Import-PowerShellDataFile $gCloudManifestPath
+Remove-PrivateData $gCloudManifest
+$gCloudManifest.CmdletsToExport = $cmdletsList
+New-ModuleManifest -Path $gCloudManifestPath @gCloudManifest
+
 # HACK: Move the GoogleCloudPowerShell.psd1 into a different folder to keep Cloud SDK installations
 # before 9/29/2016 working. We changed the location of the path we add to PSModulePath during the
 # Cloud SDK installation. The old path (<CloudSDK>\platform\GoogleCloudPowerShell) will no longer
@@ -75,7 +120,16 @@ Write-Host -ForegroundColor Cyan "*** HACK: Creating GoogleCloudPowerShell modul
 
 New-Item -ItemType Directory $packageDir
 New-Item -ItemType Directory $gcpsDir
-Move-Item (Join-Path $debugDir "GoogleCloudPowerShell.psd1") "$gcpsDir\GoogleCloudPowerShell.psd1"
+
+# Add the version folder in front of Google.PowerShell.dll and GoogleCloudPlatform.Format.ps1xml.
+$gCloudPowerShellManifest = Import-PowerShellDataFile (Join-Path $debugDir "GoogleCloudPowerShell.psd1")
+Remove-PrivateData $gCloudPowerShellManifest
+$gCloudPowerShellManifest.RootModule = $gCloudPowerShellManifest.RootModule -replace "Google.PowerShell.dll", `
+                                                                                   "$normalizedVersion\Google.PowerShell.dll"
+$gCloudPowerShellManifest.FormatsToProcess = $gCloudPowerShellManifest.FormatsToProcess -replace "GoogleCloudPlatform.Format.ps1xml", `
+                                                                                               "$normalizedVersion\GoogleCloudPlatform.Format.ps1xml"
+$gCloudPowerShellManifest.CmdletsToExport = $cmdletsList
+New-ModuleManifest -Path "$gcpsDir\GoogleCloudPowerShell.psd1" @gCloudPowerShellManifest
 
 # Package the bits. Requires setting up the right directory structure.
 Write-Host -ForegroundColor Cyan "*** Packaging the bits ***"
@@ -83,9 +137,12 @@ Write-Host -ForegroundColor Cyan "*** Packaging the bits ***"
 New-Item -ItemType Directory $powerShellDir
 Copy-Item -Recurse $debugDir $powerShellDir
 
-# The binaries in a folder named "Debug". Rename that to "GooglePowerShell".
+# The binaries are in a folder named "Debug". Move them to GoogleCloud\$normalizedVersion folder.
 $moduleDir = Join-Path $powerShellDir "Debug"
-Rename-Item $moduleDir "GoogleCloud"
+$googleCloudDir = Join-Path $powerShellDir "GoogleCloud\$normalizedVersion"
+New-Item -ItemType Directory $googleCloudDir
+Copy-Item -Recurse "$moduleDir\*" $googleCloudDir
+Remove-Item -Recurse $moduleDir -Force
 
 # Ensure key files are in the right place.
 Write-Host -ForegroundColor Cyan "*** Sanity checking ***"
@@ -97,9 +154,9 @@ function ConfirmExists($relativePath) {
    }
 }
 
-ConfirmExists "PowerShell\GoogleCloud\GoogleCloud.psd1"
-ConfirmExists "PowerShell\GoogleCloud\Google.PowerShell.dll"
-ConfirmExists "PowerShell\GoogleCloud\BootstrapCloudToolsForPowerShell.ps1"
+ConfirmExists "PowerShell\GoogleCloud\$normalizedVersion\GoogleCloud.psd1"
+ConfirmExists "PowerShell\GoogleCloud\$normalizedVersion\Google.PowerShell.dll"
+ConfirmExists "PowerShell\GoogleCloud\$normalizedVersion\BootstrapCloudToolsForPowerShell.ps1"
 ConfirmExists "GoogleCloudPowerShell\GoogleCloudPowerShell.psd1"
 
 Write-Host -ForegroundColor Cyan "*** Compressing ***"
