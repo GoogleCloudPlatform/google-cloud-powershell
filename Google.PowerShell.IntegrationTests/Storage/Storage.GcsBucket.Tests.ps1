@@ -8,7 +8,7 @@ $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 Describe "Get-GcsBucket" {
 
     It "should fail to return non-existing buckets" {
-        { Get-GcsBucket -Name "gcps-bucket-no-exist" } | Should Throw "404"
+        { Get-GcsBucket -Name "gcps-bucket-no-exist" } | Should Throw "'gcps-bucket-no-exist' does not exist"
     }
 
     It "should work" {
@@ -129,6 +129,7 @@ Describe "New-GcsBucket" {
 
 Describe "Remove-GcsBucket" {
     $bucket = "gcps-bucket-removal"
+    $bucketNotExistMsg = "'$bucket' does not exist"
     # Delete the test bucket before/after each test to ensure we are in a good state.
     BeforeEach {
         Create-TestBucket $project $bucket
@@ -139,17 +140,17 @@ Describe "Remove-GcsBucket" {
 
     It "will work" {
         Remove-GcsBucket -Name $bucket -Force
-        { Get-GcsBucket -Name $bucket } | Should Throw "404"
+        { Get-GcsBucket -Name $bucket } | Should Throw $bucketNotExistMsg
     }
 
     It "will work with pipeline" {
         $bucket | Remove-GcsBucket -Force
-        { Get-GcsBucket -Name $bucket } | Should Throw "404"
+        { Get-GcsBucket -Name $bucket } | Should Throw $bucketNotExistMsg
 
         # Also passing a Bucket object.
         $bucketObj = New-GcsBucket "gcps-bucket-removal2"
         $bucketObj | Remove-GcsBucket -Force
-        { Get-GcsBucket -Name $bucketObj.Name } | Should Throw "404"
+        { Get-GcsBucket -Name $bucketObj.Name } | Should Throw "'gcps-bucket-removal2' does not exist."
     }
 
     It "will be unstoppable with the Force flag" {
@@ -157,7 +158,7 @@ Describe "Remove-GcsBucket" {
         Add-TestFile $bucket "file.txt"
 
         Remove-GcsBucket -Name $bucket -Force
-        { Get-GcsBucket -Name $bucket } | Should Throw "404"
+        { Get-GcsBucket -Name $bucket } | Should Throw $bucketNotExistMsg
     }
 }
 

@@ -73,8 +73,20 @@ namespace Google.PowerShell.CloudStorage
             {
                 BucketsResource.GetRequest req = Service.Buckets.Get(Name);
                 req.Projection = BucketsResource.GetRequest.ProjectionEnum.Full;
-                Bucket bucket = req.Execute();
-                WriteObject(bucket);
+                try
+                {
+                    Bucket bucket = req.Execute();
+                    WriteObject(bucket);
+                }
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+                {
+                    ErrorRecord errorRecord = new ErrorRecord(
+                        new ItemNotFoundException($"Storage bucket '{Name}' does not exist."),
+                        "BucketNotFound",
+                        ErrorCategory.ObjectNotFound,
+                        Name);
+                    ThrowTerminatingError(errorRecord);
+                }
             }
 
             if (ParameterSetName == ParameterSetNames.BucketsByProject)
