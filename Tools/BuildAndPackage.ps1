@@ -1,7 +1,11 @@
 [CmdletBinding()]
 Param(
-    [Parameter(Mandatory=$true, Position=0)]
-    [version]$publishVersion
+    [Parameter(Mandatory = $true, Position=0)]
+    [version]$publishVersion,
+
+    [Parameter()]
+    [ValidateSet("Debug", "Release")]
+    [string]$configuration = "Debug"
 )
 # Builds the Google Cloud Tools for PowerShell project, and packages the output so it can be
 # integrated into the Google Cloud SDK. This is really of only use to Googlers doing the
@@ -24,7 +28,7 @@ $projectRoot = Join-Path $PSScriptRoot ".." -Resolve
 # Folders for the solution and build outputs.
 $slnFile = Join-Path $projectRoot "gcloud-powershell.sln"
 $binDir = Join-Path $projectRoot "Google.PowerShell\bin\"
-$debugDir = Join-Path $binDir "Debug"
+$configDir = Join-Path $binDir $configuration
 
 
 # Folders where the build artifacts are stored, the things to be packaged up.
@@ -78,15 +82,15 @@ $assemblyInfoContent | Out-File -Encoding utf8 -FilePath $assemblyInfoFile -NoNe
 Write-Host -ForegroundColor Cyan "*** Building the project ***"
 
 $msbuild = "c:\Program Files (x86)\MSBuild\14.0\Bin\MSBuild.exe"
-& $msbuild @($slnFile, "/t:Clean,Build", "/p:Configuration=Debug")
+& $msbuild @($slnFile, "/t:Clean,Build", "/p:Configuration=$configuration")
 
-if (-Not (Test-Path $debugDir)) {
+if (-Not (Test-Path $configDir)) {
     Write-Error "Build results not found."
     Exit
 }
 
 # Get all cmdlets available in GoogleCloud module.
-$googlePowerShellAssemblyPath = Resolve-Path (Join-Path $debugDir GoogleCloud.psd1)
+$googlePowerShellAssemblyPath = Resolve-Path (Join-Path $configDir GoogleCloud.psd1)
 $getCmdletsScriptBlock = {
     param($modulePath)
     Import-Module $modulePath | Out-Null
@@ -103,7 +107,7 @@ if ($null -ne $betaCmdlets) {
 }
 
 # Modify the list of exported cmdlets.
-$gCloudManifestPath = Join-Path $debugDir "GoogleCloud.psd1"
+$gCloudManifestPath = Join-Path $configDir "GoogleCloud.psd1"
 $gCloudManifest = Import-PowerShellDataFile $gCloudManifestPath
 Remove-PrivateData $gCloudManifest
 $gCloudManifest.CmdletsToExport = $cmdletsList
@@ -122,7 +126,7 @@ New-Item -ItemType Directory $packageDir
 New-Item -ItemType Directory $gcpsDir
 
 # Add the version folder in front of Google.PowerShell.dll and GoogleCloudPlatform.Format.ps1xml.
-$gCloudPowerShellManifest = Import-PowerShellDataFile (Join-Path $debugDir "GoogleCloudPowerShell.psd1")
+$gCloudPowerShellManifest = Import-PowerShellDataFile (Join-Path $configDir "GoogleCloudPowerShell.psd1")
 Remove-PrivateData $gCloudPowerShellManifest
 $gCloudPowerShellManifest.RootModule = $gCloudPowerShellManifest.RootModule -replace "Google.PowerShell.dll", `
                                                                                    "$normalizedVersion\Google.PowerShell.dll"
@@ -135,13 +139,20 @@ New-ModuleManifest -Path "$gcpsDir\GoogleCloudPowerShell.psd1" @gCloudPowerShell
 Write-Host -ForegroundColor Cyan "*** Packaging the bits ***"
 
 New-Item -ItemType Directory $powerShellDir
-Copy-Item -Recurse $debugDir $powerShellDir
+Copy-Item -Recurse $configDir $powerShellDir
 
-# The binaries are in a folder named "Debug". Move them to GoogleCloud\$normalizedVersion folder.
-$moduleDir = Join-Path $powerShellDir "Debug"
+# The binaries are in a folder named "$configuration". Move them to GoogleCloud\$normalizedVersion folder.
+$moduleDir = Join-Path $powerShellDir $configuration
 $googleCloudDir = Join-Path $powerShellDir "GoogleCloud\$normalizedVersion"
 New-Item -ItemType Directory $googleCloudDir
-Copy-Item -Recurse "$moduleDir\*" $googleCloudDir
+if ($configuration -eq "Debug")
+{
+    Copy-Item -Recurse "$moduleDir\*" $googleCloudDir
+}
+else
+{
+    Copy-Item -Recurse "$moduleDir\*" $googleCloudDir -Exclude '*.pdb'
+}
 Remove-Item -Recurse $moduleDir -Force
 
 # Ensure key files are in the right place.
@@ -170,6 +181,6 @@ Write-Host "Generating Website"
 $generateWebsiteFile = (Get-ChildItem "$PSScriptRoot\GenerateWebsiteData.ps1").FullName
 # We do this on another process because the GenerateWebSiteData script will load the module, so in case we want to
 # run this script again, we won't have a problem with removing the assemblies.
-$process = Start-Process powershell.exe -NoNewWindow -ArgumentList "-file `"$generateWebsiteFile`"" -PassThru
+$process = Start-Process powershell.exe -NoNewWindow -ArgumentList "-File `"$generateWebsiteFile`" -Configuration $configuration" -PassThru
 $process.WaitForExit()
 $process.Dispose()
