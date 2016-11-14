@@ -5,7 +5,7 @@
 Param(
     [Parameter()]
     [ValidateSet("Debug", "Release")]
-    [string]$configuration = "Debug"
+    [string]$configuration = "Release"
 )
 
 # Unload the module if already loaded. (Weird things happen when debugging...)

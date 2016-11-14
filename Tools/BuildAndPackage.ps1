@@ -5,7 +5,7 @@ Param(
 
     [Parameter()]
     [ValidateSet("Debug", "Release")]
-    [string]$configuration = "Debug"
+    [string]$configuration = "Release"
 )
 # Builds the Google Cloud Tools for PowerShell project, and packages the output so it can be
 # integrated into the Google Cloud SDK. This is really of only use to Googlers doing the
