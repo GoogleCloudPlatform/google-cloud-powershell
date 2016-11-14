@@ -398,17 +398,51 @@ namespace Google.PowerShell.CloudStorage
         }
     }
 
+    // TODO(chrsmith): Support iterating through the result prefixes as well as the items.
+    // This is necessary to see the "subfolders" in Cloud Storage, even though the concept
+    // does not exist.
+
     /// <summary>
     /// <para type="synopsis">
-    /// Get-GcsObject returns the Google Cloud Storage Object metadata with the given name. (Use
-    /// Find-GcsObject to return multiple objects or Read-GcsObject to get its contents.)
+    /// Get-GcsObject returns Google Cloud Storage Objects and their metadata.
+    /// (Use Read-GcsObject to get its contents.)
     /// </para>
     /// <para type="description">
-    /// Returns the give Storage object's metadata.
+    /// Given a Google Cloud Storage Bucket, returns Google Cloud Storage Objects and their metadata.
+    /// </para>
+    /// <para type="description">
+    /// If no parameter besides -Bucket is provided, all objects in the bucket are returned.
+    /// If a given prefix string is provided, returns all Cloud Storage objects identified
+    /// by the prefix string.
+    /// </para>
+    /// <para type="description">
+    /// An optional delimiter may be provided. If used, will return results in a
+    /// directory-like mode, delimited by the given string. e.g. with objects "1,
+    /// "2", "subdir/3" and delimited "/"; "subdir/3" would not be returned.
+    /// (There is no way to just return "subdir" in the previous example.)
+    /// </para>
+    /// <para type="description">
+    /// To gets a specific Cloud Storage Object by name, use the -ObjectName parameter.
+    /// This parameter cannot be used together with -Prefix and -Delimiter parameters.
     /// </para>
     /// <example>
     ///   <code>PS C:\> Get-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt"</code>
-    ///   <para>Get object metadata.</para>
+    ///   <para>Get the object name "log-000.txt" and their metadata.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Get-GcsObject -Bucket "widget-co-logs"</code>
+    ///   <para>Get all objects in a storage bucket.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Get-GcsObject -Bucket "widget-co-logs" -Prefix "pictures/winter" -Delimiter "/"</code>
+    ///   <para>Get all objects in a specific folder Storage Bucket.</para>
+    ///   <para>Because the Delimiter parameter was set, will not return objects under "pictures/winter/2016/".
+    ///   The search will omit any objects matching the prefix containing the delimiter.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Get-GcsObject -Bucket "widget-co-logs" -Prefix "pictures/winter"</code>
+    ///   <para>Get all objects in a specific folder Storage Bucket. Will return objects in pictures/winter/2016/.</para>
+    ///   <para>Because the Delimiter parameter was not set, will return objects under "pictures/winter/2016/".</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcsObject"), OutputType(typeof(Object))]
@@ -419,8 +453,8 @@ namespace Google.PowerShell.CloudStorage
         /// Name of the bucket to check. Will also accept a Bucket object.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
-        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
+        [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true)]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Bucket { get; set; }
 
         /// <summary>
@@ -428,28 +462,81 @@ namespace Google.PowerShell.CloudStorage
         /// Name of the object to inspect.
         /// </para>
         /// </summary>
-        [Parameter(Position = 1, Mandatory = true)]
+        [Parameter(Position = 1, Mandatory = false)]
+        [ValidateNotNullOrEmpty]
         public string ObjectName { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Object prefix to use. e.g. "/logs/". If not specified all
+        /// objects in the bucket will be returned.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ValidateNotNullOrEmpty]
+        public string Prefix { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Returns results in a directory-like mode, delimited by the given string. e.g.
+        /// with objects "1, "2", "subdir/3" and delimited "/", "subdir/3" would not be
+        /// returned.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ValidateNotNullOrEmpty]
+        public string Delimiter { get; set; }
 
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
 
-            ObjectsResource.GetRequest getReq = Service.Objects.Get(Bucket, ObjectName);
-            getReq.Projection = ObjectsResource.GetRequest.ProjectionEnum.Full;
-            try
+            if (ObjectName != null)
             {
-                Object gcsObject = getReq.Execute();
-                WriteObject(gcsObject);
+                if (Delimiter != null || Prefix != null)
+                {
+                    WriteWarning("-Delimiter and -Prefix parameters will be ignored since -ObjectName is given.");
+                }
+                ObjectsResource.GetRequest getReq = Service.Objects.Get(Bucket, ObjectName);
+                getReq.Projection = ObjectsResource.GetRequest.ProjectionEnum.Full;
+                try
+                {
+                    Object gcsObject = getReq.Execute();
+                    WriteObject(gcsObject);
+                }
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+                {
+                    ErrorRecord errorRecord = new ErrorRecord(
+                        new ItemNotFoundException($"Storage object '{ObjectName}' does not exist."),
+                        "ObjectNotFound",
+                        ErrorCategory.ObjectNotFound,
+                        ObjectName);
+                    ThrowTerminatingError(errorRecord);
+                }
             }
-            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+            else
             {
-                ErrorRecord errorRecord = new ErrorRecord(
-                    new ItemNotFoundException($"Storage object '{ObjectName}' does not exist."),
-                    "ObjectNotFound",
-                    ErrorCategory.ObjectNotFound,
-                    ObjectName);
-                ThrowTerminatingError(errorRecord);
+                ObjectsResource.ListRequest listReq = Service.Objects.List(Bucket);
+                listReq.Projection = ObjectsResource.ListRequest.ProjectionEnum.Full;
+                listReq.Delimiter = Delimiter;
+                listReq.Prefix = Prefix;
+                listReq.MaxResults = 100;
+
+                // When used with WriteObject, expand the IEnumerable rather than
+                // returning the IEnumerable itself. IEnumerable<T> vs. IEnumerable<IEnumerable<T>>.
+                const bool enumerateCollection = true;
+
+                // First page.
+                Objects gcsObjects = listReq.Execute();
+                WriteObject(gcsObjects.Items, enumerateCollection);
+
+                // Keep paging through results as necessary.
+                while (!Stopping && gcsObjects.NextPageToken != null)
+                {
+                    listReq.PageToken = gcsObjects.NextPageToken;
+                    gcsObjects = listReq.Execute();
+                    WriteObject(gcsObjects.Items, enumerateCollection);
+                }
             }
         }
     }
@@ -544,99 +631,6 @@ namespace Google.PowerShell.CloudStorage
         }
     }
 
-    // TODO(chrsmith): Support iterating through the result prefixes as well as the items.
-    // This is necessary to see the "subfolders" in Cloud Storage, even though the concept
-    // does not exist.
-
-    /// <summary>
-    /// <para type="synopsis">
-    /// Returns all Cloud Storage objects identified by the given prefix string.
-    /// </para>
-    /// <para type="description">
-    /// Returns all Cloud Storage objects identified by the given prefix string.
-    /// If no prefix string is provided, all objects in the bucket are returned.
-    /// </para>
-    /// <para type="description">
-    /// An optional delimiter may be provided. If used, will return results in a
-    /// directory-like mode, delimited by the given string. e.g. with objects "1,
-    /// "2", "subdir/3" and delimited "/"; "subdir/3" would not be returned.
-    /// (There is no way to just return "subdir" in the previous example.)
-    /// </para>
-    /// <example>
-    ///   <code>PS C:\> Find-GcsObject -Bucket "widget-co-logs"</code>
-    ///   <para>Get all objects in a storage bucket.</para>
-    /// </example>
-    /// <example>
-    ///   <code>PS C:\> Find-GcsObject -Bucket "widget-co-logs" -Prefix "pictures/winter" -Delimiter "/"</code>
-    ///   <para>Get all objects in a specific folder Storage Bucket.</para>
-    ///   <para>Because the Delimiter parameter was set, will not return objects under "pictures/winter/2016/".
-    ///   The search will omit any objects matching the prefix containing the delimiter.</para>
-    /// </example>
-    /// <example>
-    ///   <code>PS C:\> Find-GcsObject -Bucket "widget-co-logs" -Prefix "pictures/winter"</code>
-    ///   <para>Get all objects in a specific folder Storage Bucket. Will return objects in pictures/winter/2016/.</para>
-    ///   <para>Because the Delimiter parameter was not set, will return objects under "pictures/winter/2016/".</para>
-    /// </example>
-    /// </summary>
-    [Cmdlet(VerbsCommon.Find, "GcsObject"), OutputType(typeof(Object))]
-    public class FindGcsObjectCmdlet : GcsCmdlet
-    {
-        /// <summary>
-        /// <para type="description">
-        /// Name of the bucket to search. Will also accept a Bucket object.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true)]
-        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
-        public string Bucket { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// Object prefix to use. e.g. "/logs/". If not specified all
-        /// objects in the bucket will be returned.
-        /// </para>
-        /// </summary>
-        [Parameter(Position = 1, Mandatory = false)]
-        public string Prefix { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// Returns results in a directory-like mode, delimited by the given string. e.g.
-        /// with objects "1, "2", "subdir/3" and delimited "/", "subdir/3" would not be
-        /// returned.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = false)]
-        public string Delimiter { get; set; }
-
-        protected override void ProcessRecord()
-        {
-            base.ProcessRecord();
-
-            ObjectsResource.ListRequest listReq = Service.Objects.List(Bucket);
-            listReq.Projection = ObjectsResource.ListRequest.ProjectionEnum.Full;
-            listReq.Delimiter = Delimiter;
-            listReq.Prefix = Prefix;
-            listReq.MaxResults = 100;
-
-            // When used with WriteObject, expand the IEnumerable rather than
-            // returning the IEnumerable itself. IEnumerable<T> vs. IEnumerable<IEnumerable<T>>.
-            const bool enumerateCollection = true;
-
-            // First page.
-            Objects gcsObjects = listReq.Execute();
-            WriteObject(gcsObjects.Items, enumerateCollection);
-
-            // Keep paging through results as necessary.
-            while (gcsObjects.NextPageToken != null)
-            {
-                listReq.PageToken = gcsObjects.NextPageToken;
-                gcsObjects = listReq.Execute();
-                WriteObject(gcsObjects.Items, enumerateCollection);
-            }
-        }
-    }
-
     /// <summary>
     /// <para type="synopsis">
     /// Deletes a Cloud Storage object.
@@ -708,11 +702,23 @@ namespace Google.PowerShell.CloudStorage
                 return;
             }
 
-            ObjectsResource.DeleteRequest delReq = Service.Objects.Delete(Bucket, ObjectName);
-            string result = delReq.Execute();
-            if (!string.IsNullOrWhiteSpace(result))
+            try
             {
-                WriteObject(result);
+                ObjectsResource.DeleteRequest delReq = Service.Objects.Delete(Bucket, ObjectName);
+                string result = delReq.Execute();
+                if (!string.IsNullOrWhiteSpace(result))
+                {
+                    WriteObject(result);
+                }
+            }
+            catch (GoogleApiException apiEx) when (apiEx.HttpStatusCode == HttpStatusCode.NotFound)
+            {
+                ErrorRecord errorRecord = new ErrorRecord(
+                    new ItemNotFoundException($"Storage object '{ObjectName}' does not exist."),
+                    "ObjectNotFound",
+                    ErrorCategory.ObjectNotFound,
+                    ObjectName);
+                ThrowTerminatingError(errorRecord);
             }
         }
     }

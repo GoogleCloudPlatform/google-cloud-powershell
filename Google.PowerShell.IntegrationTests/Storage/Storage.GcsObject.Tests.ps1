@@ -310,17 +310,17 @@ Describe "New-GcsObject" {
             $saturn.ContentType | Should Be "text/plain"
 
             # This should contain everything except the TestSubFolder and its files.
-            $objs = Find-GcsObject -Delimiter "/" -Bucket $bucket -Prefix "$folderName/"
+            $objs = Get-GcsObject -Delimiter "/" -Bucket $bucket -Prefix "$folderName/"
             $objs.Count | Should Be 4
             $objs.Name -contains "$folderName/TestSubfolder/pluto.txt" | Should Be $false
             $objs.Name -contains "$folderName/TestSubfolder/saturn.txt" | Should Be $false
             $objs.Name -contains "$folderName/TestSubfolder/" | Should Be $false
 
             # Everything should be returned!
-            $objs = Find-GcsObject -Bucket $bucket -Prefix "$folderName/"
+            $objs = Get-GcsObject -Bucket $bucket -Prefix "$folderName/"
             $objs.Count | Should Be 7
 
-            $objs = Find-GcsObject -Bucket $bucket -Prefix "$folderName/TestSubfolder/"
+            $objs = Get-GcsObject -Bucket $bucket -Prefix "$folderName/TestSubfolder/"
             $objs.Count | Should Be 3
             $objs.Name -contains "$folderName/TestSubfolder/pluto.txt" | Should Be $true
             $objs.Name -contains "$folderName/TestSubfolder/saturn.txt" | Should Be $true
@@ -357,17 +357,61 @@ Describe "Get-GcsObject" {
 
     $bucket = "gcps-get-object-testing"
     Create-TestBucket $project $bucket
-    Add-TestFile $bucket "testfile1.txt"
-    Add-TestFile $bucket "testfile2.txt"
+    Add-TestFile $bucket "file1.txt"
+    Add-TestFile $bucket "A/file2.txt"
+    Add-TestFile $bucket "A/B/file3.txt"
+    Add-TestFile $bucket "A/B/file4.txt"
+    Add-TestFile $bucket "B/A/A/file5.txt"
+    Add-TestFile $bucket "B/A/A/A/A/file6.txt"
+    Add-TestFile $bucket "B/A/A/A/A/file7.txt"
+    Add-TestFile $bucket "B/B/A/A/A/file8.txt"
+    Add-TestFile $bucket "C/file9.txt"
+    Add-TestFile $bucket "C/fileA.txt"
 
     It "should work" {
-        $obj = Get-GcsObject $bucket "testfile1.txt"
-        $obj.Name | Should Be "testfile1.txt"
+        $obj = Get-GcsObject $bucket "file1.txt"
+        $obj.Name | Should Be "file1.txt"
         $obj.Size | Should Be 0
     }
 
     It "should fail for non existing objects" {
         { Get-GcsObject -Bucket $bucket -ObjectName "file-404.txt" } | Should Throw "'file-404.txt' does not exist"
+    }
+
+    It "should support getting all objects in a bucket" {
+        $objs = Get-GcsObject $bucket
+        $objs.Length | Should Be 10
+    }
+
+    It "should support getting the bucket via the pipeline (and via Bucket object)" {
+        $bucketObj = Get-GcsBucket $bucket
+        $objs = $bucketObj | Get-GcsObject
+        $objs.Length | Should Be 10
+    }
+
+    It "should support prefix matching" {
+        $objs = Get-GcsObject $bucket -Prefix "A/"
+        $objs.Length | Should Be 3
+
+        $objs = Get-GcsObject $bucket -Prefix "B/"
+        $objs.Length | Should Be 4
+
+        $objs = Get-GcsObject $bucket -Prefix "B/B"
+        $objs.Length | Should Be 1
+    }
+
+    It "should support delimiting results" {
+        $objs = Get-GcsObject $bucket -Delimiter "/"
+        $objs.Length | Should Be 1
+
+        $objs = Get-GcsObject $bucket -Prefix "A/" -Delimiter "/"
+        $objs.Length | Should Be 1
+
+        $objs = Get-GcsObject $bucket -Prefix "A/B" -Delimiter "/"
+        $objs.Length | Should Be 0
+
+        $objs = Get-GcsObject $bucket -Prefix "A/B/" -Delimiter "/"
+        $objs.Length | Should Be 2
     }
 }
 
@@ -400,58 +444,6 @@ Describe "Set-GcsObject" {
     }
 }
 
-Describe "Find-GcsObject" {
-
-    $bucket = "gcps-get-object-testing"
-    Create-TestBucket $project $bucket
-    Add-TestFile $bucket "file1.txt"
-    Add-TestFile $bucket "A/file2.txt"
-    Add-TestFile $bucket "A/B/file3.txt"
-    Add-TestFile $bucket "A/B/file4.txt"
-    Add-TestFile $bucket "B/A/A/file5.txt"
-    Add-TestFile $bucket "B/A/A/A/A/file6.txt"
-    Add-TestFile $bucket "B/A/A/A/A/file7.txt"
-    Add-TestFile $bucket "B/B/A/A/A/file8.txt"
-    Add-TestFile $bucket "C/file9.txt"
-    Add-TestFile $bucket "C/fileA.txt"
-
-    It "should support getting all objects in a bucket" {
-        $objs = Find-GcsObject $bucket
-        $objs.Length | Should Be 10
-    }
-
-    It "should support getting the bucket via the pipeline (and via Bucket object)" {
-        $bucketObj = Get-GcsBucket $bucket
-        $objs = $bucketObj | Find-GcsObject
-        $objs.Length | Should Be 10
-    }
-
-    It "should support prefix matching" {
-        $objs = Find-GcsObject $bucket -Prefix "A/"
-        $objs.Length | Should Be 3
-
-        $objs = Find-GcsObject $bucket -Prefix "B/"
-        $objs.Length | Should Be 4
-
-        $objs = Find-GcsObject $bucket -Prefix "B/B"
-        $objs.Length | Should Be 1
-    }
-
-    It "should support delimiting results" {
-        $objs = Find-GcsObject $bucket -Delimiter "/"
-        $objs.Length | Should Be 1
-
-        $objs = Find-GcsObject $bucket -Prefix "A/" -Delimiter "/"
-        $objs.Length | Should Be 1
-        
-        $objs = Find-GcsObject $bucket -Prefix "A/B" -Delimiter "/"
-        $objs.Length | Should Be 0
-
-        $objs = Find-GcsObject $bucket -Prefix "A/B/" -Delimiter "/"
-        $objs.Length | Should Be 2
-    }
-}
-
 Describe "Remove-GcsObject" {
 
     $bucket = "gcps-get-object-testing"
@@ -476,17 +468,17 @@ Describe "Remove-GcsObject" {
 
     It "should accept objects from the pipeline" {
         @("alpha", "beta", "gamma") | ForEach { New-GcsObject $bucket $_ $_ }
-        $objs = Find-GcsObject $bucket
+        $objs = Get-GcsObject $bucket
         $objs.Length | Should Be 3
 
         $objs | Remove-GcsObject
 
-        $objs = Find-GcsObject $bucket
+        $objs = Get-GcsObject $bucket
         $objs.Length | Should Be 0
     }
 
     It "should fail for non existing objects" {
-        { Remove-GcsObject -Bucket $bucket -ObjectName "file-404.txt" } | Should Throw "'file-404.txt' does not exist""
+        { Remove-GcsObject -Bucket $bucket -ObjectName "file-404.txt" } | Should Throw "'file-404.txt' does not exist"
     }
 }
 
