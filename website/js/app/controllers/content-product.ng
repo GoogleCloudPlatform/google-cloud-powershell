@@ -47,7 +47,7 @@ $config | Add-GceInstance -Project $project -Zone "us-central1-b"</pre>
     <h2>Management</h2>
     <p>
       In addition to basic cmdlets to start, stop, or restart an instance,
-      You can set tags, disks, access configs or metadata after creating
+      you can set tags, disks, access configs or metadata after creating
       your VM with the <cmdlet-ref name="Set-GceInstance"></cmdlet-ref> cmdlet.
     </p>
     <pre>
@@ -115,6 +115,26 @@ Write-GcsObject -Bucket $bucket -File "test-file.png" -ObjectName "test/test.png
 
 # Download a GCS object to disk.
 Read-GcsObject $bucket "object-name" -OutFile "output-file.png"</pre>
+    <h2>Cloud Storage PowerShell Provider</h2>
+    <p>
+      Cloud Tools for PowerShell includes a PowerShell provider for Google Cloud Storage.
+      This provider allows you to use commands like cd, dir, copy and del to navigate
+      and manipulate your data in Cloud Storage as if the data were on a local file system.
+
+      To directly use the provider, you can start Cloud Tools for PowerShell using the shortcut
+      from the start menu. This will launch a PowerShell console with the provider loaded:
+    </p>
+    <pre>
+# Navigate to Google Cloud Storage
+cd gs:\
+# Show the available buckets
+ls
+# Create a new bucket
+mkdir my-new-bucket</pre>
+    <p>
+      You can also make the provider available in any PowerShell session by importing
+      the Cloud Tools for PowerShell module via "Import-Module GoogleCloud".
+    </p>
   </div>
 
 
