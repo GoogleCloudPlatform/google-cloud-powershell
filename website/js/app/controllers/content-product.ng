@@ -68,7 +68,7 @@ $newConfig.Name = "New NAT"
 
 Set-GceInstance "instance-name" `
     -NetworkInterface "nic0" 
-    -DeleteAccessConfig "External NAT"
+    -RemoveAccessConfig "External NAT"
     -NewAccessConfig $newConfig
 
 # Edit the metadata and tags on the instance
