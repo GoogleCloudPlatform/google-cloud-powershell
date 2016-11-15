@@ -1,6 +1,12 @@
 ﻿# Generates a JSON file containing all the documentation information for all cmdlets in the
 # GoogleCloud PowerShell module. The resulting data is used to power the cmdlet reference
 # website.
+[CmdletBinding()]
+Param(
+    [Parameter()]
+    [ValidateSet("Debug", "Release")]
+    [string]$configuration = "Release"
+)
 
 # Unload the module if already loaded. (Weird things happen when debugging...)
 if (Get-Module Google.PowerShell) {
@@ -8,8 +14,7 @@ if (Get-Module Google.PowerShell) {
     Remove-Module Google.PowerShell
 }
 
-# TODO(chrsmith): Get the latest build, which may be in the Release directory.
-$modulePath = Join-Path $PSScriptRoot "\..\Google.PowerShell\bin\Debug\Google.PowerShell.dll"
+$modulePath = Join-Path $PSScriptRoot "\..\Google.PowerShell\bin\$configuration\Google.PowerShell.dll"
 
 if (-Not (Test-Path $modulePath)) {
     Write-Warning "Unable to locate PowerShell module '$modulePath'. Not built?"
