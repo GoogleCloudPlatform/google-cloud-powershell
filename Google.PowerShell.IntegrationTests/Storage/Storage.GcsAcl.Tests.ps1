@@ -5,6 +5,9 @@ $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 $userEmail = "powershelltesting@gmail.com"
 $groupEmail = "test-group-for-google-cloud-powershell@google.com"
 $domain = "example.com"
+# Time to sleep before a bucket is created. This is to ensure we don't
+# exceed the quota (which is set per second).
+$sleepTime = 2
 
 # Helper function to compare ACLs.
 function CompareAcl($firstAcl, $secondAcl) {
@@ -19,6 +22,7 @@ Describe "Get-GcsBucketAcl" {
     $r = Get-Random
     $script:bucketName = "gcps-testing-acl-bucket-$r"
     $bucketAclKind = "storage#bucketAccessControl"
+    Start-Sleep -Seconds $sleepTime
     New-GcsBucket -Name $bucketName
 
     AfterAll {
@@ -61,6 +65,7 @@ Describe "Get-GcsBucketAcl" {
 Describe "Add-GcsBucketAcl" {
     $r = Get-Random
     $script:bucketName = "gcps-testing-acl-bucket-$r"
+    Start-Sleep -Seconds $sleepTime
     New-GcsBucket -Name $bucketName
 
     AfterAll {
@@ -155,6 +160,7 @@ Describe "Add-GcsBucketAcl" {
 Describe "Remove-GcsBucketAcl" {
     $r = Get-Random
     $script:bucketName = "gcps-testing-acl-bucket-$r"
+    Start-Sleep -Seconds $sleepTime
     New-GcsBucket -Name $bucketName
 
     AfterAll {
@@ -224,6 +230,7 @@ Describe "Get-GcsObjectAcl" {
     $script:bucketName = "gcps-testing-acl-bucket-$r"
     $objectName = "testing-object-$r"
     $objectAclKind = "storage#objectAccessControl"
+    Start-Sleep -Seconds $sleepTime
     New-GcsBucket -Name $bucketName
     New-GcsObject -Bucket $bucketName -ObjectName $objectName -Value "Not Important."
 
@@ -268,6 +275,7 @@ Describe "Add-GcsObjectAcl" {
     $r = Get-Random
     $script:bucketName = "gcps-testing-acl-bucket-$r"
     $objectName = "testing-object-$r"
+    Start-Sleep -Seconds $sleepTime
     New-GcsBucket -Name $bucketName
     New-GcsObject -Bucket $bucketName -ObjectName $objectName -Value "Not Important."
 
@@ -338,6 +346,7 @@ Describe "Remove-GcsObjectAcl" {
     $r = Get-Random
     $script:bucketName = "gcps-testing-acl-bucket-$r"
     $objectName = "testing-object-$r"
+    Start-Sleep -Seconds $sleepTime
     New-GcsBucket -Name $bucketName
     New-GcsObject -Bucket $bucketName -ObjectName $objectName -Value "Not Important."
 
@@ -407,6 +416,7 @@ Describe "Get-GcsDefaultObjectAcl" {
     $r = Get-Random
     $script:bucketName = "gcps-testing-acl-bucket-$r"
     $defaultObjectAcl = "storage#objectAccessControl"
+    Start-Sleep -Seconds $sleepTime
     New-GcsBucket -Name $bucketName
 
     AfterAll {
@@ -449,6 +459,7 @@ Describe "Get-GcsDefaultObjectAcl" {
 Describe "Add-GcsDefaultObjectAcl" {
     $r = Get-Random
     $script:bucketName = "gcps-testing-acl-bucket-$r"
+    Start-Sleep -Seconds $sleepTime
     New-GcsBucket -Name $bucketName
 
     AfterAll {
@@ -537,6 +548,7 @@ Describe "Add-GcsDefaultObjectAcl" {
 Describe "Remove-GcsDefaultObjectAcl" {
     $r = Get-Random
     $script:bucketName = "gcps-testing-acl-bucket-$r"
+    Start-Sleep -Seconds $sleepTime
     New-GcsBucket -Name $bucketName
 
     AfterAll {
