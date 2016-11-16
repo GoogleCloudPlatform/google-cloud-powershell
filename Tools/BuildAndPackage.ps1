@@ -64,12 +64,21 @@ function Remove-PrivateData($moduleManifest) {
     $moduleManifest.Remove("PrivateData")
 }
 
+# Helper function to change the encoding of the module manifest file
+# to UTF8. This is needed because module manifest created by
+# New-ModuleManifest does not have UTF8 encoding.
+function Set-ModuleManifestEncoding($moduleManifestFile) {
+    $content = Get-Content $moduleManifestFile
+    Set-Content -Value $content -Encoding UTF8 $moduleManifestFile
+}
+
 # Change the module manifest version.
 $moduleManifestFile = Join-Path $projectRoot "Google.PowerShell\ReleaseFiles\GoogleCloud.psd1"
 $moduleManifestContent = Import-PowerShellDataFile $moduleManifestFile
 Remove-PrivateData $moduleManifestContent
 $moduleManifestContent.ModuleVersion = $normalizedVersion
 New-ModuleManifest -Path $moduleManifestFile @moduleManifestContent
+Set-ModuleManifestEncoding $moduleManifestFile
 
 # Change version in AssemblyInfo file.
 $assemblyInfoFile = Join-Path $projectRoot "Google.PowerShell\Properties\AssemblyInfo.cs"
@@ -112,6 +121,7 @@ $gCloudManifest = Import-PowerShellDataFile $gCloudManifestPath
 Remove-PrivateData $gCloudManifest
 $gCloudManifest.CmdletsToExport = $cmdletsList
 New-ModuleManifest -Path $gCloudManifestPath @gCloudManifest
+Set-ModuleManifestEncoding $gCloudManifestPath
 
 # HACK: Move the GoogleCloudPowerShell.psd1 into a different folder to keep Cloud SDK installations
 # before 9/29/2016 working. We changed the location of the path we add to PSModulePath during the
@@ -134,6 +144,7 @@ $gCloudPowerShellManifest.FormatsToProcess = $gCloudPowerShellManifest.FormatsTo
                                                                                                "$normalizedVersion\GoogleCloudPlatform.Format.ps1xml"
 $gCloudPowerShellManifest.CmdletsToExport = $cmdletsList
 New-ModuleManifest -Path "$gcpsDir\GoogleCloudPowerShell.psd1" @gCloudPowerShellManifest
+Set-ModuleManifestEncoding "$gcpsDir\GoogleCloudPowerShell.psd1"
 
 # Package the bits. Requires setting up the right directory structure.
 Write-Host -ForegroundColor Cyan "*** Packaging the bits ***"
