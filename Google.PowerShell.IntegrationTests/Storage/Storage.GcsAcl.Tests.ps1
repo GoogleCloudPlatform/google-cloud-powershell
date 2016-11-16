@@ -7,6 +7,9 @@ $groupEmail = "test-group-for-google-cloud-powershell@google.com"
 $domain = "example.com"
 # Time to sleep before a bucket is created. This is to ensure we don't
 # exceed the quota (which is set per second).
+# Documentation on the error can be found at https://cloud.google.com/storage/docs/json_api/v1/status-codes
+# under usageLimits.userRateLimitExceeded. More information about the quota can be found at
+# https://cloud.google.com/appengine/docs/quotas#Safety_Quotas.
 $sleepTime = 2
 
 # Helper function to compare ACLs.
