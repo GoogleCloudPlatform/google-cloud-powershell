@@ -31,14 +31,6 @@ namespace Google.PowerShell.Common
     public class AuthenticateWithSdkCredentialsExecutor : ICredential, IHttpExecuteInterceptor, IHttpUnsuccessfulResponseHandler
     {
         /// <summary>
-        /// This is a cache of the last call to "gcloud auth print-access-token".
-        /// If the current user hasn't changed, and the token hasn't expired, we reuse it
-        /// rather than launching gcloud again.
-        /// </summary>
-        private static ActiveUserToken s_token;
-        private static readonly SemaphoreSlim s_tokenLock = new SemaphoreSlim(1);
-
-        /// <summary>
         /// Returns the authorization code flow. 
         /// This is used to revoke token (in RevokeTokenAsync)
         /// and intercept request with the access token (in InterceptAsync).
@@ -102,23 +94,8 @@ namespace Google.PowerShell.Common
 
         public virtual async Task<string> GetAccessTokenForRequestAsync(string authUri = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (s_token == null)
-            {
-                await RefreshTokenAsync(cancellationToken).ConfigureAwait(false);
-                return s_token.AccessToken;
-            }
-
-            string currentCloudSdkUser = CloudSdkSettings.GetSettingsValue("account");
-            if (s_token.IsExpired || s_token.User != currentCloudSdkUser)
-            {
-                if (!await RefreshTokenAsync(cancellationToken).ConfigureAwait(false))
-                {
-                    throw new InvalidOperationException(
-                        "The access token has expired or the user has changed, but we can't refresh it.");
-                }
-            }
-
-            return s_token.AccessToken;
+            ActiveUserToken token = await ActiveUserConfig.GetActiveUserToken();
+            return token.AccessToken;
         }
 
         #endregion
@@ -128,20 +105,12 @@ namespace Google.PowerShell.Common
         /// </summary>
         public async Task<bool> RefreshTokenAsync(CancellationToken taskCancellationToken)
         {
-            await s_tokenLock.WaitAsync();
-            try
+            ActiveUserToken userToken = await ActiveUserConfig.GetActiveUserToken(refreshToken: true);
+            if (userToken != null && userToken.AccessToken != null)
             {
-                s_token = await GCloudWrapper.GetAccessToken(taskCancellationToken);
                 return true;
             }
-            catch (Exception)
-            {
-                return false;
-            }
-            finally
-            {
-                s_tokenLock.Release();
-            }
+            return false;
         }
 
         /// <summary>
@@ -152,12 +121,9 @@ namespace Google.PowerShell.Common
         /// <returns><c>true</c> if the token was revoked successfully.</returns>
         public async Task<bool> RevokeTokenAsync(CancellationToken taskCancellationToken)
         {
-            if (s_token == null)
-            {
-                return false;
-            }
+            ActiveUserToken userToken = await ActiveUserConfig.GetActiveUserToken();
 
-            await flow.RevokeTokenAsync("userId", s_token.AccessToken, taskCancellationToken).ConfigureAwait(false);
+            await flow.RevokeTokenAsync("userId", userToken.AccessToken, taskCancellationToken).ConfigureAwait(false);
             // We don't set the token to null, cause we want that the next request (without reauthorizing) will fail).
             return true;
         }

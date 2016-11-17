@@ -137,6 +137,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\ActiveUserConfig.cs" />
     <Compile Include="Common\ActiveUserToken.cs" />
     <Compile Include="Common\AuthenticateWithSdkCredentialsExecutor.cs" />
     <Compile Include="Common\AnalyticsReporter.cs" />

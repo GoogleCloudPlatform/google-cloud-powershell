@@ -29,38 +29,9 @@ namespace Google.PowerShell.Common
     /// </summary>
     public static class GCloudWrapper
     {
-        /// <summary>
-        /// Returns the global installation properties path of GoogleCloud SDK.
-        /// </summary>
-        public static async Task<string> GetInstallationPropertiesPath()
+        public static async Task<string> GetActiveConfig()
         {
-            string gCloudInfoOutput = await GetGCloudCommandOutput("info");
-            JToken gCloudInfoJson = JObject.Parse(gCloudInfoOutput);
-
-            // SelectToken will return null if token cannot be found.
-            gCloudInfoJson = gCloudInfoJson.SelectToken("config.paths.installation_properties_path");
-
-            if (gCloudInfoJson != null && gCloudInfoJson.Type == JTokenType.String)
-            {
-                return gCloudInfoJson.Value<string>();
-            }
-
-            throw new FileNotFoundException("Installation Properties file for Google Cloud SDK cannot be found.");
-        }
-
-        public static async Task<JToken> GetActiveConfig()
-        {
-            string activeConfigJson = await GetGCloudCommandOutput("beta config config-helper --force-auth-refresh");
-            return JObject.Parse(activeConfigJson);
-        }
-
-        /// <summary>
-        /// Returns the access token of the current active config.
-        /// </summary>
-        public static async Task<ActiveUserToken> GetAccessToken(CancellationToken cancellationToken)
-        {
-            ActiveUserConfig activeConfig = ActiveUserConfig.GetActiveUserConfig();
-            return activeConfig.UserToken;
+            return await GetGCloudCommandOutput("beta config config-helper --force-auth-refresh");
         }
 
         /// <summary>
