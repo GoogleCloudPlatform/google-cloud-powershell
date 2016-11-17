@@ -48,19 +48,19 @@ namespace Google.PowerShell.Common
             throw new FileNotFoundException("Installation Properties file for Google Cloud SDK cannot be found.");
         }
 
+        public static async Task<JToken> GetActiveConfig()
+        {
+            string activeConfigJson = await GetGCloudCommandOutput("beta config config-helper --force-auth-refresh");
+            return JObject.Parse(activeConfigJson);
+        }
+
         /// <summary>
         /// Returns the access token of the current active config.
         /// </summary>
         public static async Task<ActiveUserToken> GetAccessToken(CancellationToken cancellationToken)
         {
-            // We get the issued time before the command so we won't be too late
-            // when it comes to token expiry.
-            DateTime issuedTime = DateTime.Now;
-
-            string userCredentialJson = await GetGCloudCommandOutput("auth print-access-token");
-            cancellationToken.ThrowIfCancellationRequested();
-            string currentUser = CloudSdkSettings.GetSettingsValue("account");
-            return new ActiveUserToken(userCredentialJson, currentUser);
+            ActiveUserConfig activeConfig = ActiveUserConfig.GetActiveUserConfig();
+            return activeConfig.UserToken;
         }
 
         /// <summary>

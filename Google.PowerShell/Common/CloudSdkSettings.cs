@@ -1,9 +1,13 @@
 ﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
+using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace Google.PowerShell.Common
 {
@@ -53,6 +57,8 @@ namespace Google.PowerShell.Common
         /// </summary>
         private static string s_installationPropertiesPath;
 
+        private static JToken s_activeConfig;
+        
         // Prevent instantiation. Should just be a static utility class.
         private CloudSdkSettings() { }
 
@@ -101,52 +107,6 @@ namespace Google.PowerShell.Common
                 Debug.WriteLine(String.Format("Error reading Cloud SDK active configuration file: {0}", ex.Message));
                 return null;
             }
-        }
-
-        /// <summary>
-        /// Returns the current config directory.
-        /// If CLOUDSDK_CONFIG environment variable is set, we will use that as the config directory.
-        /// If not, we will use the config directory from AppData.
-        /// </summary>
-        public static string GetCurrentConfigurationDirectory()
-        {
-            string cloudConfigPath = Environment.GetEnvironmentVariable(CloudSdkConfigVariable);
-            if (!string.IsNullOrWhiteSpace(cloudConfigPath))
-            {
-                return cloudConfigPath;
-            }
-
-            cloudConfigPath = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
-            if (!string.IsNullOrWhiteSpace(cloudConfigPath))
-            {
-                cloudConfigPath = Path.Combine(cloudConfigPath, CloudSDKConfigDirectoryWindows);
-            }
-
-            return cloudConfigPath;
-        }
-
-        /// <summary> 
-        /// Returns the file path to the current Cloud SDK configuration set's property file. Returns null on any
-        /// sort of error.
-        /// </summary>
-        public static string GetCurrentConfigurationFilePath()
-        {
-            string cloudConfigDir = GetCurrentConfigurationDirectory();
-            if (cloudConfigDir == null || !Directory.Exists(cloudConfigDir))
-            {
-                return null;
-            }
-
-            string defaultConfigFile = Path.Combine(
-                cloudConfigDir,
-                ConfigurationsFolderName,
-                String.Format("config_{0}", GetCurrentConfigurationName()));
-
-            if (!File.Exists(defaultConfigFile))
-            {
-                return null;
-            }
-            return defaultConfigFile;
         }
 
         /// <summary>

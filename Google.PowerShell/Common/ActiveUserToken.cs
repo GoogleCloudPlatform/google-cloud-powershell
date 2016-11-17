@@ -51,13 +51,13 @@ namespace Google.PowerShell.Common
         }
 
         /// <summary>
-        /// Construct a new token by parsing userCredentialJson.
+        /// Construct a new token by parsing activeConfigJson and get the credential.
         /// </summary>
-        public ActiveUserToken(string userCredentialJson, string user)
+        public ActiveUserToken(JToken userCredentialJson, string user)
         {
             User = user;
-            JToken parsedCredentialJson = JObject.Parse(userCredentialJson);
-            JToken accessTokenJson = parsedCredentialJson.SelectToken("access_token");
+            JToken accessTokenJson = userCredentialJson.SelectToken("access_token");
+            JToken tokenExpiryJson = userCredentialJson.SelectToken("token_expiry");
 
             if (accessTokenJson == null || accessTokenJson.Type != JTokenType.String)
             {
@@ -66,8 +66,6 @@ namespace Google.PowerShell.Common
 
             AccessToken = accessTokenJson.Value<string>();
 
-            JToken tokenExpiryJson = parsedCredentialJson.SelectToken("token_expiry");
-
             // Service account credentials do not expire.
             if (tokenExpiryJson == null || tokenExpiryJson.Type == JTokenType.Null)
             {
@@ -75,44 +73,15 @@ namespace Google.PowerShell.Common
             }
             else
             {
-                TokenExpiry tokenExpiry = tokenExpiryJson.ToObject<TokenExpiry>();
-
-                if (tokenExpiry == null)
+                // The expiry time will be in UTC.
+                DateTime parsedExpiredDate;
+                if (!DateTime.TryParse(tokenExpiryJson.Value<string>(), out parsedExpiredDate))
                 {
                     throw new InvalidDataException("Credential JSON contains an invalid token_expiry.");
                 }
 
-                ExpiredTime = new DateTime(
-                    tokenExpiry.Year,
-                    tokenExpiry.Month,
-                    tokenExpiry.Day,
-                    tokenExpiry.Hour,
-                    tokenExpiry.Minute,
-                    tokenExpiry.Second,
-                    tokenExpiry.MicroSecond / 1000,
-                    DateTimeKind.Utc);
+                ExpiredTime = parsedExpiredDate.ToUniversalTime();
             }
-        }
-
-        /// <summary>
-        /// Represents a token expiry object returned from gcloud auth print-access-token.
-        /// </summary>
-        private class TokenExpiry
-        {
-            [JsonProperty("microsecond")]
-            internal int MicroSecond { get; set; }
-            [JsonProperty("second")]
-            internal int Second { get; set; }
-            [JsonProperty("minute")]
-            internal int Minute { get; set; }
-            [JsonProperty("hour")]
-            internal int Hour { get; set; }
-            [JsonProperty("day")]
-            internal int Day { get; set; }
-            [JsonProperty("month")]
-            internal int Month { get; set; }
-            [JsonProperty("year")]
-            internal int Year { get; set; }
         }
     }
 }
