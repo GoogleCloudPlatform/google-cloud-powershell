@@ -21,29 +21,46 @@ namespace Google.PowerShell.Provider
         {
             get
             {
-                if (DateTimeOffset.Now > _lastUpdate + _cacheLifetime)
-                {
-                    _value = _update();
-                    _lastUpdate = DateTimeOffset.Now;
-                }
-                return _value;
+                return GetValueWithUpdateFunction(_update);
             }
         }
 
+        public bool CacheOutOfDate
+        {
+            get
+            {
+                return DateTimeOffset.Now > _lastUpdate + _cacheLifetime;
+            }
+        }
+
+        public T GetValueWithUpdateFunction(Func<T> updateFunc)
+        {
+            if (CacheOutOfDate && updateFunc != null)
+            {
+                _value = updateFunc();
+                _lastUpdate = DateTimeOffset.Now;
+            }
+            return _value;
+        }
+
+        public T GetLastValueWithoutUpdate()
+        {
+            return _value;
+        }
+
         public CacheItem(Func<T> update) : this(update, TimeSpan.FromMinutes(1)) { }
+
+        public CacheItem() : this(TimeSpan.FromMinutes(1)) { }
+
+        public CacheItem(TimeSpan cacheLifetime)
+        {
+            _cacheLifetime = cacheLifetime;
+        }
 
         public CacheItem(Func<T> update, TimeSpan cacheLifetime)
         {
             _update = update;
             _cacheLifetime = cacheLifetime;
-        }
-
-        /// <summary>
-        /// Forces the CacheItem to do a new update the next time the value is requested.
-        /// </summary>
-        public void ForceRefresh()
-        {
-            _lastUpdate = DateTimeOffset.MinValue;
         }
     }
 }
