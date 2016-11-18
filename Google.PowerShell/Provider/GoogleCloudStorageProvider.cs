@@ -1065,11 +1065,12 @@ namespace Google.PowerShell.CloudStorage
 
         private static Dictionary<string, Bucket> UpdateBucketCacheAndPerformActionOnBucket(Action<Bucket> action)
         {
-            List<Project> projects = ListAllProjects().ToList();
             BlockingCollection<Bucket> bucketCollections = new BlockingCollection<Bucket>();
             ConcurrentDictionary<string, Bucket> bucketDict = new ConcurrentDictionary<string, Bucket>();
-            Task[] taskWithActions = projects.Select(project => ListBucketsAsync(project, bucketCollections)).ToArray();
-            Task.Factory.ContinueWhenAll(taskWithActions, result => { bucketCollections.CompleteAdding(); });
+            IEnumerable<Project> projects = ListAllProjects();
+            IEnumerable<Task> taskWithActions = projects.Select(project => ListBucketsAsync(project, bucketCollections));
+            Task.Factory.ContinueWhenAll(taskWithActions.ToArray(), result => { bucketCollections.CompleteAdding(); });
+
             while (!bucketCollections.IsCompleted)
             {
                 Bucket bucket = bucketCollections.Take();
