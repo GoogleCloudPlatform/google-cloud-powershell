@@ -9,6 +9,7 @@ using Google.Apis.Upload;
 using Google.PowerShell.Common;
 using Google.PowerShell.Provider;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -260,7 +261,7 @@ namespace Google.PowerShell.CloudStorage
         /// Maps the name of a bucket to a cahced object describing that bucket.
         /// </summary>
         private static CacheItem<Dictionary<string, Bucket>> BucketCache { get; } =
-            new CacheItem<Dictionary<string, Bucket>>(UpdateBucketCache);
+            new CacheItem<Dictionary<string, Bucket>>();
 
         /// <summary>
         /// Reports on the usage of the provider.
@@ -338,15 +339,25 @@ namespace Google.PowerShell.CloudStorage
                 case GcsPath.GcsPathType.Drive:
                     return true;
                 case GcsPath.GcsPathType.Bucket:
-                    var bucketCache = BucketCache.Value;
-                    if (bucketCache.ContainsKey(gcsPath.Bucket))
+                    Dictionary<string, Bucket> bucketDict = null;
+                    // If the bucket cache is not initialized, then don't bother initializing it
+                    // because that will cause a long wait time and we may not even know whether
+                    // the user needs to use all the other buckets right away. Also, we should not
+                    // refresh the whole cache right at this instance (which is why we call
+                    // GetValueWithoutUpdate) for the same reason.
+                    bucketDict = BucketCache.GetLastValueWithoutUpdate();
+                    if (bucketDict != null && bucketDict.ContainsKey(gcsPath.Bucket))
                     {
                         return true;
                     }
+
                     try
                     {
                         var bucket = Service.Buckets.Get(gcsPath.Bucket).Execute();
-                        bucketCache[bucket.Name] = bucket;
+                        if (bucketDict != null)
+                        {
+                            bucketDict[bucket.Name] = bucket;
+                        }
                         return true;
                     }
                     catch
@@ -416,15 +427,24 @@ namespace Google.PowerShell.CloudStorage
                     WriteItemObject(PSDriveInfo, path, true);
                     break;
                 case GcsPath.GcsPathType.Bucket:
+                    Dictionary<string, Bucket> bucketDict = null;
                     Bucket bucket;
-                    var bucketCache = BucketCache.Value;
-                    if (bucketCache.ContainsKey(gcsPath.Bucket))
+                    // If the bucket cache is not initialized, then don't bother initializing it
+                    // because that will cause a long wait time and we may not even know whether
+                    // the user needs to use all the other buckets right away. Also, we should not
+                    // refresh the whole cache right at this instance (which is why we call
+                    // GetValueWithoutUpdate) for the same reason.
+                    bucketDict = BucketCache.GetLastValueWithoutUpdate();
+                    if (bucketDict != null && bucketDict.ContainsKey(gcsPath.Bucket))
                     {
-                        bucket = bucketCache[gcsPath.Bucket];
+                        bucket = bucketDict[gcsPath.Bucket];
+                        break;
                     }
-                    else
+
+                    bucket = Service.Buckets.Get(gcsPath.Bucket).Execute();
+                    if (bucketDict != null)
                     {
-                        bucket = Service.Buckets.Get(gcsPath.Bucket).Execute();
+                        bucketDict[bucket.Name] = bucket;
                     }
                     WriteItemObject(bucket, path, true);
                     break;
@@ -448,11 +468,8 @@ namespace Google.PowerShell.CloudStorage
             var gcsPath = GcsPath.Parse(path);
             if (gcsPath.Type == GcsPath.GcsPathType.Drive)
             {
-                foreach (var bucket in ListAllBuckets())
-                {
-
-                    WriteItemObject(GetChildName(bucket.Name), bucket.Name, true);
-                }
+                Action<Bucket> writeBucket = (bucket) => WriteItemObject(GetChildName(bucket.Name), bucket.Name, true);
+                PerformActionOnBucket(writeBucket);
             }
             else
             {
@@ -467,6 +484,33 @@ namespace Google.PowerShell.CloudStorage
             TelemetryReporter.ReportSuccess(nameof(GoogleCloudStorageProvider), nameof(GetChildNames));
         }
 
+        private void GetChildItemBucketHelper(Bucket bucket, bool recurse)
+        {
+            WriteItemObject(bucket, bucket.Name, true);
+            if (recurse)
+            {
+                try
+                {
+                    GetChildItems(bucket.Name, true);
+                }
+                // It is possible to not have access to ojbects even if we have access to the bucket.
+                // We ignore those objects as if they did not exist.
+                catch (GoogleApiException e) when (e.HttpStatusCode == HttpStatusCode.Forbidden) { }
+                catch (AggregateException e)
+                {
+                    foreach (Exception innerException in e.InnerExceptions)
+                    {
+                        WriteError(new ErrorRecord(
+                            innerException, null, ErrorCategory.NotSpecified, bucket.Name));
+                    }
+                }
+                catch (Exception e)
+                {
+                    WriteError(new ErrorRecord(e, null, ErrorCategory.NotSpecified, bucket.Name));
+                }
+            }
+        }
+
         /// <summary>
         /// Writes the object descriptions of the items in the container to the output. Used by Get-ChildItem.
         /// </summary>
@@ -478,32 +522,8 @@ namespace Google.PowerShell.CloudStorage
             switch (gcsPath.Type)
             {
                 case GcsPath.GcsPathType.Drive:
-                    foreach (Bucket bucket in ListAllBuckets())
-                    {
-                        WriteItemObject(bucket, bucket.Name, true);
-                        if (recurse)
-                        {
-                            try
-                            {
-                                GetChildItems(bucket.Name, true);
-                            }
-                            // It is possible to not have access to ojbects even if we have access to the bucket.
-                            // We ignore those objects as if they did not exist.
-                            catch (GoogleApiException e) when (e.HttpStatusCode == HttpStatusCode.Forbidden) { }
-                            catch (AggregateException e)
-                            {
-                                foreach (Exception innerException in e.InnerExceptions)
-                                {
-                                    WriteError(new ErrorRecord(
-                                        innerException, null, ErrorCategory.NotSpecified, bucket.Name));
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                WriteError(new ErrorRecord(e, null, ErrorCategory.NotSpecified, bucket.Name));
-                            }
-                        }
-                    }
+                    Action<Bucket> actionOnBuckets = (bucket) => GetChildItemBucketHelper(bucket, recurse);
+                    PerformActionOnBucket((bucket) => GetChildItemBucketHelper(bucket, recurse));
                     break;
                 case GcsPath.GcsPathType.Bucket:
                 case GcsPath.GcsPathType.Object:
@@ -756,7 +776,16 @@ namespace Google.PowerShell.CloudStorage
                     throw new InvalidOperationException("Use Remove-PSDrive to remove a drive.");
                 case GcsPath.GcsPathType.Bucket:
                     RemoveBucket(gcsPath, recurse);
-                    BucketCache.ForceRefresh();
+                    // If the bucket cache is not initialized, then don't bother initializing it
+                    // because that will cause a long wait time and we may not even know whether
+                    // the user needs to use all the other buckets right away. Also, we should not
+                    // refresh the whole cache right at this instance (which is why we call
+                    // GetValueWithoutUpdate) for the same reason.
+                    Dictionary<string, Bucket> bucketDict = BucketCache.GetLastValueWithoutUpdate();
+                    if (bucketDict != null)
+                    {
+                        bucketDict.Remove(gcsPath.Bucket);
+                    }
                     break;
                 case GcsPath.GcsPathType.Object:
                     if (IsItemContainer(path))
@@ -928,7 +957,16 @@ namespace Google.PowerShell.CloudStorage
             insertReq.PredefinedAcl = dynamicParams.DefaultBucketAcl;
             insertReq.PredefinedDefaultObjectAcl = dynamicParams.DefaultObjectAcl;
             Bucket newBucket = insertReq.Execute();
-            BucketCache.ForceRefresh();
+            // If the bucket cache is not initialized, then don't bother initializing it
+            // because that will cause a long wait time and we may not even know whether
+            // the user needs to use all the other buckets right away. Also, we should not
+            // refresh the whole cache right at this instance (which is why we call
+            // GetValueWithoutUpdate) for the same reason.
+            Dictionary<string, Bucket> bucketDict = BucketCache.GetLastValueWithoutUpdate();
+            if (bucketDict != null)
+            {
+                bucketDict[newBucket.Name] = newBucket;
+            }
             return newBucket;
         }
 
@@ -965,7 +1003,7 @@ namespace Google.PowerShell.CloudStorage
             } while (allPages && !Stopping && request.PageToken != null);
         }
 
-        private static async Task<IEnumerable<Bucket>> ListBucketsAsync(Project project)
+        private static async Task ListBucketsAsync(Project project, BlockingCollection<Bucket> collections)
         {
             // Using a new service on every request here ensures they can all be handled at the same time.
             BucketsResource.ListRequest request = GetNewService().Buckets.List(project.ProjectId);
@@ -975,12 +1013,17 @@ namespace Google.PowerShell.CloudStorage
                 do
                 {
                     Buckets buckets = await request.ExecuteAsync();
-                    allBuckets.AddRange(buckets.Items ?? Enumerable.Empty<Bucket>());
+                    if (buckets.Items != null)
+                    {
+                        foreach (Bucket bucket in buckets.Items)
+                        {
+                            collections.Add(bucket);
+                        }
+                    }
                     request.PageToken = buckets.NextPageToken;
                 } while (request.PageToken != null);
             }
             catch (GoogleApiException e) when (e.HttpStatusCode == HttpStatusCode.Forbidden) { }
-            return allBuckets;
         }
 
         private static IEnumerable<Project> ListAllProjects()
@@ -1001,18 +1044,40 @@ namespace Google.PowerShell.CloudStorage
             } while (request.PageToken != null);
         }
 
-        private IEnumerable<Bucket> ListAllBuckets()
+        private void PerformActionOnBucket(Action<Bucket> actionOnBucket)
         {
-            return BucketCache.Value.Values;
+            // If the cache is already initialized and not stale, simply perform the action on each bucket.
+            // Otherwise, we update the cache and perform action on each of the item while doing so.
+            if (!BucketCache.CacheOutOfDate)
+            {
+                Dictionary<string, Bucket> bucketDict = BucketCache.GetLastValueWithoutUpdate();
+                foreach(Bucket bucket in bucketDict.Values)
+                {
+                    actionOnBucket(bucket);
+                }
+            }
+            else
+            {
+                Func<Dictionary<string, Bucket>> functionToUpdateCacheAndPerformActionOnBucket = () => UpdateBucketCacheAndPerformActionOnBucket(actionOnBucket);
+                BucketCache.GetValueWithUpdateFunction(functionToUpdateCacheAndPerformActionOnBucket);
+            }
         }
 
-        private static Dictionary<string, Bucket> UpdateBucketCache()
+        private static Dictionary<string, Bucket> UpdateBucketCacheAndPerformActionOnBucket(Action<Bucket> action)
         {
             List<Project> projects = ListAllProjects().ToList();
-            // Use ToList() to start all the tasks.
-            List<Task<IEnumerable<Bucket>>> tasks = projects.Select(ListBucketsAsync).ToList();
-            IEnumerable<Bucket> buckets = tasks.SelectMany(task => task.Result);
-            return buckets.ToDictionary(bucket => bucket.Name);
+            BlockingCollection<Bucket> bucketCollections = new BlockingCollection<Bucket>();
+            ConcurrentDictionary<string, Bucket> bucketDict = new ConcurrentDictionary<string, Bucket>();
+            Task[] taskWithActions = projects.Select(project => ListBucketsAsync(project, bucketCollections)).ToArray();
+            Task.Factory.ContinueWhenAll(taskWithActions, result => { bucketCollections.CompleteAdding(); });
+            while (!bucketCollections.IsCompleted)
+            {
+                Bucket bucket = bucketCollections.Take();
+                action(bucket);
+                bucketDict[bucket.Name] = bucket;
+            }
+
+            return bucketDict.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
     }
 }
