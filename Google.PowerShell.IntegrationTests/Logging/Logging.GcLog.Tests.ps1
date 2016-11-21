@@ -20,11 +20,21 @@ Describe "Get-GcLogEntry" {
 
     AfterAll {
         gcloud beta logging logs delete $logName --quiet
+        $logs = Get-GcLogEntry -LogName $logName
+        if ($null -ne $logs)
+        {
+            Write-Host "Log $logName is not deleted."
+        }
         gcloud beta logging logs delete $secondLogName --quiet
+        $logs = Get-GcLogEntry -LogName $secondLogName
+        if ($null -ne $logs)
+        {
+            Write-Host "Log $secondLogName is not deleted."
+        }
     }
 
     It "should work without any parameters" {
-        # There are a lot of logs so we just want to get the first 10
+        # There are a lot of logs so we just want to get the first 10.
         $logEntries = Get-GcLogEntry | Select -First 10
         $logEntries.Count | Should Be 10
     }
@@ -36,18 +46,22 @@ Describe "Get-GcLogEntry" {
         $textLogEntry.TextPayload | Should BeExactly $textPayload
         $jsonLogEntry = $logEntries | Where-Object { $null -ne $_.JsonPayload }
         $jsonLogEntry.JsonPayload["Key"] | Should BeExactly "Value"
+    }
 
-        # Should not return anything for non-existent parameter
+    It "should not return anything for non-existent log" {
         (Get-GcLogEntry -LogName "non-existent-log-name") | Should BeNullOrEmpty
     }
 
     It "should work with -Severity parameter" {
         $logEntries = Get-GcLogEntry -Severity Alert
+        # We can't use exact value here because this will include entries from other logs.
         $logEntries.Count -ge 2 | Should Be $true
         $logEntries | Where-Object { $_.TextPayload -eq $textPayload } | Should Not BeNullOrEmpty
         $logEntries | Where-Object { $_.TextPayload -eq $secondTextPayload } | Should Not BeNullOrEmpty
         $logEntries | ForEach-Object { $_.Severity | Should Be ALERT }
-        
+    }
+
+    It "should work with -Severity and -LogName parameters" {
         # Tests with -LogName parameter too.
         $logEntries = Get-GcLogEntry -LogName $secondLogName -Severity INFO
         $logEntries.Count | Should Be 1
@@ -57,13 +71,14 @@ Describe "Get-GcLogEntry" {
     It "should work with -After and -Before parameter" {
         # We should get the logs we created in the test.
         $logEntries = Get-GcLogEntry -After $timeBeforeCreatingLogs
+        # We can't use exact value here because this will include entries from other logs.
         $logEntries.Count -ge 4 | Should Be $true
         $textLogEntries = $logEntries | Where-Object { -not [string]::IsNullOrWhiteSpace($_.TextPayload) }
         $textLogEntries.Count -ge 2 | Should Be $true
         $jsonLogEntries = $logEntries | Where-Object { $null -ne $_.JsonPayload }
         $jsonLogEntries.Count -ge 2 | Should Be $true
-
-        # Tests with -LogName parameter.
+    }
+    It "should work with -LogName and -After and -Before parameters" {
         $logEntries = Get-GcLogEntry -After $timeAfterCreatingLogs -LogName $logName
         $logEntries | Should BeNullOrEmpty
         $logEntries = Get-GcLogEntry -Before $timeBeforeCreatingLogs -LogName $secondLogName

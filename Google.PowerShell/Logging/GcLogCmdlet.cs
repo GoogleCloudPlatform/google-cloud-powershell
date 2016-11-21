@@ -75,7 +75,7 @@ namespace Google.PowerShell.Logging
         }
 
         /// <summary>
-        /// Prefix projects/{project name}/logs to logName if not present.
+        /// Prefix projects/{project id}/logs to logName if not present.
         /// </summary>
         protected string PrefixProject(string logName, string project)
         {
@@ -148,11 +148,11 @@ namespace Google.PowerShell.Logging
     /// </para>
     /// <example>
     ///   <code>PS C:\> Get-GcLogEntry</code>
-    ///   <para>This command gets all log entries for the default project.</para>
+    ///   <para>This command gets all the log entries for the default project.</para>
     /// </example>
     /// <example>
     ///   <code>PS C:\> Get-GcLogEntry -Project "my-project"</code>
-    ///   <para>This command gets all log entries from the project "my-project".</para>
+    ///   <para>This command gets all the log entries from the project "my-project".</para>
     /// </example>
     /// <example>
     ///   <code>PS C:\> Get-GcLogEntry -LogName "my-log"</code>
@@ -165,6 +165,18 @@ namespace Google.PowerShell.Logging
     /// <example>
     ///   <code>PS C:\> Get-GcLogEntry -LogName "my-log" -Severity Error</code>
     ///   <para>This command gets all the log entries with severity ERROR from the log named "my-backendservice".</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Get-GcLogEntry -LogName "my-log" -Before [DateTime]::Now.AddMinutes(30)</code>
+    ///   <para>
+    ///   This command gets all the log entries from the log named "my-backendservice" created before 30 minutes ago.
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Get-GcLogEntry -LogName "my-log" -After [DateTime]::Now.AddMinutes(30)</code>
+    ///   <para>
+    ///   This command gets all the log entries from the log named "my-backendservice" created after 30 minutes ago.
+    ///   </para>
     /// </example>
     /// <example>
     ///   <code>PS C:\> Get-GcLogEntry -Filter 'resource.type="gce_instance" AND severity >= ERROR'</code>
@@ -207,7 +219,7 @@ namespace Google.PowerShell.Logging
 
         /// <summary>
         /// <para type="description">
-        /// The cmdlet will only return log entries with the specified severity.
+        /// If specified, the cmdlet will only return log entries with the specified severity.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.NoFilter)]
@@ -215,7 +227,7 @@ namespace Google.PowerShell.Logging
 
         /// <summary>
         /// <para type="description">
-        /// The cmdlet will only return log entries that occurs before this datetime.
+        /// If specified, the cmdlet will only return log entries that occur before this datetime.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.NoFilter)]
@@ -223,7 +235,7 @@ namespace Google.PowerShell.Logging
 
         /// <summary>
         /// <para type="description">
-        /// The cmdlet will only return log entries that occurs after this datetime.
+        /// If specified, the cmdlet will only return log entries that occur after this datetime.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.NoFilter)]
