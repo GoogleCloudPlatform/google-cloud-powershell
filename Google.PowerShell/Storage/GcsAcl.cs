@@ -116,20 +116,6 @@ namespace Google.PowerShell.CloudStorage
                     throw UnknownParameterSetException;
             }
         }
-
-        /// <summary>
-        /// Helper function that converts a list of object of the type JObject to a list of ObjectAccessControl.
-        /// </summary>
-        public static IEnumerable<ObjectAccessControl> ConvertJObjectList(IList<object> jObjects)
-        {
-            foreach (object item in jObjects)
-            {
-                if (item is JObject)
-                {
-                    yield return (item as JObject).ToObject<ObjectAccessControl>();
-                }
-            }
-        }
     }
 
     /// <summary>
@@ -431,8 +417,7 @@ namespace Google.PowerShell.CloudStorage
             base.ProcessRecord();
             ObjectAccessControlsResource.ListRequest request = Service.ObjectAccessControls.List(Bucket, ObjectName);
             ObjectAccessControls response = request.Execute();
-            IEnumerable<ObjectAccessControl> accessControls = GcsAclCmdlet.ConvertJObjectList(response.Items);
-            WriteObject(accessControls, true);
+            WriteObject(response.Items, true);
         }
     }
 
@@ -616,8 +601,7 @@ namespace Google.PowerShell.CloudStorage
             base.ProcessRecord();
             DefaultObjectAccessControlsResource.ListRequest request = Service.DefaultObjectAccessControls.List(Name);
             ObjectAccessControls response = request.Execute();
-            IEnumerable<ObjectAccessControl> accessControls = GcsAclCmdlet.ConvertJObjectList(response.Items);
-            WriteObject(accessControls, true);
+            WriteObject(response.Items, true);
         }
     }
 
