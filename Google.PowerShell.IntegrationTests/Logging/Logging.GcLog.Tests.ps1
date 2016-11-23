@@ -115,3 +115,114 @@ Describe "Get-GcLogEntry" {
         $textLogEntry.TextPayload | Should BeExactly $textPayload
     }
 }
+
+Describe "New-GcLogEntry" {
+    It "should work" {
+        $r = Get-Random
+        # This log entry does not exist before so the cmdlet should create it.
+        $logName = "gcp-testing-new-gclogentry-$r"
+        $textPayload = "This is a log entry"
+        try {
+            New-GcLogEntry -TextPayload $textPayload -LogName $logName
+            Start-Sleep 5
+            (Get-GcLogEntry -LogName $logName).TextPayload | Should BeExactly $textPayload
+
+            # Create a JSON entry in the same log, the cmdlet should write to the same log.
+            New-GcLogEntry -JsonPayload @{ "Key" = "Value" } -LogName $logName
+            Start-Sleep 5
+            $logEntries = Get-GcLogEntry -LogName $logName
+            $logEntries.Count | Should Be 2
+            $jsonLogEntry = $logEntries | Where-Object { $null -ne $_.JsonPayload }
+            $jsonLogEntry.JsonPayload.Key | Should BeExactly "Value"
+
+            # Create a Proto entry.
+            $proto = @{ "@type" = "type.googleapis.com/google.cloud.audit.AuditLog";
+                        "serviceName" = "cloudresourcemanager.googleapis.com" }
+            New-GcLogEntry -ProtoPayload $proto -LogName $logName
+            Start-Sleep 5
+            $logEntries = Get-GcLogEntry -LogName $logName
+            $logEntries.Count | Should Be 3
+            $protoLogEntry = $logEntries | Where-Object { $null -ne $_.ProtoPayload }
+            $protoLogEntry.ProtoPayload["@type"] | Should BeExactly $proto["@type"]
+            $protoLogEntry.ProtoPayload["serviceName"] | Should BeExactly $proto["serviceName"]
+        }
+        finally {
+            gcloud beta logging logs delete $logName --quiet
+        }
+    }
+
+    It "should work for array" {
+        $r = Get-Random
+        $logName = "gcp-testing-new-gclogentry-$r"
+        $firstTextPayload = "This is the first payload."
+        $secondTextPayload = "This is the second payload."
+        $firstJsonPayload = @{ "Key" = "Value" }
+        $secondJsonPayload = @{ "Key2" = "Value2" }
+        $firstProtoPayload = @{ "@type" = "type.googleapis.com/google.cloud.audit.AuditLog";
+                    "serviceName" = "cloudresourcemanager.googleapis.com" }
+        $secondProtoPayload = @{ "@type" = "type.googleapis.com/google.cloud.audit.AuditLog";
+                    "serviceName" = "www.cloudresourcemanager.googleapis.com" }
+        try {
+            New-GcLogEntry -TextPayload @($firstTextPayload, $secondTextPayload) -LogName $logName
+            Start-Sleep 5
+            $logEntriesPayloads = (Get-GcLogEntry -LogName $logName).TextPayload
+            $logEntriesPayloads.Count | Should Be 2
+
+            New-GcLogEntry -JsonPayload @($firstJsonPayload, $secondJsonPayload) -LogName $logName
+            Start-Sleep 5
+            $logEntriesJsonPayloads = Get-GcLogEntry -LogName $logName | Where-Object { $null -ne $_.JsonPayload }
+            $logEntriesJsonPayloads.Count | Should Be 2
+
+            New-GcLogEntry -ProtoPayload @($firstProtoPayload, $secondProtoPayload) -LogName $logName
+            Start-Sleep 5
+            $logEntriesProtoPayloads = Get-GcLogEntry -LogName $logName | Where-Object { $null -ne $_.ProtoPayload }
+            $logEntriesProtoPayloads.Count | Should Be 2
+        }
+        finally {
+            gcloud beta logging logs delete $logName --quiet
+        }
+    }
+
+    It "should work with pipeline" {
+        $r = Get-Random
+        $logName = "gcp-testing-new-gclogentry-$r"
+        $textPayload = "This is the text payload."
+        $jsonPayload = @{ "Key" = "Value" }
+
+        try {
+            $textPayload | New-GcLogEntry -LogName $logName
+            Start-Sleep 5
+            (Get-GcLogEntry -LogName $logName).TextPayload | Should BeExactly $textPayload
+
+            $jsonPayload | New-GcLogEntry -LogName $logName
+            Start-Sleep 5
+            $logEntriesJsonPayload = Get-GcLogEntry -LogName $logName | Where-Object { $null -ne $_.JsonPayload }
+            $logEntriesJsonPayload.JsonPayload["Key"] | Should BeExactly "Value"
+        }
+        finally {
+            gcloud beta logging logs delete $logName --quiet
+        }
+    }
+
+    It "should work with -MonitoredResource" {
+        $r = Get-Random
+        $logName = "gcp-testing-new-gclogentry-$r"
+        $textPayload = "This is the text payload."
+        $resourceType = "cloudsql_database"
+        $resourceLabels = @{ "project_id" = "my-project" ; "database_id" = "mydatabaseid" }
+        $monitoredResource = New-GcLogMonitoredResource -ResourceType $resourceType -Labels $resourceLabels
+
+        try {
+            New-GcLogEntry -LogName $logName -MonitoredResource $monitoredResource -TextPayload $textPayload
+            Start-Sleep 5
+            $logEntry = Get-GcLogEntry -LogName $logName
+            $logEntry.TextPayload | Should BeExactly $textPayload
+            $logEntry.Resource.Type | Should BeExactly $resourceType
+            $logEntry.Resource.Labels["project_id"] | Should BeExactly $resourceLabels["project_id"]
+            $logEntry.Resource.Labels["database_id"] | Should BeExactly $resourceLabels["database_id"]
+        }
+        finally {
+            gcloud beta logging logs delete $logName --quiet
+        }
+    }
+}
