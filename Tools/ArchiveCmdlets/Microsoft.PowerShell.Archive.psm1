@@ -463,12 +463,8 @@ function GetResolvedPathHelper
 }
 
 function Add-CompressionAssemblies {
-    
-    if ($PSEdition -eq "Desktop")
-    {
-        Add-Type -AssemblyName System.IO.Compression
-        Add-Type -AssemblyName System.IO.Compression.FileSystem
-    }
+    Add-Type -AssemblyName System.IO.Compression
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
 }
 
 function IsValidFileSystemPath 
@@ -685,7 +681,8 @@ function CompressSingleDirHelper
             # We need to check if the directory is an empty directory, if so such a
             # directory has to be explicitly added to the archive file.
             # if there are no files in the directory the GetFiles() API returns an empty array.
-            $files = $currentContent.GetFiles()
+            # We have to search subdirectories too.
+            $files = $currentContent.GetFiles("*", [System.IO.SearchOption]::AllDirectories)
             if($files.Count -eq 0)
             {
                 $subDirFiles.Add($currentContent.FullName + ([io.path]::DirectorySeparatorChar))
