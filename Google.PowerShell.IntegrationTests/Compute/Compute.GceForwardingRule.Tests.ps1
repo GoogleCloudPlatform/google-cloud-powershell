@@ -67,7 +67,8 @@ Describe "Get-GceForwardingRule"{
         }
 
         AfterAll {
-            gcloud compute forwarding-rules delete $regionRuleName1 -q 2>$null
+            $regionRule1 = Get-GceForwardingRule $regionRuleName1
+            gcloud compute forwarding-rules delete $regionRuleName1 --region $regionRule1.Region -q 2>$null
             gcloud compute target-pools delete "pool-$r" -q 2>$null
 
             gcloud compute forwarding-rules delete $regionRuleName2 --region asia-east1 -q 2>$null
