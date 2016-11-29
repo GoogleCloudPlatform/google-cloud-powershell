@@ -1,3 +1,3 @@
 # List of beta cmdlets.
-$cmdletsToBeExported = @("Get-GcLogEntry")
+$cmdletsToBeExported = @("Get-GcLogEntry", "New-GcLogEntry", "New-GcLogMonitoredResource")
 $cmdletsToBeExported

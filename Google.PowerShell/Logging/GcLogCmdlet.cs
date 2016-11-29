@@ -258,6 +258,10 @@ namespace Google.PowerShell.Logging
         /// <summary>
         /// This function is part of the IDynamicParameters interface.
         /// PowerShell uses it to generate parameters dynamically.
+        /// We have to generate -ResourceType parameter dynamically because the array
+        /// of resources that we used to validate against are not generated before compile time,
+        /// i.e. [ValidateSet(ArrayGeneratedAtRunTime)] will throw an error for parameters
+        /// that are not generated dynamically.
         /// </summary>
         public object GetDynamicParameters()
         {
@@ -357,6 +361,283 @@ namespace Google.PowerShell.Logging
                 logEntriesRequest.PageToken = response.NextPageToken;
             }
             while (!Stopping && logEntriesRequest.PageToken != null);
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Creates new monitored resources.
+    /// </para>
+    /// <para type="description">
+    /// Creates new monitored resources. These resources are used in the Logging cmdlets such as New-GcLogEntry
+    /// </para>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> New-GcLogMonitoredResource -ResourceType gce_instance `
+    ///                                      -Labels @{"project_id" = "my-project"; "instance_id" = "my-instance"}.
+    ///   </code>
+    ///   <para>This command creates a new monitored resource of type gce_instance with specified labels.</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/logging/docs/api/v2/resource-list)">
+    /// [Monitored Resources and Labels]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.New, "GcLogMonitoredResource")]
+    public class NewGcLogMonitoredResource : GcLogCmdlet, IDynamicParameters
+    {
+        [Parameter(Mandatory = true)]
+        [ValidateNotNullOrEmpty]
+        public Hashtable Labels { get; set; }
+
+        /// <summary>
+        /// This dynamic parameter dictionary is used by PowerShell to generate parameters dynamically.
+        /// </summary>
+        private RuntimeDefinedParameterDictionary dynamicParameters;
+
+        /// <summary>
+        /// This function is part of the IDynamicParameters interface.
+        /// PowerShell uses it to generate parameters dynamically.
+        /// We have to generate -ResourceType parameter dynamically because the array
+        /// of resources that we used to validate against are not generated before compile time,
+        /// i.e. [ValidateSet(ArrayGeneratedAtRunTime)] will throw an error for parameters
+        /// that are not generated dynamically.
+        /// </summary>
+        public object GetDynamicParameters()
+        {
+            if (dynamicParameters == null)
+            {
+                ParameterAttribute paramAttribute = new ParameterAttribute()
+                {
+                    Mandatory = true
+                };
+                ValidateSetAttribute validateSetAttribute = new ValidateSetAttribute(AllResourceTypes);
+                validateSetAttribute.IgnoreCase = true;
+                Collection<Attribute> attributes =
+                    new Collection<Attribute>(new Attribute[] { validateSetAttribute, paramAttribute });
+                // This parameter can now be thought of as:
+                // [Parameter(Mandatory = true)]
+                // [ValidateSet(validTypeValues)]
+                // public string { get; set; }
+                RuntimeDefinedParameter typeParameter = new RuntimeDefinedParameter("ResourceType", typeof(string), attributes);
+                dynamicParameters = new RuntimeDefinedParameterDictionary();
+                dynamicParameters.Add("ResourceType", typeParameter);
+            }
+
+            return dynamicParameters;
+        }
+
+        protected override void ProcessRecord()
+        {
+            string selectedType = dynamicParameters["ResourceType"].Value.ToString().ToLower();
+            MonitoredResourceDescriptor selectedDescriptor = GetResourceDescriptor(selectedType);
+            IEnumerable<string> descriptorLabels = selectedDescriptor.Labels.Select(label => label.Key);
+
+            // Validate that the Labels passed in match what is found in the labels of the selected descriptor.
+            foreach (string labelKey in Labels.Keys)
+            {
+                if (!descriptorLabels.Contains(labelKey))
+                {
+                    string descriptorLabelsString = string.Join(", ", descriptorLabels);
+                    string errorMessage = $"Label '{labelKey}' cannot be found for monitored resource of type '{selectedType}'."
+                        + $"The available lables are '{descriptorLabelsString}'.";
+                    ErrorRecord errorRecord = new ErrorRecord(
+                        new ArgumentException(errorMessage),
+                        "InvalidLabel",
+                        ErrorCategory.InvalidData,
+                        labelKey);
+                    ThrowTerminatingError(errorRecord);
+                }
+            }
+
+            MonitoredResource createdResource = new MonitoredResource()
+            {
+                Type = selectedType,
+                Labels = ConvertToDictionary<string, string>(Labels)
+            };
+            WriteObject(createdResource);
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Creates new log entries.
+    /// </para>
+    /// <para type="description">
+    /// Creates new log entries in a log. The cmdlet will create the log if it doesn't exist.
+    /// By default, the log is associated with the "global" resource type ("custom.googleapis.com" in v1 service).
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> New-GcLogEntry -TextPayload "This is a log entry." -LogName "test-log".</code>
+    ///   <para>This command creates a log entry with the specified text payload in the log "test-log".</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> New-GcLogEntry -TextPayload "Entry 1", "Entry 2" -LogName "test-log".</code>
+    ///   <para>
+    ///   This command creates 2 log entries with text payload "Entry 1" and "Entry 2" respectively in the log "test-log".
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> New-GcLogEntry -JsonPayload @{"a" = "b"} -LogName "test-log" -Severity Error</code>
+    ///   <para>This command creates a log entry with a json payload and severity level Error in the log "test-log".</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> New-GcLogEntry -MonitoredResource (New-GcLogMonitoredResource -ResourceType global -Labels @{"project_id" = "my-project"}) `
+    ///                          -TextPayload "This is a log entry."
+    ///   </code>
+    ///   <para>
+    ///   This command creates a log entry directly from the LogEntry object.
+    ///   The command also associates it with a resource type created from New-GcLogMonitoredResource
+    ///   </para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/logging/docs/view/logs_index)">
+    /// [Log Entries and Logs]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/logging/docs/api/v2/resource-list)">
+    /// [Monitored Resources]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.New, "GcLogEntry", DefaultParameterSetName = ParameterSetNames.TextPayload)]
+    public class NewGcLogEntryCmdlet : GcLogCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string TextPayload = "TextPayload";
+            public const string JsonPayload = "JsonPayload";
+            public const string ProtoPayload = "ProtoPayload";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// The project to where the log entry will be written to. If not set via PowerShell parameter processing,
+        /// will default to the Cloud SDK's DefaultProject property.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the log that this entry will be written to.
+        /// If the log does not exist, it will be created.
+        /// </para>
+        /// </summary>
+        [Parameter(Position = 0, Mandatory = true)]
+        public string LogName { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The text payload of the log entry. Each value in the array will be written to a single entry in the log.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.TextPayload, Mandatory = true, ValueFromPipeline = true)]
+        [ValidateNotNullOrEmpty]
+        public string[] TextPayload { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The JSON payload of the log entry. Each value in the array will be written to a single entry in the log.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.JsonPayload, Mandatory = true, ValueFromPipeline = true)]
+        [ValidateNotNullOrEmpty]
+        public Hashtable[] JsonPayload { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The proto payload of the log entry. Each value in the array will be written to a single entry in the log.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ProtoPayload, Mandatory = true)]
+        [ValidateNotNullOrEmpty]
+        public Hashtable[] ProtoPayload { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The severity of the log entry. Default value is Default.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public LogSeverity Severity { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Monitored Resource associated with the log. If not provided, we will default to "global" resource type
+        /// ("custom.googleapis.com" in v1 service). This is what gcloud beta logging write uses.
+        /// This indicates that the log is not associated with any specific resource.
+        /// More information can be found at https://cloud.google.com/logging/docs/api/v2/resource-list
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public MonitoredResource MonitoredResource { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            LogName = PrefixProject(LogName, Project);
+            if (MonitoredResource == null)
+            {
+                MonitoredResource = new MonitoredResource()
+                {
+                    Type = "global",
+                    Labels = new Dictionary<string, string>() { { "project_id", Project } }
+                };
+            }
+            List<LogEntry> entries = new List<LogEntry>();
+
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.TextPayload:
+                    foreach (string text in TextPayload)
+                    {
+                        LogEntry entry = new LogEntry()
+                        {
+                            LogName = LogName,
+                            Severity = Enum.GetName(typeof(LogSeverity), Severity),
+                            Resource = MonitoredResource,
+                            TextPayload = text
+                        };
+                        entries.Add(entry);
+                    }
+                    break;
+                case ParameterSetNames.ProtoPayload:
+                    foreach (Hashtable hashTable in ProtoPayload)
+                    {
+                        LogEntry entry = new LogEntry()
+                        {
+                            LogName = LogName,
+                            Severity = Enum.GetName(typeof(LogSeverity), Severity),
+                            Resource = MonitoredResource,
+                            ProtoPayload = ConvertToDictionary<string, object>(hashTable)
+                        };
+                        entries.Add(entry);
+                    }
+                    break;
+                case ParameterSetNames.JsonPayload:
+                    foreach (Hashtable hashTable in JsonPayload)
+                    {
+                        LogEntry entry = new LogEntry()
+                        {
+                            LogName = LogName,
+                            Severity = Enum.GetName(typeof(LogSeverity), Severity),
+                            Resource = MonitoredResource,
+                            JsonPayload = ConvertToDictionary<string, object>(hashTable)
+                        };
+                        entries.Add(entry);
+                    }
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+
+            WriteLogEntriesRequest writeRequest = new WriteLogEntriesRequest()
+            {
+                Entries = entries,
+                LogName = LogName,
+                Resource = MonitoredResource
+            };
+            EntriesResource.WriteRequest request = Service.Entries.Write(writeRequest);
+            WriteLogEntriesResponse response = request.Execute();
         }
     }
 }
