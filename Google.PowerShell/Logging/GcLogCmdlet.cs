@@ -640,4 +640,53 @@ namespace Google.PowerShell.Logging
             WriteLogEntriesResponse response = request.Execute();
         }
     }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Remove logs.
+    /// </para>
+    /// <para type="description">
+    /// Removes a log by its name
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> Remove-GcLog -LogName "test-log".</code>
+    ///   <para>This command removes "test-log" from the default project.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Remove-GcLog -LogName "test-log" -Project "my-project".</code>
+    ///   <para>This command removes "test-log" from project "my-project".</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/logging/docs/view/logs_index)">
+    /// [Log Entries and Logs]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Remove, "GcLog")]
+    public class RemoveGcLogCmdlet : GcLogCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The project to check for log entries. If not set via PowerShell parameter processing, will
+        /// default to the Cloud SDK's DefaultProject property.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the log to be removed.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true)]
+        [ValidateNotNullOrEmpty]
+        public string LogName { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            LogName = PrefixProject(LogName, Project);
+            ProjectsResource.LogsResource.DeleteRequest deleteRequest = Service.Projects.Logs.Delete(LogName);
+            deleteRequest.Execute();
+        }
+    }
 }
