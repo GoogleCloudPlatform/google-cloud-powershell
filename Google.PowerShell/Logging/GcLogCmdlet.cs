@@ -258,6 +258,10 @@ namespace Google.PowerShell.Logging
         /// <summary>
         /// This function is part of the IDynamicParameters interface.
         /// PowerShell uses it to generate parameters dynamically.
+        /// We have to generate -ResourceType parameter dynamically because the array
+        /// of resources that we used to validate against are not generated before compile time,
+        /// i.e. [ValidateSet(ArrayGeneratedAtRunTime)] will throw an error for parameters
+        /// that are not generated dynamically.
         /// </summary>
         public object GetDynamicParameters()
         {
@@ -393,6 +397,10 @@ namespace Google.PowerShell.Logging
         /// <summary>
         /// This function is part of the IDynamicParameters interface.
         /// PowerShell uses it to generate parameters dynamically.
+        /// We have to generate -ResourceType parameter dynamically because the array
+        /// of resources that we used to validate against are not generated before compile time,
+        /// i.e. [ValidateSet(ArrayGeneratedAtRunTime)] will throw an error for parameters
+        /// that are not generated dynamically.
         /// </summary>
         public object GetDynamicParameters()
         {
