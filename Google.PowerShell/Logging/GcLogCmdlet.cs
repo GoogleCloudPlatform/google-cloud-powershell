@@ -643,17 +643,18 @@ namespace Google.PowerShell.Logging
 
     /// <summary>
     /// <para type="synopsis">
-    /// Remove logs.
+    /// Removes a StackDriver log from a project.
     /// </para>
     /// <para type="description">
-    /// Removes a log by its name
+    /// Removes a StackDrive log from a project based on the name of the log.
+    /// All the entries in the log will be deleted (a log have multiple log entries).
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Remove-GcLog -LogName "test-log".</code>
+    ///   <code>PS C:\> Remove-GcLog -LogName "test-log"</code>
     ///   <para>This command removes "test-log" from the default project.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Remove-GcLog -LogName "test-log" -Project "my-project".</code>
+    ///   <code>PS C:\> Remove-GcLog -LogName "test-log" -Project "my-project"</code>
     ///   <para>This command removes "test-log" from project "my-project".</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/logging/docs/view/logs_index)">
