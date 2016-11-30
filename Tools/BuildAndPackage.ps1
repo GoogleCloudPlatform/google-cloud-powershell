@@ -22,6 +22,9 @@ $normalizedVersion = [version]::new(
                         [math]::Max($publishVersion.Build, 0),
                         [math]::Max($publishVersion.Revision, 0))
 
+# Import the modified Archive module.
+Import-Module (Join-Path $PSScriptRoot "ArchiveCmdlets\Microsoft.PowerShell.Archive.psd1") -Force
+
 # Root of the repo. Assuming ran from the Tools folder.
 $projectRoot = Join-Path $PSScriptRoot ".." -Resolve
 
