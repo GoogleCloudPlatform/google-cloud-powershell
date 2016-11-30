@@ -11,10 +11,10 @@ Describe "Get-GcLogEntry" {
     $secondTextPayload = "Second test entry"
     $jsonPayload = "{\`"Key\`":\`"Value\`"}"
     $timeBeforeCreatingLogs = [DateTime]::Now
-    gcloud beta logging write $logName $textPayload --severity=ALERT > $null
-    gcloud beta logging write $logName $jsonPayload --severity=INFO --payload-type=json
-    gcloud beta logging write $secondLogName $secondTextPayload --severity=ALERT
-    gcloud beta logging write $secondLogName $jsonPayload --severity=INFO --payload-type=json
+    gcloud beta logging write $logName $textPayload --severity=ALERT 2>$null
+    gcloud beta logging write $logName $jsonPayload --severity=INFO --payload-type=json 2>$null
+    gcloud beta logging write $secondLogName $secondTextPayload --severity=ALERT 2>$null
+    gcloud beta logging write $secondLogName $jsonPayload --severity=INFO --payload-type=json 2>$null
     # We add 2 minutes to account for delay in log creation
     $timeAfterCreatingLogs = [DateTime]::Now.AddMinutes(2)
 
@@ -179,7 +179,7 @@ Describe "New-GcLogEntry" {
             $logEntriesProtoPayloads.Count | Should Be 2
         }
         finally {
-            gcloud beta logging logs delete $logName --quiet
+            gcloud beta logging logs delete $logName --quiet 2>$null
         }
     }
 
@@ -200,7 +200,7 @@ Describe "New-GcLogEntry" {
             $logEntriesJsonPayload.JsonPayload["Key"] | Should BeExactly "Value"
         }
         finally {
-            gcloud beta logging logs delete $logName --quiet
+            gcloud beta logging logs delete $logName --quiet 2>$null
         }
     }
 
@@ -222,7 +222,25 @@ Describe "New-GcLogEntry" {
             $logEntry.Resource.Labels["database_id"] | Should BeExactly $resourceLabels["database_id"]
         }
         finally {
-            gcloud beta logging logs delete $logName --quiet
+            gcloud beta logging logs delete $logName --quiet 2>$null
         }
+    }
+}
+
+Describe "Remove-GcLog" {
+    It "should throw error for non-existent log" {
+        { Remove-GcLog -LogName "non-existent-log-powershell-testing" } | Should Throw "404"
+    }
+
+    It "should work" {
+        $r = Get-Random
+        $logName = "gcp-testing-new-gclogentry-$r"
+        $textPayload = "This is the text payload."
+        New-GcLogEntry -LogName $logName -TextPayload $textPayload
+        Start-Sleep 5
+        (Get-GcLogEntry -LogName $logName) | Should Not BeNullOrEmpty
+        Remove-GcLog -LogName $logName
+        Start-Sleep 5
+        (Get-GcLogEntry -LogName $logName) | Should BeNullOrEmpty
     }
 }
