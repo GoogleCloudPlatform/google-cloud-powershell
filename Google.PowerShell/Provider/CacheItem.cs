@@ -17,6 +17,10 @@ namespace Google.PowerShell.Provider
         private T _value;
         private readonly Func<T> _update;
 
+        /// <summary>
+        /// Get the value after applying the default update function
+        /// if the value is out of date.
+        /// </summary>
         public T Value
         {
             get
@@ -25,6 +29,9 @@ namespace Google.PowerShell.Provider
             }
         }
 
+        /// <summary>
+        /// Returns true if the cache is out of date.
+        /// </summary>
         public bool CacheOutOfDate
         {
             get
@@ -33,6 +40,12 @@ namespace Google.PowerShell.Provider
             }
         }
 
+        /// <summary>
+        /// Get value after applying an update function to the value
+        /// if the value is out of date.
+        /// </summary>
+        /// <param name="updateFunc"></param>
+        /// <returns></returns>
         public T GetValueWithUpdateFunction(Func<T> updateFunc)
         {
             if (CacheOutOfDate && updateFunc != null)
@@ -43,20 +56,34 @@ namespace Google.PowerShell.Provider
             return _value;
         }
 
+        /// <summary>
+        /// Get the last stored value without calling the update function.
+        /// </summary>
+        /// <returns></returns>
         public T GetLastValueWithoutUpdate()
         {
             return _value;
         }
 
+        /// <summary>
+        /// Initialize a CacheItem with an update function and a cache
+        /// reset time of 1 minute.
+        /// </summary>
+        /// <param name="update"></param>
         public CacheItem(Func<T> update) : this(update, TimeSpan.FromMinutes(1)) { }
 
-        public CacheItem() : this(TimeSpan.FromMinutes(1)) { }
+        /// <summary>
+        /// Initialize a CacheItem with a cache reset time of 1 minute and with
+        /// no update function.
+        /// </summary>
+        public CacheItem() : this(null, TimeSpan.FromMinutes(1)) { }
 
-        public CacheItem(TimeSpan cacheLifetime)
-        {
-            _cacheLifetime = cacheLifetime;
-        }
-
+        /// <summary>
+        /// Initialize a CacheItem with a cache reset time set to cacheLifetime
+        /// and update function set to update.
+        /// </summary>
+        /// <param name="update"></param>
+        /// <param name="cacheLifetime"></param>
         public CacheItem(Func<T> update, TimeSpan cacheLifetime)
         {
             _update = update;

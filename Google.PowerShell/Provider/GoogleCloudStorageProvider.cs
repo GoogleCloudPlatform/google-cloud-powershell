@@ -469,7 +469,7 @@ namespace Google.PowerShell.CloudStorage
             if (gcsPath.Type == GcsPath.GcsPathType.Drive)
             {
                 Action<Bucket> writeBucket = (bucket) => WriteItemObject(GetChildName(bucket.Name), bucket.Name, true);
-                PerformActionOnBucket(writeBucket);
+                PerformActionOnBucketAndOptionallyUpdateCache(writeBucket);
             }
             else
             {
@@ -523,7 +523,7 @@ namespace Google.PowerShell.CloudStorage
             {
                 case GcsPath.GcsPathType.Drive:
                     Action<Bucket> actionOnBuckets = (bucket) => GetChildItemBucketHelper(bucket, recurse);
-                    PerformActionOnBucket((bucket) => GetChildItemBucketHelper(bucket, recurse));
+                    PerformActionOnBucketAndOptionallyUpdateCache((bucket) => GetChildItemBucketHelper(bucket, recurse));
                     break;
                 case GcsPath.GcsPathType.Bucket:
                 case GcsPath.GcsPathType.Object:
@@ -1003,6 +1003,12 @@ namespace Google.PowerShell.CloudStorage
             } while (allPages && !Stopping && request.PageToken != null);
         }
 
+        /// <summary>
+        /// Retrieves all buckets from the specified project and adding them to the blocking collection.
+        /// </summary>
+        /// <param name="project"></param>
+        /// <param name="collections"></param>
+        /// <returns></returns>
         private static async Task ListBucketsAsync(Project project, BlockingCollection<Bucket> collections)
         {
             // Using a new service on every request here ensures they can all be handled at the same time.
@@ -1044,7 +1050,14 @@ namespace Google.PowerShell.CloudStorage
             } while (request.PageToken != null);
         }
 
-        private void PerformActionOnBucket(Action<Bucket> actionOnBucket)
+        /// <summary>
+        /// If the BucketCache is not out of date, simply perform the action on each of the bucket.
+        /// Otherwise, we update the cache and perform the action while doing that (for example,
+        /// we can write the bucket to the command line as they become available instead of writing
+        /// all at once).
+        /// </summary>
+        /// <param name="actionOnBucket"></param>
+        private void PerformActionOnBucketAndOptionallyUpdateCache(Action<Bucket> actionOnBucket)
         {
             // If the cache is already initialized and not stale, simply perform the action on each bucket.
             // Otherwise, we update the cache and perform action on each of the item while doing so.
@@ -1063,19 +1076,34 @@ namespace Google.PowerShell.CloudStorage
             }
         }
 
+        /// <summary>
+        /// Update BucketCache and perform action on each of the bucket while doing so.
+        /// </summary>
+        /// <param name="action"></param>
+        /// <returns></returns>
         private static Dictionary<string, Bucket> UpdateBucketCacheAndPerformActionOnBucket(Action<Bucket> action)
         {
             BlockingCollection<Bucket> bucketCollections = new BlockingCollection<Bucket>();
             ConcurrentDictionary<string, Bucket> bucketDict = new ConcurrentDictionary<string, Bucket>();
             IEnumerable<Project> projects = ListAllProjects();
+            // In each of these tasks, the buckets will be added to the blocking collection bucketCollections.
             IEnumerable<Task> taskWithActions = projects.Select(project => ListBucketsAsync(project, bucketCollections));
+            // Once all the tasks are done, we signal to the blocking collection that there is nothing to be added.
             Task.Factory.ContinueWhenAll(taskWithActions.ToArray(), result => { bucketCollections.CompleteAdding(); });
 
+            // bucketCollections.IsCompleted is true if CompleteAdding is called.
             while (!bucketCollections.IsCompleted)
             {
-                Bucket bucket = bucketCollections.Take();
-                action(bucket);
-                bucketDict[bucket.Name] = bucket;
+                // bucketCollections.Take() will block until something is added.
+                try
+                {
+                    Bucket bucket = bucketCollections.Take();
+                    action(bucket);
+                    bucketDict[bucket.Name] = bucket;
+                }
+                // This exception is thrown if a thread call CompleteAdding before we call bucketCollections.Take()
+                // and after we passed the IsCompleted check. We can just swallow it.
+                catch (InvalidOperationException) { }
             }
 
             return bucketDict.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
