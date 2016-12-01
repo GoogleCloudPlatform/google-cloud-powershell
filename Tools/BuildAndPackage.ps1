@@ -146,6 +146,7 @@ $gCloudPowerShellManifest.RootModule = $gCloudPowerShellManifest.RootModule -rep
 $gCloudPowerShellManifest.FormatsToProcess = $gCloudPowerShellManifest.FormatsToProcess -replace "GoogleCloudPlatform.Format.ps1xml", `
                                                                                                "$normalizedVersion\GoogleCloudPlatform.Format.ps1xml"
 $gCloudPowerShellManifest.CmdletsToExport = $cmdletsList
+$gCloudPowerShellManifest.ModuleVersion = $normalizedVersion
 New-ModuleManifest -Path "$gcpsDir\GoogleCloudPowerShell.psd1" @gCloudPowerShellManifest
 Set-ModuleManifestEncoding "$gcpsDir\GoogleCloudPowerShell.psd1"
 
