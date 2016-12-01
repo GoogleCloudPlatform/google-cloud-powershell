@@ -12,7 +12,7 @@ namespace Google.PowerShell.PubSub
     /// Creates new Google Cloud PubSub topics.
     /// </para>
     /// <para type="description">
-    /// Creates one or more Gooogle Cloud PubSub topics. Will throw errors if the topics already exist.
+    /// Creates one or more Gooogle Cloud PubSub topics. Will raise errors if the topics already exist.
     /// The cmdlet will create the topics in the default project if -Project is not used.
     /// </para>
     /// <example>
@@ -56,7 +56,7 @@ namespace Google.PowerShell.PubSub
         {
             foreach (string topicName in Topic)
             {
-                string formattedTopicname = PrefixProjectToTopic(topicName, Project);
+                string formattedTopicname = GetProjectPrefixForTopic(topicName, Project);
                 Topic topic = new Topic() { Name = formattedTopicname };
                 ProjectsResource.TopicsResource.CreateRequest request = Service.Projects.Topics.Create(topic, formattedTopicname);
                 try
@@ -66,12 +66,10 @@ namespace Google.PowerShell.PubSub
                 }
                 catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
                 {
-                    ErrorRecord errorRecord = new ErrorRecord(
-                        new ArgumentException($"Cannot create topic '{topicName}' because it already exists."),
-                        "TopicAlreadyExists",
-                        ErrorCategory.ResourceExists,
-                        topicName);
-                    WriteError(errorRecord);
+                    WriteResourceExistsError(
+                        exceptionMessage: $"Cannot create topic '{topicName}' because it already exists.",
+                        errorId: "TopicAlreadyExists",
+                        targetObject: topicName);
                 }
             }
         }
@@ -85,7 +83,7 @@ namespace Google.PowerShell.PubSub
     /// Retrieves one or more Gooogle Cloud PubSub topics.
     /// If -Topic is not used, the cmdlet will return all the topics under the specified project
     /// (default project if -Project is not used). Otherwise, the cmdlet will return a list of topics
-    /// matching the topic names specified in -Topic and will throw an error for any topic that cannot be found.
+    /// matching the topic names specified in -Topic and will raise an error for any topic that cannot be found.
     /// </para>
     /// <example>
     ///   <code>PS C:\> Get-GcpsTopic</code>
@@ -130,7 +128,7 @@ namespace Google.PowerShell.PubSub
             {
                 foreach (string topicName in Topic)
                 {
-                    string formattedTopicName = PrefixProjectToTopic(topicName, Project);
+                    string formattedTopicName = GetProjectPrefixForTopic(topicName, Project);
                     try
                     {
                         ProjectsResource.TopicsResource.GetRequest getRequest = Service.Projects.Topics.Get(formattedTopicName);
@@ -138,12 +136,10 @@ namespace Google.PowerShell.PubSub
                     }
                     catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
                     {
-                        ErrorRecord errorRecord = new ErrorRecord(
-                            new ItemNotFoundException($"Topic '{topicName}' does not exist in project '{Project}'."),
-                            "TopicNotFound",
-                            ErrorCategory.ObjectNotFound,
-                            topicName);
-                        WriteError(errorRecord);
+                        WriteResourceMissingError(
+                            exceptionMessage: $"Topic '{topicName}' does not exist in project '{Project}'.",
+                            errorId: "TopicNotFound",
+                            targetObject: topicName);
                     }
                 }
             }
@@ -153,7 +149,6 @@ namespace Google.PowerShell.PubSub
                 do
                 {
                     ListTopicsResponse response = listRequest.Execute();
-
                     if (response.Topics != null)
                     {
                         WriteObject(response.Topics, true);
@@ -170,7 +165,7 @@ namespace Google.PowerShell.PubSub
     /// Removes Google Cloud PubSub topics.
     /// </para>
     /// <para type="description">
-    /// Removes one or more Gooogle Cloud PubSub topics. Will throw errors if the topics do not exist.
+    /// Removes one or more Gooogle Cloud PubSub topics. Will raise errors if the topics do not exist.
     /// The cmdlet will delete the topics in the default project if -Project is not used.
     /// </para>
     /// <example>
@@ -187,7 +182,7 @@ namespace Google.PowerShell.PubSub
     /// [Deleting a Topic]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Remove, "GcpsTopic")]
+    [Cmdlet(VerbsCommon.Remove, "GcpsTopic", SupportsShouldProcess = true)]
     public class RemoveGcpsTopic : GcpsCmdlet
     {
         /// <summary>
@@ -206,6 +201,7 @@ namespace Google.PowerShell.PubSub
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true)]
+        [ValidateNotNullOrEmpty]
         [Alias("Name")]
         public string[] Topic { get; set; }
 
@@ -213,20 +209,21 @@ namespace Google.PowerShell.PubSub
         {
             foreach (string topicName in Topic)
             {
-                string formattedTopicName = PrefixProjectToTopic(topicName, Project);
+                string formattedTopicName = GetProjectPrefixForTopic(topicName, Project);
                 try
                 {
-                    ProjectsResource.TopicsResource.DeleteRequest request = Service.Projects.Topics.Delete(formattedTopicName);
-                    request.Execute();
+                    if (ShouldProcess(formattedTopicName, "Remove Topic"))
+                    {
+                        ProjectsResource.TopicsResource.DeleteRequest request = Service.Projects.Topics.Delete(formattedTopicName);
+                        request.Execute();
+                    }
                 }
                 catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
                 {
-                    ErrorRecord errorRecord = new ErrorRecord(
-                        new ItemNotFoundException($"Topic '{topicName}' does not exist in project '{Project}'."),
-                        "TopicNotFound",
-                        ErrorCategory.ObjectNotFound,
-                        topicName);
-                    WriteError(errorRecord);
+                    WriteResourceMissingError(
+                        exceptionMessage: $"Topic '{topicName}' does not exist in project '{Project}'.",
+                        errorId: "TopicNotFound",
+                        targetObject: topicName);
                 }
             }
         }

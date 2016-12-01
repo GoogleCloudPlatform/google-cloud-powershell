@@ -107,6 +107,32 @@ namespace Google.PowerShell.Common
         }
 
         /// <summary>
+        /// Helper function to write an exception when we try to create a resource that already exists.
+        /// </summary>
+        protected void WriteResourceExistsError(string exceptionMessage, string errorId, object targetObject)
+        {
+            ErrorRecord errorRecord = new ErrorRecord(
+                new ArgumentException(exceptionMessage),
+                errorId,
+                ErrorCategory.ResourceExists,
+                targetObject);
+            WriteError(errorRecord);
+        }
+
+        /// <summary>
+        /// Helper function to write an exception when we try to access a resource that does not exist.
+        /// </summary>
+        protected void WriteResourceMissingError(string exceptionMessage, string errorId, object targetObject)
+        {
+            ErrorRecord errorRecord = new ErrorRecord(
+                new ItemNotFoundException(exceptionMessage),
+                errorId,
+                ErrorCategory.ResourceUnavailable,
+                targetObject);
+            WriteError(errorRecord);
+        }
+
+        /// <summary>
         /// Sets properties and fields decordated with ConfigPropertyNameAttribute to their defaults, if necessary.
         /// </summary>
         // TODO(jimwp): Add new function called by this to replace capability in childeren.

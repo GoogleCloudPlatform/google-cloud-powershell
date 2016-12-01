@@ -35,6 +35,10 @@ Describe "Get-GcpsTopic" {
     It "should throw an error for non-existent topic" {
         { Get-GcpsTopic -Topic "non-existent-topic-name" -ErrorAction Stop } | Should Throw "does not exist"
     }
+
+    It "should throw error for invalid topic name" {
+        { Get-GcpsTopic -Topic "!!" -ErrorAction Stop } | Should Throw "Invalid resource name"
+    }
 }
 
 Describe "New-GcpsTopic" {
@@ -75,13 +79,13 @@ Describe "New-GcpsTopic" {
             gcloud beta pubsub topics delete $topicName --quiet 2>$null
         }
     }
+
+    It "should throw error for invalid topic name" {
+        { New-GcpsTopic -Topic "!!" -ErrorAction Stop } | Should Throw "Invalid resource name"
+    }
 }
 
 Describe "Remove-GcpsTopic" {
-    It "should throw error for non-existent topic" {
-        { Remove-GcpsTopic -Topic "non-existent-topic-powershell-testing" -ErrorAction Stop } | Should Throw "does not exist"
-    }
-
     It "should work" {
         $r = Get-Random
         $topicName = "gcp-creating-topic-$r"
@@ -97,5 +101,35 @@ Describe "Remove-GcpsTopic" {
         # Remove an array of topics.
         Remove-GcpsTopic -Topic $secondTopicName, $thirdTopicName
         { Get-GcpsTopic -Topic $secondTopicName, $thirdTopicName -ErrorAction Stop } | Should Throw "does not exist"
+    }
+
+    It "should work with pipeline" {
+        $r = Get-Random
+        $topicName = "gcp-creating-topic-$r"
+        New-GcpsTopic -Topic $topicName
+        Get-GcpsTopic -Topic $topicName | Should Not BeNullOrEmpty
+
+        # Remove through pipeline
+        Get-GcpsTopic -Topic $topicName | Remove-GcpsTopic
+        { Get-GcpsTopic -Topic $topicName -ErrorAction Stop } | Should Throw "does not exist"
+    }
+
+    It "should throw error for non-existent topic" {
+        { Remove-GcpsTopic -Topic "non-existent-topic-powershell-testing" -ErrorAction Stop } | Should Throw "does not exist"
+    }
+
+    It "should throw error for invalid topic name" {
+        { Remove-GcpsTopic -Topic "!!" -ErrorAction Stop } | Should Throw "Invalid resource name"
+    }
+
+    It "should not remove topic if -WhatIf is used" {
+        $r = Get-Random
+        $topicName = "gcp-creating-topic-$r"
+        New-GcpsTopic -Topic $topicName
+        Get-GcpsTopic -Topic $topicName | Should Not BeNullOrEmpty
+
+        # Topic should not be removed.
+        Remove-GcpsTopic -Topic $topicName -WhatIf
+        Get-GcpsTopic -Topic $topicName | Should Not BeNullOrEmpty
     }
 }
