@@ -87,14 +87,6 @@ namespace Google.PowerShell.Logging
         }
 
         /// <summary>
-        /// Converts a hashtable to a dictionary
-        /// </summary>
-        protected Dictionary<K,V> ConvertToDictionary<K,V>(Hashtable hashTable)
-        {
-            return hashTable.Cast<DictionaryEntry>().ToDictionary(kvp => (K)kvp.Key, kvp => (V)kvp.Value);
-        }
-
-        /// <summary>
         /// A cache of the list of valid monitored resource descriptors.
         /// This is used for auto-completion to display possible types of monitored resource.
         /// </summary>
