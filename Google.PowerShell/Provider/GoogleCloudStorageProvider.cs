@@ -1087,7 +1087,7 @@ namespace Google.PowerShell.CloudStorage
         /// Update BucketCache and perform action on each of the bucket while doing so.
         /// </summary>
         /// <param name="action">Action to be performed on each bucket.</param>
-        /// <returns></returns>
+        /// <returns>Returns a dictionary where key is bucket name and value is the bucket.</returns>
         private Dictionary<string, Bucket> UpdateBucketCacheAndPerformActionOnBucket(Action<Bucket> action)
         {
             BlockingCollection<Bucket> bucketCollections = new BlockingCollection<Bucket>();
