@@ -484,6 +484,10 @@ namespace Google.PowerShell.CloudStorage
             TelemetryReporter.ReportSuccess(nameof(GoogleCloudStorageProvider), nameof(GetChildNames));
         }
 
+        /// <summary>
+        /// Write out a bucket to the command line.
+        /// If recurse is set to true, call GetChildItems on the bucket to process its children.
+        /// </summary>
         private void GetChildItemBucketHelper(Bucket bucket, bool recurse)
         {
             WriteItemObject(bucket, bucket.Name, true);
@@ -493,9 +497,12 @@ namespace Google.PowerShell.CloudStorage
                 {
                     GetChildItems(bucket.Name, true);
                 }
-                // It is possible to not have access to ojbects even if we have access to the bucket.
+                // It is possible to not have access to objects even if we have access to the bucket.
                 // We ignore those objects as if they did not exist.
-                catch (GoogleApiException e) when (e.HttpStatusCode == HttpStatusCode.Forbidden) { }
+                catch (GoogleApiException e) when (e.HttpStatusCode == HttpStatusCode.Forbidden)
+                {
+                    WriteVerbose($"Access to objects in bucket {bucket.Name} is restricted.");
+                }
                 catch (AggregateException e)
                 {
                     foreach (Exception innerException in e.InnerExceptions)
@@ -1006,9 +1013,8 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// Retrieves all buckets from the specified project and adding them to the blocking collection.
         /// </summary>
-        /// <param name="project"></param>
-        /// <param name="collections"></param>
-        /// <returns></returns>
+        /// <param name="project">Project to retrieve buckets from.</param>
+        /// <param name="collections">Blocking collection to add buckets to.</param>
         private static async Task ListBucketsAsync(Project project, BlockingCollection<Bucket> collections)
         {
             // Using a new service on every request here ensures they can all be handled at the same time.
@@ -1023,6 +1029,7 @@ namespace Google.PowerShell.CloudStorage
                     {
                         foreach (Bucket bucket in buckets.Items)
                         {
+                            // BlockingCollecton does not have AddRange so we have to add each item individually.
                             collections.Add(bucket);
                         }
                     }
@@ -1051,17 +1058,17 @@ namespace Google.PowerShell.CloudStorage
         }
 
         /// <summary>
-        /// If the BucketCache is not out of date, simply perform the action on each of the bucket.
+        /// If the BucketCache is not out of date, simply perform the action on each bucket.
         /// Otherwise, we update the cache and perform the action while doing that (for example,
         /// we can write the bucket to the command line as they become available instead of writing
         /// all at once).
         /// </summary>
-        /// <param name="actionOnBucket"></param>
+        /// <param name="actionOnBucket">Action to be performed on each bucket if cache is out of date.</param>
         private void PerformActionOnBucketAndOptionallyUpdateCache(Action<Bucket> actionOnBucket)
         {
             // If the cache is already initialized and not stale, simply perform the action on each bucket.
             // Otherwise, we update the cache and perform action on each of the item while doing so.
-            if (!BucketCache.CacheOutOfDate)
+            if (!BucketCache.CacheOutOfDate())
             {
                 Dictionary<string, Bucket> bucketDict = BucketCache.GetLastValueWithoutUpdate();
                 foreach(Bucket bucket in bucketDict.Values)
@@ -1079,9 +1086,9 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// Update BucketCache and perform action on each of the bucket while doing so.
         /// </summary>
-        /// <param name="action"></param>
+        /// <param name="action">Action to be performed on each bucket.</param>
         /// <returns></returns>
-        private static Dictionary<string, Bucket> UpdateBucketCacheAndPerformActionOnBucket(Action<Bucket> action)
+        private Dictionary<string, Bucket> UpdateBucketCacheAndPerformActionOnBucket(Action<Bucket> action)
         {
             BlockingCollection<Bucket> bucketCollections = new BlockingCollection<Bucket>();
             ConcurrentDictionary<string, Bucket> bucketDict = new ConcurrentDictionary<string, Bucket>();
@@ -1103,7 +1110,10 @@ namespace Google.PowerShell.CloudStorage
                 }
                 // This exception is thrown if a thread call CompleteAdding before we call bucketCollections.Take()
                 // and after we passed the IsCompleted check. We can just swallow it.
-                catch (InvalidOperationException) { }
+                catch (InvalidOperationException ex)
+                {
+                    WriteVerbose(ex.Message);
+                }
             }
 
             return bucketDict.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);

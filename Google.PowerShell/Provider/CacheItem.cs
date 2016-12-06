@@ -12,6 +12,7 @@ namespace Google.PowerShell.Provider
     /// </summary>
     public class CacheItem<T>
     {
+        private static TimeSpan s_minuteTimeSpan = TimeSpan.FromMinutes(1);
         private DateTimeOffset _lastUpdate = DateTimeOffset.MinValue;
         private readonly TimeSpan _cacheLifetime;
         private T _value;
@@ -32,23 +33,20 @@ namespace Google.PowerShell.Provider
         /// <summary>
         /// Returns true if the cache is out of date.
         /// </summary>
-        public bool CacheOutOfDate
+        public bool CacheOutOfDate()
         {
-            get
-            {
-                return DateTimeOffset.Now > _lastUpdate + _cacheLifetime;
-            }
+            return DateTimeOffset.Now > _lastUpdate + _cacheLifetime;
         }
 
         /// <summary>
-        /// Get value after applying an update function to the value
+        /// Get the value after applying an update function to the value
         /// if the value is out of date.
         /// </summary>
-        /// <param name="updateFunc"></param>
-        /// <returns></returns>
+        /// <param name="updateFunc">The update function that is used to update _value.</param>
+        /// <returns>Returns the updated value.</returns>
         public T GetValueWithUpdateFunction(Func<T> updateFunc)
         {
-            if (CacheOutOfDate && updateFunc != null)
+            if (CacheOutOfDate() && updateFunc != null)
             {
                 _value = updateFunc();
                 _lastUpdate = DateTimeOffset.Now;
@@ -59,35 +57,21 @@ namespace Google.PowerShell.Provider
         /// <summary>
         /// Get the last stored value without calling the update function.
         /// </summary>
-        /// <returns></returns>
         public T GetLastValueWithoutUpdate()
         {
             return _value;
         }
 
         /// <summary>
-        /// Initialize a CacheItem with an update function and a cache
-        /// reset time of 1 minute.
-        /// </summary>
-        /// <param name="update"></param>
-        public CacheItem(Func<T> update) : this(update, TimeSpan.FromMinutes(1)) { }
-
-        /// <summary>
-        /// Initialize a CacheItem with a cache reset time of 1 minute and with
-        /// no update function.
-        /// </summary>
-        public CacheItem() : this(null, TimeSpan.FromMinutes(1)) { }
-
-        /// <summary>
         /// Initialize a CacheItem with a cache reset time set to cacheLifetime
         /// and update function set to update.
         /// </summary>
-        /// <param name="update"></param>
-        /// <param name="cacheLifetime"></param>
-        public CacheItem(Func<T> update, TimeSpan cacheLifetime)
+        /// <param name="update">Update function that is used to update the value if cache is out of date.</param>
+        /// <param name="cacheLifetime">Time span that the cache is valid for. Default to 1 minute.</param>
+        public CacheItem(Func<T> update = null, TimeSpan? cacheLifetime = null)
         {
             _update = update;
-            _cacheLifetime = cacheLifetime;
+            _cacheLifetime = cacheLifetime ?? s_minuteTimeSpan;
         }
     }
 }
