@@ -310,7 +310,6 @@ namespace Google.PowerShell.ComputeEngine
     [OutputType(typeof(Disk))]
     public class ResizeGceDiskCmdlet : GceConcurrentCmdlet
     {
-
         private class ParameterSetNames
         {
             public const string ByName = "ByName";

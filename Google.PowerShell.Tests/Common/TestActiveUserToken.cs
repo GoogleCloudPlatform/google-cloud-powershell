@@ -1,4 +1,7 @@
-﻿using NUnit.Framework;
+﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
+
+using NUnit.Framework;
 using Google.PowerShell.Common;
 using System;
 
@@ -11,16 +14,16 @@ namespace Google.PowerShell.Tests.Common
     /// </summary>
     public class TestActiveUserToken
     {
-        private string credentialJson = @"{
+        private string _credentialJson = @"{
             'access_token': 'access token'
         }".Replace('\'', '\"');
 
-        private string credentialJsonWithNullExpiry = @"{
+        private string _credentialJsonWithNullExpiry = @"{
             'access_token': 'access token',
             'token_expiry': null
         }".Replace('\'', '\"');
 
-        private string credentialJsonWithExpiry = @"{
+        private string _credentialJsonWithExpiry = @"{
             'access_token': 'access token',
             'token_expiry': {
                 'year': 2016,
@@ -36,7 +39,7 @@ namespace Google.PowerShell.Tests.Common
         [Test]
         public void TestCredentialJsonWithTokenExpiry()
         {
-            ActiveUserToken token = new ActiveUserToken(credentialJsonWithExpiry, "user");
+            ActiveUserToken token = new ActiveUserToken(_credentialJsonWithExpiry, "user");
             Assert.IsTrue(Equals(token.AccessToken, "access token"), "AccessToken does not match the value in JSON string.");
             Assert.IsTrue(
                 Equals(token.ExpiredTime, new DateTime(2016, 10, 18, 20, 36, 4, 497, DateTimeKind.Utc)),
@@ -46,7 +49,7 @@ namespace Google.PowerShell.Tests.Common
         [Test]
         public void TestCredentialJsonWithNullTokenExpiry()
         {
-            ActiveUserToken token = new ActiveUserToken(credentialJsonWithNullExpiry, "user");
+            ActiveUserToken token = new ActiveUserToken(_credentialJsonWithNullExpiry, "user");
             Assert.IsTrue(
                 Equals(token.ExpiredTime, DateTime.MaxValue),
                 "ExpiredTime should be set to DateTime.MaxValue if token_expiry is null");
@@ -58,7 +61,7 @@ namespace Google.PowerShell.Tests.Common
         [Test]
         public void TestTokenExpiredByTime()
         {
-            ActiveUserToken token = new ActiveUserToken(credentialJson, "user");
+            ActiveUserToken token = new ActiveUserToken(_credentialJson, "user");
             token.ExpiredTime = DateTime.UtcNow.AddHours(1);
 
             Assert.IsFalse(token.IsExpired, "Token should not expire yet.");

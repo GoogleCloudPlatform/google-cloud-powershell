@@ -1,4 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
+
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
@@ -86,7 +89,7 @@ namespace Google.PowerShell.Common
                     tokenExpiry.Hour,
                     tokenExpiry.Minute,
                     tokenExpiry.Second,
-                    tokenExpiry.MicroSecond/1000,
+                    tokenExpiry.MicroSecond / 1000,
                     DateTimeKind.Utc);
             }
         }
@@ -96,13 +99,20 @@ namespace Google.PowerShell.Common
         /// </summary>
         private class TokenExpiry
         {
-            [JsonProperty("microsecond")]  internal int MicroSecond { get; set; }
-            [JsonProperty("second")]       internal int Second { get; set; }
-            [JsonProperty("minute")]       internal int Minute { get; set; }
-            [JsonProperty("hour")]         internal int Hour { get; set; }
-            [JsonProperty("day")]          internal int Day { get; set; }
-            [JsonProperty("month")]        internal int Month { get; set; }
-            [JsonProperty("year")]         internal int Year { get; set; }
+            [JsonProperty("microsecond")]
+            internal int MicroSecond { get; set; }
+            [JsonProperty("second")]
+            internal int Second { get; set; }
+            [JsonProperty("minute")]
+            internal int Minute { get; set; }
+            [JsonProperty("hour")]
+            internal int Hour { get; set; }
+            [JsonProperty("day")]
+            internal int Day { get; set; }
+            [JsonProperty("month")]
+            internal int Month { get; set; }
+            [JsonProperty("year")]
+            internal int Year { get; set; }
         }
     }
 }
