@@ -99,7 +99,9 @@ namespace Google.PowerShell.Common
         }
 
         /// <summary>
-        /// Converts a hashtable to a dictionary
+        /// Converts a PowerShell Hashtable object to a dictionary.
+        /// By default, @{"a" = "b"} in PowerShell is passed to cmdlets as HashTable so we will have to
+        /// convert it to a dictionary if we want to use function that requires Dictionary.
         /// </summary>
         protected static Dictionary<K, V> ConvertToDictionary<K, V>(Hashtable hashTable)
         {

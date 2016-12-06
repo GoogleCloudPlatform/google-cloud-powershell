@@ -1,7 +1,6 @@
 ﻿using Google.Apis.Pubsub.v1;
 using Google.Apis.Pubsub.v1.Data;
 using Google.PowerShell.Common;
-using System;
 using System.Management.Automation;
 using System.Net;
 
@@ -44,7 +43,7 @@ namespace Google.PowerShell.PubSub
 
         /// <summary>
         /// <para type="description">
-        /// The names of the topics to be created. Topics must not have already existed.
+        /// The names of the topics to be created. Topics must not exist.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0)]
