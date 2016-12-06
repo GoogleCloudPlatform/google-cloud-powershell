@@ -66,7 +66,11 @@ namespace Google.PowerShell.Provider
         /// Initialize a CacheItem with a cache reset time set to cacheLifetime
         /// and update function set to update.
         /// </summary>
-        /// <param name="update">Update function that is used to update the value if cache is out of date.</param>
+        /// <param name="update">
+        /// Update function that is used to update the value if cache is out of date.
+        /// Default to null, which means GetValueWithUpdateFunction, GetLastValueWithoutUpdate
+        /// and Value will return default value for type T.
+        /// </param>
         /// <param name="cacheLifetime">Time span that the cache is valid for. Default to 1 minute.</param>
         public CacheItem(Func<T> update = null, TimeSpan? cacheLifetime = null)
         {
