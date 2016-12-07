@@ -1,4 +1,7 @@
-﻿using Google.Apis.Pubsub.v1;
+﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
+
+using Google.Apis.Pubsub.v1;
 using Google.PowerShell.Common;
 
 namespace Google.PowerShell.PubSub

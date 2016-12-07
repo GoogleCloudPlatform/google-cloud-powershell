@@ -149,7 +149,7 @@ namespace Google.PowerShell.Sql
         /// The instance resource, which can be created with New-GcSqlInstanceConfig.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0, 
+        [Parameter(Mandatory = true, Position = 0,
             ParameterSetName = ParameterSetNames.Default)]
         public string Name { get; set; }
 
@@ -163,7 +163,8 @@ namespace Google.PowerShell.Sql
         {
             return new DatabaseInstance
             {
-                Settings = new Settings {
+                Settings = new Settings
+                {
                     Tier = "db-n1-standard-1",
                     PricingPlan = "PER_USE",
                     ActivationPolicy = "ALWAYS",
@@ -223,7 +224,6 @@ namespace Google.PowerShell.Sql
             InstancesResource.GetRequest instanceRequest = Service.Instances.Get(Project, instance.Name);
             WriteObject(instanceRequest.Execute());
         }
-
     }
 
     /// <summary>

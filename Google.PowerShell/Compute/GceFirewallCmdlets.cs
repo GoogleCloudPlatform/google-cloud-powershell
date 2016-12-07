@@ -240,7 +240,6 @@ namespace Google.PowerShell.ComputeEngine
         {
             public const string ByName = "ByName";
             public const string ByObject = "ByObject";
-
         }
 
         /// <summary>

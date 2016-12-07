@@ -360,7 +360,7 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// Upload a GCS object using a stream.
         /// </summary>
-        private void UploadStreamToGcsObject(Stream contentStream, string objContentType, Dictionary<string,string> metadataDict, string objectName)
+        private void UploadStreamToGcsObject(Stream contentStream, string objContentType, Dictionary<string, string> metadataDict, string objectName)
         {
             if (contentStream == null)
             {
@@ -1141,7 +1141,6 @@ namespace Google.PowerShell.CloudStorage
     [OutputType(typeof(Object))]
     public class CopyGcsObject : GcsCmdlet
     {
-
         private class ParameterSetNames
         {
             public const string ByName = "ByName";

@@ -1,3 +1,6 @@
+// Copyright 2015-2016 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
+
 using Google.Apis.Logging.v2;
 using Google.Apis.Logging.v2.Data;
 using Google.PowerShell.Common;
@@ -90,7 +93,7 @@ namespace Google.PowerShell.Logging
         /// A cache of the list of valid monitored resource descriptors.
         /// This is used for auto-completion to display possible types of monitored resource.
         /// </summary>
-        private static Lazy<List<MonitoredResourceDescriptor>> monitoredResourceDescriptors =
+        private static Lazy<List<MonitoredResourceDescriptor>> s_monitoredResourceDescriptors =
             new Lazy<List<MonitoredResourceDescriptor>>(GetResourceDescriptors);
 
         /// <summary>
@@ -119,14 +122,14 @@ namespace Google.PowerShell.Logging
         /// </summary>
         protected MonitoredResourceDescriptor GetResourceDescriptor(string descriptorType)
         {
-            return monitoredResourceDescriptors.Value.First(
+            return s_monitoredResourceDescriptors.Value.First(
                 descriptor => string.Equals(descriptor.Type.ToLower(), descriptorType.ToLower()));
         }
 
         /// <summary>
         /// Returns all valid resource types.
         /// </summary>
-        protected string[] AllResourceTypes => monitoredResourceDescriptors.Value.Select(descriptor => descriptor.Type).ToArray();
+        protected string[] AllResourceTypes => s_monitoredResourceDescriptors.Value.Select(descriptor => descriptor.Type).ToArray();
     }
 
     /// <summary>
@@ -245,7 +248,7 @@ namespace Google.PowerShell.Logging
         /// <summary>
         /// This dynamic parameter dictionary is used by PowerShell to generate parameters dynamically.
         /// </summary>
-        private RuntimeDefinedParameterDictionary dynamicParameters;
+        private RuntimeDefinedParameterDictionary _dynamicParameters;
 
         /// <summary>
         /// This function is part of the IDynamicParameters interface.
@@ -257,7 +260,7 @@ namespace Google.PowerShell.Logging
         /// </summary>
         public object GetDynamicParameters()
         {
-            if (dynamicParameters == null)
+            if (_dynamicParameters == null)
             {
                 ParameterAttribute paramAttribute = new ParameterAttribute()
                 {
@@ -273,11 +276,11 @@ namespace Google.PowerShell.Logging
                 // [ValidateSet(validTypeValues)]
                 // public string { get; set; }
                 RuntimeDefinedParameter typeParameter = new RuntimeDefinedParameter("ResourceType", typeof(string), attributes);
-                dynamicParameters = new RuntimeDefinedParameterDictionary();
-                dynamicParameters.Add("ResourceType", typeParameter);
+                _dynamicParameters = new RuntimeDefinedParameterDictionary();
+                _dynamicParameters.Add("ResourceType", typeParameter);
             }
 
-            return dynamicParameters;
+            return _dynamicParameters;
         }
 
         protected override void ProcessRecord()
@@ -311,7 +314,7 @@ namespace Google.PowerShell.Logging
                     filterString += $"severity = {severityString}{andOp}";
                 }
 
-                string selectedType = dynamicParameters["ResourceType"].Value?.ToString().ToLower();
+                string selectedType = _dynamicParameters["ResourceType"].Value?.ToString().ToLower();
                 if (selectedType != null)
                 {
                     // Example: resource.type = "gce_instance".
@@ -384,7 +387,7 @@ namespace Google.PowerShell.Logging
         /// <summary>
         /// This dynamic parameter dictionary is used by PowerShell to generate parameters dynamically.
         /// </summary>
-        private RuntimeDefinedParameterDictionary dynamicParameters;
+        private RuntimeDefinedParameterDictionary _dynamicParameters;
 
         /// <summary>
         /// This function is part of the IDynamicParameters interface.
@@ -396,7 +399,7 @@ namespace Google.PowerShell.Logging
         /// </summary>
         public object GetDynamicParameters()
         {
-            if (dynamicParameters == null)
+            if (_dynamicParameters == null)
             {
                 ParameterAttribute paramAttribute = new ParameterAttribute()
                 {
@@ -411,16 +414,16 @@ namespace Google.PowerShell.Logging
                 // [ValidateSet(validTypeValues)]
                 // public string { get; set; }
                 RuntimeDefinedParameter typeParameter = new RuntimeDefinedParameter("ResourceType", typeof(string), attributes);
-                dynamicParameters = new RuntimeDefinedParameterDictionary();
-                dynamicParameters.Add("ResourceType", typeParameter);
+                _dynamicParameters = new RuntimeDefinedParameterDictionary();
+                _dynamicParameters.Add("ResourceType", typeParameter);
             }
 
-            return dynamicParameters;
+            return _dynamicParameters;
         }
 
         protected override void ProcessRecord()
         {
-            string selectedType = dynamicParameters["ResourceType"].Value.ToString().ToLower();
+            string selectedType = _dynamicParameters["ResourceType"].Value.ToString().ToLower();
             MonitoredResourceDescriptor selectedDescriptor = GetResourceDescriptor(selectedType);
             IEnumerable<string> descriptorLabels = selectedDescriptor.Labels.Select(label => label.Key);
 

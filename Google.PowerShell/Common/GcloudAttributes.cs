@@ -146,11 +146,11 @@ namespace Google.PowerShell.Common
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
     public class ArrayPropertyTransformAttribute : ArgumentTransformationAttribute
     {
-        private PropertyByTypeTransformationAttribute typeTransformationAttribute;
+        private PropertyByTypeTransformationAttribute _typeTransformationAttribute;
 
         public ArrayPropertyTransformAttribute(Type typeToTransform, string property)
         {
-            typeTransformationAttribute = new PropertyByTypeTransformationAttribute
+            _typeTransformationAttribute = new PropertyByTypeTransformationAttribute
             {
                 Property = property,
                 TypeToTransform = typeToTransform
@@ -161,7 +161,7 @@ namespace Google.PowerShell.Common
         {
             var enumerable = inputData as IEnumerable<object> ?? new[] { inputData };
             return enumerable.Select(
-                    inputElement => typeTransformationAttribute.Transform(engineIntrinsics, inputElement)
+                    inputElement => _typeTransformationAttribute.Transform(engineIntrinsics, inputElement)
                     ).ToArray();
         }
     }
