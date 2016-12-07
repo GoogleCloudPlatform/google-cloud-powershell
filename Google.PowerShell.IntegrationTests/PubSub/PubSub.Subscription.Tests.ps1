@@ -79,7 +79,6 @@ Describe "New-GcpsTopic" {
     It "should error out for bad subscription name" {
         $r = Get-Random
         $topicName = "gcp-test-new-subscription-topic-$r"
-        $subscriptionName = "gcp-test-new-subscription-$r"
 
         try {
             New-GcpsTopic -Topic $topicName
@@ -90,7 +89,25 @@ Describe "New-GcpsTopic" {
         }
     }
 
-    It "should error out for if topic does not exist" {
+    It "should error out for bad ack deadline" {
+        $r = Get-Random
+        $topicName = "gcp-test-new-subscription-topic-$r"
+        $subscriptionName = "gcp-test-new-subscription-$r"
+
+        try {
+            New-GcpsTopic -Topic $topicName
+            # Ack deadline has to be between 10 and 600.
+            { New-GcpsSubscription -Topic $topicName -Subscription $subscriptionName -AckDeadline -30 -ErrorAction Stop } |
+                Should Throw "Invalid ack deadline given"
+            { New-GcpsSubscription -Topic $topicName -Subscription $subscriptionName -AckDeadline -1000 -ErrorAction Stop } |
+                Should Throw "Invalid ack deadline given"
+        }
+        finally {
+            gcloud beta pubsub topics delete $topicName --quiet 2>$null
+        }
+    }
+
+    It "should error out if topic does not exist" {
         $r = Get-Random
         $topicName = "gcloud-powershell-non-existent-topic"
         $subscriptionName = "gcp-test-new-subscription-$r"
@@ -104,7 +121,7 @@ Describe "New-GcpsTopic" {
         }
     }
 
-    It "should error out for if subscription already exists" {
+    It "should error out if subscription already exists" {
         $r = Get-Random
         $topicName = "gcp-test-new-subscription-topic-$r"
         $subscriptionName = "gcp-test-new-subscription-$r"
@@ -117,6 +134,26 @@ Describe "New-GcpsTopic" {
             $subscription | Should Not BeNullOrEmpty
             $subscription.AckDeadlineSeconds | Should Be 10
             $subscription.PushConfig.PushEndPoint | Should BeNullOrEmpty
+        }
+        finally {
+            gcloud beta pubsub topics delete $topicName --quiet 2>$null
+            gcloud beta pubsub subscriptions delete $subscriptionName --quiet 2>$null
+        }
+    }
+
+    It "should error out for invalid endpoint" {
+        $r = Get-Random
+        $topicName = "gcp-test-new-subscription-topic-$r"
+        $subscriptionName = "gcp-test-new-subscription-$r"
+        $endpoint = "http://www.example.com"
+
+        try {
+            New-GcpsTopic -Topic $topicName
+            { New-GcpsSubscription -Subscription $subscriptionName `
+                                 -Topic $topicName `
+                                 -PushEndpoint $endpoint `
+                                 -ErrorAction Stop } |
+                                 Should Throw "Invalid push endpoint given"
         }
         finally {
             gcloud beta pubsub topics delete $topicName --quiet 2>$null
