@@ -153,4 +153,166 @@ namespace Google.PowerShell.PubSub
             }
         }
     }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Retrieves one or more Google Cloud PubSub subscriptions.
+    /// </para>
+    /// <para type="description">
+    /// Retrieves one or more Google Cloud PubSub subscriptions. The cmdlet will search for subscriptions
+    /// in the default project if -Project is not used. If -Topic is used, the cmdlet will only return
+    /// subscriptions belonging to the specified topic. If -Subscription is used, the cmdlet will only return
+    /// subscriptions whose names match the subscriptions' names provided.
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> Get-GcpsSubscription</code>
+    ///   <para> This command retrieves all subscriptions in the default project.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Get-GcpsSubscription -Topic "my-topic" -Project "my-project"</code>
+    ///   <para> This command retrieves all subscriptions that belong to topic "my-topic" in the project "my-project".</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Get-GcpsSubscription -Subscription "subscription1", "subscription2"</code>
+    ///   <para> This command retrieves subscriptions "subscription1" and "subscription2" in the default project.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Get-GcpsSubscription -Subscription "subscription1", "subscription2" -Topic "my-topic"</code>
+    ///   <para> This command retrieves subscriptions "subscription1" and "subscription2" in the topic "my-topic".</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/pubsub/docs/subscriber#overview-of-subscriptions)">
+    /// [Subscription]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Get, "GcpsSubscription")]
+    public class GetGcpsSubscription : GcpsCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The project to check for subscriptions. If not set via PowerShell parameter processing, will
+        /// default to the Cloud SDK's DefaultProject property.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The names of the subscriptions to be retrieved.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, Position = 0)]
+        [ValidateNotNullOrEmpty]
+        [Alias("Name")]
+        public string[] Subscription { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The topic to check for subscriptions.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ValidateNotNullOrEmpty]
+        public string Topic { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            if (Subscription != null)
+            {
+                Subscription = Subscription.Select(item => GetProjectPrefixForSubscription(item, Project)).ToArray();
+            }
+
+            // Handles the case where user wants to list all subscriptions in a particular topic.
+            // In this case, we will have to make a call to get the name of all the subscriptions in that topic
+            // before calling get request on each subscription.
+            if (Topic != null)
+            {
+                Topic = GetProjectPrefixForTopic(Topic, Project);
+                ProjectsResource.TopicsResource.SubscriptionsResource.ListRequest listRequest =
+                    Service.Projects.Topics.Subscriptions.List(Topic);
+                do
+                {
+                    ListTopicSubscriptionsResponse response = null;
+                    try
+                    {
+                        response = listRequest.Execute();
+                    }
+                    catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+                    {
+                        WriteResourceMissingError(
+                            exceptionMessage: $"Topic '{Topic}' does not exist in project '{Project}'.",
+                            errorId: "TopicNotFound",
+                            targetObject: Topic);
+                    }
+
+                    if (response?.Subscriptions != null)
+                    {
+                        // If user gives us a list of subscriptions to search for, we have to make sure that
+                        // those subscriptions belong to the topic.
+                        if (Subscription != null)
+                        {
+                            IEnumerable<string> selectedSubscriptions = response.Subscriptions
+                                .Where(sub => Subscription.Contains(sub, System.StringComparer.OrdinalIgnoreCase));
+                            GetSubscriptions(selectedSubscriptions);
+                        }
+                        else
+                        {
+                            GetSubscriptions(response.Subscriptions);
+                        }
+                    }
+                    listRequest.PageToken = response.NextPageToken;
+                }
+                while (!Stopping && listRequest.PageToken != null);
+                return;
+            }
+
+            // If no topic is given, then we are left with 2 cases:
+            // 1. User gives us a list of subscriptions: we just find those subscriptions and returned.
+            // 2. User does not give us any subscriptions: we just return all subscriptions in the project.
+            if (Subscription != null && Subscription.Length > 0)
+            {
+                GetSubscriptions(Subscription.Select(item => GetProjectPrefixForSubscription(item, Project)));
+            }
+            else
+            {
+                ProjectsResource.SubscriptionsResource.ListRequest listRequest =
+                    Service.Projects.Subscriptions.List($"projects/{Project}");
+                do
+                {
+                    ListSubscriptionsResponse response = listRequest.Execute();
+
+                    if (response.Subscriptions != null)
+                    {
+                        WriteObject(response.Subscriptions, true);
+                    }
+                    listRequest.PageToken = response.NextPageToken;
+                }
+                while (!Stopping && listRequest.PageToken != null);
+            }
+        }
+
+        /// <summary>
+        /// Given a list of subscription names, returns the corresponding subscriptions.
+        /// </summary>
+        private void GetSubscriptions(IEnumerable<string> subscriptionNames)
+        {
+            foreach (string subscriptionName in subscriptionNames)
+            {
+                try
+                {
+                    ProjectsResource.SubscriptionsResource.GetRequest getRequest = Service.Projects.Subscriptions.Get(subscriptionName);
+                    Subscription subscription = getRequest.Execute();
+                    WriteObject(subscription);
+                }
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+                {
+                    WriteResourceMissingError(
+                        exceptionMessage: $"Subscription '{subscriptionName}' does not exist in project '{Project}'.",
+                        errorId: "SubscriptionNotFound",
+                        targetObject: subscriptionName);
+                }
+            }
+        }
+    }
 }
