@@ -99,7 +99,9 @@ Describe "New-GcpsTopic" {
             # Ack deadline has to be between 10 and 600.
             { New-GcpsSubscription -Topic $topicName -Subscription $subscriptionName -AckDeadline -30 -ErrorAction Stop } |
                 Should Throw "Invalid ack deadline given"
-            { New-GcpsSubscription -Topic $topicName -Subscription $subscriptionName -AckDeadline -1000 -ErrorAction Stop } |
+            { New-GcpsSubscription -Topic $topicName -Subscription $subscriptionName -AckDeadline 5 -ErrorAction Stop } |
+                Should Throw "Invalid ack deadline given"
+            { New-GcpsSubscription -Topic $topicName -Subscription $subscriptionName -AckDeadline 1000 -ErrorAction Stop } |
                 Should Throw "Invalid ack deadline given"
         }
         finally {
@@ -129,11 +131,8 @@ Describe "New-GcpsTopic" {
         try {
             New-GcpsTopic -Topic $topicName
             New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
-
-            $subscription = GetSubScription -subscription $subscriptionName -topic $topicName
-            $subscription | Should Not BeNullOrEmpty
-            $subscription.AckDeadlineSeconds | Should Be 10
-            $subscription.PushConfig.PushEndPoint | Should BeNullOrEmpty
+            { New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName -ErrorAction Stop } |
+                Should Throw "it already exists"
         }
         finally {
             gcloud beta pubsub topics delete $topicName --quiet 2>$null

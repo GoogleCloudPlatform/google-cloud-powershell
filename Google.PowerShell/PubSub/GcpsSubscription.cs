@@ -73,7 +73,7 @@ namespace Google.PowerShell.PubSub
 
         /// <summary>
         /// <para type="description">
-        /// The names of the subscription to be created. Subscription must not exist.
+        /// The name of the subscription to be created. Subscription must not exist.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0)]
@@ -83,7 +83,7 @@ namespace Google.PowerShell.PubSub
 
         /// <summary>
         /// <para type="description">
-        /// The names of the topic that the subscription belongs to.
+        /// The name of the topic that the subscription belongs to.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 1)]
