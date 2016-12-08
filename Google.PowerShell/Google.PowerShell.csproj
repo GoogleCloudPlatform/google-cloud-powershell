@@ -181,6 +181,7 @@
     <Compile Include="Logging\GcLogCmdlet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Provider\CacheItem.cs" />
+    <Compile Include="PubSub\GcpsSubscription.cs" />
     <Compile Include="PubSub\GcpsCmdlet.cs" />
     <Compile Include="PubSub\GcpsTopic.cs" />
     <Compile Include="Sql\GcSqlBackupRunCmdlets.cs" />
