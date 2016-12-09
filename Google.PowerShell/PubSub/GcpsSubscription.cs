@@ -293,7 +293,7 @@ namespace Google.PowerShell.PubSub
         }
 
         /// <summary>
-        /// Given a list of subscription names, returns the corresponding subscriptions.
+        /// Given a list of subscription names, writes the corresponding subscriptions.
         /// </summary>
         private void GetSubscriptions(IEnumerable<string> subscriptionNames)
         {
