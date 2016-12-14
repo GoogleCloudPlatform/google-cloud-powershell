@@ -14,7 +14,7 @@ namespace Google.PowerShell.Tests.Common
         /// Test that GetActiveConfig returns a valid config.
         /// </summary>
         [Test]
-        public void TestGetAccessToken()
+        public void TestGetActiveConfig()
         {
             string config = GCloudWrapper.GetActiveConfig().Result;
             Assert.IsNotNull(config);

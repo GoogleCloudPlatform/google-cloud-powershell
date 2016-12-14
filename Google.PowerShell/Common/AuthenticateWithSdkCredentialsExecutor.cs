@@ -94,18 +94,18 @@ namespace Google.PowerShell.Common
 
         public virtual async Task<string> GetAccessTokenForRequestAsync(string authUri = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            ActiveUserToken token = await ActiveUserConfig.GetActiveUserToken();
+            TokenResponse token = await ActiveUserConfig.GetActiveUserToken(cancellationToken);
             return token.AccessToken;
         }
 
         #endregion
 
         /// <summary>
-        /// Refreshes the token by calling to GCloudWrapper.GetAccessToken
+        /// Refreshes the token by calling to ActiveUserConfig.GetActiveUserToken
         /// </summary>
         public async Task<bool> RefreshTokenAsync(CancellationToken taskCancellationToken)
         {
-            ActiveUserToken userToken = await ActiveUserConfig.GetActiveUserToken(refreshToken: true);
+            TokenResponse userToken = await ActiveUserConfig.GetActiveUserToken(taskCancellationToken, refresh: true);
             if (userToken != null && userToken.AccessToken != null)
             {
                 return true;
@@ -121,7 +121,7 @@ namespace Google.PowerShell.Common
         /// <returns><c>true</c> if the token was revoked successfully.</returns>
         public async Task<bool> RevokeTokenAsync(CancellationToken taskCancellationToken)
         {
-            ActiveUserToken userToken = await ActiveUserConfig.GetActiveUserToken();
+            TokenResponse userToken = await ActiveUserConfig.GetActiveUserToken(taskCancellationToken);
 
             await flow.RevokeTokenAsync("userId", userToken.AccessToken, taskCancellationToken).ConfigureAwait(false);
             // We don't set the token to null, cause we want that the next request (without reauthorizing) will fail).

@@ -287,7 +287,7 @@ namespace Google.PowerShell.CloudStorage
         {
             if (CloudSdkSettings.GetOptIntoUsageReporting())
             {
-                string clientID = CloudSdkSettings.GetAnoymousClientID();
+                string clientID = CloudSdkSettings.GetAnonymousClientID();
                 return new GoogleAnalyticsCmdletReporter(clientID, AnalyticsEventCategory.ProviderInvocation);
             }
             else

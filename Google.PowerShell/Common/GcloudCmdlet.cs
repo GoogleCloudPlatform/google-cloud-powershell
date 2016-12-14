@@ -29,7 +29,7 @@ namespace Google.PowerShell.Common
         {
             if (CloudSdkSettings.GetOptIntoUsageReporting())
             {
-                string clientID = CloudSdkSettings.GetAnoymousClientID();
+                string clientID = CloudSdkSettings.GetAnonymousClientID();
                 _telemetryReporter = new GoogleAnalyticsCmdletReporter(clientID, AnalyticsEventCategory.CmdletInvocation);
             }
             else

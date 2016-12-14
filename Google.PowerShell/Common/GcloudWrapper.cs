@@ -29,9 +29,14 @@ namespace Google.PowerShell.Common
     /// </summary>
     public static class GCloudWrapper
     {
+        /// <summary>
+        /// Gets the current active gcloud config by calling config-helper.
+        /// Every call will also create a new access token in the string returned.
+        /// </summary>
+        /// <returns></returns>
         public static async Task<string> GetActiveConfig()
         {
-            return await GetGCloudCommandOutput("beta config config-helper --force-auth-refresh");
+            return await GetGCloudCommandOutput("config config-helper --force-auth-refresh");
         }
 
         /// <summary>

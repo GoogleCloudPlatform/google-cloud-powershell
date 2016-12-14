@@ -42,7 +42,7 @@ namespace Google.PowerShell.Tests.Common
             // Same with above. If the user opted into settings (and has ran
             // the Python bits at least once) the value will be stable.
             // Otherwise it will be different each time.
-            CloudSdkSettings.GetAnoymousClientID();
+            CloudSdkSettings.GetAnonymousClientID();
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
@@ -12,13 +11,8 @@ namespace Google.PowerShell.Common
     /// OAuth 2.0 model for a successful access token response as specified in 
     /// http://tools.ietf.org/html/rfc6749#section-5.1.
     /// </summary>
-    public class ActiveUserToken
+    public class TokenResponse
     {
-        /// <summary>
-        /// The user that this token corresponds to.
-        /// </summary>
-        public string User { get; private set; }
-
         /// <summary>The access token issued by the authorization server.</summary>
         public string AccessToken { get; private set; }
 
@@ -53,9 +47,8 @@ namespace Google.PowerShell.Common
         /// <summary>
         /// Construct a new token by parsing activeConfigJson and get the credential.
         /// </summary>
-        public ActiveUserToken(JToken userCredentialJson, string user)
+        public TokenResponse(JToken userCredentialJson)
         {
-            User = user;
             JToken accessTokenJson = userCredentialJson.SelectToken("access_token");
             JToken tokenExpiryJson = userCredentialJson.SelectToken("token_expiry");
 
@@ -73,16 +66,12 @@ namespace Google.PowerShell.Common
             }
             else
             {
-                // The expiry time will be in UTC.
-                DateTime parsedExpiredDate;
-                if (!DateTime.TryParse(tokenExpiryJson.Value<string>(), out parsedExpiredDate))
+                if (tokenExpiryJson.Type != JTokenType.Date)
                 {
                     throw new InvalidDataException("Credential JSON contains an invalid token_expiry.");
                 }
-
-                ExpiredTime = parsedExpiredDate.ToUniversalTime();
+                ExpiredTime = DateTime.SpecifyKind(tokenExpiryJson.Value<DateTime>(), DateTimeKind.Utc);
             }
         }
     }
 }
-

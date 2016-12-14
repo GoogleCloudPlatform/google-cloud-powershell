@@ -57,51 +57,11 @@ namespace Google.PowerShell.Common
 
         /// <summary>
         /// Returns the setting with the given name from the currently active gcloud configuration.
-        /// We first look into the user config file. If we cannot find anything, we look
-        /// into the global properties file.
         /// </summary>
         public static string GetSettingsValue(string settingName)
         {
             ActiveUserConfig userConfig = ActiveUserConfig.GetActiveUserConfig().Result;
-            return userConfig?.GetPropertiesValue(settingName);
-        }
-
-        /// <summary>
-        /// Retrieves the setting with the given name from a config file.
-        /// </summary>
-        private static string GetSettingsValueFromFile(string configFile, string settingName)
-        {
-            if (configFile == null)
-            {
-                return null;
-            }
-
-            string[] configLines = null;
-            try
-            {
-                if (!File.Exists(configFile))
-                {
-                    return null;
-                }
-                configLines = File.ReadAllLines(configFile);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine("Error reading Cloud SDK configuration file: {0}", ex.Message);
-                return null;
-            }
-
-            // Look through all key/value pairs for the specific setting.
-            string linePrefix = settingName + " = ";
-            foreach (string fileLine in configLines)
-            {
-                if (fileLine.StartsWith(linePrefix))
-                {
-                    return fileLine.Replace(linePrefix, "");
-                }
-            }
-
-            return null;
+            return userConfig?.GetPropertyValue(settingName);
         }
 
         /// <summary>Returns the default project for the Google Cloud SDK.</summary>
@@ -130,7 +90,6 @@ namespace Google.PowerShell.Common
             }
         }
 
-
         /// <summary>
         /// Client ID refers to the random UUID generated to group telemetry reporting.
         ///
@@ -138,7 +97,7 @@ namespace Google.PowerShell.Common
         /// the file isn't found. (Meaning we will generate new UUIDs until the Python
         /// code gets executed.)
         /// </summary>
-        public static string GetAnoymousClientID()
+        public static string GetAnonymousClientID()
         {
             string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
             if (appDataFolder == null || !Directory.Exists(appDataFolder))
