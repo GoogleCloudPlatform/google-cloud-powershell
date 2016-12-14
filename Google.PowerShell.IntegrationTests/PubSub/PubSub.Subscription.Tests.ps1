@@ -21,10 +21,10 @@ Describe "New-GcpsSubscription" {
             New-GcpsTopic -Topic $topicName
             New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
 
-            $subscription = GetSubScription -subscription $subscriptionName -topic $topicName
+            $subscription = GetSubScription -Subscription $subscriptionName -Topic $topicName
             $subscription | Should Not BeNullOrEmpty
             $subscription.AckDeadlineSeconds | Should Be 10
-            $subscription.PushConfig.PushEndPoint | Should BeNullOrEmpty
+            $subscription.PushConfig.PushEndpoint | Should BeNullOrEmpty
         }
         finally {
             gcloud beta pubsub topics delete $topicName --quiet 2>$null
@@ -41,10 +41,10 @@ Describe "New-GcpsSubscription" {
             New-GcpsTopic -Topic $topicName
             New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName -AckDeadline 20
 
-            $subscription = GetSubScription -subscription $subscriptionName -topic $topicName
+            $subscription = GetSubScription -Subscription $subscriptionName -Topic $topicName
             $subscription | Should Not BeNullOrEmpty
             $subscription.AckDeadlineSeconds | Should Be 20
-            $subscription.PushConfig.PushEndPoint | Should BeNullOrEmpty
+            $subscription.PushConfig.PushEndpoint | Should BeNullOrEmpty
         }
         finally {
             gcloud beta pubsub topics delete $topicName --quiet 2>$null
@@ -65,10 +65,10 @@ Describe "New-GcpsSubscription" {
                                  -Topic $topicName `
                                  -PushEndpoint $endpoint
 
-            $subscription = GetSubScription -subscription $subscriptionName -topic $topicName
+            $subscription = GetSubScription -Subscription $subscriptionName -Topic $topicName
             $subscription | Should Not BeNullOrEmpty
             $subscription.AckDeadlineSeconds | Should Be 10
-            $subscription.PushConfig.PushEndPoint | Should Be $endpoint
+            $subscription.PushConfig.PushEndpoint | Should Be $endpoint
         }
         finally {
             gcloud beta pubsub topics delete $topicName --quiet 2>$null
@@ -324,5 +324,145 @@ Describe "Get-GcpsSubscription" {
 
     It "should error out for bad subscription name" {
         { Get-GcpsSubscription -Subscription "!!" -ErrorAction Stop } | Should Throw "Invalid resource name"
+    }
+}
+
+Describe "Set-GcpsSubscriptionConfig" {
+    $endpoint = "https://gcloud-powershell-testing.appspot.com/_ah/push-handlers/"
+
+    It "should work with -PullConfig" {
+        $r = Get-Random
+        $topicName = "gcp-test-new-subscription-topic-$r"
+        $subscriptionName = "gcp-test-new-subscription-$r"
+
+        try {
+            New-GcpsTopic -Topic $topicName
+            New-GcpsSubscription -Subscription $subscriptionName `
+                                 -Topic $topicName `
+                                 -PushEndpoint $endpoint
+
+            Set-GcpsSubscriptionConfig -Subscription $subscriptionName -PullConfig
+
+            $subscription = Get-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+            $subscription.PushConfig.PushEndpoint | Should BeNullOrEmpty
+
+            # Checks that if we call the same cmdlet a second time, the result will not be changed
+            # and no error will be thrown.
+            Set-GcpsSubscriptionConfig -Subscription $subscriptionName -PullConfig
+
+            $subscription = Get-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+            $subscription.PushConfig.PushEndpoint | Should BeNullOrEmpty
+        }
+        finally {
+            gcloud beta pubsub topics delete $topicName --quiet 2>$null
+            gcloud beta pubsub subscriptions delete $subscriptionName --quiet 2>$null
+        }
+    }
+
+    It "should work with -PushEndpoint" {
+        $r = Get-Random
+        $topicName = "gcp-test-new-subscription-topic-$r"
+        $subscriptionName = "gcp-test-new-subscription-$r"
+
+        try {
+            New-GcpsTopic -Topic $topicName
+            New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+
+            Set-GcpsSubscriptionConfig -Subscription $subscriptionName -PushEndpoint $endpoint
+
+            $subscription = Get-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+            $subscription.PushConfig.PushEndpoint | Should Be $endpoint
+
+            # Checks that if we call the same cmdlet a second time, the result will not be changed
+            # and no error will be thrown.
+            Set-GcpsSubscriptionConfig -Subscription $subscriptionName -PushEndpoint $endpoint
+
+            $subscription = Get-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+            $subscription.PushConfig.PushEndpoint | Should Be $endpoint
+        }
+        finally {
+            gcloud beta pubsub topics delete $topicName --quiet 2>$null
+            gcloud beta pubsub subscriptions delete $subscriptionName --quiet 2>$null
+        }
+    }
+
+    It "should work with -InputObject" {
+        $r = Get-Random
+        $topicName = "gcp-test-new-subscription-topic-$r"
+        $subscriptionName = "gcp-test-new-subscription-$r"
+
+        try {
+            New-GcpsTopic -Topic $topicName
+            New-GcpsSubscription -Subscription $subscriptionName `
+                                 -Topic $topicName `
+                                 -PushEndpoint $endpoint
+
+            $subscription = Get-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+            Set-GcpsSubscriptionConfig -InputObject $subscription -PullConfig
+
+            $subscription = Get-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+            $subscription.PushConfig.PushEndpoint | Should BeNullOrEmpty
+        }
+        finally {
+            gcloud beta pubsub topics delete $topicName --quiet 2>$null
+            gcloud beta pubsub subscriptions delete $subscriptionName --quiet 2>$null
+        }
+    }
+
+    It "should work with pipelining" {
+        $r = Get-Random
+        $topicName = "gcp-test-new-subscription-topic-$r"
+        $subscriptionName = "gcp-test-new-subscription-$r"
+        $subscriptionName2 = "gcp-test-new-subscription2-$r"
+
+        try {
+            New-GcpsTopic -Topic $topicName
+            New-GcpsSubscription -Subscription $subscriptionName `
+                                 -Topic $topicName `
+                                 -PushEndpoint $endpoint
+            New-GcpsSubscription -Subscription $subscriptionName2 `
+                                 -Topic $topicName `
+                                 -PushEndpoint $endpoint
+            
+            # Set all subscriptions of topic $topicName to pull config.
+            Get-GcpsSubscription -Topic $topicName | Set-GcpsSubscriptionConfig -PullConfig
+
+            $subscriptions = Get-GcpsSubscription -Topic $topicName
+            $subscriptions | ForEach-Object { $_.PushConfig.PushEndpoint | Should BeNullOrEmpty }
+        }
+        finally {
+            gcloud beta pubsub topics delete $topicName --quiet 2>$null
+            gcloud beta pubsub subscriptions delete $subscriptionName --quiet 2>$null
+        }
+    }
+
+    It "should error out if subscription does not exist" {
+        $subscriptionName = "non-existent-gcps-subscription"
+        { Set-GcpsSubscriptionConfig -Subscription $subscriptionName -PullConfig -ErrorAction Stop } |
+            Should Throw "Subscription 'projects/$project/subscriptions/$subscriptionName' does not exist"
+    }
+
+    It "should error out for bad subscription name" {
+        { Set-GcpsSubscriptionConfig -Subscription "!!" -PullConfig -ErrorAction Stop } | Should Throw "Invalid resource name"
+    }
+
+    It "should error out for invalid endpoint" {
+        $r = Get-Random
+        $topicName = "gcp-test-new-subscription-topic-$r"
+        $subscriptionName = "gcp-test-new-subscription-$r"
+        $invalidEndpoint = "http://www.example.com"
+
+        try {
+            New-GcpsTopic -Topic $topicName
+            New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+            { Set-GcpsSubscriptionConfig -Subscription $subscriptionName `
+                                 -PushEndpoint $invalidEndpoint `
+                                 -ErrorAction Stop } |
+                                 Should Throw "Invalid push endpoint given"
+        }
+        finally {
+            gcloud beta pubsub topics delete $topicName --quiet 2>$null
+            gcloud beta pubsub subscriptions delete $subscriptionName --quiet 2>$null
+        }
     }
 }

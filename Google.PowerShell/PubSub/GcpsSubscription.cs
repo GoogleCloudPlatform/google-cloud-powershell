@@ -40,7 +40,6 @@ namespace Google.PowerShell.PubSub
     ///   PS C:\> New-GcpsTopic -Topic "my-topic" `
     ///                         -Subscription "my-subscription" `
     ///                         -PushEndpoint https://www.example.com/push `
-    ///                         -PushEndpointAttributes @{"x-goog-version" = "v1beta"}
     ///   </code>
     ///   <para>
     ///   This command creates a new subscription called "my-subscription" that subscribes to "my-topic"
@@ -312,6 +311,141 @@ namespace Google.PowerShell.PubSub
                         errorId: "SubscriptionNotFound",
                         targetObject: subscriptionName);
                 }
+            }
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Changes the config of a subscription.
+    /// </para>
+    /// <para type="description">
+    /// Changes the config of a subscription from push to pull and vice versa. The cmdlet can also be used to
+    /// change the endpoint of a push subscription. Will raise error if the subscription cannot be found.
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> Set-GcpsSubscriptionConfig -Subscription "my-subscription" -PullConfig</code>
+    ///   <para> This command sets the config of subscription "my-subscription" in the default project to pull config.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Set-GcpsSubscriptionConfig -InputObject $subscription -PullConfig</code>
+    ///   <para> This command sets the config of subscription $subscription to pull config.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Get-GcpsSubscription -Topic "my-topic" | Set-GcpsSubscriptionConfig -PullConfig</code>
+    ///   <para> This command sets the config of all subscriptions of topic "my-topic" to pull config by pipelining.</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Set-GcpsSubscriptionConfig -Subscription "my-subscription" -PushEndpoint https://www.example.com -Project "my-project"
+    ///   </code>
+    ///   <para>
+    ///   This command sets the config of subscription "my-subscription" in the project "my-project" to
+    ///   a push config with endpoint https://www.example.com.
+    ///   </para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/pubsub/docs/subscriber#overview-of-subscriptions)">
+    /// [Subscription]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/pubsub/docs/reference/rest/v1/projects.subscriptions#PushConfig)">
+    /// [Push Config]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Set, "GcpsSubscriptionConfig")]
+    public class SetGcpsSubscriptionConfig : GcpsCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string PushConfigByObject = "PushConfigByObject";
+            public const string PushConfigByName = "PushConfigByName";
+            public const string PullConfigByObject = "PullConfigByObject";
+            public const string PullConfigByName = "PullConfigByName";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// The project that the config's subscription belongs to. If not set via PowerShell parameter processing,
+        /// will default to the Cloud SDK's DefaultProject property.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the subscription that the config belongs to.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.PullConfigByName)]
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.PushConfigByName)]
+        [Alias("Name")]
+        [ValidateNotNullOrEmpty]
+        public string Subscription { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The subscription that the config belongs to.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.PushConfigByObject)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.PullConfigByObject)]
+        [ValidateNotNull]
+        public Subscription InputObject { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// A URL locating the endpoint to which messages should be pushed.
+        /// For example, a Webhook endpoint might use "https://example.com/push".
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.PushConfigByName)]
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.PushConfigByObject)]
+        [ValidateNotNullOrEmpty]
+        public string PushEndpoint { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// If set, the cmdlet will change config of the subscription to a pull config.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.PullConfigByName)]
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.PullConfigByObject)]
+        public SwitchParameter PullConfig { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            if (InputObject != null)
+            {
+                Subscription = InputObject.Name;
+            }
+            Subscription = GetProjectPrefixForSubscription(Subscription, Project);
+
+            ModifyPushConfigRequest requestBody = new ModifyPushConfigRequest();
+
+            if (!PullConfig.IsPresent)
+            {
+                PushConfig pushConfig = new PushConfig() { PushEndpoint = PushEndpoint };
+                requestBody.PushConfig = pushConfig;
+            }
+            else
+            {
+                // Setting this to null will change a push config to a pull config.
+                requestBody.PushConfig = null;
+            }
+
+            try
+            {
+                ProjectsResource.SubscriptionsResource.ModifyPushConfigRequest request =
+                    Service.Projects.Subscriptions.ModifyPushConfig(requestBody, Subscription);
+                request.Execute();
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+            {
+                WriteResourceMissingError(
+                    exceptionMessage: $"Subscription '{Subscription}' does not exist in project '{Project}'.",
+                    errorId: "SubscriptionNotFound",
+                    targetObject: Subscription);
             }
         }
     }
