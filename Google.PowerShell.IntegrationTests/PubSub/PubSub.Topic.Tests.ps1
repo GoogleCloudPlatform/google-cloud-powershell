@@ -131,5 +131,7 @@ Describe "Remove-GcpsTopic" {
         # Topic should not be removed.
         Remove-GcpsTopic -Topic $topicName -WhatIf
         Get-GcpsTopic -Topic $topicName | Should Not BeNullOrEmpty
+
+        Remove-GcpsTopic -Topic $topicName
     }
 }
