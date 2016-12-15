@@ -322,14 +322,12 @@ namespace Google.PowerShell.PubSub
     /// <para type="description">
     /// Changes the config of a subscription from push to pull and vice versa. The cmdlet can also be used to
     /// change the endpoint of a push subscription. Will raise error if the subscription cannot be found.
+    /// No errors will be raised if a subscription with a pull config is set to pull config again or if a subscription
+    /// with push config is set to the same endpoint.
     /// </para>
     /// <example>
     ///   <code>PS C:\> Set-GcpsSubscriptionConfig -Subscription "my-subscription" -PullConfig</code>
     ///   <para> This command sets the config of subscription "my-subscription" in the default project to pull config.</para>
-    /// </example>
-    /// <example>
-    ///   <code>PS C:\> Set-GcpsSubscriptionConfig -InputObject $subscription -PullConfig</code>
-    ///   <para> This command sets the config of subscription $subscription to pull config.</para>
     /// </example>
     /// <example>
     ///   <code>PS C:\> Get-GcpsSubscription -Topic "my-topic" | Set-GcpsSubscriptionConfig -PullConfig</code>
@@ -385,7 +383,8 @@ namespace Google.PowerShell.PubSub
 
         /// <summary>
         /// <para type="description">
-        /// The subscription that the config belongs to.
+        /// The subscription object that the config belongs to. This parameter is used exclusively from -Subscription.
+        /// This parameter should be used mostly for pipelining from Get-GcpsSubscription since Get-GcpsSubscription returns a Subscription object.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.PushConfigByObject)]

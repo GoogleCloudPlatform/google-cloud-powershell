@@ -328,6 +328,7 @@ Describe "Get-GcpsSubscription" {
 }
 
 Describe "Set-GcpsSubscriptionConfig" {
+    # The endpoint to be used for Push Config. We get this endpoint when we set up an app.
     $endpoint = "https://gcloud-powershell-testing.appspot.com/_ah/push-handlers/"
 
     It "should work with -PullConfig" {
@@ -433,6 +434,7 @@ Describe "Set-GcpsSubscriptionConfig" {
         finally {
             gcloud beta pubsub topics delete $topicName --quiet 2>$null
             gcloud beta pubsub subscriptions delete $subscriptionName --quiet 2>$null
+            gcloud beta pubsub subscriptions delete $subscriptionName2 --quiet 2>$null
         }
     }
 
