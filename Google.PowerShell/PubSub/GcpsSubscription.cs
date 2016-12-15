@@ -385,6 +385,7 @@ namespace Google.PowerShell.PubSub
         /// <para type="description">
         /// The subscription object that the config belongs to. This parameter is used exclusively from -Subscription.
         /// This parameter should be used mostly for pipelining from Get-GcpsSubscription since Get-GcpsSubscription returns a Subscription object.
+        /// Otherwise, user can also directly use it with an object of type Google.Apis.Pubsub.v1.Data.Subscription.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.PushConfigByObject)]
