@@ -17,7 +17,7 @@ namespace Google.PowerShell.Common
         /// <summary>
         /// The token that belongs to this config.
         /// </summary>
-        public TokenResponse UserToken { get; set; }
+        public TokenResponse UserToken { get; private set; }
 
         /// <summary>
         /// This file will be updated whenever there is a change to the active config.
@@ -34,7 +34,7 @@ namespace Google.PowerShell.Common
         /// <summary>
         /// The JSON that represents the properties of this config.
         /// </summary>
-        private JToken propertiesJson;
+        public JToken PropertiesJson { get; private set; }
 
         /// <summary>
         /// Cache of the current active user config.
@@ -105,7 +105,7 @@ namespace Google.PowerShell.Common
         /// <summary>
         /// Creates an active user config by parsing a JSON.
         /// </summary>
-        private ActiveUserConfig(string activeConfigJson)
+        internal ActiveUserConfig(string activeConfigJson)
         {
             JToken parsedConfigJson = JObject.Parse(activeConfigJson);
 
@@ -123,16 +123,17 @@ namespace Google.PowerShell.Common
             UserToken = new TokenResponse(parsedCredentialJson);
 
             // Parse the properties section to get properties of the current configuration.
-            propertiesJson = parsedConfigJson.SelectToken("configuration.properties");
+            PropertiesJson = parsedConfigJson.SelectToken("configuration.properties");
         }
 
         /// <summary>
         /// Returns a property of the configuration based on the given key.
         /// </summary>
-        public string GetPropertyValue(string key)
+        public async static Task<string> GetPropertyValue(string key)
         {
             string result = null;
-            if (TryGetPropertyValue(propertiesJson, key, ref result))
+            ActiveUserConfig activeConfig = await GetActiveUserConfig();
+            if (TryGetPropertyValue(activeConfig?.PropertiesJson, key, ref result))
             {
                 return result;
             }
@@ -144,8 +145,12 @@ namespace Google.PowerShell.Common
         /// If such a key is found, set the value to the ref variable value and returns true.
         /// Otherwise, returns false.
         /// </summary>
-        private bool TryGetPropertyValue(JToken propertiesJson, string key, ref string value)
+        internal static bool TryGetPropertyValue(JToken propertiesJson, string key, ref string value)
         {
+            if (propertiesJson == null)
+            {
+                return false;
+            }
             if (propertiesJson.Type == JTokenType.Array)
             {
                 foreach (JToken childToken in propertiesJson.Children())

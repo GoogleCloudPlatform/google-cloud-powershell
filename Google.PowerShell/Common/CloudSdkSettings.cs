@@ -60,8 +60,7 @@ namespace Google.PowerShell.Common
         /// </summary>
         public static string GetSettingsValue(string settingName)
         {
-            ActiveUserConfig userConfig = ActiveUserConfig.GetActiveUserConfig().Result;
-            return userConfig?.GetPropertyValue(settingName);
+            return ActiveUserConfig.GetPropertyValue(settingName).Result;
         }
 
         /// <summary>Returns the default project for the Google Cloud SDK.</summary>
