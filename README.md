@@ -6,11 +6,6 @@ This repository contains PowerShell cmdlets for interacting with the Google
 Cloud Platform. You can use Cloud Tools for PowerShell to manage your existing
 cloud resources or create new ones.
 
-:construction: Cloud Tools for PowerShell is currently in beta. We are quickly
-expanding coverage of the Google Cloud Platform to expose more resource types
-from PowerShell. However, this product might be changed in backward-incompatible
-ways and is not subject to any SLA or deprecation policy.
-
 # Installation
 
 Cloud Tools for PowerShell is included in the Windows version of the
