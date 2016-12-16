@@ -449,4 +449,77 @@ namespace Google.PowerShell.PubSub
             }
         }
     }
+
+    /// <summary>
+    /// Removes Google Cloud PubSub subscriptions.
+    /// <para type="description">
+    /// Removes one or more Gooogle Cloud PubSub subscriptions. Will raise errors if the subscriptions do not exist.
+    /// The cmdlet will delete the subscriptions in the default project if -Project is not used.
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> Remove-GcpsSubscription -Subscription "my-subscription"</code>
+    ///   <para>This command removes subscription "my-subscription" in the default project.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Remove-GcpsTopic -Subscription "subscription1", "subscription2" -Project "my-project"</code>
+    ///   <para>
+    ///   This command removes 2 topics ("subscription1" and "subscription1") in the project "my-project".
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Get-GcpsSubscription -Topic "my-topic" | Remove-GcpsSubscription</code>
+    ///   <para>
+    ///   This command removes all subscriptions to topic "my-topic" by pipelining from Get-GcpsSubscription.
+    ///   </para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/pubsub/docs/subscriber#delete)">
+    /// [Deleting a Subscription]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Remove, "GcpsSubscription", SupportsShouldProcess = true)]
+    public class RemoveGcpsSubscription : GcpsCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The project to check for subscriptions. If not set via PowerShell parameter processing, will
+        /// default to the Cloud SDK's DefaultProject property.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The names of the subscriptions to be removed. Subscriptions must exist.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, Position = 0, ValueFromPipelineByPropertyName = true)]
+        [ValidateNotNullOrEmpty]
+        [Alias("Name")]
+        public string[] Subscription { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            foreach (string subscriptionName in Subscription)
+            {
+                string formattedSubscription = GetProjectPrefixForSubscription(subscriptionName, Project);
+                try
+                {
+                    if (ShouldProcess(formattedSubscription, "Remove Subscription"))
+                    {
+                        ProjectsResource.SubscriptionsResource.DeleteRequest request = Service.Projects.Subscriptions.Delete(formattedSubscription);
+                        request.Execute();
+                    }
+                }
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+                {
+                    WriteResourceMissingError(
+                        exceptionMessage: $"Subscription '{subscriptionName}' does not exist in project '{Project}'.",
+                        errorId: "SubscriptionNotFound",
+                        targetObject: subscriptionName);
+                }
+            }
+        }
+    }
 }

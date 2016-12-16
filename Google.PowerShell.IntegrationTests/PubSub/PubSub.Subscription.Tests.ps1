@@ -468,3 +468,68 @@ Describe "Set-GcpsSubscriptionConfig" {
         }
     }
 }
+
+Describe "Remove-GcpsSubscription" {
+    It "should work" {
+        $r = Get-Random
+        $topic = "gcp-test-remove-subscription-topic-$r"
+        $subscription = "gcp-test-remove-subscription-$r"
+        $subscriptionTwo = "gcp-test-remove-subscription-two-$r"
+        $subscriptionThree = "gcp-test-remove-subscription-three-$r"
+
+        New-GcpsTopic -Topic $topic
+        New-GcpsSubscription -Topic $topic -Subscription $subscription
+        New-GcpsSubscription -Topic $topic -Subscription $subscriptionTwo
+        New-GcpsSubscription -Topic $topic -Subscription $subscriptionThree
+
+        (Get-GcpsSubscription -Subscription $subscription, $subscriptionTwo, $subscriptionThree).Count | Should Be 3
+
+        # Remove a single subscription.
+        Remove-GcpsSubscription -Subscription $subscription
+        { Get-GcpsSubscription -Subscription $subscription -ErrorAction Stop } | Should Throw "does not exist"
+
+        # Remove an array of topics.
+        Remove-GcpsSubscription -Subscription $subscriptionTwo, $subscriptionThree
+        { Get-GcpsSubscription -Subscription $subscriptionTwo, $subscriptionThree -ErrorAction Stop } | Should Throw "does not exist"
+    }
+
+    It "should work with pipeline" {
+        $r = Get-Random
+        $topic = "gcp-test-remove-subscription-topic-$r"
+        $subscription = "gcp-test-remove-subscription-$r"
+
+        New-GcpsTopic -Topic $topic
+        New-GcpsSubscription -Topic $topic -Subscription $subscription
+
+        Get-GcpsSubscription -Subscription $subscription | Should Not BeNullOrEmpty
+
+        # Remove through pipeline
+        Get-GcpsSubscription -Subscription $subscription | Remove-GcpsSubscription
+        { Get-GcpsSubscription -Subscription $subscription -ErrorAction Stop } | Should Throw "does not exist"
+    }
+
+    It "should throw error for non-existent subscription" {
+        { Remove-GcpsSubscription -Subscription "non-existent-topic-powershell-testing" -ErrorAction Stop } | Should Throw "does not exist"
+    }
+
+    It "should throw error for invalid subscription name" {
+        { Remove-GcpsSubscription -Subscription "!!" -ErrorAction Stop } | Should Throw "Invalid resource name"
+    }
+
+    It "should not remove subscription if -WhatIf is used" {
+        $r = Get-Random
+        $topic = "gcp-test-remove-subscription-topic-$r"
+        $subscription = "gcp-test-remove-subscription-$r"
+
+        New-GcpsTopic -Topic $topic
+        New-GcpsSubscription -Topic $topic -Subscription $subscription
+
+        Get-GcpsSubscription -Subscription $subscription | Should Not BeNullOrEmpty
+
+        # Subscription should not be removed.
+        Remove-GcpsSubscription -Subscription $subscription -WhatIf
+        Get-GcpsSubscription -Subscription $subscription | Should Not BeNullOrEmpty
+
+        Remove-GcpsSubscription -Subscription $subscription
+    }
+}
