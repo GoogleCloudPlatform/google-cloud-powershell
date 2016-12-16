@@ -75,6 +75,9 @@ namespace Google.PowerShell.Tests.Common
             success = userConfig.PropertiesJson.TryGetPropertyValue("project", ref result);
             Assert.IsTrue(success, "Failed to get property region from config JSON.");
             Assert.AreEqual(project, result, "TryGetPropertyValue returns wrong project property from config JSON.");
+
+            success = userConfig.PropertiesJson.TryGetPropertyValue("non-existent-property", ref result);
+            Assert.IsFalse(success, "TryGetPropertyValue should fail for non-existing value.");
         }
 
         /// <summary>
@@ -91,13 +94,31 @@ namespace Google.PowerShell.Tests.Common
             Assert.IsNotNull(userConfig.UserToken, "Config returned should have a user token.");
             Assert.IsFalse(userConfig.UserToken.IsExpired, "Config returned should have an unexpired user token.");
             Assert.IsNotNullOrEmpty(userConfig.UserToken.AccessToken, "Config returned should have an access token.");
+        }
 
-            // Test that the result is cached.
+        /// <summary>
+        /// Tests that GetActiveUserConfig caches the result.
+        /// </summary>
+        [Test]
+        public void TestGetActiveUserConfigCache()
+        {
+            ActiveUserConfig userConfig = ActiveUserConfig.GetActiveUserConfig().Result;
             ActiveUserConfig userConfig2 = ActiveUserConfig.GetActiveUserConfig().Result;
             Assert.AreEqual(userConfig, userConfig2, "GetActiveUserConfig should cache the result.");
 
             // Test that refresh will refresh the cache.
             userConfig2 = ActiveUserConfig.GetActiveUserConfig(refreshConfig: true).Result;
+            Assert.AreNotEqual(userConfig, userConfig2, "GetActiveUserConfig should not cache the result if refreshConfig is true.");
+        }
+
+        /// <summary>
+        /// Tests that GetActiveUserConfig refresh the cache if refreshConfig is set to true.
+        /// </summary>
+        [Test]
+        public void TestGetActiveUserConfigRefresh()
+        {
+            ActiveUserConfig userConfig = ActiveUserConfig.GetActiveUserConfig().Result;
+            ActiveUserConfig userConfig2 = ActiveUserConfig.GetActiveUserConfig(refreshConfig: true).Result;
             Assert.AreNotEqual(userConfig, userConfig2, "GetActiveUserConfig should not cache the result if refreshConfig is true.");
         }
 
@@ -113,13 +134,29 @@ namespace Google.PowerShell.Tests.Common
             Assert.IsNotNull(activeToken, "GetActiveUserToken should return a user token.");
             Assert.IsFalse(activeToken.IsExpired, "GetActiveUserToken should not return an expired token.");
             Assert.IsNotNullOrEmpty(activeToken.AccessToken, "GetActiveUserToken should return a token with access token.");
+        }
 
-            // Test that the result is cached.
+        /// <summary>
+        /// Tests that GetActiveUserToken caches the result.
+        /// </summary>
+        [Test]
+        public void TestGetActiveUserTokenCache()
+        {
+            CancellationToken cancellationToken = new CancellationToken();
+            TokenResponse activeToken = ActiveUserConfig.GetActiveUserToken(cancellationToken).Result;
             TokenResponse activeToken2 = ActiveUserConfig.GetActiveUserToken(cancellationToken).Result;
             Assert.AreEqual(activeToken, activeToken2, "GetActiveUserToken should cache the result.");
+        }
 
-            // Test that refresh will refresh the cache.
-            activeToken2 = ActiveUserConfig.GetActiveUserToken(cancellationToken, refresh: true).Result;
+        /// <summary>
+        /// Tests that GetActiveUserToken refreshes the result.
+        /// </summary>
+        [Test]
+        public void TestGetActiveUserTokenRefresh()
+        {
+            CancellationToken cancellationToken = new CancellationToken();
+            TokenResponse activeToken = ActiveUserConfig.GetActiveUserToken(cancellationToken).Result;
+            TokenResponse activeToken2 = ActiveUserConfig.GetActiveUserToken(cancellationToken, refresh: true).Result;
             Assert.AreNotEqual(
                 activeToken.AccessToken,
                 activeToken2.AccessToken,

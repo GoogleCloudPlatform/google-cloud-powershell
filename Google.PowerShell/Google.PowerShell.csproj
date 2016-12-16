@@ -138,6 +138,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\ActiveUserConfig.cs" />
+    <Compile Include="Common\JsonExtensions.cs" />
     <Compile Include="Common\TokenResponse.cs" />
     <Compile Include="Common\AuthenticateWithSdkCredentialsExecutor.cs" />
     <Compile Include="Common\AnalyticsReporter.cs" />

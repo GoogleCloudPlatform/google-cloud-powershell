@@ -6,7 +6,7 @@ namespace Google.PowerShell.Common
     /// <summary>
     /// Static class that contains extension static to manipulate JToken.
     /// </summary>
-    public static class JsonUtils
+    public static class JsonExtensions
     {
         /// <summary>
         /// Search the JToken and its children recursively for a key that matches the given key.
@@ -19,11 +19,12 @@ namespace Google.PowerShell.Common
             {
                 return false;
             }
+
             if (propertiesJson.Type == JTokenType.Array)
             {
                 foreach (JToken childToken in propertiesJson.Children())
                 {
-                    if (TryGetPropertyValue(childToken, key, ref value))
+                    if (childToken.TryGetPropertyValue(key, ref value))
                     {
                         return true;
                     }
@@ -41,7 +42,7 @@ namespace Google.PowerShell.Common
                         value = childProperty.Value?.Value<string>();
                         return true;
                     }
-                    if (TryGetPropertyValue(childProperty.Value, key, ref value))
+                    if (childProperty.Value.TryGetPropertyValue(key, ref value))
                     {
                         return true;
                     }
