@@ -11,6 +11,9 @@ namespace Google.PowerShell.Common
 {
     /// <summary>
     /// Class that represents the current active gcloud config.
+    /// The active gcloud config is the config that is listed when running "gcloud config list".
+    /// This active config can be changed if the user run commands like "gcloud config set account"
+    /// or if certain CLOUDSDK_* environment variables are changed.
     /// </summary>
     public class ActiveUserConfig
     {
@@ -108,22 +111,34 @@ namespace Google.PowerShell.Common
         internal ActiveUserConfig(string activeConfigJson)
         {
             JToken parsedConfigJson = JObject.Parse(activeConfigJson);
+            if (parsedConfigJson == null)
+            {
+                throw new ArgumentException($"Unable to parse active config '{activeConfigJson}'.");
+            }
 
             // Parse the sentinels section to get the sentinel file.
             JToken sentinelJson = parsedConfigJson.SelectToken("sentinels.config_sentinel");
             if (sentinelJson == null)
             {
-                throw new FileNotFoundException("Sentinel file for current active configuration could not be found.");
+                throw new InvalidDataException("Config JSON does not contain a sentinel file.");
             }
             SentinelFile = sentinelJson.Value<string>();
             CachedFingerPrint = GetCurrentConfigurationFingerPrint();
 
             // Parse the credential section to get the access token.
             JToken parsedCredentialJson = parsedConfigJson.SelectToken("credential");
+            if (parsedCredentialJson == null)
+            {
+                throw new InvalidDataException("Config JSON does not contain the current credential.");
+            }
             UserToken = new TokenResponse(parsedCredentialJson);
 
             // Parse the properties section to get properties of the current configuration.
             PropertiesJson = parsedConfigJson.SelectToken("configuration.properties");
+            if (PropertiesJson == null)
+            {
+                throw new InvalidDataException("Config JSON does not contain the current properties.");
+            }
         }
 
         /// <summary>
@@ -133,53 +148,11 @@ namespace Google.PowerShell.Common
         {
             string result = null;
             ActiveUserConfig activeConfig = await GetActiveUserConfig();
-            if (TryGetPropertyValue(activeConfig?.PropertiesJson, key, ref result))
+            if (activeConfig != null && activeConfig.PropertiesJson.TryGetPropertyValue(key, ref result))
             {
                 return result;
             }
             return result;
-        }
-
-        /// <summary>
-        /// Search the JToken and its children recursively for a key that matches the given key.
-        /// If such a key is found, set the value to the ref variable value and returns true.
-        /// Otherwise, returns false.
-        /// </summary>
-        internal static bool TryGetPropertyValue(JToken propertiesJson, string key, ref string value)
-        {
-            if (propertiesJson == null)
-            {
-                return false;
-            }
-            if (propertiesJson.Type == JTokenType.Array)
-            {
-                foreach (JToken childToken in propertiesJson.Children())
-                {
-                    if (TryGetPropertyValue(childToken, key, ref value))
-                    {
-                        return true;
-                    }
-                }
-            }
-            else if (propertiesJson.Type == JTokenType.Object)
-            {
-                // We iterate through each child token of type JProperty, if the child token has
-                // the same name as key, then we are done. Otherwise, recursively call this method
-                // with the child token to continue the search.
-                foreach (JProperty childProperty in propertiesJson.Children<JProperty>())
-                {
-                    if (string.Equals(childProperty.Name, key, StringComparison.OrdinalIgnoreCase))
-                    {
-                        value = childProperty.Value?.Value<string>();
-                        return true;
-                    }
-                    if (TryGetPropertyValue(childProperty.Value, key, ref value))
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
         }
 
         /// <summary>

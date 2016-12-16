@@ -62,16 +62,19 @@ namespace Google.PowerShell.Tests.Common
             string result = null;
 
             string region = "us-central1";
-            ActiveUserConfig.TryGetPropertyValue(userConfig.PropertiesJson, "region", ref result);
-            Assert.AreEqual(region, result, "Failed to get property region from config JSON.");
+            bool success = userConfig.PropertiesJson.TryGetPropertyValue("region", ref result);
+            Assert.IsTrue(success, "Failed to get property region from config JSON.");
+            Assert.AreEqual(region, result, "TryGetPropertyValue returns wrong region property from config JSON.");
 
             string zone = "us-central1-f";
-            ActiveUserConfig.TryGetPropertyValue(userConfig.PropertiesJson, "zone", ref result);
-            Assert.AreEqual(zone, result, "Failed to get property zone from config JSON.");
+            success = userConfig.PropertiesJson.TryGetPropertyValue("zone", ref result);
+            Assert.IsTrue(success, "Failed to get property region from config JSON.");
+            Assert.AreEqual(zone, result, "TryGetPropertyValue returns wrong zone property from config JSON.");
 
             string project = "gcloud-powershell-testing";
-            ActiveUserConfig.TryGetPropertyValue(userConfig.PropertiesJson, "project", ref result);
-            Assert.AreEqual(project, result, "Failed to get property project from config JSON.");
+            success = userConfig.PropertiesJson.TryGetPropertyValue("project", ref result);
+            Assert.IsTrue(success, "Failed to get property region from config JSON.");
+            Assert.AreEqual(project, result, "TryGetPropertyValue returns wrong project property from config JSON.");
         }
 
         /// <summary>
