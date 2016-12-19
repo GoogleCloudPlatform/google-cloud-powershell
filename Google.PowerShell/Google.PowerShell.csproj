@@ -137,7 +137,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Common\ActiveUserToken.cs" />
+    <Compile Include="Common\ActiveUserConfig.cs" />
+    <Compile Include="Common\JsonExtensions.cs" />
+    <Compile Include="Common\TokenResponse.cs" />
     <Compile Include="Common\AuthenticateWithSdkCredentialsExecutor.cs" />
     <Compile Include="Common\AnalyticsReporter.cs" />
     <Compile Include="Common\CloudSdkSettings.cs" />

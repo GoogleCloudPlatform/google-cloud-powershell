@@ -30,37 +30,13 @@ namespace Google.PowerShell.Common
     public static class GCloudWrapper
     {
         /// <summary>
-        /// Returns the global installation properties path of GoogleCloud SDK.
+        /// Gets the current active gcloud config by calling config-helper.
+        /// Every call will also create a new access token in the string returned.
         /// </summary>
-        public static async Task<string> GetInstallationPropertiesPath()
+        /// <returns></returns>
+        public static async Task<string> GetActiveConfig()
         {
-            string gCloudInfoOutput = await GetGCloudCommandOutput("info");
-            JToken gCloudInfoJson = JObject.Parse(gCloudInfoOutput);
-
-            // SelectToken will return null if token cannot be found.
-            gCloudInfoJson = gCloudInfoJson.SelectToken("config.paths.installation_properties_path");
-
-            if (gCloudInfoJson != null && gCloudInfoJson.Type == JTokenType.String)
-            {
-                return gCloudInfoJson.Value<string>();
-            }
-
-            throw new FileNotFoundException("Installation Properties file for Google Cloud SDK cannot be found.");
-        }
-
-        /// <summary>
-        /// Returns the access token of the current active config.
-        /// </summary>
-        public static async Task<ActiveUserToken> GetAccessToken(CancellationToken cancellationToken)
-        {
-            // We get the issued time before the command so we won't be too late
-            // when it comes to token expiry.
-            DateTime issuedTime = DateTime.Now;
-
-            string userCredentialJson = await GetGCloudCommandOutput("auth print-access-token");
-            cancellationToken.ThrowIfCancellationRequested();
-            string currentUser = CloudSdkSettings.GetSettingsValue("account");
-            return new ActiveUserToken(userCredentialJson, currentUser);
+            return await GetGCloudCommandOutput("config config-helper --force-auth-refresh");
         }
 
         /// <summary>

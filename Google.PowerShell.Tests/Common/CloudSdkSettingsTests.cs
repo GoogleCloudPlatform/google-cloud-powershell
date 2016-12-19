@@ -24,18 +24,6 @@ namespace Google.PowerShell.Tests.Common
     internal class CloudSdkSettingsTests
     {
         [Test]
-        public void TestGetConfigurationFilePath()
-        {
-            string currentConfigName = CloudSdkSettings.GetCurrentConfigurationName();
-            // If this fails it is most likely because gcloud is not installed on the machine.
-            Assert.IsNotNull(currentConfigName);
-
-            string configFilePath = CloudSdkSettings.GetCurrentConfigurationFilePath();
-            Assert.IsNotNull(configFilePath);
-            Assert.IsTrue(File.Exists(configFilePath));
-        }
-
-        [Test]
         public void TestGetDefaultProject()
         {
             // This test requires the default project has actually been set. Run `gcloud init`
@@ -54,7 +42,7 @@ namespace Google.PowerShell.Tests.Common
             // Same with above. If the user opted into settings (and has ran
             // the Python bits at least once) the value will be stable.
             // Otherwise it will be different each time.
-            CloudSdkSettings.GetAnoymousClientID();
+            CloudSdkSettings.GetAnonymousClientID();
         }
     }
 }

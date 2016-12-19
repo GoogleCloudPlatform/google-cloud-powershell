@@ -1,9 +1,13 @@
 ﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
+using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace Google.PowerShell.Common
 {
@@ -47,162 +51,16 @@ namespace Google.PowerShell.Common
 
         /// <summary>Name of the file containing the anonymous client ID.</summary>
         private const string ClientIDFileName = ".metricsUUID";
-
-        /// <summary>
-        /// Backing field for the InstallationPropertiesPath property.
-        /// </summary>
-        private static string s_installationPropertiesPath;
-
+        
         // Prevent instantiation. Should just be a static utility class.
         private CloudSdkSettings() { }
 
         /// <summary>
-        /// Returns path to the properties file where GoogleCloud SDK is installed.
-        /// </summary>
-        public static string InstallationPropertiesPath
-        {
-            get
-            {
-                if (string.IsNullOrWhiteSpace(s_installationPropertiesPath))
-                {
-                    s_installationPropertiesPath = GCloudWrapper.GetInstallationPropertiesPath().Result;
-                }
-                return s_installationPropertiesPath;
-            }
-        }
-
-        /// <summary>
-        /// Returns the name of the current configuration. See `gcloud config configurations` for more information.
-        /// Returns null on any sort of error. For example, before gcloud runs for the first time no configuration
-        /// file is set.
-        /// If CLOUDSDK_ACTIVE_CONFIG_NAME is set, we will use that as the active config.
-        /// If not, we look into the active_config file to determine the active config.
-        /// </summary>
-        public static string GetCurrentConfigurationName()
-        {
-            string activeConfigName = Environment.GetEnvironmentVariable(CloudSdkActiveConfigNameVariable);
-
-            if (!string.IsNullOrWhiteSpace(activeConfigName))
-            {
-                return activeConfigName;
-            }
-
-            string cloudConfigDir = GetCurrentConfigurationDirectory();
-
-            string activeconfigFilePath = Path.Combine(
-                cloudConfigDir,
-                ActiveConfigFileName);
-            try
-            {
-                return File.ReadAllText(activeconfigFilePath);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(String.Format("Error reading Cloud SDK active configuration file: {0}", ex.Message));
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Returns the current config directory.
-        /// If CLOUDSDK_CONFIG environment variable is set, we will use that as the config directory.
-        /// If not, we will use the config directory from AppData.
-        /// </summary>
-        public static string GetCurrentConfigurationDirectory()
-        {
-            string cloudConfigPath = Environment.GetEnvironmentVariable(CloudSdkConfigVariable);
-            if (!string.IsNullOrWhiteSpace(cloudConfigPath))
-            {
-                return cloudConfigPath;
-            }
-
-            cloudConfigPath = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
-            if (!string.IsNullOrWhiteSpace(cloudConfigPath))
-            {
-                cloudConfigPath = Path.Combine(cloudConfigPath, CloudSDKConfigDirectoryWindows);
-            }
-
-            return cloudConfigPath;
-        }
-
-        /// <summary> 
-        /// Returns the file path to the current Cloud SDK configuration set's property file. Returns null on any
-        /// sort of error.
-        /// </summary>
-        public static string GetCurrentConfigurationFilePath()
-        {
-            string cloudConfigDir = GetCurrentConfigurationDirectory();
-            if (cloudConfigDir == null || !Directory.Exists(cloudConfigDir))
-            {
-                return null;
-            }
-
-            string defaultConfigFile = Path.Combine(
-                cloudConfigDir,
-                ConfigurationsFolderName,
-                String.Format("config_{0}", GetCurrentConfigurationName()));
-
-            if (!File.Exists(defaultConfigFile))
-            {
-                return null;
-            }
-            return defaultConfigFile;
-        }
-
-        /// <summary>
         /// Returns the setting with the given name from the currently active gcloud configuration.
-        /// We first look into the user config file. If we cannot find anything, we look
-        /// into the global properties file.
         /// </summary>
         public static string GetSettingsValue(string settingName)
         {
-            string userConfigFile = GetCurrentConfigurationFilePath();
-            string userConfigSetting = GetSettingsValueFromFile(userConfigFile, settingName);
-
-            if (string.IsNullOrWhiteSpace(userConfigSetting))
-            {
-                userConfigSetting = GetSettingsValueFromFile(InstallationPropertiesPath, settingName);
-            }
-
-            return userConfigSetting;
-        }
-
-        /// <summary>
-        /// Retrieves the setting with the given name from a config file.
-        /// </summary>
-        private static string GetSettingsValueFromFile(string configFile, string settingName)
-        {
-            if (configFile == null)
-            {
-                return null;
-            }
-
-            string[] configLines = null;
-            try
-            {
-                if (!File.Exists(configFile))
-                {
-                    return null;
-                }
-                configLines = File.ReadAllLines(configFile);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine("Error reading Cloud SDK configuration file: {0}", ex.Message);
-                return null;
-            }
-
-            // Look through all key/value pairs for the specific setting.
-            string linePrefix = settingName + " = ";
-            foreach (string fileLine in configLines)
-            {
-                if (fileLine.StartsWith(linePrefix))
-                {
-                    return fileLine.Replace(linePrefix, "");
-                }
-            }
-
-            return null;
+            return ActiveUserConfig.GetPropertyValue(settingName).Result;
         }
 
         /// <summary>Returns the default project for the Google Cloud SDK.</summary>
@@ -231,7 +89,6 @@ namespace Google.PowerShell.Common
             }
         }
 
-
         /// <summary>
         /// Client ID refers to the random UUID generated to group telemetry reporting.
         ///
@@ -239,7 +96,7 @@ namespace Google.PowerShell.Common
         /// the file isn't found. (Meaning we will generate new UUIDs until the Python
         /// code gets executed.)
         /// </summary>
-        public static string GetAnoymousClientID()
+        public static string GetAnonymousClientID()
         {
             string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
             if (appDataFolder == null || !Directory.Exists(appDataFolder))

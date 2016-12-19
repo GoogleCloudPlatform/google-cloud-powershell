@@ -1,7 +1,6 @@
 ﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
@@ -12,13 +11,8 @@ namespace Google.PowerShell.Common
     /// OAuth 2.0 model for a successful access token response as specified in 
     /// http://tools.ietf.org/html/rfc6749#section-5.1.
     /// </summary>
-    public class ActiveUserToken
+    public class TokenResponse
     {
-        /// <summary>
-        /// The user that this token corresponds to.
-        /// </summary>
-        public string User { get; private set; }
-
         /// <summary>The access token issued by the authorization server.</summary>
         public string AccessToken { get; private set; }
 
@@ -51,13 +45,12 @@ namespace Google.PowerShell.Common
         }
 
         /// <summary>
-        /// Construct a new token by parsing userCredentialJson.
+        /// Construct a new token by parsing activeConfigJson and get the credential.
         /// </summary>
-        public ActiveUserToken(string userCredentialJson, string user)
+        public TokenResponse(JToken userCredentialJson)
         {
-            User = user;
-            JToken parsedCredentialJson = JObject.Parse(userCredentialJson);
-            JToken accessTokenJson = parsedCredentialJson.SelectToken("access_token");
+            JToken accessTokenJson = userCredentialJson.SelectToken("access_token");
+            JToken tokenExpiryJson = userCredentialJson.SelectToken("token_expiry");
 
             if (accessTokenJson == null || accessTokenJson.Type != JTokenType.String)
             {
@@ -66,8 +59,6 @@ namespace Google.PowerShell.Common
 
             AccessToken = accessTokenJson.Value<string>();
 
-            JToken tokenExpiryJson = parsedCredentialJson.SelectToken("token_expiry");
-
             // Service account credentials do not expire.
             if (tokenExpiryJson == null || tokenExpiryJson.Type == JTokenType.Null)
             {
@@ -75,45 +66,12 @@ namespace Google.PowerShell.Common
             }
             else
             {
-                TokenExpiry tokenExpiry = tokenExpiryJson.ToObject<TokenExpiry>();
-
-                if (tokenExpiry == null)
+                if (tokenExpiryJson.Type != JTokenType.Date)
                 {
                     throw new InvalidDataException("Credential JSON contains an invalid token_expiry.");
                 }
-
-                ExpiredTime = new DateTime(
-                    tokenExpiry.Year,
-                    tokenExpiry.Month,
-                    tokenExpiry.Day,
-                    tokenExpiry.Hour,
-                    tokenExpiry.Minute,
-                    tokenExpiry.Second,
-                    tokenExpiry.MicroSecond / 1000,
-                    DateTimeKind.Utc);
+                ExpiredTime = DateTime.SpecifyKind(tokenExpiryJson.Value<DateTime>(), DateTimeKind.Utc);
             }
-        }
-
-        /// <summary>
-        /// Represents a token expiry object returned from gcloud auth print-access-token.
-        /// </summary>
-        private class TokenExpiry
-        {
-            [JsonProperty("microsecond")]
-            internal int MicroSecond { get; set; }
-            [JsonProperty("second")]
-            internal int Second { get; set; }
-            [JsonProperty("minute")]
-            internal int Minute { get; set; }
-            [JsonProperty("hour")]
-            internal int Hour { get; set; }
-            [JsonProperty("day")]
-            internal int Day { get; set; }
-            [JsonProperty("month")]
-            internal int Month { get; set; }
-            [JsonProperty("year")]
-            internal int Year { get; set; }
         }
     }
 }
-
