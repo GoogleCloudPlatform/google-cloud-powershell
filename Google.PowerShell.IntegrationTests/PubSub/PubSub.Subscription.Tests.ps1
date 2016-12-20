@@ -507,11 +507,11 @@ Describe "Remove-GcpsSubscription" {
         New-GcpsSubscription -Topic $topic -Subscription $subscription
 
         try {
-        Get-GcpsSubscription -Subscription $subscription | Should Not BeNullOrEmpty
+            Get-GcpsSubscription -Subscription $subscription | Should Not BeNullOrEmpty
 
-        # Remove through pipeline
-        Get-GcpsSubscription -Subscription $subscription | Remove-GcpsSubscription
-        { Get-GcpsSubscription -Subscription $subscription -ErrorAction Stop } | Should Throw "does not exist"
+            # Remove through pipeline
+            Get-GcpsSubscription -Subscription $subscription | Remove-GcpsSubscription
+            { Get-GcpsSubscription -Subscription $subscription -ErrorAction Stop } | Should Throw "does not exist"
         }
         finally {
             gcloud beta pubsub topics delete $topic --quiet 2>$null
