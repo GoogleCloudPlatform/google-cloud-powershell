@@ -176,7 +176,10 @@ namespace Google.PowerShell.PubSub
             // Encode data in each message to base64.
             foreach (PubsubMessage psMessage in Message)
             {
-                psMessage.Data = Convert.ToBase64String(Encoding.UTF8.GetBytes(psMessage.Data));
+                if (!string.IsNullOrWhiteSpace(psMessage.Data))
+                {
+                    psMessage.Data = Convert.ToBase64String(Encoding.UTF8.GetBytes(psMessage.Data));
+                }
             }
 
             PublishRequest requestBody = new PublishRequest() { Messages = Message };
@@ -198,8 +201,11 @@ namespace Google.PowerShell.PubSub
                 {
                     PubsubMessage publishedMessage = requestBody.Messages[index];
                     publishedMessage.MessageId = returnedMessageIds[0];
-                    byte[] decodedMessageDataBytes = Convert.FromBase64String(publishedMessage.Data);
-                    publishedMessage.Data = Encoding.UTF8.GetString(decodedMessageDataBytes);
+                    if (!string.IsNullOrWhiteSpace(publishedMessage.Data))
+                    {
+                        byte[] decodedMessageDataBytes = Convert.FromBase64String(publishedMessage.Data);
+                        publishedMessage.Data = Encoding.UTF8.GetString(decodedMessageDataBytes);
+                    }
                     WriteObject(publishedMessage);
                     index += 1;
                 }
