@@ -167,4 +167,50 @@ Describe "Publish-GcpsMessage" {
             Remove-GcpsSubscription $subscriptionName
         }
     }
+
+    It "should work with multiple subscriptions" {
+        $r = Get-Random
+        $topicName = "gcp-test-publish-gcps-message-topic-$r"
+        $subscriptionName = "gcp-test-publish-gcps-message-subscription-$r"
+        $subscriptionNameTwo = "gcp-test-publish-gcps-message-subscription2-$r"
+        $testData = "Test Data"
+        $attributes = @{"Key" = "Value"; "Key2" = "Value2"}
+
+        try {
+            New-GcpsTopic -Topic $topicName
+            New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+            New-GcpsSubscription -Subscription $subscriptionNameTwo -Topic $topicName
+
+            $publishedMessage = Publish-GcpsMessage -Data $testData -Attributes $attributes -Topic $topicName
+            $publishedMessage.MessageId | Should Not BeNullOrEmpty
+
+            $subscriptionMessage = Get-SubscriptionMessage -Subscription $subscriptionName
+
+            $subscriptionMessage.Message.MessageId | Should BeExactly $publishedMessage.MessageId
+            (ConvertFrom-Base64String $subscriptionMessage.Message.Data) | Should BeExactly $testData
+            $subscriptionMessage.Message.Attributes.Key | Should BeExactly "Value"
+            $subscriptionMessage.Message.Attributes.Key2 | Should BeExactly "Value2"
+
+            $subscriptionMessage = Get-SubscriptionMessage -Subscription $subscriptionNameTwo
+
+            $subscriptionMessage.Message.MessageId | Should BeExactly $publishedMessage.MessageId
+            (ConvertFrom-Base64String $subscriptionMessage.Message.Data) | Should BeExactly $testData
+            $subscriptionMessage.Message.Attributes.Key | Should BeExactly "Value"
+            $subscriptionMessage.Message.Attributes.Key2 | Should BeExactly "Value2"
+        }
+        finally {
+            Remove-GcpsTopic $topicName
+            Remove-GcpsSubscription $subscriptionName
+            Remove-GcpsSubscription $subscriptionNameTwo
+        }
+    }
+
+    It "should error out for non-existent topic" {
+        $topicName = "gcloud-powershell-non-existent-topic"
+        { Publish-GcpsMessage -Data "Test Data" -Topic $topicName -ErrorAction Stop } | Should Throw "does not exist"
+    }
+
+    It "should error out for invalid topic name" {
+        { Publish-GcpsMessage -Data "Test Data" -Topic "!!" -ErrorAction Stop } | Should Throw "Invalid resource name given"
+    }
 }
