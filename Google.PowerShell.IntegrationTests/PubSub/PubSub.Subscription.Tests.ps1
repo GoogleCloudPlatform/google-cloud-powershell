@@ -482,15 +482,20 @@ Describe "Remove-GcpsSubscription" {
         New-GcpsSubscription -Topic $topic -Subscription $subscriptionTwo
         New-GcpsSubscription -Topic $topic -Subscription $subscriptionThree
 
-        (Get-GcpsSubscription -Subscription $subscription, $subscriptionTwo, $subscriptionThree).Count | Should Be 3
+        try {
+            (Get-GcpsSubscription -Subscription $subscription, $subscriptionTwo, $subscriptionThree).Count | Should Be 3
 
-        # Remove a single subscription.
-        Remove-GcpsSubscription -Subscription $subscription
-        { Get-GcpsSubscription -Subscription $subscription -ErrorAction Stop } | Should Throw "does not exist"
+            # Remove a single subscription.
+            Remove-GcpsSubscription -Subscription $subscription
+            { Get-GcpsSubscription -Subscription $subscription -ErrorAction Stop } | Should Throw "does not exist"
 
-        # Remove an array of topics.
-        Remove-GcpsSubscription -Subscription $subscriptionTwo, $subscriptionThree
-        { Get-GcpsSubscription -Subscription $subscriptionTwo, $subscriptionThree -ErrorAction Stop } | Should Throw "does not exist"
+            # Remove an array of subscriptions.
+            Remove-GcpsSubscription -Subscription $subscriptionTwo, $subscriptionThree
+            { Get-GcpsSubscription -Subscription $subscriptionTwo, $subscriptionThree -ErrorAction Stop } | Should Throw "does not exist"
+        }
+        finally {
+            gcloud beta pubsub topics delete $topic --quiet 2>$null
+        }
     }
 
     It "should work with pipeline" {
@@ -501,11 +506,16 @@ Describe "Remove-GcpsSubscription" {
         New-GcpsTopic -Topic $topic
         New-GcpsSubscription -Topic $topic -Subscription $subscription
 
-        Get-GcpsSubscription -Subscription $subscription | Should Not BeNullOrEmpty
+        try {
+            Get-GcpsSubscription -Subscription $subscription | Should Not BeNullOrEmpty
 
-        # Remove through pipeline
-        Get-GcpsSubscription -Subscription $subscription | Remove-GcpsSubscription
-        { Get-GcpsSubscription -Subscription $subscription -ErrorAction Stop } | Should Throw "does not exist"
+            # Remove through pipeline
+            Get-GcpsSubscription -Subscription $subscription | Remove-GcpsSubscription
+            { Get-GcpsSubscription -Subscription $subscription -ErrorAction Stop } | Should Throw "does not exist"
+        }
+        finally {
+            gcloud beta pubsub topics delete $topic --quiet 2>$null
+        }
     }
 
     It "should throw error for non-existent subscription" {
@@ -524,12 +534,17 @@ Describe "Remove-GcpsSubscription" {
         New-GcpsTopic -Topic $topic
         New-GcpsSubscription -Topic $topic -Subscription $subscription
 
-        Get-GcpsSubscription -Subscription $subscription | Should Not BeNullOrEmpty
+        try {
+            Get-GcpsSubscription -Subscription $subscription | Should Not BeNullOrEmpty
 
-        # Subscription should not be removed.
-        Remove-GcpsSubscription -Subscription $subscription -WhatIf
-        Get-GcpsSubscription -Subscription $subscription | Should Not BeNullOrEmpty
+            # Subscription should not be removed.
+            Remove-GcpsSubscription -Subscription $subscription -WhatIf
+            Get-GcpsSubscription -Subscription $subscription | Should Not BeNullOrEmpty
 
-        Remove-GcpsSubscription -Subscription $subscription
+            Remove-GcpsSubscription -Subscription $subscription
+        }
+        finally {
+            gcloud beta pubsub topics delete $topic --quiet 2>$null
+        }
     }
 }
