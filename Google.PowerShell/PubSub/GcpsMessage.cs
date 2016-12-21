@@ -70,7 +70,7 @@ namespace Google.PowerShell.PubSub
                 attributesDict = ConvertToDictionary<string, string>(attributes);
             }
             // A valid PubSub message must have either a non-empty message or a non-empty attributes.
-            if (attributesDict == null && data == null)
+            if (attributesDict == null && string.IsNullOrWhiteSpace(data))
             {
                 throw new ArgumentException("Cannot construct a PubSub message because both the message data and the attributes are empty.");
             }
@@ -139,7 +139,7 @@ namespace Google.PowerShell.PubSub
 
         /// <summary>
         /// <para type="description">
-        /// Data of the message that will be published.
+        /// The data message that will be published.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DataAndAttributes)]
@@ -194,20 +194,19 @@ namespace Google.PowerShell.PubSub
                 IList<string> returnedMessageIds = response.MessageIds;
                 if (returnedMessageIds.Count != requestBody.Messages.Count)
                 {
-                    throw new InvalidOperationException($"Only {returnedMessageIds.Count} out of {requestBody.Messages.Count} is published.");
+                    throw new InvalidOperationException($"Only {returnedMessageIds.Count} out of {requestBody.Messages.Count} published.");
                 }
 
                 for (int index = 0; index < returnedMessageIds.Count; index += 1)
                 {
                     PubsubMessage publishedMessage = requestBody.Messages[index];
-                    publishedMessage.MessageId = returnedMessageIds[0];
+                    publishedMessage.MessageId = returnedMessageIds[index];
                     if (!string.IsNullOrWhiteSpace(publishedMessage.Data))
                     {
                         byte[] decodedMessageDataBytes = Convert.FromBase64String(publishedMessage.Data);
                         publishedMessage.Data = Encoding.UTF8.GetString(decodedMessageDataBytes);
                     }
                     WriteObject(publishedMessage);
-                    index += 1;
                 }
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
