@@ -168,6 +168,45 @@ Describe "Publish-GcpsMessage" {
         }
     }
 
+    It "should work with an array of messages" {
+        $r = Get-Random
+        $topicName = "gcp-test-publish-gcps-message-topic-$r"
+        $subscriptionName = "gcp-test-publish-gcps-message-subscription-$r"
+        $testData = "Test Data"
+        $attributes = @{"Key" = "Value"; "Key2" = "Value2"}
+
+        try {
+            New-GcpsTopic -Topic $topicName
+            New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+            $messageOne = New-GcpsMessage -Data $testData
+            $messageTwo = New-GcpsMessage -Attributes $attributes
+            $messageThree = New-GcpsMessage -Attributes $attributes -Data $testData
+            $messages = @($messageOne, $messageTwo, $messageThree)
+
+            $publishedMessages = Publish-GcpsMessage -Message $messages -Topic $topicName
+            $publishedMessages.Count | Should Be 3
+
+            $subscriptionMessages = Get-SubscriptionMessage -Subscription $subscriptionName
+            $subscriptionMessages.Count | Should Be 3
+
+            $subscriptionMessageOne = $subscriptionMessages | Where-Object {$_.Message.MessageId -eq $publishedMessages[0].MessageId}
+            (ConvertFrom-Base64String $subscriptionMessageOne.Message.Data) | Should BeExactly $testData
+
+            $subscriptionMessageTwo = $subscriptionMessages | Where-Object {$_.Message.MessageId -eq $publishedMessages[1].MessageId}
+            $subscriptionMessageTwo.Message.Attributes.Key | Should BeExactly "Value"
+            $subscriptionMessageTwo.Message.Attributes.Key2 | Should BeExactly "Value2"
+
+            $subscriptionMessageThree = $subscriptionMessages | Where-Object {$_.Message.MessageId -eq $publishedMessages[2].MessageId}
+            (ConvertFrom-Base64String $subscriptionMessageThree.Message.Data) | Should BeExactly $testData
+            $subscriptionMessageThree.Message.Attributes.Key | Should BeExactly "Value"
+            $subscriptionMessageThree.Message.Attributes.Key2 | Should BeExactly "Value2"
+        }
+        finally {
+            Remove-GcpsTopic $topicName
+            Remove-GcpsSubscription $subscriptionName
+        }
+    }
+
     It "should work with multiple subscriptions" {
         $r = Get-Random
         $topicName = "gcp-test-publish-gcps-message-topic-$r"
