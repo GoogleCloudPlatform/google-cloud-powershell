@@ -13,6 +13,213 @@ namespace Google.PowerShell.PubSub
 {
     /// <summary>
     /// <para type="synopsis">
+    /// Gets a Google Cloud PubSub message from a pull config subscription.
+    /// </para>
+    /// <para type="description">
+    /// Gets a Google Cloud PubSub message from a pull config subscription.
+    /// Will raise errors if the subscription does not exist. The default project will be used to search
+    /// for the subscription if -Project is not used. If -AutoAck switch is supplied, each message
+    /// received will be acknowledged automatically.
+    /// If there are more than 1 messages for the subscription, the cmdlet may not get all of them in one call.
+    /// By default, the cmdlet will block until at least one message is returned.
+    /// If -ReturnImmediately is used, the cmdlet will not block.
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> Get-GcpsMessage -Subscription "my-subscription"</code>
+    ///   <para>This command pulls down a message or more from the subscription "my-subscription" in the default project.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Get-GcpsMessage -Subscription "my-subscription" -ReturnImmediately</code>
+    ///   <para>
+    ///   This command pulls down a message or more from the subscription "my-subscription" in the default project
+    ///   and it will not block even if no messages are returned.
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Get-GcpsMessage -Subscription "my-subscription" -Project "my-project" -MaxMessage 10</code>
+    ///   <para>
+    ///   This command pulls down a maximum of 10 messages from the subscription "my-subscription" in the project "my-project".
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Get-GcpsMessage -Subscription "my-subscription"</code>
+    ///   <para>
+    ///   This command pulls down a message or more from the subscription "my-subscription" in the default project
+    ///   and sends an acknowledgement for each message.
+    ///   </para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/pubsub/docs/reference/rest/v1/PubsubMessage)">
+    /// [PubSub Message]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/pubsub/docs/subscriber#receiving-pull-messages)">
+    /// [Retrieving Pull Messages]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Get, "GcpsMessage")]
+    public class GetGcpsMessage : GcpsCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The project to check for the subscription. If not set via PowerShell parameter processing, will
+        /// default to the Cloud SDK's DefaultProject property.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the subscription to pull the messages from.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true)]
+        [Alias("Subscription")]
+        [ValidateNotNullOrEmpty]
+        public string Name { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The maximum number of messages that can be returned.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public int? MaxMessages { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// If set, automatically send acknowledgement for each message received.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public SwitchParameter AutoAck { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// If set, the cmdlet will not block when there are no messages.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public SwitchParameter ReturnImmediately { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            Name = GetProjectPrefixForSubscription(Name, Project);
+            PullRequest requestBody = new PullRequest();
+
+            if (MaxMessages.HasValue)
+            {
+                requestBody.MaxMessages = MaxMessages;
+            }
+            else
+            {
+                requestBody.MaxMessages = 100;
+            }
+
+            if (ReturnImmediately.IsPresent)
+            {
+                requestBody.ReturnImmediately = true;
+            }
+            else
+            {
+                ReturnImmediately = false;
+            }
+
+            // Send the pull request. Raise error if subscription is not found.
+            ProjectsResource.SubscriptionsResource.PullRequest request = Service.Projects.Subscriptions.Pull(requestBody, Name);
+            PullResponse response = null;
+            try
+            {
+                response = request.Execute();
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+            {
+                WriteResourceMissingError(
+                    exceptionMessage: $"Subscription '{Name}' does not exist in project '{Project}'.",
+                    errorId: "SubscriptionNotFound",
+                    targetObject: Name);
+                return;
+            }
+
+            IList<ReceivedMessage> receivedMessages = response?.ReceivedMessages;
+            if (receivedMessages == null || receivedMessages.Count == 0)
+            {
+                return;
+            }
+
+            // Send acknowledgement for all the messages if -AutoAck is present.
+            if (AutoAck.IsPresent)
+            {
+                AcknowledgeRequest ackRequestBody = new AcknowledgeRequest()
+                {
+                    AckIds = receivedMessages.Select(message => message.AckId).ToList()
+                };
+                ProjectsResource.SubscriptionsResource.AcknowledgeRequest ackRequest =
+                    Service.Projects.Subscriptions.Acknowledge(ackRequestBody, Name);
+                ackRequest.Execute();
+            }
+
+            foreach (ReceivedMessage receivedMessage in receivedMessages)
+            {
+                PubSubMessageWithAckIdAndSubscription messageWithAck = new PubSubMessageWithAckIdAndSubscription(receivedMessage, Name);
+                // Convert the base 64 encoded message data.
+                if (!string.IsNullOrWhiteSpace(messageWithAck.Data))
+                {
+                    byte[] base64Bytes = Convert.FromBase64String(messageWithAck.Data);
+                    messageWithAck.Data = Encoding.UTF8.GetString(base64Bytes);
+                }
+                if (AutoAck.IsPresent)
+                {
+                    // Remove the AckId 
+                    messageWithAck.AckId = null;
+                }
+                WriteObject(messageWithAck);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Class that extends PubSub Message by adding AckId and Subscription fields.
+    /// We added these fields to the PubSub Message to allow pipelining the results
+    /// from Get-GcpsMessage to other cmdlets.
+    /// </summary>
+    public class PubSubMessageWithAckIdAndSubscription : PubsubMessage
+    {
+        public PubSubMessageWithAckIdAndSubscription() : base() { }
+
+        /// <summary>
+        /// Given a received message (returned from a pull request from a subscription)
+        /// and a subscription, construct a PubSub message with AckId and subscription.
+        /// </summary>
+        /// <param name="receivedMessage"></param>
+        /// <param name="subscription"></param>
+        public PubSubMessageWithAckIdAndSubscription(ReceivedMessage receivedMessage, string subscription)
+        {
+            Subscription = subscription;
+            AckId = receivedMessage.AckId;
+            if (receivedMessage.Message != null)
+            {
+                Attributes = receivedMessage.Message.Attributes;
+                Data = receivedMessage.Message.Data;
+                ETag = receivedMessage.Message.ETag;
+                MessageId = receivedMessage.Message.MessageId;
+                PublishTime = receivedMessage.Message.PublishTime;
+            }
+        }
+
+        /// <summary>
+        /// The AckId of the message.
+        /// </summary>
+        public string AckId { get; set; }
+
+        /// <summary>
+        /// The Subscription that this message belongs to.
+        /// </summary>
+        public string Subscription { get; set; }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
     /// Creates a Google Cloud PubSub message.
     /// </para>
     /// <para type="description">
