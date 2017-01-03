@@ -500,4 +500,22 @@ Describe "Get-GcpsMessage" {
     It "should error out for invalid subscription name" {
         { Get-GcpsMessage -Subscription "!!" -ReturnImmediately -ErrorAction Stop } | Should Throw "Invalid resource name given"
     }
+
+    It "should error out if MaxMessages has value less than or equal to zero" {
+        $r = Get-Random
+        $topicName = "gcp-test-publish-gcps-message-topic-$r"
+        $subscriptionName = "gcp-test-publish-gcps-message-subscription-$r"
+
+        try {
+            New-GcpsTopic -Topic $topicName
+            New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+
+            { Get-GcpsMessage -Subscription $subscriptionName -MaxMessages 0 } | Should Throw "should have a value greater than 0."
+            { Get-GcpsMessage -Subscription $subscriptionName -MaxMessages -10 } | Should Throw "should have a value greater than 0."
+        }
+        finally {
+            Remove-GcpsTopic $topicName
+            Remove-GcpsSubscription $subscriptionName
+        }
+    }
 }

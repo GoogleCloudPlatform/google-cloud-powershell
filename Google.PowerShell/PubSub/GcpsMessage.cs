@@ -20,7 +20,7 @@ namespace Google.PowerShell.PubSub
     /// Will raise errors if the subscription does not exist. The default project will be used to search
     /// for the subscription if -Project is not used. If -AutoAck switch is supplied, each message
     /// received will be acknowledged automatically.
-    /// If there is more than 1 message for the subscription, the cmdlet may not get all of them in one call.
+    /// If there is more than one message for the subscription, the cmdlet may not get all of them in one call.
     /// By default, the cmdlet will block until at least one message is returned.
     /// If -ReturnImmediately is used, the cmdlet will not block.
     /// </para>
@@ -110,9 +110,9 @@ namespace Google.PowerShell.PubSub
             PullRequest requestBody = new PullRequest();
             requestBody.ReturnImmediately = ReturnImmediately.IsPresent;
             requestBody.MaxMessages = MaxMessages.HasValue ? MaxMessages : DefaultMaxMessages;
-            if (requestBody.MaxMessages < 0)
+            if (requestBody.MaxMessages <= 0)
             {
-                requestBody.MaxMessages = DefaultMaxMessages;
+                throw new PSArgumentException("MaxMessages parameter should have a value greater than 0.");
             }
 
             // Send the pull request. Raise error if subscription is not found.
