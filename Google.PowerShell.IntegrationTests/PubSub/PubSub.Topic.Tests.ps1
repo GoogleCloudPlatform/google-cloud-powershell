@@ -103,6 +103,25 @@ Describe "Remove-GcpsTopic" {
         { Get-GcpsTopic -Topic $secondTopicName, $thirdTopicName -ErrorAction Stop } | Should Throw "does not exist"
     }
 
+    It "should work with topic object" {
+        $r = Get-Random
+        $topicName = "gcp-creating-topic-$r"
+        $secondTopicName = "gcp-creating-topic2-$r"
+        $thirdTopicName = "gcp-creating-topic3-$r"
+        New-GcpsTopic -Topic $topicName, $secondTopicName, $thirdTopicName
+        (Get-GcpsTopic -Topic $topicName, $secondTopicName, $thirdTopicName).Count | Should Be 3
+
+        # Remove a single topic.
+        $oneTopic = Get-GcpsTopic $topicName
+        Remove-GcpsTopic -Topic $oneTopic
+        { Get-GcpsTopic -Topic $topicName -ErrorAction Stop } | Should Throw "does not exist"
+
+        # Remove an array of topics.
+        $twoTopics = Get-GcpsTopic $secondTopicName, $thirdTopicName
+        Remove-GcpsTopic -Topic $twoTopics
+        { Get-GcpsTopic -Topic $secondTopicName, $thirdTopicName -ErrorAction Stop } | Should Throw "does not exist"
+    }
+
     It "should work with pipeline" {
         $r = Get-Random
         $topicName = "gcp-creating-topic-$r"

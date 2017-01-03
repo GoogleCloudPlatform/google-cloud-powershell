@@ -203,6 +203,7 @@ namespace Google.PowerShell.PubSub
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true)]
+        [ArrayPropertyTransform(typeof(Topic), nameof(Apis.Pubsub.v1.Data.Topic.Name))]
         [ValidateNotNullOrEmpty]
         [Alias("Name")]
         public string[] Topic { get; set; }

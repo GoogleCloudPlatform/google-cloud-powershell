@@ -77,6 +77,30 @@ Describe "Publish-GcpsMessage" {
         }
     }
 
+    It "should work with topic object" {
+        $r = Get-Random
+        $topicName = "gcp-test-publish-gcps-message-topic-$r"
+        $subscriptionName = "gcp-test-publish-gcps-message-subscription-$r"
+        $testData = "Test Data"
+
+        try {
+            $topicObject = New-GcpsTopic -Topic $topicName
+            New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+
+            $publishedMessage = Publish-GcpsMessage -Data $testData -Topic $topicObject
+            $publishedMessage.MessageId | Should Not BeNullOrEmpty
+
+            $subscriptionMessage = Get-SubscriptionMessage -Subscription $subscriptionName
+
+            $subscriptionMessage.Message.MessageId | Should BeExactly $publishedMessage.MessageId
+            (ConvertFrom-Base64String $subscriptionMessage.Message.Data) | Should BeExactly $testData
+        }
+        finally {
+            Remove-GcpsTopic $topicName
+            Remove-GcpsSubscription $subscriptionName
+        }
+    }
+
     It "should work with -Attributes" {
         $r = Get-Random
         $topicName = "gcp-test-publish-gcps-message-topic-$r"
@@ -324,6 +348,31 @@ Describe "Get-GcpsMessage" {
             # Now if we pull again, we should get nothing
             $subscriptionMessageThree = Get-GcpsMessage -Subscription $subscriptionName -ReturnImmediately
             $subscriptionMessageThree | Should BeNullOrEmpty
+        }
+        finally {
+            Remove-GcpsTopic $topicName
+            Remove-GcpsSubscription $subscriptionName
+        }
+    }
+
+    It "should work with subscription object" {
+        $r = Get-Random
+        $topicName = "gcp-test-publish-gcps-message-topic-$r"
+        $subscriptionName = "gcp-test-publish-gcps-message-subscription-$r"
+        $testData = "Test Data"
+
+        try {
+            New-GcpsTopic -Topic $topicName
+            $subscriptionObject = New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+
+            $publishedMessage = Publish-GcpsMessage -Data $testData -Topic $topicName
+
+            $subscriptionMessage = Get-GcpsMessage -Subscription $subscriptionObject -AutoAck
+
+            $subscriptionMessage.MessageId | Should BeExactly $publishedMessage.MessageId
+            $subscriptionMessage.Data | Should BeExactly $testData
+            $subscriptionMessage.AckId | Should BeNullOrEmpty
+            $subscriptionMessage.Subscription | Should Match $subscriptionName
         }
         finally {
             Remove-GcpsTopic $topicName
