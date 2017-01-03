@@ -253,3 +253,269 @@ Describe "Publish-GcpsMessage" {
         { Publish-GcpsMessage -Data "Test Data" -Topic "!!" -ErrorAction Stop } | Should Throw "Invalid resource name given"
     }
 }
+
+Describe "Get-GcpsMessage" {
+    It "should work" {
+        $r = Get-Random
+        $topicName = "gcp-test-publish-gcps-message-topic-$r"
+        $subscriptionName = "gcp-test-publish-gcps-message-subscription-$r"
+        $testData = "Test Data"
+        $attributes = @{"Key" = "Value"; "Key2" = "Value2"}
+
+        try {
+            New-GcpsTopic -Topic $topicName
+            New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+
+            $publishedMessage = Publish-GcpsMessage -Data $testData -Attributes $attributes -Topic $topicName
+
+            $subscriptionMessage = Get-GcpsMessage -Subscription $subscriptionName
+
+            $subscriptionMessage.MessageId | Should BeExactly $publishedMessage.MessageId
+            $subscriptionMessage.Data | Should BeExactly $testData
+            $subscriptionMessage.Attributes.Key | Should BeExactly "Value"
+            $subscriptionMessage.Attributes.Key2 | Should BeExactly "Value2"
+            $subscriptionMessage.AckId | Should Not BeNullOrEmpty
+            $subscriptionMessage.Subscription | Should Match $subscriptionName
+
+            # Since we does not acknowledge the message, another call should return the same message.
+            $subscriptionMessageTwo = Get-GcpsMessage -Subscription $subscriptionName
+
+            $subscriptionMessageTwo.MessageId | Should BeExactly $publishedMessage.MessageId
+            $subscriptionMessageTwo.Data | Should BeExactly $testData
+            $subscriptionMessageTwo.Attributes.Key | Should BeExactly "Value"
+            $subscriptionMessageTwo.Attributes.Key2 | Should BeExactly "Value2"
+            $subscriptionMessageTwo.AckId | Should Not BeNullOrEmpty
+            $subscriptionMessageTwo.Subscription | Should Match $subscriptionName
+
+            # Acknowledge the message with gcloud
+            gcloud beta pubsub subscriptions ack $subscriptionMessageTwo.Subscription $subscriptionMessageTwo.AckId 2>$null
+            # Now if we pull again, we should get nothing
+            $subscriptionMessageThree = Get-GcpsMessage -Subscription $subscriptionName
+            $subscriptionMessageThree | Should BeNullOrEmpty
+        }
+        finally {
+            Remove-GcpsTopic $topicName
+            Remove-GcpsSubscription $subscriptionName
+        }
+    }
+
+    It "should work with -AutoAck" {
+        $r = Get-Random
+        $topicName = "gcp-test-publish-gcps-message-topic-$r"
+        $subscriptionName = "gcp-test-publish-gcps-message-subscription-$r"
+        $testData = "Test Data"
+        $attributes = @{"Key" = "Value"; "Key2" = "Value2"}
+
+        try {
+            New-GcpsTopic -Topic $topicName
+            New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+
+            $publishedMessage = Publish-GcpsMessage -Data $testData -Attributes $attributes -Topic $topicName
+
+            $subscriptionMessage = Get-GcpsMessage -Subscription $subscriptionName -AutoAck
+
+            $subscriptionMessage.MessageId | Should BeExactly $publishedMessage.MessageId
+            $subscriptionMessage.Data | Should BeExactly $testData
+            $subscriptionMessage.Attributes.Key | Should BeExactly "Value"
+            $subscriptionMessage.Attributes.Key2 | Should BeExactly "Value2"
+            $subscriptionMessage.AckId | Should BeNullOrEmpty
+            $subscriptionMessage.Subscription | Should Match $subscriptionName
+
+            # Now if we pull again, we should get nothing
+            $subscriptionMessageThree = Get-GcpsMessage -Subscription $subscriptionName -ReturnImmediately
+            $subscriptionMessageThree | Should BeNullOrEmpty
+        }
+        finally {
+            Remove-GcpsTopic $topicName
+            Remove-GcpsSubscription $subscriptionName
+        }
+    }
+
+    It "should work with multiple messages" {
+        $r = Get-Random
+        $topicName = "gcp-test-publish-gcps-message-topic-$r"
+        $subscriptionName = "gcp-test-publish-gcps-message-subscription-$r"
+        $testData = "Test Data"
+        $attributes = @{"Key" = "Value"; "Key2" = "Value2"}
+
+        try {
+            New-GcpsTopic -Topic $topicName
+            New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+            $messageOne = New-GcpsMessage -Data $testData
+            $messageTwo = New-GcpsMessage -Attributes $attributes
+            $messageThree = New-GcpsMessage -Attributes $attributes -Data $testData
+            $messages = @($messageOne, $messageTwo, $messageThree)
+
+            $publishedMessages = Publish-GcpsMessage -Message $messages -Topic $topicName
+
+            # Retrieves all 3 messages
+            $subscriptionMessages = @()
+            # We will try for a maximum of 10 times
+            for ($i = 0; $i -lt 10; $i += 1)
+            {
+                $subscriptionMessages += (Get-GcpsMessage -Subscription $subscriptionName -AutoAck)
+                if ($subscriptionMessages.Count -eq 3)
+                {
+                    break
+                }
+            }
+
+            $subscriptionMessageOne = $subscriptionMessages | Where-Object {$_.MessageId -eq $publishedMessages[0].MessageId}
+            $subscriptionMessageOne.Data | Should BeExactly $testData
+            $subscriptionMessageOne.AckId | Should BeNullOrEmpty
+            $subscriptionMessageOne.Subscription | Should Match $subscriptionName
+
+            $subscriptionMessageTwo = $subscriptionMessages | Where-Object {$_.MessageId -eq $publishedMessages[1].MessageId}
+            $subscriptionMessageTwo.Attributes.Key | Should BeExactly "Value"
+            $subscriptionMessageTwo.Attributes.Key2 | Should BeExactly "Value2"
+            $subscriptionMessageTwo.AckId | Should BeNullOrEmpty
+            $subscriptionMessageTwo.Subscription | Should Match $subscriptionName
+
+            $subscriptionMessageThree = $subscriptionMessages | Where-Object {$_.MessageId -eq $publishedMessages[2].MessageId}
+            $subscriptionMessageThree.Data | Should BeExactly $testData
+            $subscriptionMessageThree.Attributes.Key | Should BeExactly "Value"
+            $subscriptionMessageThree.Attributes.Key2 | Should BeExactly "Value2"
+            $subscriptionMessageThree.AckId | Should BeNullOrEmpty
+            $subscriptionMessageThree.Subscription | Should Match $subscriptionName
+
+            # Now if we pull again, we should get nothing
+            $subscriptionMessageThree = Get-GcpsMessage -Subscription $subscriptionName -ReturnImmediately
+            $subscriptionMessageThree | Should BeNullOrEmpty
+        }
+        finally {
+            Remove-GcpsTopic $topicName
+            Remove-GcpsSubscription $subscriptionName
+        }
+    }
+
+    It "should work with -MaxMessages" {
+        $r = Get-Random
+        $topicName = "gcp-test-publish-gcps-message-topic-$r"
+        $subscriptionName = "gcp-test-publish-gcps-message-subscription-$r"
+        $testData = "Test Data"
+        $attributes = @{"Key" = "Value"; "Key2" = "Value2"}
+
+        try {
+            New-GcpsTopic -Topic $topicName
+            New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+            $messageOne = New-GcpsMessage -Data $testData
+            $messageTwo = New-GcpsMessage -Attributes $attributes
+            $messages = @($messageOne, $messageTwo)
+
+            $publishedMessages = Publish-GcpsMessage -Message $messages -Topic $topicName
+
+            # Retrieves all 2 messages, making sure that when we set -MaxMessage to 1, we get 1 at a time.
+            $subscriptionMessages = @()
+            # We will try for a maximum of 10 times
+            for ($i = 0; $i -lt 10; $i += 1)
+            {
+                $subscriptionMessage = @(Get-GcpsMessage -Subscription $subscriptionName -AutoAck -MaxMessage 1)
+                $subscriptionMessage.Count | Should Be 1
+                $subscriptionMessages += $subscriptionMessage
+                if ($subscriptionMessages.Count -eq 2)
+                {
+                    break
+                }
+            }
+
+            $subscriptionMessageOne = $subscriptionMessages | Where-Object {$_.MessageId -eq $publishedMessages[0].MessageId}
+            $subscriptionMessageOne.Data | Should BeExactly $testData
+            $subscriptionMessageOne.AckId | Should BeNullOrEmpty
+            $subscriptionMessageOne.Subscription | Should Match $subscriptionName
+
+            $subscriptionMessageTwo = $subscriptionMessages | Where-Object {$_.MessageId -eq $publishedMessages[1].MessageId}
+            $subscriptionMessageTwo.Attributes.Key | Should BeExactly "Value"
+            $subscriptionMessageTwo.Attributes.Key2 | Should BeExactly "Value2"
+            $subscriptionMessageTwo.AckId | Should BeNullOrEmpty
+            $subscriptionMessageTwo.Subscription | Should Match $subscriptionName
+
+            # Now if we pull again, we should get nothing
+            $subscriptionMessageThree = Get-GcpsMessage -Subscription $subscriptionName -ReturnImmediately
+            $subscriptionMessageThree | Should BeNullOrEmpty
+        }
+        finally {
+            Remove-GcpsTopic $topicName
+            Remove-GcpsSubscription $subscriptionName
+        }        
+    }
+
+    It "should work with -ReturnImmediately" {
+        $r = Get-Random
+        $topicName = "gcp-test-publish-gcps-message-topic-$r"
+        $subscriptionName = "gcp-test-publish-gcps-message-subscription-$r"
+
+        try {
+            New-GcpsTopic -Topic $topicName
+            New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+
+            $subscriptionMessage = Get-GcpsMessage -Subscription $subscriptionName -ReturnImmediately
+            $subscriptionMessage | Should BeNullOrEmpty
+        }
+        finally {
+            Remove-GcpsTopic $topicName
+            Remove-GcpsSubscription $subscriptionName
+        }
+    }
+
+    It "should block without -ReturnImmediately" {
+        $r = Get-Random
+        $topicName = "gcp-test-publish-gcps-message-topic-$r"
+        $subscriptionName = "gcp-test-publish-gcps-message-subscription-$r"
+        $testData = "Test Data"
+
+        try {
+            New-GcpsTopic -Topic $topicName
+            New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+
+            # We need the GcloudCmdlets path to call Install-GCloudCmdlets so the cmdlets Get-GcpsMessage will be loaded.
+            $gcloudCmdletsPath = (Resolve-Path "$PSScriptRoot\..\GcloudCmdlets.ps1").Path
+            $sb = [scriptblock]::Create(". $gcloudCmdletsPath; Install-GCloudCmdlets; Get-GcpsMessage -Subscription $subscriptionName")
+            $job = Start-Job -ScriptBlock $sb
+
+            Start-Sleep -Seconds 5
+
+            # After 5 seconds, job should still be running and not completed because of the blocking call Get-GcpsMessage.
+            $job.State | Should Be "Running"
+
+            # Now we publish 1 message, the job should finish running.
+            $publishedMessage = Publish-GcpsMessage -Data $testData -Topic $topicName
+            Start-Sleep -Seconds 5
+            $job.State | Should Be "Completed"
+            $subscriptionMessage = $job | Receive-Job
+            $subscriptionMessage.MessageId | Should BeExactly $publishedMessage.MessageId
+            $subscriptionMessage.Data | Should BeExactly $testData
+        }
+        finally {
+            Remove-GcpsTopic $topicName
+            Remove-GcpsSubscription $subscriptionName
+            Get-Job | Remove-Job -Force
+        }
+    }
+
+    It "should error out for non-existent subscription" {
+        $subscription = "gcloud-powershell-non-existent-subscription"
+        { Get-GcpsMessage -Subscription $subscription -ReturnImmediately -ErrorAction Stop } | Should Throw "does not exist"
+    }
+
+    It "should error out for invalid subscription name" {
+        { Get-GcpsMessage -Subscription "!!" -ReturnImmediately -ErrorAction Stop } | Should Throw "Invalid resource name given"
+    }
+
+    It "should error out if MaxMessages has value less than or equal to zero" {
+        $r = Get-Random
+        $topicName = "gcp-test-publish-gcps-message-topic-$r"
+        $subscriptionName = "gcp-test-publish-gcps-message-subscription-$r"
+
+        try {
+            New-GcpsTopic -Topic $topicName
+            New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+
+            { Get-GcpsMessage -Subscription $subscriptionName -MaxMessages 0 } | Should Throw "should have a value greater than 0."
+            { Get-GcpsMessage -Subscription $subscriptionName -MaxMessages -10 } | Should Throw "should have a value greater than 0."
+        }
+        finally {
+            Remove-GcpsTopic $topicName
+            Remove-GcpsSubscription $subscriptionName
+        }
+    }
+}
