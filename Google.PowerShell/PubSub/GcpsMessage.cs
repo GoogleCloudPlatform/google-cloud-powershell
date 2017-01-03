@@ -20,18 +20,18 @@ namespace Google.PowerShell.PubSub
     /// Will raise errors if the subscription does not exist. The default project will be used to search
     /// for the subscription if -Project is not used. If -AutoAck switch is supplied, each message
     /// received will be acknowledged automatically.
-    /// If there are more than 1 messages for the subscription, the cmdlet may not get all of them in one call.
+    /// If there is more than 1 message for the subscription, the cmdlet may not get all of them in one call.
     /// By default, the cmdlet will block until at least one message is returned.
     /// If -ReturnImmediately is used, the cmdlet will not block.
     /// </para>
     /// <example>
     ///   <code>PS C:\> Get-GcpsMessage -Subscription "my-subscription"</code>
-    ///   <para>This command pulls down a message or more from the subscription "my-subscription" in the default project.</para>
+    ///   <para>This command pulls down one or more messages from the subscription "my-subscription" in the default project.</para>
     /// </example>
     /// <example>
     ///   <code>PS C:\> Get-GcpsMessage -Subscription "my-subscription" -ReturnImmediately</code>
     ///   <para>
-    ///   This command pulls down a message or more from the subscription "my-subscription" in the default project
+    ///   This command pulls down one or more messages from the subscription "my-subscription" in the default project
     ///   and it will not block even if no messages are returned.
     ///   </para>
     /// </example>
@@ -44,7 +44,7 @@ namespace Google.PowerShell.PubSub
     /// <example>
     ///   <code>PS C:\> Get-GcpsMessage -Subscription "my-subscription"</code>
     ///   <para>
-    ///   This command pulls down a message or more from the subscription "my-subscription" in the default project
+    ///   This command pulls down one or more messages from the subscription "my-subscription" in the default project
     ///   and sends an acknowledgement for each message.
     ///   </para>
     /// </example>
@@ -52,12 +52,14 @@ namespace Google.PowerShell.PubSub
     /// [PubSub Message]
     /// </para>
     /// <para type="link" uri="(https://cloud.google.com/pubsub/docs/subscriber#receiving-pull-messages)">
-    /// [Retrieving Pull Messages]
+    /// [Receiving Pull Messages]
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcpsMessage")]
     public class GetGcpsMessage : GcpsCmdlet
     {
+        private const int DefaultMaxMessages = 100;
+
         /// <summary>
         /// <para type="description">
         /// The project to check for the subscription. If not set via PowerShell parameter processing, will
@@ -106,23 +108,11 @@ namespace Google.PowerShell.PubSub
         {
             Name = GetProjectPrefixForSubscription(Name, Project);
             PullRequest requestBody = new PullRequest();
-
-            if (MaxMessages.HasValue)
+            requestBody.ReturnImmediately = ReturnImmediately.IsPresent;
+            requestBody.MaxMessages = MaxMessages.HasValue ? MaxMessages : DefaultMaxMessages;
+            if (requestBody.MaxMessages < 0)
             {
-                requestBody.MaxMessages = MaxMessages;
-            }
-            else
-            {
-                requestBody.MaxMessages = 100;
-            }
-
-            if (ReturnImmediately.IsPresent)
-            {
-                requestBody.ReturnImmediately = true;
-            }
-            else
-            {
-                ReturnImmediately = false;
+                requestBody.MaxMessages = DefaultMaxMessages;
             }
 
             // Send the pull request. Raise error if subscription is not found.
@@ -191,8 +181,6 @@ namespace Google.PowerShell.PubSub
         /// Given a received message (returned from a pull request from a subscription)
         /// and a subscription, construct a PubSub message with AckId and subscription.
         /// </summary>
-        /// <param name="receivedMessage"></param>
-        /// <param name="subscription"></param>
         public PubSubMessageWithAckIdAndSubscription(ReceivedMessage receivedMessage, string subscription)
         {
             Subscription = subscription;

@@ -350,7 +350,8 @@ Describe "Get-GcpsMessage" {
 
             # Retrieves all 3 messages
             $subscriptionMessages = @()
-            while ($true)
+            # We will try for a maximum of 10 times
+            for ($i = 0; $i -lt 10; $i += 1)
             {
                 $subscriptionMessages += (Get-GcpsMessage -Subscription $subscriptionName -AutoAck)
                 if ($subscriptionMessages.Count -eq 3)
@@ -405,7 +406,8 @@ Describe "Get-GcpsMessage" {
 
             # Retrieves all 2 messages, making sure that when we set -MaxMessage to 1, we get 1 at a time.
             $subscriptionMessages = @()
-            while ($true)
+            # We will try for a maximum of 10 times
+            for ($i = 0; $i -lt 10; $i += 1)
             {
                 $subscriptionMessage = @(Get-GcpsMessage -Subscription $subscriptionName -AutoAck -MaxMessage 1)
                 $subscriptionMessage.Count | Should Be 1
@@ -441,8 +443,6 @@ Describe "Get-GcpsMessage" {
         $r = Get-Random
         $topicName = "gcp-test-publish-gcps-message-topic-$r"
         $subscriptionName = "gcp-test-publish-gcps-message-subscription-$r"
-        $testData = "Test Data"
-        $attributes = @{"Key" = "Value"; "Key2" = "Value2"}
 
         try {
             New-GcpsTopic -Topic $topicName
@@ -454,6 +454,41 @@ Describe "Get-GcpsMessage" {
         finally {
             Remove-GcpsTopic $topicName
             Remove-GcpsSubscription $subscriptionName
+        }
+    }
+
+    It "should block without -ReturnImmediately" {
+        $r = Get-Random
+        $topicName = "gcp-test-publish-gcps-message-topic-$r"
+        $subscriptionName = "gcp-test-publish-gcps-message-subscription-$r"
+        $testData = "Test Data"
+
+        try {
+            New-GcpsTopic -Topic $topicName
+            New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+
+            # We need the GcloudCmdlets path to call Install-GCloudCmdlets so the cmdlets Get-GcpsMessage will be loaded.
+            $gcloudCmdletsPath = (Resolve-Path "$PSScriptRoot\..\GcloudCmdlets.ps1").Path
+            $sb = [scriptblock]::Create(". $gcloudCmdletsPath; Install-GCloudCmdlets; Get-GcpsMessage -Subscription $subscriptionName")
+            $job = Start-Job -ScriptBlock $sb
+
+            Start-Sleep -Seconds 5
+
+            # After 5 seconds, job should still be running and not completed because of the blocking call Get-GcpsMessage.
+            $job.State | Should Be "Running"
+
+            # Now we publish 1 message, the job should finish running.
+            $publishedMessage = Publish-GcpsMessage -Data $testData -Topic $topicName
+            Start-Sleep -Seconds 5
+            $job.State | Should Be "Completed"
+            $subscriptionMessage = $job | Receive-Job
+            $subscriptionMessage.MessageId | Should BeExactly $publishedMessage.MessageId
+            $subscriptionMessage.Data | Should BeExactly $testData
+        }
+        finally {
+            Remove-GcpsTopic $topicName
+            Remove-GcpsSubscription $subscriptionName
+            Get-Job | Remove-Job -Force
         }
     }
 
