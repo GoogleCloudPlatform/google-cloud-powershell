@@ -670,8 +670,27 @@ Describe "Send-GcpsAck" {
     }
 
     It "should error out for non-existent subscription" {
-        $subscription = "gcloud-powershell-non-existent-subscription"
-        { Send-GcpsAck -Subscription $subscription -AckId "AckId" -ErrorAction Stop } | Should Throw "does not exist"
+        $r = Get-Random
+        $topicName = "gcp-test-publish-gcps-message-topic-$r"
+        $subscriptionName = "gcp-test-publish-gcps-message-subscription-$r"
+        $testData = "Test Data"
+
+        try {
+            New-GcpsTopic -Topic $topicName
+            New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+            $publishedMessage = Publish-GcpsMessage -Data $testData -Topic $topicName
+            $subscriptionMessage = Get-GcpsMessage -Subscription $subscriptionName
+
+            $subscriptionMessage.MessageId | Should BeExactly $publishedMessage.MessageId
+            $subscriptionMessage.AckId | Should Not BeNullOrEmpty
+
+            $subscription = "gcloud-powershell-non-existent-subscription"
+            { Send-GcpsAck -Subscription $subscription -AckId $subscriptionMessage.AckId -ErrorAction Stop } | Should Throw "does not exist"
+        }
+        finally {
+            Remove-GcpsTopic $topicName
+            Remove-GcpsSubscription $subscriptionName
+        }
     }
 
     It "should error out for invalid Ack Id" {
@@ -693,6 +712,26 @@ Describe "Send-GcpsAck" {
     }
 
     It "should error out for invalid subscription name" {
-        { Send-GcpsAck -Subscription "!!" -AckId "Wrong ack" -ErrorAction Stop } | Should Throw "Invalid resource name given"
+        $r = Get-Random
+        $topicName = "gcp-test-publish-gcps-message-topic-$r"
+        $subscriptionName = "gcp-test-publish-gcps-message-subscription-$r"
+        $testData = "Test Data"
+
+        try {
+            New-GcpsTopic -Topic $topicName
+            New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+            $publishedMessage = Publish-GcpsMessage -Data $testData -Topic $topicName
+            $subscriptionMessage = Get-GcpsMessage -Subscription $subscriptionName
+
+            $subscriptionMessage.MessageId | Should BeExactly $publishedMessage.MessageId
+            $subscriptionMessage.AckId | Should Not BeNullOrEmpty
+
+            $subscription = "gcloud-powershell-non-existent-subscription"
+            { Send-GcpsAck -Subscription "!!" -AckId $subscriptionMessage.AckId -ErrorAction Stop } | Should Throw "Invalid resource name given"
+        }
+        finally {
+            Remove-GcpsTopic $topicName
+            Remove-GcpsSubscription $subscriptionName
+        }
     }
 }

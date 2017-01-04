@@ -424,7 +424,7 @@ namespace Google.PowerShell.PubSub
     /// Sends acknowledgement for one or more PubSub messages. Will raise errors if the subscription that the messages are pulled from
     /// does not exist. The cmdlet will search for the subscription and the messages in the default project if -Project is not used.
     /// To send acknowledgement for messages from a single subscription, use -Subscription to provide the name of the subscription
-    /// and -AckId to provide a list of Ack Ids for that subscription. To send acknowledgement for messages object returned by
+    /// and -AckId to provide a list of Ack Ids for that subscription. To send acknowledgement for messages objects returned by
     /// Get-GcpsMessage cmdlet, use the -InputObject parameter.
     /// </para>
     /// <example>
@@ -479,10 +479,10 @@ namespace Google.PowerShell.PubSub
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByName)]
-        [PropertyByTypeTransformation(TypeToTransform = typeof(Subscription), Property =nameof(Subscription.Name))]
-        [Alias("Subscription")]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Subscription), Property =nameof(Apis.Pubsub.v1.Data.Subscription.Name))]
+        [Alias("Name")]
         [ValidateNotNullOrEmpty]
-        public string Name { get; set; }
+        public string Subscription { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -507,9 +507,9 @@ namespace Google.PowerShell.PubSub
         {
             if (ParameterSetName == ParameterSetNames.ByName)
             {
-                Name = GetProjectPrefixForSubscription(Name, Project);
+                Subscription = GetProjectPrefixForSubscription(Subscription, Project);
                 AcknowledgeRequest requestBody = new AcknowledgeRequest() { AckIds = AckId.ToList() };
-                SendAcknowledgement(requestBody, Name);
+                SendAcknowledgement(requestBody, Subscription);
             }
 
             if (ParameterSetName == ParameterSetNames.ByObject)
