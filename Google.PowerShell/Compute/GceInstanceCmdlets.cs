@@ -1098,6 +1098,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Disk)]
         [Parameter(ParameterSetName = ParameterSetNames.DiskByObject)]
+        [ValidateNotNullOrEmpty]
         public object[] AddDisk { get; set; } = { };
 
         /// <summary>
@@ -1107,7 +1108,8 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.Disk)]
         [Parameter(ParameterSetName = ParameterSetNames.DiskByObject)]
-        [ArrayPropertyTransform(typeof(Disk), nameof(Disk.Name))]
+        [ArrayPropertyTransform(typeof(Disk), nameof(Disk.SelfLink))]
+        [ValidateNotNullOrEmpty]
         public string[] RemoveDisk { get; set; } = { };
 
         /// <summary>
@@ -1226,10 +1228,32 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         private void ProcessDisk()
         {
+            // The disks on the GCE instance we need to set.
+            // This is used for the case when there are selflinks instead of disk names.
+            IList<AttachedDisk> attachedDisks = null;
+            if (RemoveDisk != null && RemoveDisk.Any(diskName => Uri.IsWellFormedUriString(diskName, UriKind.Absolute)))
+            {
+                Instance gceInstance = Service.Instances.Get(_project, _zone, _name).Execute();
+                attachedDisks = gceInstance?.Disks;
+            }
+
             foreach (string diskName in RemoveDisk)
             {
+                string detachedDiskName = diskName;
+                // If the diskName is a self link, we have to get the device name from attachedDisks list.
+                if (Uri.IsWellFormedUriString(diskName, UriKind.Absolute))
+                {
+                    AttachedDisk attachedDisk = attachedDisks.FirstOrDefault(
+                        disk => string.Equals(disk.Source, diskName, StringComparison.OrdinalIgnoreCase));
+                    if (attachedDisk == null)
+                    {
+                        WriteResourceMissingError($"Disk '{diskName}' cannot be found.", "MissingAttachedDisk", diskName);
+                        continue;
+                    }
+                    detachedDiskName = attachedDisk.DeviceName;
+                }
                 InstancesResource.DetachDiskRequest request = Service.Instances.DetachDisk(
-                    _project, _zone, _name, diskName);
+                    _project, _zone, _name, detachedDiskName);
                 Operation operation = request.Execute();
                 AddZoneOperation(_project, _zone, operation, () =>
                 {
