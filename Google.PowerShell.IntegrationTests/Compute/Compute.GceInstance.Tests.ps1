@@ -419,10 +419,14 @@ Describe "Set-GceInstance" {
             $newDiskName = "attach-disk-test-$r"
             $newDiskName2 = "attach-disk-test2-$r"
             $newDiskName3 = "attach-disk-test3-$r"
+            $newDiskName4 = "attach-disk-test4-$r"
+            $disk4DeviceName = "testing-$r"
             $newDisk = New-GceDisk -Project $project -Zone $zone2 -DiskName $newDiskName -Size 1
             $newDisk2 = New-GceDisk -Project $project -Zone $zone2 -DiskName $newDiskName2 -Size 1
             $newDisk3 = New-GceDisk -Project $project -Zone $zone2 -DiskName $newDiskName3 -Size 1
+            $newDisk4 = New-GceDisk -Project $project -Zone $zone2 -DiskName $newDiskName4 -Size 1
             $attachedDisk3 = New-GceAttachedDiskConfig $newDisk3 -DeviceName $newDiskName3
+            $attachedDisk4 = New-GceAttachedDiskConfig $newDisk4 -DeviceName $disk4DeviceName
         }
 
         It "should change Disk" {
@@ -435,6 +439,20 @@ Describe "Set-GceInstance" {
             Set-GceInstance -Project $project -Zone $zone2 $instance -RemoveDisk $newDiskName,
                 $newDisk2, $newDiskName3
             (Get-GceInstance -Project $project -Zone $zone2 $instance).Disks.Count | Should Be 1
+        }
+
+        It "should work with Disks objects for -RemoveDisk when DeviceName is different than persistent name" {
+            Set-GceInstance $instance -Project $project -Zone $zone2 -AddDisk $attachedDisk4
+            $instanceObj = Get-GceInstance -Project $project -Zone $zone2 $instance
+            ($instanceObj.Disks | Where {$_.DeviceName -eq $disk4DeviceName}).Count | Should Be 1
+
+            # If we try the other disk, error should be thrown
+            { Set-GceInstance $instance -Project $project -Zone $zone2 -RemoveDisk  $newDisk2 -ErrorAction Stop } |
+                Should Throw "cannot be found"
+
+            # Even though the device name of disk 4 on the VM is different than its persistent name,
+            # RemoveDisk should still work.
+            Set-GceInstance $instance -Project $project -Zone $zone2 -RemoveDisk $newDisk4
         }
 
         AfterAll {

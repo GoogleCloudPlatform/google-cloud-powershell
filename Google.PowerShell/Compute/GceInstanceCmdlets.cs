@@ -1231,7 +1231,6 @@ namespace Google.PowerShell.ComputeEngine
             // The disks on the GCE instance we need to set.
             // This is used for the case when there are selflinks instead of disk names.
             IList<AttachedDisk> attachedDisks = null;
-            // Only selflink contain :// because those are not valid disk names.
             if (RemoveDisk != null && RemoveDisk.Any(diskName => Uri.IsWellFormedUriString(diskName, UriKind.Absolute)))
             {
                 Instance gceInstance = Service.Instances.Get(_project, _zone, _name).Execute();
