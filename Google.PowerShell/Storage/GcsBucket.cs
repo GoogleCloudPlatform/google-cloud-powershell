@@ -94,7 +94,10 @@ namespace Google.PowerShell.CloudStorage
                 var req = Service.Buckets.List(Project);
                 req.Projection = BucketsResource.ListRequest.ProjectionEnum.Full;
                 Buckets buckets = req.Execute();
-                WriteObject(buckets.Items, true);
+                if (buckets != null)
+                {
+                    WriteObject(buckets.Items, true);
+                }
             }
         }
     }
