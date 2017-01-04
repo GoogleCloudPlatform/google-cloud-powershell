@@ -33,7 +33,6 @@ $slnFile = Join-Path $projectRoot "gcloud-powershell.sln"
 $binDir = Join-Path $projectRoot "Google.PowerShell\bin\"
 $configDir = Join-Path $binDir $configuration
 
-
 # Folders where the build artifacts are stored, the things to be packaged up.
 $packageDir = Join-Path $binDir "Packaged"
 $powerShellDir = Join-Path $packageDir "PowerShell"
@@ -46,11 +45,18 @@ if (Test-Path $binDir) {
     Remove-Item $binDir -Recurse -Force
 }
 
+# String holder for export variables in module manifest.
+# Read the followed function for more details.
+$toBeReplaced = "TOBEREPLACED"
+
 # Helper function to remove PrivateData from module manifest.
 # If we do not do this, when we splat $moduleManifest to New-ModuleManifest,
 # PrivateData will have 2 PSDaTa keys. Also, the key value pairs from PSData will
-# also be lost.
-function Remove-PrivateData($moduleManifest) {
+# also be lost. In addition, this function will also set VariablesToExport,
+# FunctionsToExport and AliasesToExport to 'TOBEREPLACED' so we can replace them with
+# @(). We have to do this because if we simply set them to an empty array, PowerShell
+# will remove these values from the manifest but what we actually want is to set them to @().
+function CleanupPrivateDataAndExportVariables($moduleManifest) {
     $privateData = $moduleManifest["PrivateData"]
     if ($null -ne $privateData -and $privateData.ContainsKey("PSData")) {
         $psData = $privateData["PSData"]
@@ -65,20 +71,25 @@ function Remove-PrivateData($moduleManifest) {
     }
 
     $moduleManifest.Remove("PrivateData")
+    $moduleManifest["VariablesToExport"] = $toBeReplaced
+    $moduleManifest["FunctionsToExport"] = $toBeReplaced
+    $moduleManifest["AliasesToExport"] = $toBeReplaced
 }
 
 # Helper function to change the encoding of the module manifest file
 # to UTF8. This is needed because module manifest created by
 # New-ModuleManifest does not have UTF8 encoding.
+# We also replaced 'TOBEREPLACED' with @()
 function Set-ModuleManifestEncoding($moduleManifestFile) {
     $content = Get-Content $moduleManifestFile
+    $content = $content.Replace("'$toBeReplaced'", "@()")
     Set-Content -Value $content -Encoding UTF8 $moduleManifestFile
 }
 
 # Change the module manifest version.
 $moduleManifestFile = Join-Path $projectRoot "Google.PowerShell\ReleaseFiles\GoogleCloud.psd1"
 $moduleManifestContent = Import-PowerShellDataFile $moduleManifestFile
-Remove-PrivateData $moduleManifestContent
+CleanupPrivateDataAndExportVariables $moduleManifestContent
 $moduleManifestContent.ModuleVersion = $normalizedVersion
 New-ModuleManifest -Path $moduleManifestFile @moduleManifestContent
 Set-ModuleManifestEncoding $moduleManifestFile
@@ -121,7 +132,7 @@ if ($null -ne $betaCmdlets) {
 # Modify the list of exported cmdlets.
 $gCloudManifestPath = Join-Path $configDir "GoogleCloud.psd1"
 $gCloudManifest = Import-PowerShellDataFile $gCloudManifestPath
-Remove-PrivateData $gCloudManifest
+CleanupPrivateDataAndExportVariables $gCloudManifest
 $gCloudManifest.CmdletsToExport = $cmdletsList
 New-ModuleManifest -Path $gCloudManifestPath @gCloudManifest
 Set-ModuleManifestEncoding $gCloudManifestPath
@@ -140,7 +151,7 @@ New-Item -ItemType Directory $gcpsDir
 
 # Add the version folder in front of Google.PowerShell.dll and GoogleCloudPlatform.Format.ps1xml.
 $gCloudPowerShellManifest = Import-PowerShellDataFile (Join-Path $configDir "GoogleCloudPowerShell.psd1")
-Remove-PrivateData $gCloudPowerShellManifest
+CleanupPrivateDataAndExportVariables $gCloudPowerShellManifest
 $gCloudPowerShellManifest.RootModule = $gCloudPowerShellManifest.RootModule -replace "Google.PowerShell.dll", `
                                                                                    "$normalizedVersion\Google.PowerShell.dll"
 $gCloudPowerShellManifest.FormatsToProcess = $gCloudPowerShellManifest.FormatsToProcess -replace "GoogleCloudPlatform.Format.ps1xml", `
