@@ -991,10 +991,12 @@ namespace Google.PowerShell.ComputeEngine
         {
             public const string AccessConfig = "AccessConfig";
             public const string Disk = "Disk";
+            public const string AutoDeleteDisk = "AutoDeleteDisk";
             public const string Metadata = "Metadata";
             public const string Tag = "Tag";
             public const string AccessConfigByObject = "AccessConfigByObject";
             public const string DiskByObject = "DiskByObject";
+            public const string AutoDeleteDiskByObject = "AutoDeleteDiskByObject";
             public const string MetadataByObject = "MetadataByObject";
             public const string TagByObject = "TagByObject";
         }
@@ -1006,6 +1008,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.AccessConfig)]
         [Parameter(ParameterSetName = ParameterSetNames.Disk)]
+        [Parameter(ParameterSetName = ParameterSetNames.AutoDeleteDisk)]
         [Parameter(ParameterSetName = ParameterSetNames.Metadata)]
         [Parameter(ParameterSetName = ParameterSetNames.Tag)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
@@ -1021,6 +1024,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.AccessConfig)]
         [Parameter(ParameterSetName = ParameterSetNames.Disk)]
+        [Parameter(ParameterSetName = ParameterSetNames.AutoDeleteDisk)]
         [Parameter(ParameterSetName = ParameterSetNames.Metadata)]
         [Parameter(ParameterSetName = ParameterSetNames.Tag)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
@@ -1038,6 +1042,8 @@ namespace Google.PowerShell.ComputeEngine
             Position = 0, ValueFromPipeline = true)]
         [Parameter(ParameterSetName = ParameterSetNames.Disk, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.AutoDeleteDisk, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
         [Parameter(ParameterSetName = ParameterSetNames.Metadata, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         [Parameter(ParameterSetName = ParameterSetNames.Tag, Mandatory = true,
@@ -1054,6 +1060,8 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(ParameterSetName = ParameterSetNames.AccessConfigByObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         [Parameter(ParameterSetName = ParameterSetNames.DiskByObject, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.AutoDeleteDiskByObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         [Parameter(ParameterSetName = ParameterSetNames.MetadataByObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
@@ -1114,6 +1122,28 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
+        /// The name of the disk to turn on autodelete.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.AutoDeleteDisk)]
+        [Parameter(ParameterSetName = ParameterSetNames.AutoDeleteDiskByObject)]
+        [ArrayPropertyTransform(typeof(Disk), nameof(Disk.SelfLink))]
+        [ValidateNotNullOrEmpty]
+        public string[] TurnOnAutoDeleteDisk { get; set; } = { };
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the disk to turn off autodelete.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.AutoDeleteDisk)]
+        [Parameter(ParameterSetName = ParameterSetNames.AutoDeleteDiskByObject)]
+        [ArrayPropertyTransform(typeof(Disk), nameof(Disk.SelfLink))]
+        [ValidateNotNullOrEmpty]
+        public string[] TurnOffAutoDeleteDisk { get; set; } = { };
+
+        /// <summary>
+        /// <para type="description">
         /// The keys and values of the metadata to add.
         /// </para>
         /// </summary>
@@ -1156,6 +1186,7 @@ namespace Google.PowerShell.ComputeEngine
             {
                 case ParameterSetNames.AccessConfig:
                 case ParameterSetNames.Disk:
+                case ParameterSetNames.AutoDeleteDisk:
                 case ParameterSetNames.Metadata:
                 case ParameterSetNames.Tag:
                     _project = Project;
@@ -1164,6 +1195,7 @@ namespace Google.PowerShell.ComputeEngine
                     break;
                 case ParameterSetNames.AccessConfigByObject:
                 case ParameterSetNames.DiskByObject:
+                case ParameterSetNames.AutoDeleteDiskByObject:
                 case ParameterSetNames.MetadataByObject:
                 case ParameterSetNames.TagByObject:
                     _project = GetProjectNameFromUri(Object.SelfLink);
@@ -1181,6 +1213,10 @@ namespace Google.PowerShell.ComputeEngine
                 case ParameterSetNames.Disk:
                 case ParameterSetNames.DiskByObject:
                     ProcessDisk();
+                    break;
+                case ParameterSetNames.AutoDeleteDisk:
+                case ParameterSetNames.AutoDeleteDiskByObject:
+                    ProcessAutoDeleteDisk();
                     break;
                 case ParameterSetNames.Metadata:
                 case ParameterSetNames.MetadataByObject:
@@ -1282,6 +1318,14 @@ namespace Google.PowerShell.ComputeEngine
                     WriteObject(Service.Instances.Get(_project, _zone, _name));
                 });
             }
+        }
+
+        /// <summary>
+        /// ProcessRecord for AutoDeleteDisk parameter set.
+        /// </summary>
+        private void ProcessAutoDeleteDisk()
+        {
+            FILL IN HERE
         }
 
         /// <summary>
