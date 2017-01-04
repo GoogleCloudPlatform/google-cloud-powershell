@@ -86,6 +86,7 @@ namespace Google.PowerShell.PubSub
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 1)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Topic), Property = nameof(Apis.Pubsub.v1.Data.Topic.Name))]
         [ValidateNotNullOrEmpty]
         public string Topic { get; set; }
 
@@ -212,6 +213,7 @@ namespace Google.PowerShell.PubSub
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Topic), Property = nameof(Apis.Pubsub.v1.Data.Topic.Name))]
         [ValidateNotNullOrEmpty]
         public string Topic { get; set; }
 
@@ -354,10 +356,8 @@ namespace Google.PowerShell.PubSub
     {
         private class ParameterSetNames
         {
-            public const string PushConfigByObject = "PushConfigByObject";
-            public const string PushConfigByName = "PushConfigByName";
-            public const string PullConfigByObject = "PullConfigByObject";
-            public const string PullConfigByName = "PullConfigByName";
+            public const string PushConfig = "PushConfig";
+            public const string PullConfig = "PullConfig";
         }
 
         /// <summary>
@@ -375,23 +375,11 @@ namespace Google.PowerShell.PubSub
         /// The name of the subscription that the config belongs to.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.PullConfigByName)]
-        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.PushConfigByName)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true)]
         [Alias("Name")]
         [ValidateNotNullOrEmpty]
+        [PropertyByTypeTransformation(Property = nameof(Apis.Pubsub.v1.Data.Subscription.Name), TypeToTransform = typeof(Subscription))]
         public string Subscription { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The subscription object that the config belongs to. This parameter is used exclusively from -Subscription.
-        /// This parameter should be used mostly for pipelining from Get-GcpsSubscription since Get-GcpsSubscription returns a Subscription object.
-        /// Otherwise, user can also directly use it with an object of type Google.Apis.Pubsub.v1.Data.Subscription.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.PushConfigByObject)]
-        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.PullConfigByObject)]
-        [ValidateNotNull]
-        public Subscription InputObject { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -399,8 +387,7 @@ namespace Google.PowerShell.PubSub
         /// For example, a Webhook endpoint might use "https://example.com/push".
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.PushConfigByName)]
-        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.PushConfigByObject)]
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.PushConfig)]
         [ValidateNotNullOrEmpty]
         public string PushEndpoint { get; set; }
 
@@ -409,16 +396,11 @@ namespace Google.PowerShell.PubSub
         /// If set, the cmdlet will change config of the subscription to a pull config.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.PullConfigByName)]
-        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.PullConfigByObject)]
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.PullConfig)]
         public SwitchParameter PullConfig { get; set; }
 
         protected override void ProcessRecord()
         {
-            if (InputObject != null)
-            {
-                Subscription = InputObject.Name;
-            }
             Subscription = GetProjectPrefixForSubscription(Subscription, Project);
 
             ModifyPushConfigRequest requestBody = new ModifyPushConfigRequest();
@@ -495,6 +477,7 @@ namespace Google.PowerShell.PubSub
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, Position = 0, ValueFromPipelineByPropertyName = true)]
+        [ArrayPropertyTransform(typeof(Subscription), nameof(Apis.Pubsub.v1.Data.Subscription.Name))]
         [ValidateNotNullOrEmpty]
         [Alias("Name")]
         public string[] Subscription { get; set; }

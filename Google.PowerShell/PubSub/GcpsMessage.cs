@@ -76,6 +76,7 @@ namespace Google.PowerShell.PubSub
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Subscription), Property = nameof(Subscription.Name))]
         [Alias("Subscription")]
         [ValidateNotNullOrEmpty]
         public string Name { get; set; }
@@ -329,6 +330,7 @@ namespace Google.PowerShell.PubSub
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Topic), Property = nameof(Apis.Pubsub.v1.Data.Topic.Name))]
         [ValidateNotNullOrEmpty]
         public string Topic { get; set; }
 

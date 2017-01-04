@@ -32,6 +32,26 @@ Describe "New-GcpsSubscription" {
         }
     }
 
+    It "should work with topic object" {
+        $r = Get-Random
+        $topicName = "gcp-test-new-subscription-topic-$r"
+        $subscriptionName = "gcp-test-new-subscription-$r"
+
+        try {
+            $topicObject = New-GcpsTopic -Topic $topicName
+            New-GcpsSubscription -Subscription $subscriptionName -Topic $topicObject
+
+            $subscription = GetSubScription -Subscription $subscriptionName -Topic $topicName
+            $subscription | Should Not BeNullOrEmpty
+            $subscription.AckDeadlineSeconds | Should Be 10
+            $subscription.PushConfig.PushEndpoint | Should BeNullOrEmpty
+        }
+        finally {
+            gcloud beta pubsub topics delete $topicName --quiet 2>$null
+            gcloud beta pubsub subscriptions delete $subscriptionName --quiet 2>$null
+        }
+    }
+
     It "should work with -AckDeadline" {
         $r = Get-Random
         $topicName = "gcp-test-new-subscription-topic-$r"
@@ -194,10 +214,10 @@ Describe "Get-GcpsSubscription" {
         $subscriptionName4 = "gcp-test-new-subscription4-$r"
 
         try {
-            New-GcpsTopic -Topic $topicName
+            $topicObject = New-GcpsTopic -Topic $topicName
             New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
             New-GcpsSubscription -Subscription $subscriptionName2 -Topic $topicName
-            New-GcpsTopic -Topic $topicName2
+            $topicObject2 = New-GcpsTopic -Topic $topicName2
             New-GcpsSubscription -Subscription $subscriptionName3 -Topic $topicName2
             New-GcpsSubscription -Subscription $subscriptionName4 -Topic $topicName2
 
@@ -207,7 +227,19 @@ Describe "Get-GcpsSubscription" {
             $subscriptions | Where-Object {$_.Name -like "*$subscriptionName*"} | Should Not BeNullOrEmpty
             $subscriptions | Where-Object {$_.Name -like "*$subscriptionName2*"} | Should Not BeNullOrEmpty
 
+            # Should also work if we give a topic object.
+            $subscriptions = Get-GcpsSubscription -Topic $topicObject
+            $subscriptions.Count | Should Be 2
+            $subscriptions | Where-Object {$_.Name -like "*$subscriptionName*"} | Should Not BeNullOrEmpty
+            $subscriptions | Where-Object {$_.Name -like "*$subscriptionName2*"} | Should Not BeNullOrEmpty
+
             $subscriptions2 = Get-GcpsSubscription -Topic $topicName2
+            $subscriptions2.Count | Should Be 2
+            $subscriptions2 | Where-Object {$_.Name -like "*$subscriptionName3*"} | Should Not BeNullOrEmpty
+            $subscriptions2 | Where-Object {$_.Name -like "*$subscriptionName4*"} | Should Not BeNullOrEmpty
+
+            # Should also work if we give a topic object.
+            $subscriptions2 = Get-GcpsSubscription -Topic $topicObject2
             $subscriptions2.Count | Should Be 2
             $subscriptions2 | Where-Object {$_.Name -like "*$subscriptionName3*"} | Should Not BeNullOrEmpty
             $subscriptions2 | Where-Object {$_.Name -like "*$subscriptionName4*"} | Should Not BeNullOrEmpty
@@ -387,7 +419,7 @@ Describe "Set-GcpsSubscriptionConfig" {
         }
     }
 
-    It "should work with -InputObject" {
+    It "should work with subscription objects" {
         $r = Get-Random
         $topicName = "gcp-test-new-subscription-topic-$r"
         $subscriptionName = "gcp-test-new-subscription-$r"
@@ -399,7 +431,7 @@ Describe "Set-GcpsSubscriptionConfig" {
                                  -PushEndpoint $endpoint
 
             $subscription = Get-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
-            Set-GcpsSubscriptionConfig -InputObject $subscription -PullConfig
+            Set-GcpsSubscriptionConfig -Subscription $subscription -PullConfig
 
             $subscription = Get-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
             $subscription.PushConfig.PushEndpoint | Should BeNullOrEmpty
@@ -511,6 +543,26 @@ Describe "Remove-GcpsSubscription" {
 
             # Remove through pipeline
             Get-GcpsSubscription -Subscription $subscription | Remove-GcpsSubscription
+            { Get-GcpsSubscription -Subscription $subscription -ErrorAction Stop } | Should Throw "does not exist"
+        }
+        finally {
+            gcloud beta pubsub topics delete $topic --quiet 2>$null
+        }
+    }
+
+    It "should work with subscription object" {
+        $r = Get-Random
+        $topic = "gcp-test-remove-subscription-topic-$r"
+        $subscription = "gcp-test-remove-subscription-$r"
+
+        New-GcpsTopic -Topic $topic
+        New-GcpsSubscription -Topic $topic -Subscription $subscription
+
+        try {
+            $subscriptionObject = Get-GcpsSubscription -Subscription $subscription
+            $subscription | Should Not BeNullOrEmpty
+
+            Remove-GcpsSubscription -Subscription $subscriptionObject
             { Get-GcpsSubscription -Subscription $subscription -ErrorAction Stop } | Should Throw "does not exist"
         }
         finally {
