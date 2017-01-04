@@ -74,11 +74,11 @@ Describe "Add-GceFirewall" {
 
     It "should work" {
         $firewall = Add-GceFirewall -Project $project $name -Allowed $allowed -Description "test Add $r" `
-            -SourceRange "192.168.100.0/22", "2001:db8::/48" -SourceTag "alpha" -TargetTag "beta"
+            -SourceRange "192.168.100.0/22", "192.168.100.0/30" -SourceTag "alpha" -TargetTag "beta"
         $firewall.Description | Should Be "test Add $r"
         $firewall.SourceRanges.Count | Should Be 2
         $firewall.SourceRanges -contains "192.168.100.0/22" | Should Be $true
-        $firewall.SourceRanges -contains "2001:db8::/48" | Should Be $true
+        $firewall.SourceRanges -contains "192.168.100.0/30" | Should Be $true
         $firewall.SourceTags | Should Be "alpha"
         $firewall.TargetTags | Should Be "beta"
     }
