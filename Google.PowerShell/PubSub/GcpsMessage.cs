@@ -282,7 +282,7 @@ namespace Google.PowerShell.PubSub
     /// <para type="description">
     /// Publishes one or more PubSub messages to a topic. Will raise errors if the topic does not exist.
     /// The cmdlet will search for the topic in the default project if -Project is not used.
-    /// To publish more than 1 message, use -Message parameter with an array of messages constructed from New-GcpsMessage.
+    /// To publish more than one message, use -Message parameter with an array of messages constructed from New-GcpsMessage.
     /// Otherwise, use -Data and -Attribute parameters to publish a single message.
     /// </para>
     /// <example>
@@ -412,6 +412,134 @@ namespace Google.PowerShell.PubSub
                     exceptionMessage: $"Topic '{Topic}' does not exist in project '{Project}'.",
                     errorId: "TopicNotFound",
                     targetObject: Topic);
+            }
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Sends acknowledgement for one or more PubSub messages.
+    /// </para>
+    /// <para type="description">
+    /// Sends acknowledgement for one or more PubSub messages. Will raise errors if the subscription that the messages are pulled from
+    /// does not exist. The cmdlet will search for the subscription and the messages in the default project if -Project is not used.
+    /// To send acknowledgement for messages from a single subscription, use -Subscription to provide the name of the subscription
+    /// and -AckId to provide a list of Ack Ids for that subscription. To send acknowledgement for messages objects returned by
+    /// Get-GcpsMessage cmdlet, use the -InputObject parameter.
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> Send-GcpsAck -Subscription "my-subscription" -AckId "ackId"</code>
+    ///   <para>
+    ///   This command sends acknowledgement for message with Ack Id "ackId" from subscription "my-subscription" in the default project.
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Send-GcpsAck -Subscription "my-subscription" -AckId "ackId1", "ackId2" -Project "my-project"</code>
+    ///   <para>
+    ///   This command sends acknowledgement for messages with Ack Ids "ackId1" and "ackId2" from subscription"my-subscription"
+    ///   in the project "my-project".
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> $messages = Get-GcpsMessage -Subscription "my-subscription"
+    ///   PS C:\> Send-GcpsAck -InputObject $messages
+    ///   </code>
+    ///   <para>
+    ///   This command sends acknowledgement for messages pulled from subscription "my-subscription"
+    ///   </para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/pubsub/docs/subscriber#receiving-pull-messages)">
+    /// [Receiving and Sending Acknowledge for Pull Messages]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommunications.Send, "GcpsAck")]
+    public class SendGcpsAck : GcpsCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string ByObject = "ByObject";
+            public const string ByName = "ByName";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// The project that the subscription belongs to. If not set via PowerShell parameter processing, will
+        /// default to the Cloud SDK's DefaultProject property.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByName)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the subscription that the messages are pulled from.
+        /// This parameter is used with -AckId parameter.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByName)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Subscription), Property =nameof(Apis.Pubsub.v1.Data.Subscription.Name))]
+        [Alias("Name")]
+        [ValidateNotNullOrEmpty]
+        public string Subscription { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The list of AckIds of the pulled messages from the provided subscription.
+        /// This parameter is used with -Name parameter.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ValueFromPipelineByPropertyName = true, ParameterSetName = ParameterSetNames.ByName)]
+        [ValidateNotNullOrEmpty]
+        public string[] AckId { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The list of PubSub messages that the cmdlet will send acknowledgement for.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ByObject)]
+        [ValidateNotNullOrEmpty]
+        public PubSubMessageWithAckIdAndSubscription[] InputObject { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            if (ParameterSetName == ParameterSetNames.ByName)
+            {
+                Subscription = GetProjectPrefixForSubscription(Subscription, Project);
+                AcknowledgeRequest requestBody = new AcknowledgeRequest() { AckIds = AckId.ToList() };
+                SendAcknowledgement(requestBody, Subscription);
+            }
+
+            if (ParameterSetName == ParameterSetNames.ByObject)
+            {
+                // We group the message with the subscription name as key and Ack IDs as values and send 1 request per subscription.
+                IEnumerable<IGrouping<string, string>> messageGroups =
+                    InputObject.GroupBy(message => message.Subscription, message => message.AckId);
+                foreach (IGrouping<string, string> messageGroup in messageGroups)
+                {
+                    AcknowledgeRequest requestBody = new AcknowledgeRequest() { AckIds = messageGroup.ToList() };
+                    SendAcknowledgement(requestBody, messageGroup.Key);
+                }
+            }
+        }
+
+        private void SendAcknowledgement(AcknowledgeRequest requestBody, string subscriptionName)
+        {
+            try
+            {
+                ProjectsResource.SubscriptionsResource.AcknowledgeRequest request =
+                    Service.Projects.Subscriptions.Acknowledge(requestBody, subscriptionName);
+                request.Execute();
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+            {
+                WriteResourceMissingError(
+                    exceptionMessage: $"Subscription '{subscriptionName}' does not exist in project '{Project}'.",
+                    errorId: "SubscriptionNotFound",
+                    targetObject: subscriptionName);
+                return;
             }
         }
     }
