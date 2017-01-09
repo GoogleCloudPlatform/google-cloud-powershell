@@ -979,6 +979,40 @@ namespace Google.PowerShell.ComputeEngine
     /// With this cmdlet, you can update metadata, attach and detach disks, add and remove acces configs,
     /// or add and remove tags.
     /// </para>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Set-GceInstance -Name "my-instance" -AttachDisk $disk
+    ///   </code>
+    ///   <para>Attach disk $disk to the instance "my-instance" in the default project.</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Set-GceInstance -Name "my-instance" -RemoveDisk "my-disk" -Project "my-project"
+    ///   </code>
+    ///   <para>
+    ///   Remove disk "my-disk" from the instance "my-instance" in the project "my-project".
+    ///   Please note that "my-disk" is the device name of the disk in the instance, not the
+    ///   persistent name of the disk.
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Set-GceInstance -Name "my-instance" -TurnOnAutoDeleteDisk "my-disk"
+    ///   </code>
+    ///   <para>
+    ///   Turn on autodelete for disk "my-disk" from the instance "my-instance".
+    ///   Please note that "my-disk" is the device name of the disk in the instance, not the
+    ///   persistent name of the disk.
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Set-GceInstance -Name "my-instance" -TurnOffAutoDeleteDisk $disk1, $disk2
+    ///   </code>
+    ///   <para>
+    ///   Turn off autodelete for disk $disk1 and $disk2 from the instance "my-instance".
+    ///   </para>
+    /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
     /// [Instance resource definition]
     /// </para>
@@ -1122,7 +1156,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The name of the disk to turn on autodelete.
+        /// The names of the disks to turn on autodelete.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.AutoDeleteDisk)]
@@ -1133,7 +1167,7 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
-        /// The name of the disk to turn off autodelete.
+        /// The names of the disks to turn off autodelete.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.AutoDeleteDisk)]
@@ -1177,6 +1211,9 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(ParameterSetName = ParameterSetNames.Tag)]
         [Parameter(ParameterSetName = ParameterSetNames.TagByObject)]
         public string[] RemoveTag { get; set; } = { };
+
+        // List of attached disks of the instance.
+        private IList<AttachedDisk> attachedDisks;
 
         protected override void ProcessRecord()
         {
@@ -1259,37 +1296,50 @@ namespace Google.PowerShell.ComputeEngine
             }
         }
 
+        // Given a list of string, transform any selflink URI into attached disk name.
+        private IEnumerable<string> GetAttachedDiskName(string[] diskNames)
+        {
+            if (diskNames.Any(diskName => Uri.IsWellFormedUriString(diskName, UriKind.Absolute)))
+            {
+                // The disks on the GCE instance we need to set.
+                // This is used for the case when there are selflinks instead of disk names.
+                // We cached this in private field so subsequent calls to the function can use it.
+                if (attachedDisks == null)
+                {
+                    Instance gceInstance = Service.Instances.Get(_project, _zone, _name).Execute();
+                    attachedDisks = gceInstance?.Disks;
+                }
+
+                return diskNames.Select(diskName =>
+                    {
+                        // If the diskName is a self link, we have to get the device name from attachedDisks list.
+                        if (Uri.IsWellFormedUriString(diskName, UriKind.Absolute))
+                        {
+                            AttachedDisk attachedDisk = attachedDisks.FirstOrDefault(
+                                disk => string.Equals(disk.Source, diskName, StringComparison.OrdinalIgnoreCase));
+                            if (attachedDisk == null)
+                            {
+                                WriteResourceMissingError($"Disk '{diskName}' cannot be found.", "MissingAttachedDisk", diskName);
+                            }
+                            return attachedDisk.DeviceName;
+                        }
+
+                        return diskName;
+                    });
+            }
+
+            return diskNames;
+        }
+
         /// <summary>
         /// ProcessRecord for Disk parameter set.
         /// </summary>
         private void ProcessDisk()
         {
-            // The disks on the GCE instance we need to set.
-            // This is used for the case when there are selflinks instead of disk names.
-            IList<AttachedDisk> attachedDisks = null;
-            if (RemoveDisk != null && RemoveDisk.Any(diskName => Uri.IsWellFormedUriString(diskName, UriKind.Absolute)))
+            foreach (string diskName in GetAttachedDiskName(RemoveDisk))
             {
-                Instance gceInstance = Service.Instances.Get(_project, _zone, _name).Execute();
-                attachedDisks = gceInstance?.Disks;
-            }
-
-            foreach (string diskName in RemoveDisk)
-            {
-                string detachedDiskName = diskName;
-                // If the diskName is a self link, we have to get the device name from attachedDisks list.
-                if (Uri.IsWellFormedUriString(diskName, UriKind.Absolute))
-                {
-                    AttachedDisk attachedDisk = attachedDisks.FirstOrDefault(
-                        disk => string.Equals(disk.Source, diskName, StringComparison.OrdinalIgnoreCase));
-                    if (attachedDisk == null)
-                    {
-                        WriteResourceMissingError($"Disk '{diskName}' cannot be found.", "MissingAttachedDisk", diskName);
-                        continue;
-                    }
-                    detachedDiskName = attachedDisk.DeviceName;
-                }
                 InstancesResource.DetachDiskRequest request = Service.Instances.DetachDisk(
-                    _project, _zone, _name, detachedDiskName);
+                    _project, _zone, _name, diskName);
                 Operation operation = request.Execute();
                 AddZoneOperation(_project, _zone, operation, () =>
                 {
@@ -1325,7 +1375,27 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         private void ProcessAutoDeleteDisk()
         {
-            FILL IN HERE
+            foreach (string diskName in GetAttachedDiskName(TurnOnAutoDeleteDisk))
+            {
+                InstancesResource.SetDiskAutoDeleteRequest request = Service.Instances.SetDiskAutoDelete(
+                    _project, _zone, _name, true, diskName);
+                Operation operation = request.Execute();
+                AddZoneOperation(_project, _zone, operation, () =>
+                {
+                    WriteObject(Service.Instances.Get(_project, _zone, _name));
+                });
+            }
+
+            foreach (string diskName in GetAttachedDiskName(TurnOffAutoDeleteDisk))
+            {
+                InstancesResource.SetDiskAutoDeleteRequest request = Service.Instances.SetDiskAutoDelete(
+                    _project, _zone, _name, false, diskName);
+                Operation operation = request.Execute();
+                AddZoneOperation(_project, _zone, operation, () =>
+                {
+                    WriteObject(Service.Instances.Get(_project, _zone, _name));
+                });
+            }
         }
 
         /// <summary>

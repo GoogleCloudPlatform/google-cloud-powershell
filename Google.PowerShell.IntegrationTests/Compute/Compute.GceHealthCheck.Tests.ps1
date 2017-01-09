@@ -13,7 +13,7 @@ Describe "Add-GceHealthCheck" {
 
     Context "add success" {
         AfterEach {
-            Get-GceHealthCheck $healthCheckName -ErrorAction SilentlyContinue | Remove-GceHealthCheck -ErrorAction SilentlyContinue
+            Get-GceHealthCheck | Remove-GceHealthCheck -ErrorAction SilentlyContinue
         }
 
         It "should set defaults" {
