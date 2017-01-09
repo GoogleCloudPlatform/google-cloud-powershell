@@ -511,7 +511,7 @@ Describe "Set-GceInstance" {
             }
         }
 
-        AfterAll {            
+        AfterAll {
             $newDisk, $newDisk2, $newDisk3, $newDisk4 | Remove-GceDisk -ErrorAction SilentlyContinue
         }
     }
