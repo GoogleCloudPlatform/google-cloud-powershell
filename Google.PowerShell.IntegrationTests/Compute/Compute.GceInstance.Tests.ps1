@@ -447,16 +447,72 @@ Describe "Set-GceInstance" {
             ($instanceObj.Disks | Where {$_.DeviceName -eq $disk4DeviceName}).Count | Should Be 1
 
             # If we try the other disk, error should be thrown
-            { Set-GceInstance $instance -Project $project -Zone $zone2 -RemoveDisk  $newDisk2 -ErrorAction Stop } |
+            { Set-GceInstance $instance -Project $project -Zone $zone2 -RemoveDisk $newDisk2 -ErrorAction Stop } |
                 Should Throw "cannot be found"
 
             # Even though the device name of disk 4 on the VM is different than its persistent name,
             # RemoveDisk should still work.
             Set-GceInstance $instance -Project $project -Zone $zone2 -RemoveDisk $newDisk4
+            $instanceObj = Get-GceInstance -Project $project -Zone $zone2 $instance
+            ($instanceObj.Disks | Where {$_.DeviceName -eq $disk4DeviceName}).Count | Should Be 0
+        }
+
+        It "should turn on and off AutoDelete with -TurnOnAutoDeleteDisk and -TurnOffAutoDeleteDisk" {
+            Set-GceInstance $instance -Project $project -Zone $zone2 -AddDisk $newDiskName,
+                $newDisk2, $attachedDisk3, $attachedDisk4
+            
+            try {
+                # Turn off autodelete for disk 1 and disk 2.
+                Set-GceInstance $instance -Project $project -Zone $zone2 -TurnOffAutoDeleteDisk $newDiskName, $newDisk2
+                $allDisks = (Get-GceInstance -Project $project -Zone $zone2 $instance).Disks
+                $disk1 = $allDisks | Where {$_.DeviceName -eq $newDiskName}
+                $disk1.AutoDelete | Should Be $false
+                $disk2 = $allDisks | Where {$_.DeviceName -eq $newDiskName2}
+                $disk2.AutoDelete | Should Be $false
+
+                # Turn on autodelete for disk 3 and disk 4.
+                Set-GceInstance $instance -Project $project -Zone $zone2 -TurnOnAutoDeleteDisk $newDiskName3, $newDisk4
+                $allDisks = (Get-GceInstance -Project $project -Zone $zone2 $instance).Disks
+                $disk3 = $allDisks | Where {$_.DeviceName -eq $newDiskName3}
+                $disk3.AutoDelete | Should Be $true
+                $disk4 = $allDisks | Where {$_.DeviceName -eq $disk4DeviceName}
+                $disk4.AutoDelete | Should Be $true
+
+                # Turn on autodelete for 1 and 2 and off for 3 and 4 at the same time.
+                Set-GceInstance $instance -Project $project -Zone $zone2 `
+                                -TurnOffAutoDeleteDisk $newDiskName3, $newDisk4 `
+                                -TurnOnAutoDeleteDisk $newDiskName, $newDisk2
+                $allDisks = (Get-GceInstance -Project $project -Zone $zone2 $instance).Disks
+                $disk1 = $allDisks | Where {$_.DeviceName -eq $newDiskName}
+                $disk1.AutoDelete | Should Be $true
+                $disk2 = $allDisks | Where {$_.DeviceName -eq $newDiskName2}
+                $disk2.AutoDelete | Should Be $true
+                $disk3 = $allDisks | Where {$_.DeviceName -eq $newDiskName3}
+                $disk3.AutoDelete | Should Be $false
+                $disk4 = $allDisks | Where {$_.DeviceName -eq $disk4DeviceName}
+                $disk4.AutoDelete | Should Be $false
+
+                # Turn on autodelete for all disks.
+                Set-GceInstance $instance -Project $project -Zone $zone2 `
+                                -TurnOnAutoDeleteDisk $newDiskName3, $newDisk4, $newDiskName, $newDisk2
+                $allDisks = (Get-GceInstance -Project $project -Zone $zone2 $instance).Disks
+                $disk1 = $allDisks | Where {$_.DeviceName -eq $newDiskName}
+                $disk1.AutoDelete | Should Be $true
+                $disk2 = $allDisks | Where {$_.DeviceName -eq $newDiskName2}
+                $disk2.AutoDelete | Should Be $true
+                $disk3 = $allDisks | Where {$_.DeviceName -eq $newDiskName3}
+                $disk3.AutoDelete | Should Be $true
+                $disk4 = $allDisks | Where {$_.DeviceName -eq $disk4DeviceName}
+                $disk4.AutoDelete | Should Be $true
+            }
+            finally {
+                Set-GceInstance $instance -Project $project -Zone $zone2 `
+                                -RemoveDisk $newDisk, $newDisk2, $newDisk3, $newDisk4
+            }
         }
 
         AfterAll {
-            $newDisk, $newDisk2, $newDisk3 | Remove-GceDisk
+            $newDisk, $newDisk2, $newDisk3, $newDisk4 | Remove-GceDisk -ErrorAction SilentlyContinue
         }
     }
 
