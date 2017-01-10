@@ -583,7 +583,7 @@ namespace Google.PowerShell.PubSub
     /// <example>
     ///   <code>
     ///   PS C:\> $messages = Get-GcpsMessage -Subscription "my-subscription"
-    ///   PS C:\> Set-GcpsAckDeadline -InputObject $messages
+    ///   PS C:\> Set-GcpsAckDeadline -InputObject $messages -AckDeadline 10
     ///   </code>
     ///   <para>
     ///   This command sets the acknowledgement deadline for messages pulled from subscription "my-subscription" to 10s.
