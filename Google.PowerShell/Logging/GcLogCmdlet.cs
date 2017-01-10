@@ -646,10 +646,12 @@ namespace Google.PowerShell.Logging
 
     /// <summary>
     /// <para type="synopsis">
-    /// Gets StackDriver logs from a project.
+    /// Lists StackDriver logs' names from a project.
     /// </para>
     /// <para type="description">
-    /// Gets StackDriver logs from a project. Will display logs from the default project if -Project is not used.
+    /// Lists StackDriver logs' names from a project. Will display logs' names from the default project if -Project is not used.\
+    /// A log is a named collection of log entries within the project (any log mus thave at least 1 log entry).
+    /// To get log entries from a particular log, use Get-GcLogEntry cmdlet instead.
     /// </para>
     /// <example>
     ///   <code>PS C:\> Get-GcLog</code>
@@ -659,8 +661,8 @@ namespace Google.PowerShell.Logging
     ///   <code>PS C:\> Get-GcLog -Project "my-project"</code>
     ///   <para>This command gets logs from project "my-project".</para>
     /// </example>
-    /// <para type="link" uri="(https://cloud.google.com/logging/docs/view/logs_index)">
-    /// [Log Entries and Logs]
+    /// <para type="link" uri="(https://cloud.google.com/logging/docs/basic-concepts#logs)">
+    /// [Logs]
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcLog")]
@@ -668,7 +670,7 @@ namespace Google.PowerShell.Logging
     {
         /// <summary>
         /// <para type="description">
-        /// The project to check for logs. If not set via PowerShell parameter processing, will
+        /// The project to check for logs in. If not set via PowerShell parameter processing, will
         /// default to the Cloud SDK's DefaultProject property.
         /// </para>
         /// </summary>
