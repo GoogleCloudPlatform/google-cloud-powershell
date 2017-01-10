@@ -114,6 +114,25 @@ Describe "Get-GcLogEntry" {
         $textLogEntry = Get-GcLogEntry -Filter "logName=`"projects/$project/logs/$logName`" AND textPayload=`"$textPayload`""
         $textLogEntry.TextPayload | Should BeExactly $textPayload
     }
+
+    It "should work with -Filter combined with other parameters" {
+        $textLogEntry = Get-GcLogEntry -Filter "textPayload=`"$textPayload`"" -LogName $logName
+        $textLogEntry.TextPayload | Should BeExactly $textPayload
+
+        $gceLogEntries = Get-GcLogEntry -Filter "resource.type = global" -LogName $logName | Select -First 2
+        $gceLogEntries.Resource | ForEach-Object { $_.Type | Should BeExactly global }
+
+        # In this case, -Filter and -LogName parameters have the same effect so we still should get entry from log $logName.
+        $logEntries = Get-GcLogEntry -Filter "logName=`"projects/$project/logs/$logName`"" -LogName $logName
+        $logEntries.Count | Should Be 2
+        $textLogEntry = $logEntries | Where-Object { -not [string]::IsNullOrWhiteSpace($_.TextPayload) }
+        $textLogEntry.TextPayload | Should BeExactly $textPayload
+        $jsonLogEntry = $logEntries | Where-Object { $null -ne $_.JsonPayload }
+        $jsonLogEntry.JsonPayload["Key"] | Should BeExactly "Value"
+
+        $logEntries = Get-GcLogEntry -Filter "logName=`"projects/$project/logs/non-existinglog`"" -LogName $logName
+        $logEntries | Should BeNullOrEmpty
+    }
 }
 
 Describe "New-GcLogEntry" {
