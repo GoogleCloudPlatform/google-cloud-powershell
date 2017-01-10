@@ -638,6 +638,61 @@ namespace Google.PowerShell.Logging
 
     /// <summary>
     /// <para type="synopsis">
+    /// Gets StackDriver logs from a project.
+    /// </para>
+    /// <para type="description">
+    /// Gets StackDriver logs from a project. Will display logs from the default project if -Project is not used.
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> Get-GcLog</code>
+    ///   <para>This command gets logs from the default project.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Get-GcLog -Project "my-project"</code>
+    ///   <para>This command gets logs from project "my-project".</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/logging/docs/view/logs_index)">
+    /// [Log Entries and Logs]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Get, "GcLog")]
+    public class GetGcLogCmdlet : GcLogCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The project to check for logs. If not set via PowerShell parameter processing, will
+        /// default to the Cloud SDK's DefaultProject property.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            ProjectsResource.LogsResource.ListRequest listRequest = Service.Projects.Logs.List($"projects/{Project}");
+            do
+            {
+                try
+                {
+                    ListLogsResponse response = listRequest.Execute();
+                    if (response.LogNames != null)
+                    {
+                        WriteObject(response.LogNames, true);
+                    }
+                    listRequest.PageToken = response.NextPageToken;
+                }
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    throw new PSArgumentException($"Project {Project} does not exist.");
+                }
+            }
+            while (!Stopping && listRequest.PageToken != null);
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
     /// Removes a StackDriver log from a project.
     /// </para>
     /// <para type="description">

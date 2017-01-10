@@ -114,6 +114,25 @@ Describe "Get-GcLogEntry" {
         $textLogEntry = Get-GcLogEntry -Filter "logName=`"projects/$project/logs/$logName`" AND textPayload=`"$textPayload`""
         $textLogEntry.TextPayload | Should BeExactly $textPayload
     }
+
+    It "should work with -Filter combined with other parameters" {
+        $textLogEntry = Get-GcLogEntry -Filter "textPayload=`"$textPayload`"" -LogName $logName
+        $textLogEntry.TextPayload | Should BeExactly $textPayload
+
+        $gceLogEntries = Get-GcLogEntry -Filter "resource.type = global" -LogName $logName | Select -First 2
+        $gceLogEntries.Resource | ForEach-Object { $_.Type | Should BeExactly global }
+
+        # In this case, -Filter and -LogName parameters have the same effect so we still should get entry from log $logName.
+        $logEntries = Get-GcLogEntry -Filter "logName=`"projects/$project/logs/$logName`"" -LogName $logName
+        $logEntries.Count | Should Be 2
+        $textLogEntry = $logEntries | Where-Object { -not [string]::IsNullOrWhiteSpace($_.TextPayload) }
+        $textLogEntry.TextPayload | Should BeExactly $textPayload
+        $jsonLogEntry = $logEntries | Where-Object { $null -ne $_.JsonPayload }
+        $jsonLogEntry.JsonPayload["Key"] | Should BeExactly "Value"
+
+        $logEntries = Get-GcLogEntry -Filter "logName=`"projects/$project/logs/non-existinglog`"" -LogName $logName
+        $logEntries | Should BeNullOrEmpty
+    }
 }
 
 Describe "New-GcLogEntry" {
@@ -223,6 +242,39 @@ Describe "New-GcLogEntry" {
         }
         finally {
             gcloud beta logging logs delete $logName --quiet 2>$null
+        }
+    }
+}
+
+Describe "Get-GcLog" {
+    It "should throw error for non-existent project" {
+        { Get-GcLog -Project "this-project-does-not-exist-powershell" } | Should Throw "does not exist"
+    }
+
+    It "should work" {
+        $r = Get-Random
+        $logName = "gcp-testing-get-gclog-$r"
+        $logName2 = "gcp-testing-get-gclog2-$r"
+        $logFullName = "projects/$project/logs/$logName"
+        $logFullName2 = "projects/$project/logs/$logName2"
+        $textPayload = "This is the text payload."
+
+        try {
+            New-GcLogEntry -LogName $logName -TextPayload $textPayload
+            New-GcLogEntry -LogName $logName2 -TextPayload $textPayload
+            Start-Sleep 5
+
+            $logs = Get-GcLog
+            $logs -contains $logFullName| Should Be $true
+            $logs -contains $logFullName2 | Should Be $true
+
+            $logs = Get-GcLog -Project $project
+            $logs -contains $logFullName | Should Be $true
+            $logs -contains $logFullName2 | Should Be $true
+        }
+        finally {
+            gcloud beta logging logs delete $logName --quiet 2>$null
+            gcloud beta logging logs delete $logName2 --quiet 2>$null
         }
     }
 }
