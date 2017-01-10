@@ -130,6 +130,65 @@ namespace Google.PowerShell.Logging
         /// Returns all valid resource types.
         /// </summary>
         protected string[] AllResourceTypes => s_monitoredResourceDescriptors.Value.Select(descriptor => descriptor.Type).ToArray();
+
+        /// <summary>
+        /// Constructs a filter string based on log name, severity, type of log, before and after timestamps
+        /// and other advanced filter.
+        /// </summary>
+        protected string ConstructLogFilterString(string logName, LogSeverity? logSeverity, string selectedType,
+            DateTime? before, DateTime? after, string otherFilter)
+        {
+            string andOp = " AND ";
+            string filterString = "";
+
+            if (!string.IsNullOrWhiteSpace(logName))
+            {
+                // By setting logName = LogName in the filter, the list request
+                // will only return log entry that belongs to LogName.
+                // Example: logName = "Name of log".
+                filterString = $"logName = '{logName}'{andOp}".Replace('\'', '"');
+            }
+
+            if (logSeverity.HasValue)
+            {
+                // Example: severity >= ERROR.
+                string severityString = Enum.GetName(typeof(LogSeverity), logSeverity.Value).ToUpper();
+                filterString += $"severity = {severityString}{andOp}";
+            }
+
+            if (selectedType != null)
+            {
+                // Example: resource.type = "gce_instance".
+                filterString += $"resource.type = '{selectedType}'{andOp}".Replace('\'', '"');
+            }
+
+            if (before.HasValue)
+            {
+                // Example: timestamp <= "2016-06-27T14:40:00-04:00".
+                string beforeTimestamp = XmlConvert.ToString(before.Value, XmlDateTimeSerializationMode.Local);
+                filterString += $"timestamp <= '{beforeTimestamp}'{andOp}".Replace('\'', '"');
+            }
+
+            if (after.HasValue)
+            {
+                // Example: timestamp >= "2016-06-27T14:40:00-04:00".
+                string afterTimestamp = XmlConvert.ToString(after.Value, XmlDateTimeSerializationMode.Local);
+                filterString += $"timestamp >= '{afterTimestamp}'{andOp}".Replace('\'', '"');
+            }
+
+            if (otherFilter != null)
+            {
+                filterString += otherFilter;
+            }
+
+            // Strip the "AND " at the end if we have it.
+            if (filterString.EndsWith(andOp))
+            {
+                filterString = filterString.Substring(0, filterString.Length - andOp.Length);
+            }
+
+            return filterString;
+        }
     }
 
     /// <summary>
@@ -281,59 +340,15 @@ namespace Google.PowerShell.Logging
             ListLogEntriesRequest logEntriesRequest = new ListLogEntriesRequest();
             // Set resource to "projects/{Project}" so we will only find log entries in project Project.
             logEntriesRequest.ResourceNames = new List<string> { $"projects/{Project}" };
-
-            string andOp = " AND ";
-            string filterString = "";
-
-            if (!string.IsNullOrWhiteSpace(LogName))
-            {
-                LogName = PrefixProject(LogName, Project);
-                // By setting logName = LogName in the filter, the list request
-                // will only return log entry that belongs to LogName.
-                // Example: logName = "Name of log".
-                filterString = $"logName = '{LogName}'{andOp}".Replace('\'', '"');
-            }
-
-            if (Severity.HasValue)
-            {
-                // Example: severity >= ERROR.
-                string severityString = Enum.GetName(typeof(LogSeverity), Severity.Value).ToUpper();
-                filterString += $"severity = {severityString}{andOp}";
-            }
-
             string selectedType = _dynamicParameters["ResourceType"].Value?.ToString().ToLower();
-            if (selectedType != null)
-            {
-                // Example: resource.type = "gce_instance".
-                filterString += $"resource.type = '{selectedType}'{andOp}".Replace('\'', '"');
-            }
-
-            if (Before.HasValue)
-            {
-                // Example: timestamp <= "2016-06-27T14:40:00-04:00".
-                string beforeTimestamp = XmlConvert.ToString(Before.Value, XmlDateTimeSerializationMode.Local);
-                filterString += $"timestamp <= '{beforeTimestamp}'{andOp}".Replace('\'', '"');
-            }
-
-            if (After.HasValue)
-            {
-                // Example: timestamp >= "2016-06-27T14:40:00-04:00".
-                string afterTimestamp = XmlConvert.ToString(After.Value, XmlDateTimeSerializationMode.Local);
-                filterString += $"timestamp >= '{afterTimestamp}'{andOp}".Replace('\'', '"');
-            }
-
-            if (Filter != null)
-            {
-                filterString += Filter;
-            }
-
-            // Strip the "AND " at the end if we have it.
-            if (filterString.EndsWith(andOp))
-            {
-                filterString = filterString.Substring(0, filterString.Length - andOp.Length);
-            }
-
-            logEntriesRequest.Filter = filterString;
+            string logName = PrefixProject(LogName, Project);
+            logEntriesRequest.Filter = ConstructLogFilterString(
+                logName: logName,
+                logSeverity: Severity,
+                selectedType: selectedType,
+                before: Before,
+                after: After,
+                otherFilter: Filter);
 
             do
             {
@@ -667,7 +682,7 @@ namespace Google.PowerShell.Logging
         /// The name of the log to be removed.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true)]
+        [Parameter(Mandatory = true, Position = 0)]
         [ValidateNotNullOrEmpty]
         public string LogName { get; set; }
 
