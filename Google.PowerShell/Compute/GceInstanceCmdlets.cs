@@ -1302,7 +1302,7 @@ namespace Google.PowerShell.ComputeEngine
             if (diskNames.Any(diskName => Uri.IsWellFormedUriString(diskName, UriKind.Absolute)))
             {
                 // The disks on the GCE instance we need to set.
-                // This is used for the case when there are selflinks instead of disk names.
+                // This is used for the case when there are self-links instead of disk names.
                 // We cached this in private field so subsequent calls to the function can use it.
                 if (attachedDisks == null)
                 {
@@ -1375,21 +1375,19 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         private void ProcessAutoDeleteDisk()
         {
-            foreach (string diskName in GetAttachedDiskName(TurnOnAutoDeleteDisk))
-            {
-                InstancesResource.SetDiskAutoDeleteRequest request = Service.Instances.SetDiskAutoDelete(
-                    _project, _zone, _name, true, diskName);
-                Operation operation = request.Execute();
-                AddZoneOperation(_project, _zone, operation, () =>
-                {
-                    WriteObject(Service.Instances.Get(_project, _zone, _name));
-                });
-            }
+            SetAutoDeleteDisk(true, TurnOnAutoDeleteDisk);
+            SetAutoDeleteDisk(false, TurnOffAutoDeleteDisk);
+        }
 
-            foreach (string diskName in GetAttachedDiskName(TurnOffAutoDeleteDisk))
+        /// <summary>
+        /// Given an array of disks, turn on or off autodelete for them.
+        /// </summary>
+        private void SetAutoDeleteDisk(bool autoDelete, string[] diskNames)
+        {
+            foreach (string diskName in GetAttachedDiskName(diskNames))
             {
                 InstancesResource.SetDiskAutoDeleteRequest request = Service.Instances.SetDiskAutoDelete(
-                    _project, _zone, _name, false, diskName);
+                    _project, _zone, _name, autoDelete, diskName);
                 Operation operation = request.Execute();
                 AddZoneOperation(_project, _zone, operation, () =>
                 {
