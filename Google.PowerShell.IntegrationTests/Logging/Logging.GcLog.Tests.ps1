@@ -246,6 +246,39 @@ Describe "New-GcLogEntry" {
     }
 }
 
+Describe "Get-GcLog" {
+    It "should throw error for non-existent project" {
+        { Get-GcLog -Project "this-project-does-not-exist-powershell" } | Should Throw "does not exist"
+    }
+
+    It "should work" {
+        $r = Get-Random
+        $logName = "gcp-testing-get-gclog-$r"
+        $logName2 = "gcp-testing-get-gclog2-$r"
+        $logFullName = "projects/$project/logs/$logName"
+        $logFullName2 = "projects/$project/logs/$logName2"
+        $textPayload = "This is the text payload."
+
+        try {
+            New-GcLogEntry -LogName $logName -TextPayload $textPayload
+            New-GcLogEntry -LogName $logName2 -TextPayload $textPayload
+            Start-Sleep 5
+
+            $logs = Get-GcLog
+            $logs -contains $logFullName| Should Be $true
+            $logs -contains $logFullName2 | Should Be $true
+
+            $logs = Get-GcLog -Project $project
+            $logs -contains $logFullName | Should Be $true
+            $logs -contains $logFullName2 | Should Be $true
+        }
+        finally {
+            gcloud beta logging logs delete $logName --quiet 2>$null
+            gcloud beta logging logs delete $logName2 --quiet 2>$null
+        }
+    }
+}
+
 Describe "Remove-GcLog" {
     It "should throw error for non-existent log" {
         { Remove-GcLog -LogName "non-existent-log-powershell-testing" } | Should Throw "404"
