@@ -11,10 +11,10 @@ namespace Google.PowerShell.Logging
 {
     /// <summary>
     /// <para type="synopsis">
-    /// Retrieves StackDriver Log Sinks.
+    /// Retrieves Stackdriver Log Sinks.
     /// </para>
     /// <para type="description">
-    /// Retrieves one or more StackDriver Log Sinks.
+    /// Retrieves one or more Stackdriver Log Sinks.
     /// If -Sink is not used, the cmdlet will return all the sinks under the specified project
     /// (default project if -Project is not used). Otherwise, the cmdlet will return a list of sinks
     /// matching the sink names specified in -Sink and will raise an error for any sinks that cannot be found.
@@ -38,7 +38,7 @@ namespace Google.PowerShell.Logging
     {
         /// <summary>
         /// <para type="description">
-        /// The project to check for sinks. If not set via PowerShell parameter processing, will
+        /// The project to check for sinks in. If not set via PowerShell parameter processing, will
         /// default to the Cloud SDK's DefaultProject property.
         /// </para>
         /// </summary>

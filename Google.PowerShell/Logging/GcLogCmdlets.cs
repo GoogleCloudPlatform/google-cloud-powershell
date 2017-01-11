@@ -658,10 +658,10 @@ namespace Google.PowerShell.Logging
 
     /// <summary>
     /// <para type="synopsis">
-    /// Lists StackDriver logs' names from a project.
+    /// Lists Stackdriver logs' names from a project.
     /// </para>
     /// <para type="description">
-    /// Lists StackDriver logs' names from a project. Will display logs' names from the default project if -Project is not used.
+    /// Lists Stackdriver logs' names from a project. Will display logs' names from the default project if -Project is not used.
     /// A log is a named collection of log entries within the project (any log mus thave at least 1 log entry).
     /// To get log entries from a particular log, use Get-GcLogEntry cmdlet instead.
     /// </para>
@@ -715,7 +715,7 @@ namespace Google.PowerShell.Logging
 
     /// <summary>
     /// <para type="synopsis">
-    /// Removes a StackDriver log from a project.
+    /// Removes a Stackdriver log from a project.
     /// </para>
     /// <para type="description">
     /// Removes a StackDrive log from a project based on the name of the log.

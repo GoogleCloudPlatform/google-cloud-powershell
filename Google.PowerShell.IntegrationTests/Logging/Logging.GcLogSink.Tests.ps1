@@ -24,7 +24,6 @@ Describe "Get-GcpsLogSink" {
 
     It "should work without any parameters" {
         $sinks = Get-GcLogSink
-        $sinks.Count - $previousCount | Should Be 2
 
         $firstSink = $sinks | Where-Object {$_.Name -eq $sinkName}
         $firstSink | Should Not BeNullOrEmpty
@@ -43,14 +42,15 @@ Describe "Get-GcpsLogSink" {
 
     It "should work with -Sink parameter" {
         $firstSink = Get-GcLogSink -Sink $sinkName
-        $firstSink.Name | Should BeExactly "$sinkName"
         $firstSink | Should Not BeNullOrEmpty
+        $firstSink.Name | Should BeExactly "$sinkName"
         $firstSink.Destination | Should BeExactly $destination
         $firstSink.OutputVersionFormat | Should BeExactly V1
         $firstSink.Filter | Should BeExactly $logFilter
         $firstSink.WriterIdentity | Should Not BeNullOrEmpty
+    }
 
-        # Should work with an array of sinks names.
+    It "should work with an array of sinks names" {
         $sinks = Get-GcLogSink -Sink $sinkName, $secondSinkName
         $sinks.Count | Should Be 2
 
