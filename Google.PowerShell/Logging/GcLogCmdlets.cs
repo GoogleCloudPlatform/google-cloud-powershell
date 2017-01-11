@@ -80,13 +80,25 @@ namespace Google.PowerShell.Logging
         /// <summary>
         /// Prefix projects/{project id}/logs to logName if not present.
         /// </summary>
-        protected string PrefixProject(string logName, string project)
+        protected string PrefixProjectToLogName(string logName, string project)
         {
             if (!string.IsNullOrWhiteSpace(logName) && !logName.StartsWith($"projects/{project}/logs"))
             {
                 logName = $"projects/{project}/logs/{logName}";
             }
             return logName;
+        }
+
+        /// <summary>
+        /// Prefix projects/{project id}/sinks to sinkName if not present.
+        /// </summary>
+        protected string PrefixProjectToSinkName(string sinkName, string project)
+        {
+            if (!string.IsNullOrWhiteSpace(sinkName) && !sinkName.StartsWith($"projects/{project}/sinks"))
+            {
+                sinkName = $"projects/{project}/sinks/{sinkName}";
+            }
+            return sinkName;
         }
 
         /// <summary>
@@ -341,7 +353,7 @@ namespace Google.PowerShell.Logging
             // Set resource to "projects/{Project}" so we will only find log entries in project Project.
             logEntriesRequest.ResourceNames = new List<string> { $"projects/{Project}" };
             string selectedType = _dynamicParameters["ResourceType"].Value?.ToString().ToLower();
-            string logName = PrefixProject(LogName, Project);
+            string logName = PrefixProjectToLogName(LogName, Project);
             logEntriesRequest.Filter = ConstructLogFilterString(
                 logName: logName,
                 logSeverity: Severity,
@@ -577,7 +589,7 @@ namespace Google.PowerShell.Logging
 
         protected override void ProcessRecord()
         {
-            LogName = PrefixProject(LogName, Project);
+            LogName = PrefixProjectToLogName(LogName, Project);
             if (MonitoredResource == null)
             {
                 MonitoredResource = new MonitoredResource()
@@ -646,10 +658,10 @@ namespace Google.PowerShell.Logging
 
     /// <summary>
     /// <para type="synopsis">
-    /// Lists StackDriver logs' names from a project.
+    /// Lists Stackdriver logs' names from a project.
     /// </para>
     /// <para type="description">
-    /// Lists StackDriver logs' names from a project. Will display logs' names from the default project if -Project is not used.
+    /// Lists Stackdriver logs' names from a project. Will display logs' names from the default project if -Project is not used.
     /// A log is a named collection of log entries within the project (any log mus thave at least 1 log entry).
     /// To get log entries from a particular log, use Get-GcLogEntry cmdlet instead.
     /// </para>
@@ -703,7 +715,7 @@ namespace Google.PowerShell.Logging
 
     /// <summary>
     /// <para type="synopsis">
-    /// Removes a StackDriver log from a project.
+    /// Removes a Stackdriver log from a project.
     /// </para>
     /// <para type="description">
     /// Removes a StackDrive log from a project based on the name of the log.
@@ -745,7 +757,7 @@ namespace Google.PowerShell.Logging
 
         protected override void ProcessRecord()
         {
-            LogName = PrefixProject(LogName, Project);
+            LogName = PrefixProjectToLogName(LogName, Project);
             ProjectsResource.LogsResource.DeleteRequest deleteRequest = Service.Projects.Logs.Delete(LogName);
             deleteRequest.Execute();
         }
