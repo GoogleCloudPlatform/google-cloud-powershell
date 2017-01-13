@@ -56,7 +56,7 @@ namespace Google.PowerShell.Common
 
             if (!string.IsNullOrWhiteSpace(processOutput.StandardError))
             {
-                throw new InvalidOperationException($"Command {actualCommand} failed with error: processOutput.StandardError");
+                throw new InvalidOperationException($"Command {actualCommand} failed with error: {processOutput.StandardError}");
             }
 
             throw new InvalidOperationException($"Command {actualCommand} failed.");
