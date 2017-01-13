@@ -4,8 +4,10 @@
 using Google.Apis.Logging.v2;
 using Google.Apis.Logging.v2.Data;
 using Google.PowerShell.Common;
+using System;
 using System.Management.Automation;
 using System.Net;
+using System.Xml;
 
 namespace Google.PowerShell.Logging
 {
@@ -90,6 +92,143 @@ namespace Google.PowerShell.Logging
                     listRequest.PageToken = response.NextPageToken;
                 }
                 while (!Stopping && listRequest.PageToken != null);
+            }
+        }
+    }
+
+    [Cmdlet(VerbsCommon.New, "GcLogSink")]
+    public class NewGcLogSinkCmdlet : GcLogEntryCmdletWithLogFilter
+    {
+        private class ParameterSetNames
+        {
+            public const string BigQueryDataSetDestination = "BigQueryDataSetDestination";
+            public const string GcsBucketDestination = "GcsBucketDestination";
+            public const string PubSubTopicDestination = "PubSubTopicDestination";
+        }
+
+        /// <summary>
+        /// Enum of version format for log entry.
+        /// See https://cloud.google.com/logging/docs/api/reference/rest/v2/organizations.sinks#versionformat.
+        /// </summary>
+        public enum LogEntryVersionFormat
+        {
+            /// <summary>
+            /// LogEntry version 2 format.
+            /// </summary>
+            V2,
+
+            /// <summary>
+            /// LogEntry version 1 format.
+            /// </summary>
+            V1
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// The project to check for log entries. If not set via PowerShell parameter processing, will
+        /// default to the Cloud SDK's DefaultProject property.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        [Parameter(Mandatory = false)]
+        public LogEntryVersionFormat? OutputVersionFormat { get; set; }
+
+        [Parameter(Mandatory = true, Position = 0)]
+        [ValidateNotNullOrEmpty]
+        public string SinkName { get; set; }
+
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.GcsBucketDestination)]
+        [ValidateNotNullOrEmpty]
+        public string GcsBucketDestination { get; set; }
+
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.BigQueryDataSetDestination)]
+        [ValidateNotNullOrEmpty]
+        public string BigQueryDataSetDestination { get; set; }
+
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.PubSubTopicDestination)]
+        [ValidateNotNullOrEmpty]
+        public string PubSubTopicDestination { get; set; }
+
+        [Parameter(Mandatory = false)]
+        public SwitchParameter NoUniqueWriterIdentity { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            LogSink logSink = new LogSink()
+            {
+                Name = SinkName
+            };
+
+            string permissionRequest = "";
+
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.GcsBucketDestination:
+                    logSink.Destination = $"storage.googleapis.com/{GcsBucketDestination}";
+                    permissionRequest = $"'Owner' permission to the bucket '{GcsBucketDestination}'.";
+                    break;
+                case ParameterSetNames.BigQueryDataSetDestination:
+                    logSink.Destination = $"bigquery.googleapis.com/projects/{Project}/datasets/{BigQueryDataSetDestination}";
+                    permissionRequest = $"'Can edit' permission to the dataset '{BigQueryDataSetDestination}'.";
+                    break;
+                case ParameterSetNames.PubSubTopicDestination:
+                    logSink.Destination = $"pubsub.googleapis.com/projects/{Project}/topics/{PubSubTopicDestination}";
+                    permissionRequest = $"'Editor' permission in the project '{Project}'.";
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+
+            string logName = PrefixProjectToLogName(LogName, Project);
+            // The sink already has before and after filter so we do not have to supply it.
+            logSink.Filter = ConstructLogFilterString(
+                logName: logName,
+                logSeverity: Severity,
+                selectedType: SelectedResourceType,
+                before: null,
+                after: null,
+                otherFilter: Filter);
+
+            if (OutputVersionFormat.HasValue)
+            {
+                logSink.OutputVersionFormat = Enum.GetName(typeof(LogEntryVersionFormat), OutputVersionFormat.Value).ToUpper();
+            }
+
+            if (Before.HasValue)
+            {
+                logSink.EndTime = XmlConvert.ToString(Before.Value, XmlDateTimeSerializationMode.Local);
+            }
+
+            if (After.HasValue)
+            {
+                logSink.StartTime = XmlConvert.ToString(After.Value, XmlDateTimeSerializationMode.Local);
+            }
+
+            ProjectsResource.SinksResource.CreateRequest createRequest = Service.Projects.Sinks.Create(logSink, $"projects/{Project}");
+            if (NoUniqueWriterIdentity.IsPresent)
+            {
+                createRequest.UniqueWriterIdentity = !NoUniqueWriterIdentity.ToBool();
+            }
+            else
+            {
+                createRequest.UniqueWriterIdentity = true;
+            }
+
+            try
+            {
+                LogSink createdSink = createRequest.Execute();
+                WriteObject(createdSink);
+                Host.UI.WriteLine($"Please remember to grant '{createdSink?.WriterIdentity}' {permissionRequest}");
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
+            {
+                WriteResourceExistsError(
+                    exceptionMessage: $"Cannot create '{LogName}' in project '{Project}' because it already exists.",
+                    errorId: "SubscriptionAlreadyExists",
+                    targetObject: LogName);
             }
         }
     }
