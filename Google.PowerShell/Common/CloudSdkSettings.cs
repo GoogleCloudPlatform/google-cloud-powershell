@@ -68,7 +68,7 @@ namespace Google.PowerShell.Common
             {
                 if (aggEx.InnerExceptions != null)
                 {
-                    // Exception thrown by GCloudWrapper is InvalidOperationException
+                    // Exception thrown by GCloudWrapper is InvalidOperationException.
                     Exception invalidOpEx = aggEx.InnerExceptions.FirstOrDefault(ex => ex is InvalidOperationException);
                     if (invalidOpEx != null)
                     {
