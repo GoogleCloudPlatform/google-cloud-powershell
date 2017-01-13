@@ -60,7 +60,27 @@ namespace Google.PowerShell.Common
         /// </summary>
         public static string GetSettingsValue(string settingName)
         {
-            return ActiveUserConfig.GetPropertyValue(settingName).Result;
+            try
+            {
+                return ActiveUserConfig.GetPropertyValue(settingName).Result;
+            }
+            catch (AggregateException aggEx)
+            {
+                if (aggEx.InnerExceptions != null)
+                {
+                    // Exception thrown by GCloudWrapper is InvalidOperationException.
+                    Exception invalidOpEx = aggEx.InnerExceptions.FirstOrDefault(ex => ex is InvalidOperationException);
+                    if (invalidOpEx != null)
+                    {
+                        throw invalidOpEx;
+                    }
+                }
+                throw aggEx;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
 
         /// <summary>Returns the default project for the Google Cloud SDK.</summary>
