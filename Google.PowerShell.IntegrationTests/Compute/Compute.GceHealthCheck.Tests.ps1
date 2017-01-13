@@ -6,6 +6,18 @@ $r = Get-Random
 
 Describe "Add-GceHealthCheck" {
     $healthCheckName = "test-add-gcehealthcheck-$r"
+    # We have to do this because there are 2 types of Google.Apis.Compute.v1.Data.HttpHealthCheck:
+    # One is HttpHealthCheck and the other is HTTPHealthCheck (The only difference is the case)
+    # and PowerShell New-Object does not like that.
+    $tempHealthCheck = "test-add-gcehealthcheck-temp-$r"
+    $tempHealthCheck2 = "test-add-gcehealthcheck-temp2-$r"
+    try {
+        $httpHealthCheckType = (Add-GceHealthCheck $tempHealthCheck).GetType()
+        $httpsHealthCheckType = (Add-GceHealthCheck $tempHealthCheck2 -Https).GetType()
+    }
+    finally {
+        Get-GceHealthCheck | Remove-GceHealthCheck -ErrorAction SilentlyContinue
+    }
 
     It "should fail for wrong project" {
         { Add-GceHealthCheck $healthCheckName -Project "asdf" } | Should Throw 403
@@ -45,7 +57,7 @@ Describe "Add-GceHealthCheck" {
         }
 
         It "should use an HTTP object over pipeline" {
-            $initHealthCheck = New-Object Google.Apis.Compute.v1.Data.HttpHealthCheck
+            $initHealthCheck = $httpHealthCheckType.GetConstructor(@()).Invoke(@())
             $initHealthCheck.Name = $healthCheckName
             $healthCheck = $initHealthCheck | Add-GceHealthCheck
             ($healthCheck | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.HttpHealthCheck
@@ -59,7 +71,7 @@ Describe "Add-GceHealthCheck" {
         }
 
         It "should use an HTTPS object over pipeline" {
-            $initHealthCheck = New-Object Google.Apis.Compute.v1.Data.HttpsHealthCheck
+            $initHealthCheck = $httpsHealthCheckType.GetConstructor(@()).Invoke(@())
             $initHealthCheck.Name = $healthCheckName
             $healthCheck = $initHealthCheck | Add-GceHealthCheck
             ($healthCheck | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.HttpsHealthCheck
