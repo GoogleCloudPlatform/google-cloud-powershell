@@ -7,6 +7,9 @@ Describe "Get-GceForwardingRule"{
     $regionRuleName1 = "region-rule1-$r"
     $regionRuleName2 = "region-rule2-$r"
     $globalRuleName = "global-rule-$r"
+    $previousAllCount = (Get-GceForwardingRule).Count
+    $previousGlobalCount = (Get-GceForwardingRule).Count
+    $previousAsiaEastCount = (Get-GceForwardingRule).Count
 
     It "should fail for wrong project" {
         { Get-GceForwardingRule -Project "asdf" } | Should Throw 403
@@ -20,13 +23,13 @@ Describe "Get-GceForwardingRule"{
     Context "with data" {
         BeforeAll {
             gcloud compute http-health-checks create "health-check-$r" 2>$null
-            gcloud compute backend-services create "backend-$r" --http-health-checks "health-check-$r" 2>$null
+            gcloud compute backend-services create "backend-$r" --http-health-checks "health-check-$r" --global 2>$null
             gcloud compute url-maps create "url-map-$r" --default-service "backend-$r" 2>$null
             gcloud compute target-http-proxies create "proxy-$r" --url-map "url-map-$r" 2>$null
             gcloud compute forwarding-rules create $globalRuleName --target-http-proxy "proxy-$r" --global --ports 8080 2>$null
 
-            gcloud compute target-pools create "pool-$r" 2>$null
-            gcloud compute forwarding-rules create $regionRuleName1 --target-pool "pool-$r" 2>$null
+            gcloud compute target-pools create "pool-$r" --region us-central1 2>$null
+            gcloud compute forwarding-rules create $regionRuleName1 --target-pool "pool-$r" --region us-central1 2>$null
 
             gcloud compute target-pools create "pool-$r" --region asia-east1 2>$null
             gcloud compute forwarding-rules create $regionRuleName2 --target-pool "pool-$r" --region asia-east1 2>$null
@@ -34,20 +37,20 @@ Describe "Get-GceForwardingRule"{
 
         It "should get all rules" {
             $rules = Get-GceForwardingRule
-            $rules.Count | Should Be 3
+            $rules.Count - $previousAllCount | Should Be 3
             ($rules | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.ForwardingRule
         }
 
         It "should get global rule" {
             $rules = Get-GceForwardingRule -Global
-            $rules.Count | Should Be 1
+            $rules.Count - $previousGlobalCount | Should Be 1
             ($rules | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.ForwardingRule
             $rules.Name | Should Be $globalRuleName
         }
 
         It "should get region rule" {
             $rules = Get-GceForwardingRule -Region asia-east1
-            $rules.Count | Should Be 1
+            $rules.Count -$previousAsiaEastCount | Should Be 1
             ($rules | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.ForwardingRule
             $rules.Name | Should Be $regionRuleName2
         }
@@ -67,8 +70,7 @@ Describe "Get-GceForwardingRule"{
         }
 
         AfterAll {
-            $regionRule1 = Get-GceForwardingRule $regionRuleName1
-            gcloud compute forwarding-rules delete $regionRuleName1 --region $regionRule1.Region -q 2>$null
+            gcloud compute forwarding-rules delete $regionRuleName1 --region us-central1 -q 2>$null
             gcloud compute target-pools delete "pool-$r" -q 2>$null
 
             gcloud compute forwarding-rules delete $regionRuleName2 --region asia-east1 -q 2>$null
@@ -77,7 +79,7 @@ Describe "Get-GceForwardingRule"{
             gcloud compute forwarding-rules delete $globalRuleName --global -q 2>$null
             gcloud compute target-http-proxies delete "proxy-$r" -q 2>$null
             gcloud compute url-maps delete "url-map-$r" -q 2>$null
-            gcloud compute backend-services delete "backend-$r" -q 2>$null
+            gcloud compute backend-services delete "backend-$r" --global -q 2>$null
             gcloud compute http-health-checks delete "health-check-$r" -q 2>$null
         }
     }

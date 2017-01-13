@@ -5,6 +5,8 @@ $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 $r = Get-Random
 
 Describe "Get-GceTargetPool"{
+    $previousAllAcount = (Get-GceTargetPool).Count
+    $previousRegionAcount = (Get-GceTargetPool -Region asia-east1).Count
     $poolName1 = "pool1-$r"
     $poolName2 = "pool2-$r"
     It "should fail for wrong project" {
@@ -17,20 +19,20 @@ Describe "Get-GceTargetPool"{
 
     Context "with data" {
         BeforeAll {
-            gcloud compute target-pools create $poolName1 2>$null
+            gcloud compute target-pools create $poolName1 --region us-central1 2>$null
 
             gcloud compute target-pools create $poolName2 --region asia-east1 2>$null
         }
 
         It "should get all rules" {
             $rules = Get-GceTargetPool
-            $rules.Count | Should Be 2
+            $rules.Count -$previousAllAcount | Should Be 2
             ($rules | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.TargetPool
         }
         
         It "should get region rule" {
             $rules = Get-GceTargetPool -Region asia-east1
-            $rules.Count | Should Be 1
+            $rules.Count - $previousRegionAcount | Should Be 1
             ($rules | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.TargetPool
             $rules.Name | Should Be $poolName2
         }
@@ -43,7 +45,7 @@ Describe "Get-GceTargetPool"{
         }
 
         AfterAll {
-            gcloud compute target-pools delete $poolName1 -q 2>$null
+            gcloud compute target-pools delete $poolName1 --region us-central1 -q 2>$null
             gcloud compute target-pools delete $poolName2 --region asia-east1 -q 2>$null
         }
     }

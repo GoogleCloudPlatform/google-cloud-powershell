@@ -22,7 +22,7 @@ Describe "Get-GceBackendService" {
 
     It "should get all maps" {
         $maps = Get-GceBackendService
-        $maps.Count | Should Be 2
+        $maps.Count -ge 2 | Should Be $true
         ($maps | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.BackendService
     }
 
