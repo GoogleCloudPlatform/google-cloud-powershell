@@ -5,6 +5,7 @@ $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 $r = Get-Random
 
 Describe "Get-GceUrlMap" {
+    $previousAllCount = (Get-GceUrlMap).Count
     $urlMapName1 = "url-map1-$r"
     $urlMapName2 = "url-map2-$r"
 
@@ -17,13 +18,13 @@ Describe "Get-GceUrlMap" {
     }
 
     gcloud compute http-health-checks create "health-check-$r" 2>$null
-    gcloud compute backend-services create "backend-$r" --http-health-checks "health-check-$r" 2>$null
+    gcloud compute backend-services create "backend-$r" --http-health-checks "health-check-$r" --global 2>$null
     gcloud compute url-maps create $urlMapName1 --default-service "backend-$r" 2>$null
     gcloud compute url-maps create $urlMapName2 --default-service "backend-$r" 2>$null
 
     It "should get all maps" {
         $maps = Get-GceUrlMap
-        $maps.Count | Should Be 2
+        $maps.Count - $previousAllCount | Should Be 2
         ($maps | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.UrlMap
     }
 
@@ -35,7 +36,7 @@ Describe "Get-GceUrlMap" {
     
     gcloud compute url-maps delete $urlMapName1 -q 2>$null
     gcloud compute url-maps delete $urlMapName2 -q 2>$null
-    gcloud compute backend-services delete "backend-$r" -q 2>$null
+    gcloud compute backend-services delete "backend-$r" --global -q 2>$null
     gcloud compute http-health-checks delete "health-check-$r" -q 2>$null
 }
 
