@@ -286,6 +286,10 @@ namespace Google.PowerShell.Logging
             return _dynamicParameters;
         }
 
+        /// <summary>
+        /// The value of the dynamic parameter -ResourceType. For example, if user types -ResourceType gce_instance,
+        /// then this will be gce_instance.
+        /// </summary>
         public string SelectedResourceType
         {
             get
@@ -499,11 +503,11 @@ namespace Google.PowerShell.Logging
     /// By default, the log is associated with the "global" resource type ("custom.googleapis.com" in v1 service).
     /// </para>
     /// <example>
-    ///   <code>PS C:\> New-GcLogEntry -TextPayload "This is a log entry." -LogName "test-log".</code>
+    ///   <code>PS C:\> New-GcLogEntry -TextPayload "This is a log entry." -LogName "test-log"</code>
     ///   <para>This command creates a log entry with the specified text payload in the log "test-log".</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> New-GcLogEntry -TextPayload "Entry 1", "Entry 2" -LogName "test-log".</code>
+    ///   <code>PS C:\> New-GcLogEntry -TextPayload "Entry 1", "Entry 2" -LogName "test-log"</code>
     ///   <para>
     ///   This command creates 2 log entries with text payload "Entry 1" and "Entry 2" respectively in the log "test-log".
     ///   </para>

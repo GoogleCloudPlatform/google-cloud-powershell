@@ -3,7 +3,7 @@ Install-GCloudCmdlets
 
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
-Describe "Get-GcpsLogSink" {
+Describe "Get-GcLogSink" {
     $r = Get-Random
     $script:sinkName = "gcps-get-gclogsink-$r"
     $script:secondSinkName = "gcps-get-gclogsink2-$r"
@@ -70,7 +70,68 @@ Describe "Get-GcpsLogSink" {
     }
 }
 
-Describe "New-GcpsLogSink" {
+function Test-GcLogSink (
+    [string]$name,
+    [string]$destination,
+    [string]$outputVersionFormat,
+    [string]$writerIdentity,
+    [DateTime]$startTime,
+    [DateTime]$endTime,
+    [Google.Apis.Logging.v2.Data.LogSink]$sink)
+{
+    if ($null -eq $sink) {
+        return $false
+    }
+
+    if ($sink.Name -ne $name) {
+        return $false
+    }
+
+    if ($sink.Destination -ne $destination) {
+        return $false
+    }
+
+    if ($sink.OutputVersionFormat -ne $outputVersionFormat) {
+        return $false
+    }
+
+    # Every sink must has a writer identity.
+    if ([string]::IsNullOrWhiteSpace($sink.WriterIdentity)) {
+        return $false
+    }
+
+    # Only checks for writer identity if it is provided.
+    if (-not [string]::IsNullOrWhiteSpace($writerIdentity) -and $sink.WriterIdentity -ne $writerIdentity) {
+        return $false
+    }
+
+    if ($null -eq $startTime) {
+        if ($null -ne $sink.StartTime) {
+            return $false
+        }
+    }
+    else {
+        if ($startTime -ne [DateTime]$sink.StartTime) {
+            return $false
+        }
+    }
+
+    if ($null -eq $endTime) {
+        if ($null -ne $sink.EndTime) {
+            return $false
+        }
+    }
+    else {
+        if ($endTime -ne [DateTime]$sink.EndTime) {
+            return $false
+        }
+    }
+
+    return $true
+}
+
+Describe "New-GcLogSink" {
+    $script:cloudLogServiceAccount = "serviceAccount:cloud-logs@system.gserviceaccount.com"
     It "should work with -GcsBucketDestination" {
         $r = Get-Random
         $bucket = "gcloud-powershell-testing-logsink-bucket-$r"
@@ -80,14 +141,11 @@ Describe "New-GcpsLogSink" {
             Start-Sleep -Seconds 1
 
             $createdSink = Get-GcLogSink -Sink $sinkName
-            $createdSink | Should Not BeNullOrEmpty
-            $createdSink.Name | Should BeExactly $sinkName
-            $createdSink.Destination | Should BeExactly "storage.googleapis.com/$bucket"
-            $createdSink.OutputVersionFormat | Should BeExactly V2
-            $createdSink.WriterIdentity | Should Not BeNullOrEmpty
-            $createdSink.Filter | Should BeNullOrEmpty
-            $createdSink.StartTime | Should BeNullOrEmpty
-            $createdSink.EndTime | Should BeNullOrEmpty
+            $testSink = Test-GcLogSink -Name $sinkName `
+                           -Destination "storage.googleapis.com/$bucket" `
+                           -OutputVersionFormat "V2" `
+                           -Sink $createdSink
+            $testSink | Should Be $true
         }
         finally {
             gcloud beta logging sinks delete $sinkName --quiet 2>$null
@@ -103,14 +161,10 @@ Describe "New-GcpsLogSink" {
             Start-Sleep -Seconds 1
 
             $createdSink = Get-GcLogSink -Sink $sinkName
-            $createdSink | Should Not BeNullOrEmpty
-            $createdSink.Name | Should BeExactly $sinkName
-            $createdSink.Destination | Should BeExactly "bigquery.googleapis.com/projects/$project/datasets/$dataset"
-            $createdSink.OutputVersionFormat | Should BeExactly V2
-            $createdSink.WriterIdentity | Should Not BeNullOrEmpty
-            $createdSink.Filter | Should BeNullOrEmpty
-            $createdSink.StartTime | Should BeNullOrEmpty
-            $createdSink.EndTime | Should BeNullOrEmpty
+            $testSink = Test-GcLogSink -Name $sinkName `
+                           -Destination "bigquery.googleapis.com/projects/$project/datasets/$dataset" `
+                           -OutputVersionFormat "V2" `
+                           -Sink $createdSink
         }
         finally {
             gcloud beta logging sinks delete $sinkName --quiet 2>$null
@@ -126,14 +180,10 @@ Describe "New-GcpsLogSink" {
             Start-Sleep -Seconds 1
 
             $createdSink = Get-GcLogSink -Sink $sinkName
-            $createdSink | Should Not BeNullOrEmpty
-            $createdSink.Name | Should BeExactly $sinkName
-            $createdSink.Destination | Should BeExactly "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic"
-            $createdSink.OutputVersionFormat | Should BeExactly V2
-            $createdSink.WriterIdentity | Should Not BeNullOrEmpty
-            $createdSink.Filter | Should BeNullOrEmpty
-            $createdSink.StartTime | Should BeNullOrEmpty
-            $createdSink.EndTime | Should BeNullOrEmpty
+            $testSink = Test-GcLogSink -Name $sinkName `
+                           -Destination "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic" `
+                           -OutputVersionFormat "V2" `
+                           -Sink $createdSink
         }
         finally {
             gcloud beta logging sinks delete $sinkName --quiet 2>$null
@@ -153,24 +203,18 @@ Describe "New-GcpsLogSink" {
             Start-Sleep -Seconds 1
 
             $createdSink = Get-GcLogSink -Sink $sinkName
-            $createdSink | Should Not BeNullOrEmpty
-            $createdSink.Name | Should BeExactly $sinkName
-            $createdSink.Destination | Should BeExactly "storage.googleapis.com/$bucket"
-            $createdSink.OutputVersionFormat | Should BeExactly V1
-            $createdSink.WriterIdentity | Should Not BeNullOrEmpty
-            $createdSink.Filter | Should BeNullOrEmpty
-            $createdSink.StartTime | Should BeNullOrEmpty
-            $createdSink.EndTime | Should BeNullOrEmpty
+            $testSink = Test-GcLogSink -Name $sinkName `
+                           -Destination "storage.googleapis.com/$bucket" `
+                           -OutputVersionFormat "V1" `
+                           -Sink $createdSink
+            $testSink | Should Be $true
 
             $createdSink = Get-GcLogSink -Sink $sinkNameTwo
-            $createdSink | Should Not BeNullOrEmpty
-            $createdSink.Name | Should BeExactly $sinkNameTwo
-            $createdSink.Destination | Should BeExactly "storage.googleapis.com/$bucketTwo"
-            $createdSink.OutputVersionFormat | Should BeExactly V2
-            $createdSink.WriterIdentity | Should Not BeNullOrEmpty
-            $createdSink.Filter | Should BeNullOrEmpty
-            $createdSink.StartTime | Should BeNullOrEmpty
-            $createdSink.EndTime | Should BeNullOrEmpty
+            $testSink = Test-GcLogSink -Name $sinkNameTwo `
+                           -Destination "storage.googleapis.com/$bucketTwo" `
+                           -OutputVersionFormat "V2" `
+                           -Sink $createdSink
+            $testSink | Should Be $true
         }
         finally {
             gcloud beta logging sinks delete $sinkName --quiet 2>$null
@@ -189,24 +233,20 @@ Describe "New-GcpsLogSink" {
             Start-Sleep -Seconds 1
 
             $createdSink = Get-GcLogSink -Sink $sinkName
-            $createdSink | Should Not BeNullOrEmpty
-            $createdSink.Name | Should BeExactly $sinkName
-            $createdSink.Destination | Should BeExactly "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic"
-            $createdSink.OutputVersionFormat | Should BeExactly V2
-            $createdSink.WriterIdentity | Should BeExactly "serviceAccount:cloud-logs@system.gserviceaccount.com"
-            $createdSink.Filter | Should BeNullOrEmpty
-            $createdSink.StartTime | Should BeNullOrEmpty
-            $createdSink.EndTime | Should BeNullOrEmpty
+            $testSink = Test-GcLogSink -Name $sinkName `
+                           -Destination "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic" `
+                           -OutputVersionFormat "V2" `
+                           -WriterIdentity $script:cloudLogServiceAccount `
+                           -Sink $createdSink
+            $testSink | Should Be $true
 
             $createdSink = Get-GcLogSink -Sink $sinkNameTwo
-            $createdSink | Should Not BeNullOrEmpty
-            $createdSink.Name | Should BeExactly $sinkNameTwo
-            $createdSink.Destination | Should BeExactly "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic"
-            $createdSink.OutputVersionFormat | Should BeExactly V2
-            $createdSink.WriterIdentity | Should Not Be "serviceAccount:cloud-logs@system.gserviceaccount.com"
-            $createdSink.Filter | Should BeNullOrEmpty
-            $createdSink.StartTime | Should BeNullOrEmpty
-            $createdSink.EndTime | Should BeNullOrEmpty
+            $createdSink.WriterIdentity | Should Not Be $script:cloudLogServiceAccount
+            $testSink = Test-GcLogSink -Name $sinkNameTwo `
+                           -Destination "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic" `
+                           -OutputVersionFormat "V2" `
+                           -Sink $createdSink
+            $testSink | Should Be $true
         }
         finally {
             gcloud beta logging sinks delete $sinkName --quiet 2>$null
@@ -217,7 +257,7 @@ Describe "New-GcpsLogSink" {
 
     It "should work with -Before and -After" {
         $r = Get-Random
-        # These topics already has permission for cloud-logs to write to.
+        # Cloud-logs already has permission to write to these topics.
         $pubsubTopic = "gcloud-powershell-exported-log"
         $sinkName = "gcps-new-gclogsink-$r"
         $secondSinkName = "gcps-new-gclogsink2-$r"
@@ -232,34 +272,29 @@ Describe "New-GcpsLogSink" {
             Start-Sleep -Seconds 1
 
             $createdSink = Get-GcLogSink -Sink $sinkName
-            $createdSink | Should Not BeNullOrEmpty
-            $createdSink.Name | Should BeExactly $sinkName
-            $createdSink.Destination | Should BeExactly "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic"
-            $createdSink.OutputVersionFormat | Should BeExactly V2
-            $createdSink.WriterIdentity | Should Not BeNullOrEmpty
-            $createdSink.Filter | Should BeNullOrEmpty
-            $createdSink.StartTime | Should BeNullOrEmpty
-            [datetime]$createdSink.EndTime -eq $firstTime | Should Be $true
+            $testSink = Test-GcLogSink -Name $sinkName `
+                           -Destination "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic" `
+                           -OutputVersionFormat "V2" `
+                           -EndTime $firstTime `
+                           -Sink $createdSink
+            $testSink | Should Be $true
 
             $createdSink = Get-GcLogSink -Sink $secondSinkName
-            $createdSink | Should Not BeNullOrEmpty
-            $createdSink.Name | Should BeExactly $secondSinkName
-            $createdSink.Destination | Should BeExactly "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic"
-            $createdSink.OutputVersionFormat | Should BeExactly V2
-            $createdSink.WriterIdentity | Should Not BeNullOrEmpty
-            $createdSink.Filter | Should BeNullOrEmpty
-            [datetime]$createdSink.StartTime -eq $secondTime | Should Be $true
-            $createdSink.EndTime | Should BeNullOrEmpty
+            $testSink = Test-GcLogSink -Name $secondSinkName `
+                           -Destination "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic" `
+                           -OutputVersionFormat "V2" `
+                           -StartTime $secondTime `
+                           -Sink $createdSink
+            $testSink | Should Be $true
 
             $createdSink = Get-GcLogSink -Sink $thirdSinkName
-            $createdSink | Should Not BeNullOrEmpty
-            $createdSink.Name | Should BeExactly $thirdSinkName
-            $createdSink.Destination | Should BeExactly "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic"
-            $createdSink.OutputVersionFormat | Should BeExactly V2
-            $createdSink.WriterIdentity | Should Not BeNullOrEmpty
-            $createdSink.Filter | Should BeNullOrEmpty
-            [datetime]$createdSink.StartTime -eq $firstTime | Should Be $true
-            [datetime]$createdSink.EndTime -eq $secondTime | Should Be $true
+            $testSink = Test-GcLogSink -Name $thirdSinkName `
+                           -Destination "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic" `
+                           -OutputVersionFormat "V2" `
+                           -StartTime $firstTime `
+                           -EndTime $secondTime `
+                           -Sink $createdSink
+            $testSink | Should Be $true
         }
         finally {
             gcloud beta logging sinks delete $sinkName --quiet 2>$null
@@ -270,7 +305,7 @@ Describe "New-GcpsLogSink" {
 
     It "should work with -LogName" {
         $r = Get-Random
-        # This topic already has permission for cloud-logs to write to.
+        # Cloud-logs already has permission to write to this topic.
         $pubsubTopic = "gcloud-powershell-exported-log"
         $sinkName = "gcps-new-gclogsink-$r"
         $logName = "gcps-new-gclogsink-log-$r"
@@ -280,22 +315,23 @@ Describe "New-GcpsLogSink" {
         try {
             New-GcLogSink $sinkName -PubSubTopicDestination $pubsubTopic -LogName $logName -NoUniqueWriterIdentity
             New-GcpsSubscription -Subscription $subscriptionName -Topic $pubsubTopic
+            # We need to sleep before creating the log entry to account for the time the logsink
+            # and the subscription is created.
             Start-Sleep -Seconds 20
 
             $createdSink = Get-GcLogSink -Sink $sinkName
-            $createdSink | Should Not BeNullOrEmpty
-            $createdSink.Name | Should BeExactly $sinkName
-            $createdSink.Destination | Should BeExactly "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic"
-            $createdSink.OutputVersionFormat | Should BeExactly V2
-            $createdSink.WriterIdentity | Should BeExactly "serviceAccount:cloud-logs@system.gserviceaccount.com"
-            $createdSink.Filter | Should Not BeNullOrEmpty
-            $createdSink.StartTime | Should BeNullOrEmpty
-            $createdSink.EndTime | Should BeNullOrEmpty
+            $testSink = Test-GcLogSink -Name $sinkName `
+                           -Destination "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic" `
+                           -WriterIdentity $script:cloudLogServiceAccount `
+                           -OutputVersionFormat "V2" `
+                           -Sink $createdSink
+            $testSink | Should Be $true
 
             # Write a log entry to the log, we should be able to get it from the subscription since it will be exported to the topic.
             New-GcLogEntry -LogName $logName -TextPayload $textPayload
             # Write a different entry to a different log (we should not get this).
             New-GcLogEntry -LogName $secondLogName -TextPayload "You should not get this."
+            # We need to sleep before getting the message to account for the delay before the log is exported to the topic.
             Start-Sleep -Seconds 20
 
             $message = Get-GcpsMessage -Subscription $subscriptionName -AutoAck
@@ -313,7 +349,7 @@ Describe "New-GcpsLogSink" {
 
     It "should work with -Filter" {
         $r = Get-Random
-        # This topic already has permission for cloud-logs to write to.
+        # Cloud-logs already has permission to write to this topic.
         $pubsubTopic = "gcloud-powershell-exported-log"
         $sinkName = "gcps-new-gclogsink-$r"
         $logName = "gcps-new-gclogsink-log-$r"
@@ -324,20 +360,21 @@ Describe "New-GcpsLogSink" {
         try {
             New-GcLogSink $sinkName -PubSubTopicDestination $pubsubTopic -LogName $logName -NoUniqueWriterIdentity -Filter $filter
             New-GcpsSubscription -Subscription $subscriptionName -Topic $pubsubTopic
+            # We need to sleep before creating the log entry to account for the time the logsink
+            # and the subscription is created.
             Start-Sleep -Seconds 20
 
             $createdSink = Get-GcLogSink -Sink $sinkName
-            $createdSink | Should Not BeNullOrEmpty
-            $createdSink.Name | Should BeExactly $sinkName
-            $createdSink.Destination | Should BeExactly "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic"
-            $createdSink.OutputVersionFormat | Should BeExactly V2
-            $createdSink.WriterIdentity | Should BeExactly "serviceAccount:cloud-logs@system.gserviceaccount.com"
-            $createdSink.Filter | Should Match $filter
-            $createdSink.StartTime | Should BeNullOrEmpty
-            $createdSink.EndTime | Should BeNullOrEmpty
+            $testSink = Test-GcLogSink -Name $sinkName `
+                           -Destination "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic" `
+                           -WriterIdentity $script:cloudLogServiceAccount `
+                           -OutputVersionFormat "V2" `
+                           -Sink $createdSink
+            $testSink | Should Be $true
 
             New-GcLogEntry -LogName $logName -TextPayload $textPayload
             New-GcLogEntry -LogName $logName -TextPayload $secondTextPayload
+            # We need to sleep before getting the message to account for the delay before the log is exported to the topic.
             Start-Sleep -Seconds 20
 
             $message = Get-GcpsMessage -Subscription $subscriptionName -AutoAck
@@ -354,7 +391,7 @@ Describe "New-GcpsLogSink" {
 
     It "should work with -Severity" {
         $r = Get-Random
-        # This topic already has permission for cloud-logs to write to.
+        # Cloud-logs already has permission to write to this topic.
         $pubsubTopic = "gcloud-powershell-exported-log"
         $sinkName = "gcps-new-gclogsink-$r"
         $logName = "gcps-new-gclogsink-log-$r"
@@ -365,21 +402,21 @@ Describe "New-GcpsLogSink" {
         try {
             New-GcLogSink $sinkName -PubSubTopicDestination $pubsubTopic -LogName $logName -NoUniqueWriterIdentity -Severity Error
             New-GcpsSubscription -Subscription $subscriptionName -Topic $pubsubTopic
+            # We need to sleep before creating the log entry to account for the time the logsink
+            # and the subscription is created.
             Start-Sleep -Seconds 20
 
             $createdSink = Get-GcLogSink -Sink $sinkName
-            $createdSink | Should Not BeNullOrEmpty
-            $createdSink.Name | Should BeExactly $sinkName
-            $createdSink.Destination | Should BeExactly "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic"
-            $createdSink.OutputVersionFormat | Should BeExactly V2
-            $createdSink.WriterIdentity | Should BeExactly "serviceAccount:cloud-logs@system.gserviceaccount.com"
-            $createdSink.Filter | Should Not BeNullOrEmpty
-            $createdSink.StartTime | Should BeNullOrEmpty
-            $createdSink.EndTime | Should BeNullOrEmpty
+            $testSink = Test-GcLogSink -Name $sinkName `
+                           -Destination "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic" `
+                           -WriterIdentity $script:cloudLogServiceAccount `
+                           -OutputVersionFormat "V2" `
+                           -Sink $createdSink
 
             New-GcLogEntry -LogName $logName -TextPayload $debugPayload -Severity Debug
             New-GcLogEntry -LogName $logName -TextPayload $infoPayload -Severity Info
             New-GcLogEntry -LogName $logName -TextPayload $errorPayload -Severity Error
+            # We need to sleep before getting the message to account for the delay before the log is exported to the topic.
             Start-Sleep -Seconds 20
 
             $message = Get-GcpsMessage -Subscription $subscriptionName -AutoAck
