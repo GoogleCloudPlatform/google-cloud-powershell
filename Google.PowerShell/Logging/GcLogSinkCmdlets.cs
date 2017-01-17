@@ -179,7 +179,7 @@ namespace Google.PowerShell.Logging
 
         /// <summary>
         /// <para type="description">
-        /// The project to check for log entries. If not set via PowerShell parameter processing, will
+        /// The project to create the sink in. If not set via PowerShell parameter processing, will
         /// default to the Cloud SDK's DefaultProject property.
         /// </para>
         /// </summary>
@@ -308,9 +308,77 @@ namespace Google.PowerShell.Logging
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
             {
                 WriteResourceExistsError(
-                    exceptionMessage: $"Cannot create '{LogName}' in project '{Project}' because it already exists.",
+                    exceptionMessage: $"Cannot create '{SinkName}' in project '{Project}' because it already exists.",
                     errorId: "SubscriptionAlreadyExists",
                     targetObject: LogName);
+            }
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Removes one or more log sinks from a project.
+    /// </para>
+    /// <para type="description">
+    /// Removes one or more log sinks from a project based on the name of the log.
+    /// If -Project is not specified, the default project will be used.
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> Remove-GcLogSink -SinkName "my-sink"</code>
+    ///   <para>This command removes "my-sink" from the default project.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Remove-GcLogSink -SinkName "my-sink", "my-sink2" -Project "my-project"</code>
+    ///   <para>This command removes "my-sink" and "my-sink2" from project "my-project".</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/logging/docs/export/using_exported_logs#sink-service-destination)">
+    /// [Log Sinks]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Remove, "GcLogSink", SupportsShouldProcess = true)]
+    public class RemoveGcLogSinkCmdlet : GcLogCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The project to check for log sinks in. If not set via PowerShell parameter processing, will
+        /// default to the Cloud SDK's DefaultProject property.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The names of the sinks to be removed.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true)]
+        [ArrayPropertyTransform(typeof(LogSink), nameof(LogSink.Name))]
+        [ValidateNotNullOrEmpty]
+        [Alias("Name")]
+        public string[] SinkName { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            foreach (string sink in SinkName)
+            {
+                string formattedSinkName = PrefixProjectToSinkName(sink, Project);
+                try
+                {
+                    if (ShouldProcess(formattedSinkName, "Remove Sink"))
+                    {
+                        ProjectsResource.SinksResource.DeleteRequest request = Service.Projects.Sinks.Delete(formattedSinkName);
+                        request.Execute();
+                    }
+                }
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+                {
+                    WriteResourceMissingError(
+                        exceptionMessage: $"Sink '{sink}' does not exist in project '{Project}'.",
+                        errorId: "SinkNotFound",
+                        targetObject: sink);
+                }
             }
         }
     }
