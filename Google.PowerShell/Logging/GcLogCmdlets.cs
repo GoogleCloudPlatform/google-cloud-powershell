@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Management.Automation;
+using System.Net;
 using System.Xml;
 
 namespace Google.PowerShell.Logging
@@ -736,11 +737,11 @@ namespace Google.PowerShell.Logging
 
     /// <summary>
     /// <para type="synopsis">
-    /// Removes a Stackdriver log from a project.
+    /// Removes one or more Stackdriver logs from a project.
     /// </para>
     /// <para type="description">
-    /// Removes a StackDrive log from a project based on the name of the log.
-    /// All the entries in the log will be deleted (a log have multiple log entries).
+    /// Removes one or more StackDrive logs from a project based on the names of the logs.
+    /// All the entries in the logs will be deleted (a log have multiple log entries).
     /// </para>
     /// <example>
     ///   <code>PS C:\> Remove-GcLog -LogName "test-log"</code>
@@ -750,11 +751,15 @@ namespace Google.PowerShell.Logging
     ///   <code>PS C:\> Remove-GcLog -LogName "test-log" -Project "my-project"</code>
     ///   <para>This command removes "test-log" from project "my-project".</para>
     /// </example>
+    /// <example>
+    ///   <code>PS C:\> Remove-GcLog -LogName "log1", "log2"</code>
+    ///   <para>This command removes "log1" and "log2" from the default project.</para>
+    /// </example>
     /// <para type="link" uri="(https://cloud.google.com/logging/docs/view/logs_index)">
     /// [Log Entries and Logs]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Remove, "GcLog")]
+    [Cmdlet(VerbsCommon.Remove, "GcLog", SupportsShouldProcess = true)]
     public class RemoveGcLogCmdlet : GcLogCmdlet
     {
         /// <summary>
@@ -769,18 +774,34 @@ namespace Google.PowerShell.Logging
 
         /// <summary>
         /// <para type="description">
-        /// The name of the log to be removed.
+        /// The names of the logs to be removed.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true)]
         [ValidateNotNullOrEmpty]
-        public string LogName { get; set; }
+        public string[] LogName { get; set; }
 
         protected override void ProcessRecord()
         {
-            LogName = PrefixProjectToLogName(LogName, Project);
-            ProjectsResource.LogsResource.DeleteRequest deleteRequest = Service.Projects.Logs.Delete(LogName);
-            deleteRequest.Execute();
+            foreach (string log in LogName)
+            {
+                string formattedLogName = PrefixProjectToLogName(log, Project);
+                try
+                {
+                    if (ShouldProcess(formattedLogName, "Remove Log"))
+                    {
+                        ProjectsResource.LogsResource.DeleteRequest deleteRequest = Service.Projects.Logs.Delete(formattedLogName);
+                        deleteRequest.Execute();
+                    }
+                }
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+                {
+                    WriteResourceMissingError(
+                        exceptionMessage: $"Log '{log}' does not exist in project '{Project}'.",
+                        errorId: "LogNotFound",
+                        targetObject: log);
+                }
+            }
         }
     }
 }
