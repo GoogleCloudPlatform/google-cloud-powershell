@@ -415,3 +415,55 @@ Describe "New-GcLogSink" {
         }
     }
 }
+
+Describe "Remove-GcLogSink" {
+    It "should throw error for non-existent log sink" {
+        { Remove-GcLogSink -SinkName "non-existent-log-sink-powershell-testing" -ErrorAction Stop } |
+            Should Throw "does not exist"
+    }
+
+    It "should work" {
+        $r = Get-Random
+        $bucket = "gcloud-powershell-testing-logsink-bucket-$r"
+        $sinkName = "gcps-new-gclogsink-$r"
+        New-GcLogSink $sinkName -GcsBucketDestination $bucket
+        Start-Sleep -Seconds 1
+
+        $createdSink = Get-GcLogSink -Sink $sinkName
+        $createdSink | Should Not BeNullOrEmpty
+
+        Remove-GcLogSink $sinkName
+        { Get-GcLogSink -Sink $sinkName -ErrorAction Stop } | Should Throw "does not exist"
+    }
+
+
+    It "should work for multiple sinks" {
+        $r = Get-Random
+        $bucket = "gcloud-powershell-testing-logsink-bucket-$r"
+        $sinkName = "gcps-new-gclogsink-$r"
+        $sinkNameTwo = "gcps-new-gclogsink2-$r"
+        New-GcLogSink $sinkName -GcsBucketDestination $bucket
+        New-GcLogSink $sinkNameTwo -GcsBucketDestination $bucket
+        Start-Sleep -Seconds 1
+
+        $createdSinks = Get-GcLogSink -Sink $sinkName, $sinkNameTwo
+        $createdSinks | Should Not BeNullOrEmpty
+
+        Remove-GcLogSink $sinkName, $sinkNameTwo
+        { Get-GcLogSink -Sink $sinkName -ErrorAction Stop } | Should Throw "does not exist"
+        { Get-GcLogSink -Sink $sinkNameTwo -ErrorAction Stop } | Should Throw "does not exist"
+    }
+
+    It "should work for log sink object" {
+        $r = Get-Random
+        $bucket = "gcloud-powershell-testing-logsink-bucket-$r"
+        $sinkName = "gcps-new-gclogsink-$r"
+        New-GcLogSink $sinkName -GcsBucketDestination $bucket
+        Start-Sleep -Seconds 1
+
+        $createdSinkObject = Get-GcLogSink -Sink $sinkName
+
+        Remove-GcLogSink $createdSinkObject
+        { Get-GcLogSink -Sink $sinkName -ErrorAction Stop } | Should Throw "does not exist"
+    }
+}
