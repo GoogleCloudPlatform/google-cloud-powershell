@@ -104,7 +104,9 @@ namespace Google.PowerShell.Logging
     /// Creates a new log sink to export log entries. The sink will be created in the default project if -Project is not used.
     /// Will raise an error if the sink already exists.
     /// There are 3 possible destinations for the sink: Google Cloud Storage bucket, Google BigQuery dataset
-    /// and Google Cloud PubSub topic.
+    /// and Google Cloud PubSub topic. The destinations must be created and given appropriate permissions for
+    /// log exporting (see https://cloud.google.com/logging/docs/export/configure_export_v2#destination_authorization)
+    /// The cmdlet will not create the destinations.
     /// </para>
     /// <example>
     ///   <code>PS C:\> New-GcLogSink -SinkName "my-sink" -GcsBucketDestination "my-bucket"</code>
@@ -196,7 +198,7 @@ namespace Google.PowerShell.Logging
 
         /// <summary>
         /// <para type="description">
-        /// The name of the sink to be created, unique within the project.
+        /// The name of the sink to be created. This name must be unique within the project.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0)]
@@ -299,7 +301,7 @@ namespace Google.PowerShell.Logging
             {
                 LogSink createdSink = createRequest.Execute();
                 WriteObject(createdSink);
-                // We wants to let the user knows that they have to grant appropriate permission to the writer identity
+                // We want to let the user knows that they have to grant appropriate permission to the writer identity
                 // so that the logs can be exported (otherwise, the export will fail).
                 Host.UI.WriteLine($"Please remember to grant '{createdSink?.WriterIdentity}' {permissionRequest}");
             }
