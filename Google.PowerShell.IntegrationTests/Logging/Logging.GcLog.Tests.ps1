@@ -281,12 +281,13 @@ Describe "Get-GcLog" {
 
 Describe "Remove-GcLog" {
     It "should throw error for non-existent log" {
-        { Remove-GcLog -LogName "non-existent-log-powershell-testing" } | Should Throw "404"
+        { Remove-GcLog -LogName "non-existent-log-powershell-testing" -ErrorAction Stop } |
+            Should Throw "does not exist"
     }
 
     It "should work" {
         $r = Get-Random
-        $logName = "gcp-testing-new-gclogentry-$r"
+        $logName = "gcp-testing-remove-gclog-$r"
         $textPayload = "This is the text payload."
         New-GcLogEntry -LogName $logName -TextPayload $textPayload
         Start-Sleep 5
@@ -294,5 +295,23 @@ Describe "Remove-GcLog" {
         Remove-GcLog -LogName $logName
         Start-Sleep 5
         (Get-GcLogEntry -LogName $logName) | Should BeNullOrEmpty
+    }
+
+
+    It "should work for multiple logs" {
+        $r = Get-Random
+        $logName = "gcp-testing-remove-gclog-$r"
+        $logNameTwo = "gcp-testing-remove-gclog2-$r"
+        $textPayload = "This is the text payload."
+        New-GcLogEntry -LogName $logName -TextPayload $textPayload
+        New-GcLogEntry -LogName $logNameTwo -TextPayload $textPayload
+        Start-Sleep 5
+        (Get-GcLogEntry -LogName $logName) | Should Not BeNullOrEmpty
+        (Get-GcLogEntry -LogName $logNameTwo) | Should Not BeNullOrEmpty
+        Remove-GcLog -LogName $logName
+        Remove-GcLog -LogName $logNameTwo
+        Start-Sleep 5
+        (Get-GcLogEntry -LogName $logName) | Should BeNullOrEmpty
+        (Get-GcLogEntry -LogName $logNameTwo) | Should BeNullOrEmpty
     }
 }
