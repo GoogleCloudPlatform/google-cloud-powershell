@@ -204,6 +204,106 @@ namespace Google.PowerShell.Logging
     }
 
     /// <summary>
+    /// Base class for GcLog cmdlet that uses log filter.
+    /// </summary>
+    public class GcLogEntryCmdletWithLogFilter : GcLogCmdlet, IDynamicParameters
+    {
+        /// <summary>
+        /// <para type="description">
+        /// If specified, the cmdlet will filter out log entries that are in the log LogName.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public string LogName { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// If specified, the cmdlet will filter out log entries with the specified severity.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public LogSeverity? Severity { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// If specified, the cmdlet will filter out log entries that occur before this datetime.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public DateTime? Before { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// If specified, the cmdlet will filter out log entries that occur after this datetime.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public DateTime? After { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// If specified, the cmdlet will filter out log entries that satisfy the filter.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ValidateNotNullOrEmpty]
+        public string Filter { get; set; }
+
+        /// <summary>
+        /// This dynamic parameter dictionary is used by PowerShell to generate parameters dynamically.
+        /// </summary>
+        private RuntimeDefinedParameterDictionary _dynamicParameters;
+
+        /// <summary>
+        /// This function is part of the IDynamicParameters interface.
+        /// PowerShell uses it to generate parameters dynamically.
+        /// We have to generate -ResourceType parameter dynamically because the array
+        /// of resources that we used to validate against are not generated before compile time,
+        /// i.e. [ValidateSet(ArrayGeneratedAtRunTime)] will throw an error for parameters
+        /// that are not generated dynamically.
+        /// </summary>
+        public object GetDynamicParameters()
+        {
+            if (_dynamicParameters == null)
+            {
+                ParameterAttribute paramAttribute = new ParameterAttribute()
+                {
+                    Mandatory = false
+                };
+                ValidateSetAttribute validateSetAttribute = new ValidateSetAttribute(AllResourceTypes);
+                validateSetAttribute.IgnoreCase = true;
+                Collection<Attribute> attributes =
+                    new Collection<Attribute>(new Attribute[] { validateSetAttribute, paramAttribute });
+                // This parameter can now be thought of as:
+                // [Parameter(Mandatory = false)]
+                // [ValidateSet(validTypeValues)]
+                // public string { get; set; }
+                RuntimeDefinedParameter typeParameter = new RuntimeDefinedParameter("ResourceType", typeof(string), attributes);
+                _dynamicParameters = new RuntimeDefinedParameterDictionary();
+                _dynamicParameters.Add("ResourceType", typeParameter);
+            }
+
+            return _dynamicParameters;
+        }
+
+        /// <summary>
+        /// The value of the dynamic parameter -ResourceType. For example, if user types -ResourceType gce_instance,
+        /// then this will be gce_instance.
+        /// </summary>
+        public string SelectedResourceType
+        {
+            get
+            {
+                if (_dynamicParameters != null && _dynamicParameters.ContainsKey("ResourceType"))
+                {
+                    return _dynamicParameters["ResourceType"].Value?.ToString().ToLower();
+                }
+                return null;
+            }
+        }
+    }
+
+    /// <summary>
     /// <para type="synopsis">
     /// Gets log entries.
     /// </para>
@@ -257,7 +357,7 @@ namespace Google.PowerShell.Logging
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcLogEntry")]
     [OutputType(typeof(LogEntry))]
-    public class GetGcLogEntryCmdlet : GcLogCmdlet, IDynamicParameters
+    public class GetGcLogEntryCmdlet : GcLogEntryCmdletWithLogFilter
     {
         /// <summary>
         /// <para type="description">
@@ -269,95 +369,16 @@ namespace Google.PowerShell.Logging
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
-        /// <summary>
-        /// <para type="description">
-        /// If specified, the cmdlet will only return log entries in the log with the same name.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = false)]
-        public string LogName { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// If specified, the cmdlet will only return log entries with the specified severity.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = false)]
-        public LogSeverity? Severity { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// If specified, the cmdlet will only return log entries that occur before this datetime.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = false)]
-        public DateTime? Before { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// If specified, the cmdlet will only return log entries that occur after this datetime.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = false)]
-        public DateTime? After { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// If specified, the cmdlet will use this to filter out log entries returned.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = false)]
-        [ValidateNotNullOrEmpty]
-        public string Filter { get; set; }
-
-        /// <summary>
-        /// This dynamic parameter dictionary is used by PowerShell to generate parameters dynamically.
-        /// </summary>
-        private RuntimeDefinedParameterDictionary _dynamicParameters;
-
-        /// <summary>
-        /// This function is part of the IDynamicParameters interface.
-        /// PowerShell uses it to generate parameters dynamically.
-        /// We have to generate -ResourceType parameter dynamically because the array
-        /// of resources that we used to validate against are not generated before compile time,
-        /// i.e. [ValidateSet(ArrayGeneratedAtRunTime)] will throw an error for parameters
-        /// that are not generated dynamically.
-        /// </summary>
-        public object GetDynamicParameters()
-        {
-            if (_dynamicParameters == null)
-            {
-                ParameterAttribute paramAttribute = new ParameterAttribute()
-                {
-                    Mandatory = false
-                };
-                ValidateSetAttribute validateSetAttribute = new ValidateSetAttribute(AllResourceTypes);
-                validateSetAttribute.IgnoreCase = true;
-                Collection<Attribute> attributes =
-                    new Collection<Attribute>(new Attribute[] { validateSetAttribute, paramAttribute });
-                // This parameter can now be thought of as:
-                // [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.NoFilter)]
-                // [ValidateSet(validTypeValues)]
-                // public string { get; set; }
-                RuntimeDefinedParameter typeParameter = new RuntimeDefinedParameter("ResourceType", typeof(string), attributes);
-                _dynamicParameters = new RuntimeDefinedParameterDictionary();
-                _dynamicParameters.Add("ResourceType", typeParameter);
-            }
-
-            return _dynamicParameters;
-        }
-
         protected override void ProcessRecord()
         {
             ListLogEntriesRequest logEntriesRequest = new ListLogEntriesRequest();
             // Set resource to "projects/{Project}" so we will only find log entries in project Project.
             logEntriesRequest.ResourceNames = new List<string> { $"projects/{Project}" };
-            string selectedType = _dynamicParameters["ResourceType"].Value?.ToString().ToLower();
             string logName = PrefixProjectToLogName(LogName, Project);
             logEntriesRequest.Filter = ConstructLogFilterString(
                 logName: logName,
                 logSeverity: Severity,
-                selectedType: selectedType,
+                selectedType: SelectedResourceType,
                 before: Before,
                 after: After,
                 otherFilter: Filter);
@@ -482,11 +503,11 @@ namespace Google.PowerShell.Logging
     /// By default, the log is associated with the "global" resource type ("custom.googleapis.com" in v1 service).
     /// </para>
     /// <example>
-    ///   <code>PS C:\> New-GcLogEntry -TextPayload "This is a log entry." -LogName "test-log".</code>
+    ///   <code>PS C:\> New-GcLogEntry -TextPayload "This is a log entry." -LogName "test-log"</code>
     ///   <para>This command creates a log entry with the specified text payload in the log "test-log".</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> New-GcLogEntry -TextPayload "Entry 1", "Entry 2" -LogName "test-log".</code>
+    ///   <code>PS C:\> New-GcLogEntry -TextPayload "Entry 1", "Entry 2" -LogName "test-log"</code>
     ///   <para>
     ///   This command creates 2 log entries with text payload "Entry 1" and "Entry 2" respectively in the log "test-log".
     ///   </para>
@@ -751,7 +772,7 @@ namespace Google.PowerShell.Logging
         /// The name of the log to be removed.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true)]
         [ValidateNotNullOrEmpty]
         public string LogName { get; set; }
 
