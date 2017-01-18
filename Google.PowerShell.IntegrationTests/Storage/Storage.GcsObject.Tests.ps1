@@ -698,7 +698,7 @@ Describe "Remove-GcsObject" {
     }
 
     It "should accept objects from the pipeline" {
-        @("alpha", "beta", "gamma") | ForEach { New-GcsObject $bucket $_ $_ }
+        @("alpha", "beta", "gamma") | ForEach { New-GcsObject $_ $_ $bucket }
         $objs = Get-GcsObject $bucket
         $objs.Length | Should Be 3
 
@@ -725,7 +725,7 @@ Describe "Read-GcsObject" {
         # Before each test, upload a new file to the GCS bucket.
         $filename = [System.IO.Path]::GetTempFileName()
         $testFileContents | Out-File $filename -Encoding ascii -NoNewline
-        New-GcsObject $bucket $testObjectName -File $filename -Force
+        New-GcsObject $testObjectName -File $filename $bucket -Force
         Remove-Item -Force $filename
     }
 
@@ -833,7 +833,7 @@ Describe "Write-GcsObject" {
         # Create the original file.
         $tempFile = [System.IO.Path]::GetTempFileName()
         $originalContents | Out-File $tempFile -Encoding ascii -NoNewline
-        New-GcsObject $bucket $objectName -File $tempFile
+        New-GcsObject $objectName -File $tempFile $bucket
         Remove-Item $tempFile
 
         # Rewrite its contents
@@ -1050,19 +1050,19 @@ Describe "Copy-GcsObject" {
         }
         
         It "Should fail to write to inaccessible source bucket" {
-            New-GcsObject $bucket "test-source0" -Value "test0-$r"
+            New-GcsObject "test-source0" -Value "test0-$r" $bucket
             { Copy-GcsObject -SourceBucket $bucket -SourceObject "test-source0" "asdf" "test-dest" } |
                 Should Throw 403
         }
 
         It "Should work by name" {
-            New-GcsObject $bucket "test-source" -Value "test1-$r"
+            New-GcsObject "test-source" -Value "test1-$r" $bucket
             Copy-GcsObject -SourceBucket $bucket -SourceObject "test-source" $bucket "test-dest"
             Read-GcsObject $bucket "test-dest" | Should Be "test1-$r"
         }
 
         It "Should work by object" {
-            $sourceObj = New-GcsObject $bucket "test-source2" -Value "test2-$r"
+            $sourceObj = New-GcsObject "test-source2" -Value "test2-$r" $bucket
             $sourceObj | Copy-GcsObject $bucket "test-dest2"
             Read-GcsObject $bucket "test-dest2" | Should Be "test2-$r"
         }
