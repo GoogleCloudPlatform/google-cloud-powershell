@@ -23,9 +23,9 @@ Describe "New-GcsObject" {
         $filename = [System.IO.Path]::GetTempFileName()
         "Hello, World" | Out-File $filename -Encoding utf8
 
-        $objectName = "43b75bdd-8869-496e-8c0d-3c12b49dcb18.txt"
+        $objectName = Get-Random
 
-        $newObj = New-GcsObject $objectName -File $filename $bucket
+        $newObj = New-GcsObject $bucket $objectName -File $filename
         Remove-Item $filename
 
         $newObj.Name | Should Be $objectName
@@ -44,12 +44,12 @@ Describe "New-GcsObject" {
         $filename = [System.IO.Path]::GetTempFileName()
         "Hello, World" | Out-File $filename -Encoding utf8
 
-        $objectName = "43b75bdd-8869-496e-8c0d-3c12b49dcb18.txt"
+        $objectName = Get-Random
 
         $currentLocation = Resolve-Path .\
         try {
             cd "gs:\$bucket"
-            $newObj = New-GcsObject $objectName -File $filename
+            $newObj = New-GcsObject -ObjectName $objectName -File $filename
             Remove-Item $filename
 
             $newObj.Name | Should Be $objectName
@@ -96,7 +96,7 @@ Describe "New-GcsObject" {
         $filename = [System.IO.Path]::GetTempFileName()
         "Hello, World" | Out-File $filename -Encoding utf8
 
-        $objectName = "43b75bdd-8869-496e-8c0d-3c12b49dcb18.txt"
+        $objectName = Get-Random
 
         $currentLocation = Resolve-Path .\
         $folderName = "gcps-testing"
@@ -104,7 +104,7 @@ Describe "New-GcsObject" {
             cd "gs:\$bucket"
             mkdir $folderName
             cd $folderName
-            $newObj = New-GcsObject $objectName -File $filename
+            $newObj = New-GcsObject -ObjectName $objectName -File $filename
             Remove-Item $filename
 
             $newObj.Name | Should Be "$folderName/$objectName"
@@ -119,7 +119,7 @@ Describe "New-GcsObject" {
             $obj.Metadata | Should Be $null
 
             # Try object name with slash to see whether the folder structure is preserved in this case.
-            $newObj = New-GcsObject "Testing/$objectName" -Value "Testing value"
+            $newObj = New-GcsObject -ObjectName "Testing/$objectName" -Value "Testing value"
             $newObj.Name | Should Be "$folderName/Testing/$objectName"
 
             # Double check it is stored in GCS.
@@ -137,12 +137,12 @@ Describe "New-GcsObject" {
     }
 
     It "should fail if the file does not exist" {
-        { New-GcsObject "file-not-found.txt" -File "C:\file-404" $bucket } `
+        { New-GcsObject $bucket "file-not-found.txt" -File "C:\file-404" } `
             | Should Throw "File not found"
     }
 
     It "should fail if the folder does not exist" {
-        { New-GcsObject -Folder "C:\I should not exist" $bucket } `
+        { New-GcsObject $bucket -Folder "C:\I should not exist" } `
             | Should Throw "Directory 'C:\I should not exist' cannot be found"
     }
 
@@ -170,7 +170,7 @@ Describe "New-GcsObject" {
         "Huzzah!" | Out-File $filename -Encoding ascii -NoNewline
 
         $objectName = "C:\both-kinds/country\western"
-        $newObj = New-GcsObject $objectName -File $filename $bucket
+        $newObj = New-GcsObject $bucket $objectName -File $filename
         Remove-Item -Force $filename
 
         $newObj.Name | Should Be $objectName
@@ -199,7 +199,7 @@ Describe "New-GcsObject" {
 
         $i = 0
         foreach ($test in $tests) {
-            New-GcsObject "on-gcs/relative-path/scenario-$i" -File $fileName $bucket
+            New-GcsObject $bucket "on-gcs/relative-path/scenario-$i" -File $fileName
 
             $obj = Get-GcsObject $bucket "on-gcs/relative-path/scenario-$i"
             $obj.Size | Should Be 13  # "file-contents"
@@ -216,7 +216,7 @@ Describe "New-GcsObject" {
         "predefined ACL test" | Out-File $filename -Encoding ascii -NoNewline
 
         $objectName = "predefined-acl-test"
-        $newObj = New-GcsObject $objectName -File $filename $bucket -PredefinedAcl "publicRead"
+        $newObj = New-GcsObject $bucket $objectName -File $filename -PredefinedAcl "publicRead"
         # ACL[0] is from the user who created the object.
         # ACL[1]'s Id is like "gcps-object-testing/predefined-acl-test/1459867429211000/allUsers"
         $newObj.Acl[1].Id | Should Match "$bucket/$objectName/"
@@ -234,19 +234,19 @@ Describe "New-GcsObject" {
         "existing-gcs-object" | Out-File $tempFile -Encoding ascii -NoNewline
 
         # Create
-        $newObj = New-GcsObject -File $tempFile -Bucket $bucket
+        $newObj = New-GcsObject $bucket -File $tempFile
 
         # Verify that the -ObjectName will default to the file name if not specified (only for file upload case).
         $objectName = Split-Path -Leaf $tempFile
         $newObj.Name | Should BeExactly $objectName
 
         # Confirm we won't clobber
-        { New-GcsObject $objectName -File $tempFile $bucket } `
+        { New-GcsObject $bucket $objectName -File $tempFile } `
             | Should Throw "Storage object '$objectName' already exists"
 
         # Confirm -Force works
         "updated-object-contents" | Out-File $tempFile -Encoding ascii -NoNewline
-        New-GcsObject $objectName -File $tempFile $bucket -Force
+        New-GcsObject $bucket $objectName -File $tempFile -Force
         Remove-Item $tempFile
 
         # Confirm the contents are expected
@@ -262,14 +262,14 @@ Describe "New-GcsObject" {
     It "will accept object contents from the pipeline" {
         $objectName = "new-object-from-pipeline"
         $objectContents = "Object contents from the PowerShell pipeline"
-        $objectContents | New-GcsObject $objectName -Bucket $bucket -PredefinedAcl "publicRead"
+        $objectContents | New-GcsObject $bucket $objectName -PredefinedAcl "publicRead"
 
         Read-GcsObject $bucket $objectName | Should BeExactly $objectContents
     }
 
     It "will have default MIME types for files and text" {
         # Text file
-        "text" | New-GcsObject "text-file" -Bucket $bucket | Out-Null
+        "text" | New-GcsObject $bucket "text-file" | Out-Null
         $textObj = Get-GcsObject $bucket "text-file"
         $textObj.ContentType | Should Be "text/plain; charset=utf-8"
         Remove-GcsObject $textObj
@@ -278,7 +278,7 @@ Describe "New-GcsObject" {
         $tempFile = [System.IO.Path]::GetTempFileName()
         # TODO(chrsmith): Support creating 0-byte files on GCS.
         [System.IO.File]::WriteAllText($tempFile, "<binary-data>")
-        New-GcsObject "binary-file" -File $tempFile $bucket | Out-Null
+        New-GcsObject $bucket "binary-file" -File $tempFile | Out-Null
         $binObj = Get-GcsObject $bucket "binary-file"
         $binObj.ContentType | Should Be "application/octet-stream"
         Remove-GcsObject $binObj
@@ -289,7 +289,7 @@ Describe "New-GcsObject" {
         $tempFile = [System.IO.Path]::GetTempFileName() + ".png"
         # TODO(chrsmith): Support creating 0-byte files on GCS.
         [System.IO.File]::WriteAllText($tempFile,"<binary-data>")
-        New-GcsObject "png-file" -File $tempFile $bucket | Out-Null
+        New-GcsObject $bucket "png-file" -File $tempFile | Out-Null
         $binObj = Get-GcsObject $bucket "png-file"
         $binObj.ContentType | Should Be "image/png"
         Remove-GcsObject $binObj
@@ -297,13 +297,13 @@ Describe "New-GcsObject" {
     }
 
     It "should write zero byte files" {
-        $emptyObj = New-GcsObject "zero-byte-test" -Bucket $bucket
+        $emptyObj = New-GcsObject $bucket "zero-byte-test"
         $emptyObj.Size | Should Be 0
         Remove-GcsObject $emptyObj
     }
 
     It "should write metadata" {
-        $obj = New-GcsObject "metadata-test" -Bucket $bucket `
+        $obj = New-GcsObject $bucket "metadata-test" `
             -Metadata @{ "alpha" = 1; "beta" = "two"; "Content-Type" = "image/png" }
         $obj.Metadata.Count = 3
         $obj.Metadata["alpha"] | Should Be 1
@@ -316,7 +316,7 @@ Describe "New-GcsObject" {
 
     # Regression for a bug found while unit testing other scenarios.
     It "should write metadata when accepting content from pipeline" {
-        $obj = "XXX" | New-GcsObject "metadata-test-2" -Bucket $bucket `
+        $obj = "XXX" | New-GcsObject $bucket "metadata-test-2" `
             -Metadata @{ "alpha" = 1; "beta" = 2; "gamma" = 3}
         $obj.Metadata.Count | Should Be 3
 
@@ -324,7 +324,7 @@ Describe "New-GcsObject" {
     }
 
     It "will prefer the -ContentType parameter to -Metadata" {
-        $obj = New-GcsObject "metadata-test" -Bucket $bucket `
+        $obj = New-GcsObject $bucket "metadata-test" `
             -ContentType "image/jpeg" `
             -Metadata @{ "Content-Type" = "image/png" }
         $obj.ContentType | Should Be "image/jpeg"
@@ -698,14 +698,14 @@ Describe "Remove-GcsObject" {
     }
 
     It "should accept objects from the pipeline" {
-        @("alpha", "beta", "gamma") | ForEach { New-GcsObject $_ $_ $bucket }
+        @("alpha", "beta", "gamma") | ForEach { New-GcsObject $bucket $_ $_ }
         $objs = Get-GcsObject $bucket
         $objs.Length | Should Be 3
 
         $objs | Remove-GcsObject
 
         $objs = Get-GcsObject $bucket
-        $objs | Should BeNullOrEmpty
+        $objs.Length | Should Be 0
     }
 
     It "should fail for non existing objects" {
@@ -725,7 +725,7 @@ Describe "Read-GcsObject" {
         # Before each test, upload a new file to the GCS bucket.
         $filename = [System.IO.Path]::GetTempFileName()
         $testFileContents | Out-File $filename -Encoding ascii -NoNewline
-        New-GcsObject $testObjectName -File $filename $bucket -Force
+        New-GcsObject $bucket $testObjectName -File $filename -Force
         Remove-Item -Force $filename
     }
 
@@ -833,7 +833,7 @@ Describe "Write-GcsObject" {
         # Create the original file.
         $tempFile = [System.IO.Path]::GetTempFileName()
         $originalContents | Out-File $tempFile -Encoding ascii -NoNewline
-        New-GcsObject $objectName -File $tempFile $bucket
+        New-GcsObject $bucket $objectName -File $tempFile
         Remove-Item $tempFile
 
         # Rewrite its contents
@@ -909,7 +909,7 @@ Describe "Write-GcsObject" {
         $objectName = "relative-file-test"
 
         # Create the original GCS object.
-        "contents" | New-GcsObject -Bucket $bucket $objectName
+        "contents" | New-GcsObject $bucket $objectName
 
         # Rewrite its contents, reading from a relative file.
         $localFileName = "write-gcs-object-file-in-temp-dir.txt"
@@ -933,7 +933,7 @@ Describe "Write-GcsObject" {
         $objectName = "write-zero-bytes-test"
 
         # Create the original GCS object.
-        "contents" | New-GcsObject -Bucket $bucket $objectName
+        "contents" | New-GcsObject $bucket $objectName
 
         Write-GcsObject $bucket $objectName
         $emptyObj = Get-GcsObject $bucket $objectName
@@ -942,7 +942,7 @@ Describe "Write-GcsObject" {
     }
 
     It "should not rewrite ACLs" {
-        $orgObj = "original contents" | New-GcsObject -Bucket $bucket "acl-test" `
+        $orgObj = "original contents" | New-GcsObject $bucket "acl-test" `
             -PredefinedAcl bucketOwnerRead
 
         # The exact project or user IDs don't matter. As long as the ACL kind is correct.
@@ -958,7 +958,7 @@ Describe "Write-GcsObject" {
     }
 
     It "should not clobber existing metadata" {
-        $orgObj = "original contents" | New-GcsObject -Bucket $bucket "metadata-test" `
+        $orgObj = "original contents" | New-GcsObject $bucket "metadata-test" `
             -Metadata @{ "one" = 1; "two" = 2}
         $orgObj.Metadata.Count | Should Be 2
         
@@ -969,7 +969,7 @@ Describe "Write-GcsObject" {
     }
 
     It "should merge Metadata updates" {
-        $step1 = "XXX" | New-GcsObject -Bucket $bucket "metadata-test2" `
+        $step1 = "XXX" | New-GcsObject $bucket "metadata-test2" `
             -Metadata @{ "alpha" = 1; "beta" = 2; "gamma" = 3 }
         $step1.Metadata.Count | Should Be 3
         $step1.Metadata["alpha"] | Should Be 1
@@ -1011,7 +1011,7 @@ Describe "Test-GcsObject" {
 
     It "should work" {
         Test-GcsObject $bucket "test-obj" | Should Be $false
-        $obj = "can you hear me now?" | New-GcsObject -Bucket $bucket "test-obj"
+        $obj = "can you hear me now?" | New-GcsObject $bucket "test-obj"
         Test-GcsObject $bucket "test-obj" | Should Be $true
         $obj | Remove-GcsObject
     }
@@ -1044,25 +1044,25 @@ Describe "Copy-GcsObject" {
                 Should Throw 404
         }
         
-        It "Should fail to read from inaccessible source bucket" {
+        It "Should fail to read from unaccessable source bucket" {
             { Copy-GcsObject -SourceBucket "asdf" -SourceObject "test-source" $bucket "test-dest" } |
                 Should Throw 403
         }
         
-        It "Should fail to write to inaccessible source bucket" {
-            New-GcsObject "test-source0" -Value "test0-$r" $bucket
+        It "Should fail to write to unaccessable source bucket" {
+            New-GcsObject $bucket "test-source0" -Value "test0-$r"
             { Copy-GcsObject -SourceBucket $bucket -SourceObject "test-source0" "asdf" "test-dest" } |
                 Should Throw 403
         }
 
         It "Should work by name" {
-            New-GcsObject "test-source" -Value "test1-$r" $bucket
+            New-GcsObject $bucket "test-source" -Value "test1-$r"
             Copy-GcsObject -SourceBucket $bucket -SourceObject "test-source" $bucket "test-dest"
             Read-GcsObject $bucket "test-dest" | Should Be "test1-$r"
         }
 
         It "Should work by object" {
-            $sourceObj = New-GcsObject "test-source2" -Value "test2-$r" $bucket
+            $sourceObj = New-GcsObject $bucket "test-source2" -Value "test2-$r"
             $sourceObj | Copy-GcsObject $bucket "test-dest2"
             Read-GcsObject $bucket "test-dest2" | Should Be "test2-$r"
         }

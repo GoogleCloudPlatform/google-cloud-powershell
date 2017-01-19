@@ -163,7 +163,7 @@ namespace Google.PowerShell.CloudStorage
         /// The name of the bucket to upload to. Will also accept a Bucket object.
         /// </para>
         /// </summary>
-        [Parameter(Position = 2, Mandatory = false)]
+        [Parameter(Position = 0, Mandatory = false)]
         [PropertyByTypeTransformation(Property = nameof(Apis.Storage.v1.Data.Bucket.Name),
             TypeToTransform = typeof(Bucket))]
         [ValidateNotNullOrEmpty]
@@ -177,8 +177,8 @@ namespace Google.PowerShell.CloudStorage
         /// If uploading a file, will default to the name of the file if not set.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.ContentsFromString)]
-        [Parameter(Position = 0, Mandatory = false, ParameterSetName = ParameterSetNames.ContentsFromFile)]
+        [Parameter(Position = 1, Mandatory = true, ParameterSetName = ParameterSetNames.ContentsFromString)]
+        [Parameter(Position = 1, Mandatory = false, ParameterSetName = ParameterSetNames.ContentsFromFile)]
         public string ObjectName { get; set; }
 
         /// <summary>
@@ -187,7 +187,7 @@ namespace Google.PowerShell.CloudStorage
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ContentsFromString,
-            Position = 1, ValueFromPipeline = true)]
+            Position = 2, ValueFromPipeline = true)]
         public string Value { get; set; } = "";
 
         /// <summary>
@@ -195,7 +195,7 @@ namespace Google.PowerShell.CloudStorage
         /// Local path to the file to upload.
         /// </para>
         /// </summary>
-        [Parameter(Position = 1, Mandatory = true, ParameterSetName = ParameterSetNames.ContentsFromFile)]
+        [Parameter(Position = 2, Mandatory = true, ParameterSetName = ParameterSetNames.ContentsFromFile)]
         [ValidateNotNullOrEmpty]
         public string File { get; set; }
 
@@ -204,7 +204,7 @@ namespace Google.PowerShell.CloudStorage
         /// Local path to the folder to upload.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.UploadFolder)]
+        [Parameter(Position = 2, Mandatory = true, ParameterSetName = ParameterSetNames.UploadFolder)]
         [ValidateNotNullOrEmpty]
         public string Folder { get; set; }
 

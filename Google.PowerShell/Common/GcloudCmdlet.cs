@@ -53,13 +53,19 @@ namespace Google.PowerShell.Common
             };
         }
 
-        protected Tuple<string, ProviderInfo> GetFullPath(string filePath)
+        /// <summary>
+        /// Given a path, try to get the fully-qualified path and returns the PowerShell Provider
+        /// that resolves the path. For example, if the path is C:\Test, this will return "C:\Test"
+        /// with provider as FileSystem. If the path is gs:\my-bucket, this wil return "my-bucket"
+        /// with provider as GoogleCloudStorage.
+        /// </summary>
+        protected Tuple<string, ProviderInfo> GetFullPath(string path)
         {
             // Try to resolve the path using PowerShell.
             try
             {
                 ProviderInfo provider = null;
-                string[] result = GetResolvedProviderPathFromPSPath(filePath, out provider).ToArray();
+                string[] result = GetResolvedProviderPathFromPSPath(path, out provider).ToArray();
 
                 // Only return the resolved path if there are no ambiguities.
                 // If path contains wildcards, then it may resolved to more than 1 path.
@@ -71,11 +77,14 @@ namespace Google.PowerShell.Common
             catch (ItemNotFoundException itemEx)
             {
                 // This exception is thrown if the path does not exist.
-                // We can still resolve the path with GetUnresolvedProviderPathFromPSPath.
+                // For example, if we try to resolve .\Blah.text in folder C:\Test
+                // and the file does not exist, this exception will be thrown.
+                // However, we can still resolve the path with GetUnresolvedProviderPathFromPSPath to C:\Test\Blah.text
                 ProviderInfo provider = null;
                 PSDriveInfo psDrive = null;
-                string path = SessionState.Path.GetUnresolvedProviderPathFromPSPath(itemEx.ItemName, out provider, out psDrive);
-                return new Tuple<string, ProviderInfo>(path, provider);
+                string unresolvedPath = SessionState.Path?.GetUnresolvedProviderPathFromPSPath(
+                    itemEx.ItemName, out provider, out psDrive);
+                return new Tuple<string, ProviderInfo>(unresolvedPath, provider);
             }
 
             return null;
@@ -99,7 +108,17 @@ namespace Google.PowerShell.Common
                 return filePath;
             }
 
-            Tuple<string, ProviderInfo> pathAndProviderInfo = GetFullPath(filePath);
+            Tuple<string, ProviderInfo> pathAndProviderInfo = null;
+
+            try
+            {
+                pathAndProviderInfo = GetFullPath(filePath);
+            }
+            catch
+            {
+                return filePath;
+            }
+
             if (pathAndProviderInfo == null)
             {
                 return filePath;
