@@ -54,6 +54,43 @@ namespace Google.PowerShell.Common
         }
 
         /// <summary>
+        /// Given a path, try to get the fully-qualified path and returns the PowerShell Provider
+        /// that resolves the path. For example, if the path is C:\Test, this will return "C:\Test"
+        /// with provider as FileSystem. If the path is gs:\my-bucket, this wil return "my-bucket"
+        /// with provider as GoogleCloudStorage.
+        /// </summary>
+        protected Tuple<string, ProviderInfo> GetFullPath(string path)
+        {
+            // Try to resolve the path using PowerShell.
+            try
+            {
+                ProviderInfo provider = null;
+                string[] result = GetResolvedProviderPathFromPSPath(path, out provider).ToArray();
+
+                // Only return the resolved path if there are no ambiguities.
+                // If path contains wildcards, then it may resolved to more than 1 path.
+                if (result?.Length == 1)
+                {
+                    return new Tuple<string, ProviderInfo>(result[0], provider);
+                }
+            }
+            catch (ItemNotFoundException itemEx)
+            {
+                // This exception is thrown if the path does not exist.
+                // For example, if we try to resolve .\Blah.text in folder C:\Test
+                // and the file does not exist, this exception will be thrown.
+                // However, we can still resolve the path with GetUnresolvedProviderPathFromPSPath to C:\Test\Blah.text
+                ProviderInfo provider = null;
+                PSDriveInfo psDrive = null;
+                string unresolvedPath = SessionState.Path?.GetUnresolvedProviderPathFromPSPath(
+                    itemEx.ItemName, out provider, out psDrive);
+                return new Tuple<string, ProviderInfo>(unresolvedPath, provider);
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Returns the fully-qualified file path, properly relative file paths (taking the current Powershell
         /// environemnt into account.)
         ///
@@ -63,7 +100,7 @@ namespace Google.PowerShell.Common
         ///
         /// You should *always* call this instead of Path.GetFullPath inside of cmdlets.
         /// </summary>
-        protected string GetFullPath(string filePath)
+        protected string GetFullFilePath(string filePath)
         {
             // If the path is already fully-qualified, go with that.
             if (Path.IsPathRooted(filePath))
@@ -71,31 +108,32 @@ namespace Google.PowerShell.Common
                 return filePath;
             }
 
-            // Try to resolve the path using PowerShell (only applicable for FileSystemProvider).
+            Tuple<string, ProviderInfo> pathAndProviderInfo = null;
+
             try
             {
-                ProviderInfo provider = null;
-                string[] result = GetResolvedProviderPathFromPSPath(filePath, out provider).ToArray();
-
-                // Only return the resolved path if there are no ambiguities.
-                // If path contains wildcards, then it may resolved to more than 1 path.
-                if (result?.Length == 1 && provider.ImplementingType == typeof(FileSystemProvider))
-                {
-                    return result[0];
-                }
+                pathAndProviderInfo = GetFullPath(filePath);
             }
-            catch (ItemNotFoundException itemEx)
+            catch
             {
-                // In case the file path is not created, an error will be thrown.
-                // But we should still return the resolved path if it is rooted.
-                if (Path.IsPathRooted(itemEx.ItemName))
-                {
-                    return itemEx.ItemName;
-                }
+                return filePath;
             }
 
-            // Default with the input path in case we cannot resolve it.
-            return filePath;
+            if (pathAndProviderInfo == null)
+            {
+                return filePath;
+            }
+
+            string resolvedPath = pathAndProviderInfo.Item1;
+            ProviderInfo providerInfo = pathAndProviderInfo.Item2;
+            if (string.IsNullOrWhiteSpace(resolvedPath)
+                || providerInfo == null
+                || providerInfo.ImplementingType != typeof(FileSystemProvider))
+            {
+                return filePath;
+            }
+
+            return resolvedPath;
         }
 
         /// <summary>

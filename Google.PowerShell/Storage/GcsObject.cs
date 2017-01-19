@@ -106,6 +106,13 @@ namespace Google.PowerShell.CloudStorage
     /// use -ObjectName or -ContentType parameter in this case.
     /// Use this instead of Write-GcsObject when creating a new Google Cloud Storage object. You will get
     /// a warning if the object already exists.
+    /// If this cmdlet is used when PowerShell is in a Google Cloud Storage Provider location (i.e, the shell's location starts
+    /// with gs:\), then you may not need to supply -Bucket. For example, if the location is gs:\my-bucket, the cmdlet will
+    /// automatically fill out -Bucket with "my-bucket". If -Bucket is still used, however, whatever value given will override "my-bucket".
+    /// If the location is inside a folder on Google Cloud Storage, then the cmdlet will prefix the folder name to the object name.
+    /// For example, if the location is gs:\my-bucket\folder-1\folder-2, the cmdlet will prefix "folder-1/folder-2/" to the
+    /// object name. If -ObjectNamePrefix is used, the automatically determined folder prefix will be appended to the front
+    /// of the value of -ObjectNamePrefix.
     /// </para>
     /// <para type="description">
     /// Note: Most Google Cloud Storage utilities, including the PowerShell Provider and the Google Cloud
@@ -125,7 +132,14 @@ namespace Google.PowerShell.CloudStorage
     ///   PS C:\> "Hello, World!" | New-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt" `
     ///       -Metadata @{ "logsource" = $env:computername }
     ///   </code>
-    ///   <para>Pipe a string to a a file on GCS. Sets a custom metadata value.</para>
+    ///   <para>Pipe a string to a file on GCS. Sets a custom metadata value.</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> cd gs:\my-bucket\my-folder
+    ///   PS gs:\my-bucket\my-folder> "Hello, World!" | New-GcsObject -ObjectName "log-000.txt"
+    ///   </code>
+    ///   <para>Pipe a string to a file on GCS while using the GCS Provider. Here, the object created will be "my-folder/log-000.txt".</para>
     /// </example>
     /// <example>
     ///  <code>PS C:\> New-GcsObject -Bucket "widget-co-logs" -Folder "$env:SystemDrive\inetpub\logs\LogFiles"</code>
@@ -149,9 +163,10 @@ namespace Google.PowerShell.CloudStorage
         /// The name of the bucket to upload to. Will also accept a Bucket object.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
+        [Parameter(Position = 0, Mandatory = false)]
         [PropertyByTypeTransformation(Property = nameof(Apis.Storage.v1.Data.Bucket.Name),
             TypeToTransform = typeof(Bucket))]
+        [ValidateNotNullOrEmpty]
         public string Bucket { get; set; }
 
         /// <summary>
@@ -258,12 +273,35 @@ namespace Google.PowerShell.CloudStorage
             string objContentType = null;
             Stream contentStream = null;
 
+            // Check whether our current location is in gs:\ (i.e., we are in the Google Cloud Storage provider).
+            // If so, then we can resolve the path to get the bucket and folder name (if we are in one).
+            if (SessionState?.Path?.CurrentLocation?.Provider?.ImplementingType == typeof(GoogleCloudStorageProvider))
+            {
+                string providerPath = SessionState.Path.CurrentLocation.ProviderPath;
+                // Path is of the form <bucket-name>\prefix
+                if (!string.IsNullOrWhiteSpace(providerPath))
+                {
+                    string[] bucketAndPrefix = providerPath.Split(new char[] { '\\' }, 2);
+                    Bucket = Bucket ?? bucketAndPrefix[0];
+                    if (bucketAndPrefix.Length == 2)
+                    {
+                        string prefix = bucketAndPrefix[1];
+                        ObjectNamePrefix = ObjectNamePrefix == null ? prefix : Path.Combine(prefix, ObjectNamePrefix);
+                    }
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(Bucket))
+            {
+                throw new PSArgumentNullException(nameof(Bucket), "Bucket name cannot be determined.");
+            }
+
             if (ParameterSetName == ParameterSetNames.UploadFolder)
             {
                 // User gives us the path to a folder, we will resolve the path and upload the contents of that folder.
                 // Have to take care of / and \ in the end of the directory path because Path.GetFileName will return
                 // an empty string if that is not trimmed off.
-                string resolvedFolderPath = GetFullPath(Folder).TrimEnd("/\\".ToCharArray());
+                string resolvedFolderPath = GetFullFilePath(Folder).TrimEnd("/\\".ToCharArray());
                 if (string.IsNullOrWhiteSpace(resolvedFolderPath) || !Directory.Exists(resolvedFolderPath))
                 {
                     throw new DirectoryNotFoundException($"Directory '{resolvedFolderPath}' cannot be found.");
@@ -282,7 +320,7 @@ namespace Google.PowerShell.CloudStorage
             if (ParameterSetName == ParameterSetNames.ContentsFromFile)
             {
                 objContentType = GetContentType(ContentType, metadataDict, InferContentType(File));
-                string qualifiedPath = GetFullPath(File);
+                string qualifiedPath = GetFullFilePath(File);
                 if (!System.IO.File.Exists(qualifiedPath))
                 {
                     throw new FileNotFoundException("File not found.", qualifiedPath);
@@ -297,6 +335,11 @@ namespace Google.PowerShell.CloudStorage
                 objContentType = GetContentType(ContentType, metadataDict, UTF8TextMimeType);
                 byte[] contentBuffer = Encoding.UTF8.GetBytes(Value);
                 contentStream = new MemoryStream(contentBuffer);
+            }
+            // If we are in a GCS Provider location, then there may be a object name prefix.
+            if (!string.IsNullOrWhiteSpace(ObjectNamePrefix))
+            {
+                ObjectName = ConvertLocalToGcsFolderPath(Path.Combine(ObjectNamePrefix, ObjectName));
             }
 
             UploadStreamToGcsObject(contentStream, objContentType, metadataDict, ObjectName);
@@ -568,7 +611,7 @@ namespace Google.PowerShell.CloudStorage
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.FromBucketAndObjName)]
-        [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Bucket { get; set; }
 
         /// <summary>
@@ -839,7 +882,7 @@ namespace Google.PowerShell.CloudStorage
             }
 
             // Write object contents to disk. Fail if the local file exists, unless -Force is specified.
-            string qualifiedPath = GetFullPath(OutFile);
+            string qualifiedPath = GetFullFilePath(OutFile);
             bool fileExists = File.Exists(qualifiedPath);
             if (fileExists && !Force.IsPresent)
             {
@@ -998,7 +1041,7 @@ namespace Google.PowerShell.CloudStorage
             Stream contentStream;
             if (!string.IsNullOrEmpty(File))
             {
-                string qualifiedPath = GetFullPath(File);
+                string qualifiedPath = GetFullFilePath(File);
                 if (!System.IO.File.Exists(qualifiedPath))
                 {
                     throw new FileNotFoundException("File not found.", qualifiedPath);
