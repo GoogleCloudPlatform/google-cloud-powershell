@@ -56,7 +56,7 @@ Describe "New-GcsObject" {
             $newObj.Size | Should Be 17
 
             # Double check it is stored in GCS.
-            $obj = Get-GcsObject $bucket $objectName
+            $obj = Get-GcsObject -ObjectName $objectName
             $obj.Name | Should Be $objectName
             $obj.Size | Should Be 17
 
@@ -111,7 +111,7 @@ Describe "New-GcsObject" {
             $newObj.Size | Should Be 17
 
             # Double check it is stored in GCS.
-            $obj = Get-GcsObject $bucket "$folderName/$objectName"
+            $obj = Get-GcsObject -ObjectName $objectName
             $obj.Name | Should Be "$folderName/$objectName"
             $obj.Size | Should Be 17
 
@@ -123,7 +123,7 @@ Describe "New-GcsObject" {
             $newObj.Name | Should Be "$folderName/Testing/$objectName"
 
             # Double check it is stored in GCS.
-            $obj = Get-GcsObject $bucket "$folderName/Testing/$objectName"
+            $obj = Get-GcsObject -ObjectName "Testing/$objectName"
             $obj.Name | Should Be "$folderName/Testing/$objectName"
         }
         finally {
@@ -155,8 +155,8 @@ Describe "New-GcsObject" {
         try {
             cd "gs:\$bucket"
             "test string" | New-GcsObject -ObjectName "pipeline-test"
-            Read-GcsObject $bucket "pipeline-test" | Should Be "test string"
-            Remove-GcsObject $bucket "pipeline-test"
+            Read-GcsObject -ObjectName "pipeline-test" | Should Be "test string"
+            Remove-GcsObject -ObjectName "pipeline-test"
         }
         finally {
             cd $currentLocation
@@ -192,7 +192,7 @@ Describe "New-GcsObject" {
         $tempFolderName = Split-Path $env:TEMP -Leaf
         $tests = @(
                 "$fileName",
-                ".\$fileName",
+                ".\$fileremoveName",
                 "./$fileName",
                 (Join-Path $env:TEMP "$fileName"),
                 "..\$tempFolderName\$fileName")
@@ -349,8 +349,7 @@ Describe "New-GcsObject" {
             $folderOnline.Name | Should Be "$folderName/"
             $folderOnline.Size | Should Be 0
         }
-        finally
-        {
+        finally {
             Remove-Item $testFolder -Recurse -Force -ErrorAction Ignore
         }
     }
@@ -369,12 +368,11 @@ Describe "New-GcsObject" {
             $folder.Name | Should Be "$folderName/"
             $folder.Size | Should Be 0
 
-            $folderOnline = Get-GcsObject -Bucket $bucket -ObjectName "$folderName/"
+            $folderOnline = Get-GcsObject -ObjectName "$folderName/"
             $folderOnline.Name | Should Be "$folderName/"
             $folderOnline.Size | Should Be 0
         }
-        finally
-        {
+        finally {
             cd $currentLocation
             Remove-Item $testFolder -Recurse -Force -ErrorAction Ignore
         }
@@ -404,8 +402,7 @@ Describe "New-GcsObject" {
 
             Test-SlashHelper $result $folderName
         }
-        finally
-        {
+        finally {
             Remove-Item $testFolder -Recurse -Force -ErrorAction Ignore
         }
     }
@@ -431,8 +428,7 @@ Describe "New-GcsObject" {
 
             Test-SlashHelper $result $folderName
         }
-        finally
-        {
+        finally {
             cd $currentLocation
             Remove-Item $testFolder -Recurse -Force -ErrorAction Ignore
         }
@@ -492,8 +488,7 @@ Describe "New-GcsObject" {
 
             Test-FolderAndSubFolderHelper $result $folderName
         }
-        finally
-        {
+        finally {
             Remove-Item $testFolder -Recurse -Force -ErrorAction Ignore
         }
     }
@@ -521,8 +516,7 @@ Describe "New-GcsObject" {
 
             Test-FolderAndSubFolderHelper $result $folderName
         }
-        finally
-        {
+        finally {
             cd $currentLocation
             Remove-Item $testFolder -Recurse -Force -ErrorAction Ignore
         }
@@ -542,8 +536,7 @@ Describe "New-GcsObject" {
             $result.Name -contains "$prefix/$folderName/" | should be $true
             $result.Name -contains "$prefix/$folderName/world.txt" | should be $true
         }
-        finally
-        {
+        finally {
             Remove-Item $testFolder -Recurse -Force -ErrorAction Ignore
         }
     }
@@ -576,8 +569,7 @@ Describe "New-GcsObject" {
             $result.Name -contains "$anotherDir/$prefix/$folderName/" | should be $true
             $result.Name -contains "$anotherDir/$prefix/$folderName/world.txt" | should be $true
         }
-        finally
-        {
+        finally {
             cd $currentLocation
             Remove-Item $testFolder -Recurse -Force -ErrorAction Ignore
         }
@@ -614,10 +606,42 @@ Describe "Get-GcsObject" {
         $objs.Length | Should Be 10
     }
 
+    It "should support getting all objects in a bucket in GCS Provider location" {
+        $currentLocation = Resolve-Path .\
+        try {
+            cd "gs:\$bucket"
+            $objs = Get-GcsObject
+            $objs.Length | Should Be 10
+        }
+        finally {
+            cd $currentLocation
+        }
+    }
+
     It "should support getting the bucket via the pipeline (and via Bucket object)" {
         $bucketObj = Get-GcsBucket $bucket
         $objs = $bucketObj | Get-GcsObject
         $objs.Length | Should Be 10
+    }
+
+    It "should honor -Bucket and pipelining from Bucket object even in GCS Provider" {
+        $r = Get-Random
+        $anotherBucket = "gcps-get-gcsobject-$r"
+        if (-not (Test-GcsBucket $anotherBucket)) {
+            Create-TestBucket $project $anotherBucket
+        }
+
+        $currentLocation = Resolve-Path .\
+        try {
+            cd "gs:\$anotherBucket"
+            $bucketObj = Get-GcsBucket $bucket
+            $objs = $bucketObj | Get-GcsObject
+            $objs.Length | Should Be 10
+        }
+        finally {
+            cd $currentLocation
+            Remove-GcsBucket $anotherBucket -Force -ErrorAction Ignore
+        }
     }
 
     It "should support prefix matching" {
@@ -629,6 +653,39 @@ Describe "Get-GcsObject" {
 
         $objs = Get-GcsObject $bucket -Prefix "B/B"
         $objs.Length | Should Be 1
+    }
+
+    It "should support prefix matching in GCS Provider location" {
+        $currentLocation = Resolve-Path .\
+        try {
+            cd "gs:\$bucket"
+            $objs = Get-GcsObject -Prefix "A/"
+            $objs.Length | Should Be 3
+
+            cd .\A
+            $objs = Get-GcsObject
+            $objs.Length | Should Be 3
+            cd ..
+
+            $objs = Get-GcsObject -Prefix "B/"
+            $objs.Length | Should Be 4
+
+            cd .\B
+            $objs = Get-GcsObject
+            $objs.Length | Should Be 4
+            cd ..
+
+            $objs = Get-GcsObject -Prefix "B/B"
+            $objs.Length | Should Be 1
+
+            cd .\B
+            $objs = Get-GcsObject -Prefix "B/"
+            $objs.Length | Should Be 1
+            cd ..
+        }
+        finally {
+            cd $currentLocation
+        }
     }
 
     It "should support delimiting results" {
@@ -644,6 +701,43 @@ Describe "Get-GcsObject" {
         $objs = Get-GcsObject $bucket -Prefix "A/B/" -Delimiter "/"
         $objs.Length | Should Be 2
     }
+
+    It "should support delimiting results in GCS Provider location" {
+        $currentLocation = Resolve-Path .\
+        try {
+            cd "gs:\$bucket"
+            $objs = Get-GcsObject -Delimiter "/"
+            $objs.Length | Should Be 1
+
+            $objs = Get-GcsObject -Prefix "A/" -Delimiter "/"
+            $objs.Length | Should Be 1
+
+            cd .\A
+            $objs = Get-GcsObject -Delimiter "/"
+            $objs.Length | Should Be 1
+            cd ..
+
+            $objs = Get-GcsObject -Prefix "A/B" -Delimiter "/"
+            $objs.Length | Should Be 0
+
+            cd .\A\B
+            $objs = Get-GcsObject -Delimiter "/"
+            # Result here is 2 because the prefix is "A/B/"
+            $objs.Length | Should Be 2
+            cd ..\..
+
+            $objs = Get-GcsObject -Prefix "A/B/" -Delimiter "/"
+            $objs.Length | Should Be 2
+
+            cd .\A
+            $objs = Get-GcsObject -Prefix "B/" -Delimiter "/"
+            $objs.Length | Should Be 2
+            cd ..
+        }
+        finally {
+            cd $currentLocation
+        }
+    }
 }
 
 Describe "Set-GcsObject" {
@@ -651,27 +745,55 @@ Describe "Set-GcsObject" {
     $bucket = "gcps-get-object-testing"
     Create-TestBucket $project $bucket
     Add-TestFile $bucket "testfile1.txt"
+    Add-TestFile $bucket "testfile2.txt"
 
-    It "should work" {
-        # Default ACLs set on the object from the bucket.
-        $obj = Get-GcsObject $bucket "testfile1.txt"
+    function Test-ObjectDefaultAcl($obj) {
         $obj.Acl.Count | Should Be 4
         $obj.Acl[0].ID.Contains("/project-owners-") | Should Be $true
         $obj.Acl[1].ID.Contains("/project-editors-") | Should Be $true
         $obj.Acl[2].ID.Contains("/project-viewers-") | Should Be $true
         $obj.Acl[3].ID.Contains("/user-") | Should Be $true
+    }
+
+    function Test-ObjectPublicReadAcl($obj) {
+        $obj.Acl.Count | Should Be 2
+        $obj.Acl[0].ID.Contains("/user-") | Should Be $true
+        $obj.Acl[1].ID.Contains("/allUsers") | Should Be $true
+    }
+
+    It "should work" {
+        # Default ACLs set on the object from the bucket.
+        $obj = Get-GcsObject $bucket "testfile1.txt"
+        Test-ObjectDefaultAcl $obj
 
         # Set new value for ACLs using a predefined set.
         $obj = $obj | Set-GcsObject -PredefinedAcl PublicRead
-        $obj.Acl.Count | Should Be 2
-        $obj.Acl[0].ID.Contains("/user-") | Should Be $true
-        $obj.Acl[1].ID.Contains("/allUsers") | Should Be $true
+        Test-ObjectPublicReadAcl $obj
 
         # Confirm the change took place.
         $obj = Get-GcsObject $bucket "testfile1.txt"
-        $obj.Acl.Count | Should Be 2
-        $obj.Acl[0].ID.Contains("/user-") | Should Be $true
-        $obj.Acl[1].ID.Contains("/allUsers") | Should Be $true
+        Test-ObjectPublicReadAcl $obj
+    }
+
+    It "should work in GCS Provider location" {
+        $currentLocation = Resolve-Path .\
+        try {
+            cd "gs:\$bucket"
+            # Default ACLs set on the object from the bucket.
+            $obj = Get-GcsObject -ObjectName "testfile2.txt"
+            Test-ObjectDefaultAcl $obj
+
+            # Set new value for ACLs using a predefined set.
+            $obj = Set-GcsObject -ObjectName $obj.Name -PredefinedAcl PublicRead
+            Test-ObjectPublicReadAcl $obj
+
+            # Confirm the change took place.
+            $obj = Get-GcsObject -ObjectName "testfile2.txt"
+            Test-ObjectPublicReadAcl $obj
+        }
+        finally {
+            cd $currentLocation
+        }
     }
 }
 
@@ -693,8 +815,29 @@ Describe "Remove-GcsObject" {
 
     It "should work" {
         Add-TestFile $bucket "testfile.txt"
-        $obj = Remove-GcsObject $bucket "testfile.txt"
+        Remove-GcsObject $bucket "testfile.txt"
         { Get-GcsObject $bucket "testfile.txt" } | Should Throw "'testfile.txt' does not exist"
+    }
+
+    It "should work in GCS Provider location" {
+        Add-TestFile $bucket "testfile.txt"
+        $currentLocation = Resolve-Path .\
+        try {
+            cd "gs:\$bucket"
+            Remove-GcsObject -ObjectName "testfile.txt"
+            { Get-GcsObject -ObjectName "testfile.txt" } | Should Throw "'testfile.txt' does not exist"
+
+            $anotherFolder = "anotherFolder"
+            mkdir $anotherFolder
+            cd $anotherFolder
+            New-GcsObject -ObjectName "Test"
+            Remove-GcsObject -ObjectName "Test"
+            { Get-GcsObject -ObjectName "Test" } | Should Throw "does not exist"
+            cd ..
+        }
+        finally {
+            cd $currentLocation
+        }
     }
 
     It "should accept objects from the pipeline" {
@@ -706,6 +849,31 @@ Describe "Remove-GcsObject" {
 
         $objs = Get-GcsObject $bucket
         $objs.Length | Should Be 0
+    }
+
+    It "should accept objects from the pipeline in GCS Provider location" {
+        @("alpha", "beta", "gamma") | ForEach { New-GcsObject $bucket $_ $_ }
+        $objs = Get-GcsObject $bucket
+        $objs.Length | Should Be 3
+
+        $r = Get-Random
+        $anotherBucket = "gcps-get-gcsobject-$r"
+        if (-not (Test-GcsBucket $anotherBucket)) {
+            Create-TestBucket $project $anotherBucket
+        }
+
+        $currentLocation = Resolve-Path .\
+        try {
+            cd "gs:\$anotherBucket"
+            $objs | Remove-GcsObject
+
+            $objs = Get-GcsObject $bucket
+            $objs.Length | Should Be 0
+        }
+        finally {
+            cd $currentLocation
+            Remove-GcsBucket $anotherBucket -Force -ErrorAction Ignore
+        }
     }
 
     It "should fail for non existing objects" {
@@ -730,8 +898,6 @@ Describe "Read-GcsObject" {
     }
 
     It "should work" {
-        # GetTempFileName creates a 0-byte file, which will cause problems
-        # because the cmdlet won't overwrite it without -Force.
         $tempFileName = [System.IO.Path]::Combine(
                  [System.IO.Path]::GetTempPath(),
                  [System.IO.Path]::GetRandomFileName())
@@ -740,6 +906,24 @@ Describe "Read-GcsObject" {
         Get-Content $tempFileName | Should BeExactly $testFileContents
 
         Remove-Item $tempFileName
+    }
+
+    It "should work in GCS Provider location" {
+        # GetTempFileName creates a 0-byte file, which will cause problems
+        # because the cmdlet won't overwrite it without -Force.
+        $tempFileName = [System.IO.Path]::Combine(
+                 [System.IO.Path]::GetTempPath(),
+                 [System.IO.Path]::GetRandomFileName())
+        $currentLocation = Resolve-Path .\
+        try {
+            cd "gs:\$bucket"
+            Read-GcsObject -ObjectName $testObjectName -OutFile $tempFileName
+            Get-Content $tempFileName | Should BeExactly $testFileContents
+            Remove-Item $tempFileName
+        }
+        finally {
+            cd $currentLocation
+        }        
     }
 
     It "should take pipeline input" {
@@ -754,6 +938,26 @@ Describe "Read-GcsObject" {
         Get-Content $tempFileName | Should BeExactly $testFileContents
 
         Remove-Item $tempFileName
+    }
+
+    It "should accept objects from the pipeline in GCS Provider location" {
+        # GetTempFileName creates a 0-byte file, which will cause problems
+        # because the cmdlet won't overwrite it without -Force.
+        $tempFileName = [System.IO.Path]::Combine(
+                 [System.IO.Path]::GetTempPath(),
+                 [System.IO.Path]::GetRandomFileName())
+        $currentLocation = Resolve-Path .\
+        try {
+            cd "gs:\$bucket"
+            Get-GcsObject -ObjectName $testObjectName | Read-GcsObject -OutFile $tempFileName
+
+            Get-Content $tempFileName | Should BeExactly $testFileContents
+
+            Remove-Item $tempFileName
+        }
+        finally {
+            cd $currentLocation
+        }
     }
 
     It "won't overwrite existing files" {
@@ -851,6 +1055,38 @@ Describe "Write-GcsObject" {
         Remove-Item $tempFile
     }
 
+    It "should work in GCS Provider location" {
+        $objectName = "folder/file.txt"
+        $originalContents = "This is the ORIGINAL file contents."
+
+        # Create the original file.
+        $tempFile = [System.IO.Path]::GetTempFileName()
+        $originalContents | Out-File $tempFile -Encoding ascii -NoNewline
+        $currentLocation = Resolve-Path .\
+        try {
+            cd "gs:\$bucket"
+            New-GcsObject -ObjectName $objectName -File $tempFile
+            Remove-Item $tempFile
+
+            # Rewrite its contents
+            $tempFile = [System.IO.Path]::GetTempFileName()
+            $newContents = "This is the NEW content."
+            $newContents | Out-File $tempFile -Encoding ascii -NoNewline
+            Write-GcsObject -ObjectName $objectName -File $tempFile
+            Remove-Item $tempFile
+
+            # Confirm the contents have changed.
+            $tempFile = [System.IO.Path]::GetTempFileName()
+            Read-GcsObject -ObjectName $objectName -OutFile $tempFile -Force
+
+            Get-Content $tempFile | Should BeExactly $newContents
+            Remove-Item $tempFile
+        }
+        finally {
+            cd $currentLocation
+        }        
+    }
+
     It "will accept contents from the pipeline" {
         # Note that we aren't specifying the -Value or -File parameter. Instead
         # that is set by the pipeline.
@@ -879,20 +1115,29 @@ Describe "Write-GcsObject" {
 
         # Using piped in GCS Object with -Value.
         $objectContents = "This is some text from the PowerShell pipeline using piped in GCS Object"
-        Get-GcsObject -Bucket $bucket -ObjectName $objectName | Write-GcsObject -Value $objectContents
-        Read-GcsObject -Bucket $bucket -ObjectName $objectName | Should BeExactly $objectContents
+        $currentLocation = Resolve-Path .\
+
+        try {
+            cd "gs:\$bucket"
+            Get-GcsObject -ObjectName $objectName | Write-GcsObject -Value $objectContents
+            Read-GcsObject -ObjectName $objectName | Should BeExactly $objectContents
+        }
+        finally {
+            cd $currentLocation
+        } 
 
         # Using piped in GCS Object with -File.
         $fileContents = "This is the file contents."
         $tempFile = [System.IO.Path]::GetTempFileName()
 
         try {
+            cd "gs:\$bucket"
             $fileContents | Out-File $tempFile -Encoding ascii -NoNewline
-            Get-GcsObject -Bucket $bucket -ObjectName $objectName | Write-GcsObject -File $tempFile
+            Get-GcsObject -ObjectName $objectName | Write-GcsObject -File $tempFile
         }
         finally {
-            Remove-Item $tempFile
-        }
+            cd $currentLocation
+        } 
 
         # Confirm the contents have changed.
         $tempFile = [System.IO.Path]::GetTempFileName()
@@ -1016,6 +1261,20 @@ Describe "Test-GcsObject" {
         $obj | Remove-GcsObject
     }
 
+    It "should work in GCS Provider location" {
+        $currentLocation = Resolve-Path .\
+        try {
+            cd "gs:\$bucket"
+            Test-GcsObject -ObjectName "test-obj" | Should Be $false
+            $obj = "can you hear me now?" | New-GcsObject -ObjectName "test-obj"
+            Test-GcsObject -ObjectName "test-obj" | Should Be $true
+            $obj | Remove-GcsObject
+        }
+        finally {
+            cd $currentLocation
+        }
+    }
+
     It "should return false if the Bucket does not exist" {
         Test-GcsObject "bucket-aad2fjadkdmgzadfhj4" "obj.txt"| Should Be $false
     }
@@ -1044,12 +1303,12 @@ Describe "Copy-GcsObject" {
                 Should Throw 404
         }
         
-        It "Should fail to read from unaccessable source bucket" {
+        It "Should fail to read from inaccessible source bucket" {
             { Copy-GcsObject -SourceBucket "asdf" -SourceObject "test-source" $bucket "test-dest" } |
                 Should Throw 403
         }
         
-        It "Should fail to write to unaccessable source bucket" {
+        It "Should fail to write to inaccessible source bucket" {
             New-GcsObject $bucket "test-source0" -Value "test0-$r"
             { Copy-GcsObject -SourceBucket $bucket -SourceObject "test-source0" "asdf" "test-dest" } |
                 Should Throw 403
@@ -1065,6 +1324,23 @@ Describe "Copy-GcsObject" {
             $sourceObj = New-GcsObject $bucket "test-source2" -Value "test2-$r"
             $sourceObj | Copy-GcsObject $bucket "test-dest2"
             Read-GcsObject $bucket "test-dest2" | Should Be "test2-$r"
+        }
+
+        It "should work in GCS Provider location" {
+            $currentLocation = Resolve-Path .\
+            try {
+                cd "gs:\$bucket"
+                New-GcsObject -ObjectName "test-source" -Value "test1-$r" -Force
+                Copy-GcsObject -SourceObjectName "test-source" -DestinationBucket $bucket -DestinationObjectName "test-dest" -Force
+                Read-GcsObject -ObjectName "test-dest" | Should Be "test1-$r"
+
+                $sourceObj = New-GcsObject -ObjectName "test-source2" -Value "test2-$r" -Force
+                $sourceObj | Copy-GcsObject $bucket "test-dest2" -Force
+                Read-GcsObject -ObjectName "test-dest2" | Should Be "test2-$r"
+            }
+            finally {
+                cd $currentLocation
+            }
         }
 
         It "Should overwrite existing object" {

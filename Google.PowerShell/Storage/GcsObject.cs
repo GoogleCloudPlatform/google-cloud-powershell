@@ -107,7 +107,15 @@ namespace Google.PowerShell.CloudStorage
                 // Path is of the form <bucket-name>\prefix.
                 if (!string.IsNullOrWhiteSpace(providerPath))
                 {
-                    return providerPath.Split(new char[] { '\\' }, 2);
+                    string[] result = providerPath.Split(new char[] { '\\' }, 2);
+                    if (result.Length == 2)
+                    {
+                        if (!result[1].EndsWith("/"))
+                        {
+                            result[1] += "/";
+                        }
+                    }
+                    return result;
                 }
             }
             return null;
@@ -307,7 +315,8 @@ namespace Google.PowerShell.CloudStorage
                 Bucket = Bucket ?? bucketAndPrefix[0];
                 if (bucketAndPrefix.Length == 2)
                 {
-                    ObjectNamePrefix = Path.Combine(bucketAndPrefix[1], ObjectNamePrefix);
+                    string gcsProviderPrefix = bucketAndPrefix[1];
+                    ObjectNamePrefix = (ObjectNamePrefix == null) ? gcsProviderPrefix : Path.Combine(gcsProviderPrefix, ObjectNamePrefix);
                 }
             }
 
@@ -511,7 +520,7 @@ namespace Google.PowerShell.CloudStorage
         /// Name of the bucket to check. Will also accept a Bucket object.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true)]
+        [Parameter(Position = 0, Mandatory = false, ValueFromPipeline = true)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Bucket { get; set; }
 
@@ -558,7 +567,6 @@ namespace Google.PowerShell.CloudStorage
                 if (bucketAndPrefix.Length == 2)
                 {
                     gcsProviderPrefix = bucketAndPrefix[1];
-                    Prefix = ConvertLocalToGcsFolderPath(Path.Combine(gcsProviderPrefix, Prefix));
                 }
             }
 
@@ -604,6 +612,11 @@ namespace Google.PowerShell.CloudStorage
                 ObjectsResource.ListRequest listReq = Service.Objects.List(Bucket);
                 listReq.Projection = ObjectsResource.ListRequest.ProjectionEnum.Full;
                 listReq.Delimiter = Delimiter;
+                if (gcsProviderPrefix != null)
+                {
+                    Prefix = (Prefix == null) ? gcsProviderPrefix : Path.Combine(gcsProviderPrefix, Prefix);
+                    Prefix = ConvertLocalToGcsFolderPath(Prefix);
+                }
                 listReq.Prefix = Prefix;
                 listReq.MaxResults = 100;
 
@@ -626,6 +639,11 @@ namespace Google.PowerShell.CloudStorage
         }
     }
 
+    /// <summary>
+    /// Base class for cmdlet that uses either ObjectName and Bucket OR InputObject to access a Google Cloud Storage object.
+    /// This class also takes into account whether the cmdlet is in a Google Cloud Storage Provider location or not.
+    /// If so, it will try to resolve bucket name and prefix from the current location.
+    /// </summary>
     public class GcsObjectWithBucketAndPrefixValidationCmdlet : GcsObjectCmdlet
     {
         public virtual string Bucket { get; set; }
@@ -856,7 +874,7 @@ namespace Google.PowerShell.CloudStorage
         /// Name of the bucket containing the object. Will also accept a Bucket object.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.ByName)]
+        [Parameter(Position = 0, Mandatory = false, ParameterSetName = ParameterSetNames.ByName)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Bucket))]
         public override string Bucket { get; set; }
 
@@ -1012,8 +1030,8 @@ namespace Google.PowerShell.CloudStorage
         /// Name of the bucket containing the object. Will also accept a Bucket object.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByNameFromString, Position = 0, Mandatory = true)]
-        [Parameter(ParameterSetName = ParameterSetNames.ByNameFromFile, Position = 0, Mandatory = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByNameFromString, Position = 0, Mandatory = false)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByNameFromFile, Position = 0, Mandatory = false)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Bucket))]
         public override string Bucket { get; set; }
 
@@ -1185,7 +1203,7 @@ namespace Google.PowerShell.CloudStorage
         /// Name of the containing bucket. Will also accept a Bucket object.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true)]
+        [Parameter(Position = 0, Mandatory = false)]
         [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
         public override string Bucket { get; set; }
 
@@ -1250,7 +1268,7 @@ namespace Google.PowerShell.CloudStorage
         /// Name of the bucket containing the object to read from. Will also accept a Bucket object.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = false)]
         [PropertyByTypeTransformation(Property = nameof(Apis.Storage.v1.Data.Bucket.Name), TypeToTransform = typeof(Bucket))]
         [Alias("SourceBucket")]
         public override string Bucket { get; set; }
@@ -1261,7 +1279,7 @@ namespace Google.PowerShell.CloudStorage
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true)]
-        [Alias("SourceBucket")]
+        [Alias("SourceObjectName")]
         public override string ObjectName { get; set; }
 
 
@@ -1292,6 +1310,8 @@ namespace Google.PowerShell.CloudStorage
 
         protected override void ProcessRecord()
         {
+            base.ProcessRecord();
+
             Object gcsObject = InputObject ?? Service.Objects.Get(Bucket, ObjectName).Execute();
 
             string destinationBucket = DestinationBucket ?? gcsObject.Bucket;
