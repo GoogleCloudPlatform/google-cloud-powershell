@@ -141,6 +141,8 @@ namespace Google.PowerShell.CloudStorage
     /// use -ObjectName or -ContentType parameter in this case.
     /// Use this instead of Write-GcsObject when creating a new Google Cloud Storage object. You will get
     /// a warning if the object already exists.
+    /// </para>
+    /// <para type="description">
     /// If this cmdlet is used when PowerShell is in a Google Cloud Storage Provider location (i.e, the shell's location starts
     /// with gs:\), then you may not need to supply -Bucket. For example, if the location is gs:\my-bucket, the cmdlet will
     /// automatically fill out -Bucket with "my-bucket". If -Bucket is still used, however, whatever value given will override "my-bucket".
@@ -492,6 +494,14 @@ namespace Google.PowerShell.CloudStorage
     /// To gets a specific Cloud Storage Object by name, use the -ObjectName parameter.
     /// This parameter cannot be used together with -Prefix and -Delimiter parameters.
     /// </para>
+    /// <para type="description">
+    /// If this cmdlet is used when PowerShell is in a Google Cloud Storage Provider location (i.e, the shell's location starts
+    /// with gs:\), then you may not need to supply -Bucket. For example, if the location is gs:\my-bucket, the cmdlet will
+    /// automatically fill out -Bucket with "my-bucket". If -Bucket is still used, however, whatever value given will override "my-bucket".
+    /// If the location is inside a folder on Google Cloud Storage, then the cmdlet will prefix the name of the folder to -ObjectName
+    /// if -ObjectName is used. If -ObjectName is not used, the cmdlet will use the name of the folder as a prefix by default if -Prefix
+    /// is not used or prefix the folder name to -Prefix if -Prefix is used.
+    /// </para>
     /// <example>
     ///   <code>PS C:\> Get-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt"</code>
     ///   <para>Get the object name "log-000.txt" and their metadata.</para>
@@ -510,6 +520,16 @@ namespace Google.PowerShell.CloudStorage
     ///   <code>PS C:\> Get-GcsObject -Bucket "widget-co-logs" -Prefix "pictures/winter"</code>
     ///   <para>Get all objects in a specific folder Storage Bucket. Will return objects in pictures/winter/2016/.</para>
     ///   <para>Because the Delimiter parameter was not set, will return objects under "pictures/winter/2016/".</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> cd gs:\my-bucket\my-folder
+    ///   PS gs:\my-bucket\my-folder> Get-GcsObject -ObjectName "Blah.txt"
+    ///   </code>
+    ///   <para>
+    ///   Get the object Blah.txt in folder "my-folder" in bucket "my-bucket".
+    ///   This has the same effect as "Get-GcsObject -Bucket my-bucket -ObjectName "my-folder/Blah.txt"
+    ///   </para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcsObject"), OutputType(typeof(Object))]
@@ -690,6 +710,23 @@ namespace Google.PowerShell.CloudStorage
     /// <para type="description">
     /// Updates the metadata associated with a Cloud Storage Object, such as ACLs.
     /// </para>
+    /// <para type="description">
+    /// If this cmdlet is used when PowerShell is in a Google Cloud Storage Provider location (i.e, the shell's location starts
+    /// with gs:\), then you may not need to supply -Bucket. For example, if the location is gs:\my-bucket, the cmdlet will
+    /// automatically fill out -Bucket with "my-bucket". If -Bucket is still used, however, whatever value given will override "my-bucket".
+    /// If the location is inside a folder on Google Cloud Storage, then the cmdlet will prefix the folder name to the object name.
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> Set-GcsObject -Bucket "widget-co-logs" -ObjectName "my-object" -PredefinedAcl PublicRead</code>
+    ///   <para>Sets the ACL on object "my-object" in bucket "widget-co-logs" to PublicRead.</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> cd gs:\my-bucket
+    ///   PS gs:\my-bucket> Set-GcsObject -ObjectName "my-object" -PredefinedAcl PublicRead
+    ///   </code>
+    ///   <para>Sets the ACL on object "my-object" in bucket "my-bucket" to PublicRead.</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Set, "GcsObject")]
     [OutputType(typeof(Object))]
@@ -765,10 +802,23 @@ namespace Google.PowerShell.CloudStorage
     /// <para type="description">
     /// Deletes a Cloud Storage object.
     /// </para>
+    /// <para type="description">
+    /// If this cmdlet is used when PowerShell is in a Google Cloud Storage Provider location (i.e, the shell's location starts
+    /// with gs:\), then you may not need to supply -Bucket. For example, if the location is gs:\my-bucket, the cmdlet will
+    /// automatically fill out -Bucket with "my-bucket". If -Bucket is still used, however, whatever value given will override "my-bucket".
+    /// If the location is inside a folder on Google Cloud Storage, then the cmdlet will prefix the folder name to the object name.
+    /// </para>
     /// <example>
     ///   <code>PS C:\> Remove-GcsObject ppiper-prod text-files/14683615 -WhatIf</code>
     ///   <code>What if: Performing the operation "Delete Object" on target "[ppiper-prod]" text-files/14683615".</code>
     ///   <para>Delete storage object named "text-files/14683615".</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> cd gs:\my-bucket
+    ///   PS gs:\my-bucket> Remove-GcsObject -ObjectName "my-object"
+    ///   </code>
+    ///   <para>Removes the storage object "my-object" in bucket "my-bucket".</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GcsObject",
@@ -847,6 +897,12 @@ namespace Google.PowerShell.CloudStorage
     /// written to the pipeline. If the -OutFile parameter is set, it will be written
     /// to disk instead.
     /// </para>
+    /// <para type="description">
+    /// If this cmdlet is used when PowerShell is in a Google Cloud Storage Provider location (i.e, the shell's location starts
+    /// with gs:\), then you may not need to supply -Bucket. For example, if the location is gs:\my-bucket, the cmdlet will
+    /// automatically fill out -Bucket with "my-bucket". If -Bucket is still used, however, whatever value given will override "my-bucket".
+    /// If the location is inside a folder on Google Cloud Storage, then the cmdlet will prefix the folder name to the object name.
+    /// </para>
     /// <example>
     ///   <code>
     ///   PS C:\> Read-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt" `
@@ -857,6 +913,13 @@ namespace Google.PowerShell.CloudStorage
     /// <example>
     ///   <code>PS C:\> Read-GcsObject -Bucket "widget-co-logs" -ObjectName "log-000.txt" | Write-Host</code>
     ///   <para>Returns the storage object's contents as a string.</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> cd gs:\my-bucket
+    ///   PS gs:\my-bucket> Read-GcsObject -ObjectName "log-000.txt" | Write-Host
+    ///   </code>
+    ///   <para>Returns contents of the storage object "log-000.txt" in bucket "my-bucket" as a string.</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommunications.Read, "GcsObject", DefaultParameterSetName = ParameterSetNames.ByName)]
@@ -990,11 +1053,24 @@ namespace Google.PowerShell.CloudStorage
     /// from the pipeline. Use this instead of New-GcsObject to set the contents of a Google Cloud Storage
     /// object that already exists. You will get a warning if the object does not exist.
     /// </para>
+    /// <para type="description">
+    /// If this cmdlet is used when PowerShell is in a Google Cloud Storage Provider location (i.e, the shell's location starts
+    /// with gs:\), then you may not need to supply -Bucket. For example, if the location is gs:\my-bucket, the cmdlet will
+    /// automatically fill out -Bucket with "my-bucket". If -Bucket is still used, however, whatever value given will override "my-bucket".
+    /// If the location is inside a folder on Google Cloud Storage, then the cmdlet will prefix the folder name to the object name.
+    /// </para>
     /// <example>
     ///   <code>
     ///   PS C:\> Get-GcsObject -Bucket "widget-co-logs" -ObjectName "status.txt" | Write-GcsObject -Value "OK"
     ///   </code>
     ///   <para>Update the contents of the Storage Object piped from Get-GcsObject.</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> cd gs:\my-bucket
+    ///   PS gs:\my-bucket> Write-GcsObject -ObjectName "log-000.txt" -Value "OK"
+    ///   </code>
+    ///   <para>Updates the contents of the storage object "log-000.txt" in bucket "my-bucket".</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsCommunications.Write, "GcsObject"), OutputType(typeof(Object))]
@@ -1190,9 +1266,22 @@ namespace Google.PowerShell.CloudStorage
     /// <para type="description">
     /// Verify the existence of a Cloud Storage Object.
     /// </para>
+    /// <para type="description">
+    /// If this cmdlet is used when PowerShell is in a Google Cloud Storage Provider location (i.e, the shell's location starts
+    /// with gs:\), then you may not need to supply -Bucket. For example, if the location is gs:\my-bucket, the cmdlet will
+    /// automatically fill out -Bucket with "my-bucket". If -Bucket is still used, however, whatever value given will override "my-bucket".
+    /// If the location is inside a folder on Google Cloud Storage, then the cmdlet will prefix the folder name to the object name.
+    /// </para>
     /// <example>
     ///   <code>PS C:\> Test-GcsObject -Bucket "widget-co-logs" -ObjectName "status.txt"</code>
     ///   <para>Test if an object named "status.txt" exists in the bucket "widget-co-logs".</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> cd gs:\my-bucket
+    ///   PS gs:\my-bucket> Test-GcsObject -ObjectName "status.txt"
+    ///   </code>
+    ///   <para>Test if an object named "status.txt" exists in the bucket "my-bucket".</para>
     /// </example>
     /// </summary>
     [Cmdlet(VerbsDiagnostic.Test, "GcsObject"), OutputType(typeof(bool))]
@@ -1244,6 +1333,23 @@ namespace Google.PowerShell.CloudStorage
     /// Copies a Google Cloud Storage object to another location The target location may be in the same bucket
     /// with a different name or a different bucket with any name.
     /// </para>
+    /// <para type="description">
+    /// If this cmdlet is used when PowerShell is in a Google Cloud Storage Provider location (i.e, the shell's location starts
+    /// with gs:\), then you may not need to supply -Bucket. For example, if the location is gs:\my-bucket, the cmdlet will
+    /// automatically fill out -Bucket with "my-bucket". If -Bucket is still used, however, whatever value given will override "my-bucket".
+    /// If the location is inside a folder on Google Cloud Storage, then the cmdlet will prefix the folder name to the object name.
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> Copy-GcsObject -Bucket "widget-co-logs" -ObjectName "status.txt" -DestinationBucket "another-bucket"</code>
+    ///   <para>Copy object "status.txt" in bucket "widget-co-logs" to bucket "another-bucket".</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> cd gs:\my-bucket
+    ///   PS gs:\my-bucket> Copy-GcsObject -ObjectName "status.txt" -DestinationBucket "another-bucket" -DestinationObjectName "new-name.txt"
+    ///   </code>
+    ///   <para>Copy object "status.txt" in bucket "my-bucket" to bucket "another-bucket" as "new-name.txt".</para>
+    /// </example>
     /// </summary>
     [Cmdlet(VerbsCommon.Copy, "GcsObject", DefaultParameterSetName = ParameterSetNames.ByObject)]
     [OutputType(typeof(Object))]
