@@ -95,10 +95,10 @@ namespace Google.PowerShell.CloudStorage
         }
 
         /// <summary>
-        /// Returns an array that contains bucket and prefix name if the cmdlet is in Google Cloud Storage provider location.
+        /// Gets and performs action on bucket and prefix name if the cmdlet is in Google Cloud Storage provider location.
         /// For example, if we are in gs:\my-bucket\my-folder\my-subfolder, the array returned will be { "my-bucket", "my-folder\my-subfolder" }
         /// </summary>
-        protected string[] GetBucketAndPrefix()
+        protected void PerformActionOnGcsProviderBucketAndPrefix(System.Action<string> actionOnBucket, System.Action<string> actionOnPrefix)
         {
             // Check whether our current location is in gs:\ (i.e., we are in the Google Cloud Storage provider).
             if (SessionState?.Path?.CurrentLocation?.Provider?.ImplementingType == typeof(GoogleCloudStorageProvider))
@@ -107,22 +107,25 @@ namespace Google.PowerShell.CloudStorage
                 // Path is of the form <bucket-name>\prefix.
                 if (!string.IsNullOrWhiteSpace(providerPath))
                 {
+                    // TODO (quoct): When doing cross-platform, add if-def to change \ to / on Linux.
                     string[] result = providerPath.Split(new char[] { '\\' }, 2);
+                    actionOnBucket(result[0]);
                     if (result.Length == 2)
                     {
                         if (!result[1].EndsWith("/"))
                         {
                             result[1] += "/";
                         }
+                        actionOnPrefix(result[1]);
                     }
-                    return result;
+                    return;
                 }
             }
-            return null;
+            return;
         }
 
         /// <summary>
-        /// Replace \ with / in path to complies with GCS path
+        /// Replace \ with / in path to comply with GCS path
         /// </summary>
         protected static string ConvertLocalToGcsFolderPath(string localFilePath)
         {
@@ -311,16 +314,9 @@ namespace Google.PowerShell.CloudStorage
             Stream contentStream = null;
 
             // If we are in Google Cloud Storage Provider location, resolve the path to get possible bucket name and prefix.
-            string[] bucketAndPrefix = GetBucketAndPrefix();
-            if (bucketAndPrefix != null && bucketAndPrefix.Length > 0)
-            {
-                Bucket = Bucket ?? bucketAndPrefix[0];
-                if (bucketAndPrefix.Length == 2)
-                {
-                    string gcsProviderPrefix = bucketAndPrefix[1];
-                    ObjectNamePrefix = (ObjectNamePrefix == null) ? gcsProviderPrefix : Path.Combine(gcsProviderPrefix, ObjectNamePrefix);
-                }
-            }
+            PerformActionOnGcsProviderBucketAndPrefix(
+                bucket => Bucket = Bucket ?? bucket,
+                prefix => ObjectNamePrefix = (ObjectNamePrefix == null) ? prefix : Path.Combine(prefix, ObjectNamePrefix));
 
             if (string.IsNullOrWhiteSpace(Bucket))
             {
@@ -579,16 +575,10 @@ namespace Google.PowerShell.CloudStorage
             base.ProcessRecord();
 
             // If we are in Google Cloud Storage Provider location, resolve the path to get possible bucket name and prefix.
-            string[] bucketAndPrefix = GetBucketAndPrefix();
             string gcsProviderPrefix = null;
-            if (bucketAndPrefix != null && bucketAndPrefix.Length > 0)
-            {
-                Bucket = Bucket ?? bucketAndPrefix[0];
-                if (bucketAndPrefix.Length == 2)
-                {
-                    gcsProviderPrefix = bucketAndPrefix[1];
-                }
-            }
+            PerformActionOnGcsProviderBucketAndPrefix(
+                bucket => Bucket = Bucket ?? bucket,
+                prefix => gcsProviderPrefix = prefix);
 
             if (string.IsNullOrWhiteSpace(Bucket))
             {
@@ -680,15 +670,9 @@ namespace Google.PowerShell.CloudStorage
             else
             {
                 // If we are in Google Cloud Storage Provider location, resolve the path to get possible bucket name and prefix.
-                string[] bucketAndPrefix = GetBucketAndPrefix();
-                if (bucketAndPrefix != null && bucketAndPrefix.Length > 0)
-                {
-                    Bucket = Bucket ?? bucketAndPrefix[0];
-                    if (bucketAndPrefix.Length == 2)
-                    {
-                        ObjectName = ConvertLocalToGcsFolderPath(Path.Combine(bucketAndPrefix[1], ObjectName));
-                    }
-                }
+                PerformActionOnGcsProviderBucketAndPrefix(
+                    bucket => Bucket = Bucket ?? bucket,
+                    prefix => ObjectName = ConvertLocalToGcsFolderPath(Path.Combine(prefix, ObjectName)));
             }
 
             if (string.IsNullOrWhiteSpace(Bucket))
