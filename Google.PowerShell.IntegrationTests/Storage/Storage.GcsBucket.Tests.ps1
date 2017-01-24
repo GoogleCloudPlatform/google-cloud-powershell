@@ -6,13 +6,22 @@ $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 # TODO(chrsmith): When Posh updates, newer versions of Pester have Should BeOfType.
 # TODO(chrsmith): Add a random suffix to bucket names to avoid collisions between devs.
 Describe "Get-GcsBucket" {
+    # This is another test project that cloudsharp-eng@google.com has OWNER access.
     $script:additionalTestingProject = "quoct-test-project"
+
+    # This service account has EDITOR access to the $additionalTestingProject project.
     $script:serviceAccountInOtherTestProject = "appveyorci-testing@gcloud-powershell-testing.iam.gserviceaccount.com"
+
+    # This is a bucket that exists in $additionalTestingProject. The $serviceAccountInOtherTestProject has
+    # permission to access this bucket.
     $script:bucketInOtherTestProject = "gcloud-powershell-additional-bucket"
+
+    # This contains the key to set up the service account $serviceAccountInOtherTestProject
     $script:additionalKey = Resolve-Path "$PSScriptRoot\..\AdditionalServiceAccountCredentials.json" -ErrorAction Ignore
-    # Skip the service account test if the key file does not exist.
-    # Key file only exists in AppVeyor where it can be decrypted.
-    $script:skipServiceAccountTest = $null -eq $additionalKey -or (-not (Test-Path $additionalKey))
+
+    # Skip the service account test if we are not running in AppVeyor. This is because the key $additionalKey is only
+    # decrypted in AppVeyor. If we are in AppVeyor running this test, the test_folder variable is set to Storage (in appveyor.yml).
+    $script:skipServiceAccountTest = $env:test_folder -eq "Storage"
 
     It "should fail to return non-existing buckets" {
         { Get-GcsBucket -Name "gcps-bucket-no-exist" } | Should Throw "'gcps-bucket-no-exist' does not exist"
@@ -31,7 +40,9 @@ Describe "Get-GcsBucket" {
     }
 
     It "should take into account changes in the Cloud SDK, including environment variables" -Skip:$skipServiceAccountTest {
-        # This key contains service account information that has access to project quoct-test-project
+        if ($null -eq $additionalKey -or (-not (Test-Path $additionalKey))) {
+            throw "Cannot find service account credential for project '$additionalTestingProject'"
+        }
 
         try {
             gcloud auth activate-service-account --key-file="$additionalKey" 2>$null
