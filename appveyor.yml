@@ -21,6 +21,7 @@ before_build:
   - nuget install secure-file -ExcludeVersion
   # Unencrypt the service account credentials.
   - secure-file\tools\secure-file -decrypt "C:\projects\google-cloud-powershell\Google.PowerShell.IntegrationTests\ServiceAccountCredentials.json.enc" -secret %ENCRYPTION_KEY%
+  - secure-file\tools\secure-file -decrypt "C:\projects\google-cloud-powershell\Google.PowerShell.IntegrationTests\AdditionalServiceAccountCredentials.json.enc" -secret %ENCRYPTION_KEY%
   # Install Pester.
   - cinst -y pester
   # Install Google Cloud SDK and set up the credentials.

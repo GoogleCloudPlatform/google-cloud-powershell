@@ -6,6 +6,22 @@ $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 # TODO(chrsmith): When Posh updates, newer versions of Pester have Should BeOfType.
 # TODO(chrsmith): Add a random suffix to bucket names to avoid collisions between devs.
 Describe "Get-GcsBucket" {
+    # This is another test project that cloudsharp-eng@google.com has OWNER access.
+    $script:additionalTestingProject = "quoct-test-project"
+
+    # This service account has EDITOR access to the $additionalTestingProject project.
+    $script:serviceAccountInOtherTestProject = "appveyorci-testing@gcloud-powershell-testing.iam.gserviceaccount.com"
+
+    # This is a bucket that exists in $additionalTestingProject. The $serviceAccountInOtherTestProject has
+    # permission to access this bucket.
+    $script:bucketInOtherTestProject = "gcloud-powershell-additional-bucket"
+
+    # This contains the key to set up the service account $serviceAccountInOtherTestProject
+    $script:additionalKey = Resolve-Path "$PSScriptRoot\..\AdditionalServiceAccountCredentials.json" -ErrorAction Ignore
+
+    # Skip the service account test if we are not running in AppVeyor. This is because the key $additionalKey is only
+    # decrypted in AppVeyor. If we are in AppVeyor running this test, the test_folder variable is set to Storage (in appveyor.yml).
+    $script:skipServiceAccountTest = $env:test_folder -eq "Storage"
 
     It "should fail to return non-existing buckets" {
         { Get-GcsBucket -Name "gcps-bucket-no-exist" } | Should Throw "'gcps-bucket-no-exist' does not exist"
@@ -21,6 +37,34 @@ Describe "Get-GcsBucket" {
         $bucket.SelfLink | Should Match "https://www.googleapis.com/storage/v1/b/gcps-testbucket"
 
         gsutil rb gs://gcps-testbucket 2>$null
+    }
+
+    It "should take into account changes in the Cloud SDK, including environment variables" -Skip:$skipServiceAccountTest {
+        if ($null -eq $additionalKey -or (-not (Test-Path $additionalKey))) {
+            throw "Cannot find service account credential for project '$additionalTestingProject'"
+        }
+
+        try {
+            gcloud auth activate-service-account --key-file="$additionalKey" 2>$null
+            # Should throw 403 because the project is still "gcloud-powershell-testing"
+            { Get-GcsBucket } | Should Throw "403"
+            # This will set the project to quoct-test-project
+            $env:CLOUDSDK_CORE_PROJECT = $additionalTestingProject
+            $bucket = Get-GcsBucket $bucketInOtherTestProject
+            $bucket.Name | Should Match $bucketInOtherTestProject
+
+            # Now we change the project back
+            $env:CLOUDSDK_CORE_PROJECT = $null
+            gcloud config set account $serviceAccountInOtherTestProject 2>$null
+            $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
+            { Get-GcsBucket $bucketInOtherTestProject } | Should Throw "403"
+        }
+        finally {
+            # If this is true then the test did not call Set-GCloudConfig.
+            if ($project -eq $additionalTestingProject) {
+                $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
+            }
+        }
     }
 
     It "should contain ACL information" -Pending {
