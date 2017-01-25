@@ -56,7 +56,7 @@ $toBeReplaced = "TOBEREPLACED"
 # FunctionsToExport and AliasesToExport to 'TOBEREPLACED' so we can replace them with
 # @(). We have to do this because if we simply set them to an empty array, PowerShell
 # will remove these values from the manifest but what we actually want is to set them to @().
-function CleanupPrivateDataAndExportVariables($moduleManifest) {
+function CleanUp-PrivateDataAndExportVariables($moduleManifest) {
     $privateData = $moduleManifest["PrivateData"]
     if ($null -ne $privateData -and $privateData.ContainsKey("PSData")) {
         $psData = $privateData["PSData"]
@@ -89,7 +89,7 @@ function Set-ModuleManifestEncoding($moduleManifestFile) {
 # Change the module manifest version.
 $moduleManifestFile = Join-Path $projectRoot "Google.PowerShell\ReleaseFiles\GoogleCloud.psd1"
 $moduleManifestContent = Import-PowerShellDataFile $moduleManifestFile
-CleanupPrivateDataAndExportVariables $moduleManifestContent
+CleanUp-PrivateDataAndExportVariables $moduleManifestContent
 $moduleManifestContent.ModuleVersion = $normalizedVersion
 New-ModuleManifest -Path $moduleManifestFile @moduleManifestContent
 Set-ModuleManifestEncoding $moduleManifestFile
@@ -132,7 +132,7 @@ if ($null -ne $betaCmdlets) {
 # Modify the list of exported cmdlets.
 $gCloudManifestPath = Join-Path $configDir "GoogleCloud.psd1"
 $gCloudManifest = Import-PowerShellDataFile $gCloudManifestPath
-CleanupPrivateDataAndExportVariables $gCloudManifest
+CleanUp-PrivateDataAndExportVariables $gCloudManifest
 $gCloudManifest.CmdletsToExport = $cmdletsList
 New-ModuleManifest -Path $gCloudManifestPath @gCloudManifest
 Set-ModuleManifestEncoding $gCloudManifestPath
@@ -151,7 +151,7 @@ New-Item -ItemType Directory $gcpsDir
 
 # Add the version folder in front of Google.PowerShell.dll and GoogleCloudPlatform.Format.ps1xml.
 $gCloudPowerShellManifest = Import-PowerShellDataFile (Join-Path $configDir "GoogleCloudPowerShell.psd1")
-CleanupPrivateDataAndExportVariables $gCloudPowerShellManifest
+CleanUp-PrivateDataAndExportVariables $gCloudPowerShellManifest
 $gCloudPowerShellManifest.RootModule = $gCloudPowerShellManifest.RootModule -replace "Google.PowerShell.dll", `
                                                                                    "$normalizedVersion\Google.PowerShell.dll"
 $gCloudPowerShellManifest.FormatsToProcess = $gCloudPowerShellManifest.FormatsToProcess -replace "GoogleCloudPlatform.Format.ps1xml", `
@@ -167,19 +167,40 @@ Write-Host -ForegroundColor Cyan "*** Packaging the bits ***"
 New-Item -ItemType Directory $powerShellDir
 Copy-Item -Recurse $configDir $powerShellDir
 
-# The binaries are in a folder named "$configuration". Move them to GoogleCloud\$normalizedVersion folder.
+# The binaries are in a folder named "$configuration". Move them to GoogleCloud\$normalizedVersion folder
+# and GoogleCloudBeta\$normalizedVersion for the beta cmdlets.
 $moduleDir = Join-Path $powerShellDir $configuration
 $googleCloudDir = Join-Path $powerShellDir "GoogleCloud\$normalizedVersion"
+$googleCloudBetaDir = Join-Path $powerShellDir "GoogleCloudBeta\$normalizedVersion"
 New-Item -ItemType Directory $googleCloudDir
+New-Item -ItemType Directory $googleCloudBetaDir
+
 if ($configuration -eq "Debug")
 {
     Copy-Item -Recurse "$moduleDir\*" $googleCloudDir
+    Copy-Item -Recurse "$moduleDir\*" $googleCloudBetaDir
 }
 else
 {
     Copy-Item -Recurse "$moduleDir\*" $googleCloudDir -Exclude '*.pdb'
+    Copy-Item -Recurse "$moduleDir\*" $googleCloudBetaDir -Exclude '*.pdb'
 }
 Remove-Item -Recurse $moduleDir -Force
+
+# For the beta module, edit and rename the module manifest file.
+$betaGCloudManifestPath = Join-Path $googleCloudBetaDir "GoogleCloud.psd1"
+$gCloudBetaManifest = Import-PowerShellDataFile $betaGCloudManifestPath
+CleanUp-PrivateDataAndExportVariables $gCloudBetaManifest
+$gCloudBetaManifest.CmdletsToExport = $betaCmdlets
+
+# Change the name of the manifest from GoogleCloud.psd1 to GoogleCloudBeta.psd1.
+$betaGCloudManifestPath = Join-Path $googleCloudBetaDir "GoogleCloudBeta.psd1"
+New-ModuleManifest -Path $betaGCloudManifestPath @gCloudBetaManifest
+
+# Remove unnecessary manifest files.
+Remove-Item -Path "$googleCloudBetaDir\GoogleCloud.psd1" -Force
+Remove-Item -Path "$googleCloudBetaDir\GoogleCloudPowerShell.psd1" -Force
+Remove-Item -Path "$googleCloudDir\GoogleCloudPowerShell.psd1" -Force
 
 # Ensure key files are in the right place.
 Write-Host -ForegroundColor Cyan "*** Sanity checking ***"
@@ -195,6 +216,8 @@ ConfirmExists "PowerShell\GoogleCloud\$normalizedVersion\GoogleCloud.psd1"
 ConfirmExists "PowerShell\GoogleCloud\$normalizedVersion\Google.PowerShell.dll"
 ConfirmExists "PowerShell\GoogleCloud\$normalizedVersion\BootstrapCloudToolsForPowerShell.ps1"
 ConfirmExists "GoogleCloudPowerShell\GoogleCloudPowerShell.psd1"
+ConfirmExists "PowerShell\GoogleCloudBeta\$normalizedVersion\Google.PowerShell.dll"
+ConfirmExists "PowerShell\GoogleCloudBeta\$normalizedVersion\BootstrapCloudToolsForPowerShell.ps1"
 
 Write-Host -ForegroundColor Cyan "*** Compressing ***"
 Compress-Archive -Path @($powerShellDir, $gcpsDir) $archivePath

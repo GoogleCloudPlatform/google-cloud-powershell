@@ -1,5 +1,9 @@
 # List of beta cmdlets.
 $cmdletsToBeExported = @("Get-GcLogEntry", "New-GcLogEntry", "New-GcLogMonitoredResource",
-                         "Remove-GcLog", "New-GcpsTopic", "Get-GcpsTopic",
-                         "Remove-GcpsTopic")
+                         "Get-GcLog", "Remove-GcLog", "New-GcLogSink", "Get-GcLogSink",
+                         "Remove-GcLogSink", "Get-GcpsTopic", "New-GcpsTopic"
+                         "Remove-GcpsTopic", "New-GcpsSubscription", "Get-GcpsSubscription",
+                         "Set-GcpsSubscriptionConfig", "Remove-GcpsSubscription",
+                         "New-GcpsMessage", "Publish-GcpsMessage", "Get-GcpsMessage",
+                         "Set-GcpsAckDeadline", "Send-GcpsAck")
 $cmdletsToBeExported
