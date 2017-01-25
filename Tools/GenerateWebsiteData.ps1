@@ -28,7 +28,7 @@ $cmdlets = Get-Command -Module "Google.PowerShell"
 
 # Collapses an array of objects with a Text property into an array of strings.
 # We return $null rather than @() to work around a quirk of PowerShell JSON conversion.
-function CollapseTextArray($textObjs) {
+function Collapse-TextArray($textObjs) {
     $lines = @()
     ForEach ($textObj in $textObjs) {
         $lines += $textObj.Text.TrimEnd("`r"[0], "`n"[0])
@@ -40,18 +40,18 @@ function CollapseTextArray($textObjs) {
     return $null
 }
 
-# GetExamples converts the PowerShell examples object into a more JSON-friendly type.
+# Get-Examples converts the PowerShell examples object into a more JSON-friendly type.
 # Specifically, it collapses arrays of custom objects with a Text property, to just
 # arrays of strings.
-function GetExamples($rawExamples) {
+function Get-Examples($rawExamples) {
     $examples = @()
     ForEach ($rawExample in $rawExamples) {
         $example = @{
-            "introduction" = CollapseTextArray($rawExample.introduction)
+            "introduction" = Collapse-TextArray($rawExample.introduction)
             # The second <code> block in an example is ignored by XmlDoc2CmdletDoc. But
             # <para> blocks are added, separated by \n characters.
             "code" = $rawExample.Code
-            "remarks" = CollapseTextArray($rawExample.remarks)
+            "remarks" = Collapse-TextArray($rawExample.remarks)
         }
         $examples += $example
     }
@@ -62,9 +62,9 @@ function GetExamples($rawExamples) {
     return $null
 }
 
-# GetLinks creates an array of link objects for the given cmdlet.
+# Get-Links creates an array of link objects for the given cmdlet.
 # $docObj is of type PSCustomObject, obtained via Get-Help.
-function GetLinks ($docObj) {
+function Get-Links ($docObj) {
     $links = @()
     $relatedLinks = $docObj.relatedLinks
     ForEach ($link in $relatedLinks.navigationLink) {
@@ -81,11 +81,10 @@ function GetLinks ($docObj) {
 
 # Generate a PSObject that will be used to populate the cmdlet JSON file based on $parameter.
 function New-DynamicParamObject($parameter) {
+    $position = "named"
+
     if ($parameter.Position -ge 0) {
         $position = $parameter.Position
-    }
-    else {
-        $position = "named"
     }
 
     if ($parameter.ValueFromPipeline -and $parameter.ValueFromPipelineByPropertyName) {
@@ -140,7 +139,7 @@ function New-DynamicParamObject($parameter) {
 # - Each Parameter ($docObj.parameters.parameter) will give given a new field "parameterSets".
 #
 # We update the objects in-memory, and rely on their persistance until we convert them to JSON.
-function AnnotateParametersAndSyntaxObjects($cmdletName, $docObj) {
+function Annotate-ParametersAndSyntaxObjects($cmdletName, $docObj) {
     $parameterSets = (Get-Command $cmdletName).ParameterSets
 
     # Go through each parameter set and annotate the parameters that belong to it.
@@ -205,9 +204,7 @@ function AnnotateParametersAndSyntaxObjects($cmdletName, $docObj) {
                 # So we will have to generate an object that corresponds to this dynamic parameter and add it to $syntaxObj.parameter.
                 if ($paramSetParam.IsDynamic) {
                     $dynamicParameterSyntaxObject = New-DynamicParamObject $paramSetParam
-
                     $parameterArray = @($dynamicParameterSyntaxObject) + $syntaxObj.parameter
-
                     $syntaxObj.parameter = $parameterArray
                     continue
                 }
@@ -242,7 +239,7 @@ function AnnotateParametersAndSyntaxObjects($cmdletName, $docObj) {
 }
 
 # Add dynamic parameter to $docObj.parameters
-function AddDynamicParameterToDocObj($cmdletName, $docObj) {
+function Add-DynamicParameterToDocObj($cmdletName, $docObj) {
     $dynamicParameters = @()
     $parameterSets = (Get-Command $cmdletName).ParameterSets
     ForEach($parameterSet in $parameterSets) {
@@ -263,7 +260,7 @@ function AddDynamicParameterToDocObj($cmdletName, $docObj) {
     }
 
     if ($dynamicParameters.Count -gt 0) {
-        CollapseParameterDescriptions($dynamicParameters)
+        Collapse-ParameterDescriptions($dynamicParameters)
         $docObj.parameters = $dynamicParameters + $docObj.parameters
     }
 }
@@ -271,7 +268,7 @@ function AddDynamicParameterToDocObj($cmdletName, $docObj) {
 # Each parameter description is either a single string, or an array of PSAutomationObjects with a
 # single Text parameter. Collapse these to just be an array of strings. This makes processing the
 # JSON easier on the frontend.
-function CollapseParameterDescriptions($parameters) {
+function Collapse-ParameterDescriptions($parameters) {
     ForEach ($parameter in $parameters) {
         if (($parameter | Get-Member "description") -eq $null) {
             Write-Warning "Parameter $($parameter.Name) has no description."
@@ -311,18 +308,18 @@ ForEach ($cmdlet in $cmdlets) {
     $docObj = @{
         "name"        = $cmdlet.Name
         "synopsis"    = $helpObj.Synopsis
-        "description" = CollapseTextArray($helpObj.Description)
+        "description" = Collapse-TextArray($helpObj.Description)
         "syntax"      = $helpObj.Syntax.syntaxItem
         "parameters"  = $helpObj.parameters.parameter
         "inputs"      = $helpObj.inputTypes
         "outputs"     = $helpObj.returnValues
-        "examples"    = GetExamples($helpObj.examples.example)
-        "links"       = GetLinks($helpObj)
+        "examples"    = Get-Examples($helpObj.examples.example)
+        "links"       = Get-Links($helpObj)
     }
 
-    AddDynamicParameterToDocObj $cmdlet.Name $docObj
-    AnnotateParametersAndSyntaxObjects $cmdlet.Name $helpObj
-    CollapseParameterDescriptions $helpObj.parameters.parameter
+    Add-DynamicParameterToDocObj $cmdlet.Name $docObj
+    Annotate-ParametersAndSyntaxObjects $cmdlet.Name $helpObj
+    Collapse-ParameterDescriptions $helpObj.parameters.parameter
 
     # Determine which product the cmdlet belongs to
     $productObj = $null
