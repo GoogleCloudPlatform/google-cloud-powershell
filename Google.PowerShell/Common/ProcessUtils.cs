@@ -151,7 +151,11 @@ namespace Google.PowerShell.Common
             {
                 foreach (var entry in environment)
                 {
+#if !CORECLR
                     result.EnvironmentVariables[entry.Key] = entry.Value;
+#else
+                    result.Environment[entry.Key] = entry.Value;
+#endif
                 }
             }
 

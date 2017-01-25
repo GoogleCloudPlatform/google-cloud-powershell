@@ -47,8 +47,13 @@ namespace Google.PowerShell.Common
         /// </summary>
         private static async Task<string> GetGCloudCommandOutput(string command, IDictionary<string, string> environment = null)
         {
+#if !UNIX
             var actualCommand = $"gcloud {command} --format=json";
             ProcessOutput processOutput = await ProcessUtils.GetCommandOutput("cmd.exe", $"/c \"{actualCommand}\"", environment);
+#else
+            var actualCommand = $"{command} --format=json";
+            ProcessOutput processOutput = await ProcessUtils.GetCommandOutput("gcloud", $"{actualCommand}", environment);
+#endif
             if (processOutput.Succeeded)
             {
                 return processOutput.StandardOutput;

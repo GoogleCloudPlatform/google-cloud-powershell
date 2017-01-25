@@ -18,6 +18,7 @@ using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Provider;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Object = Google.Apis.Storage.v1.Data.Object;
@@ -987,10 +988,9 @@ namespace Google.PowerShell.CloudStorage
         {
             if (dynamicParams.Project == null)
             {
-                var property = dynamicParams.GetType().GetProperty(nameof(Project));
+                var property = dynamicParams.GetType().GetTypeInfo().GetProperty(nameof(Project));
                 ConfigPropertyNameAttribute configPropertyName =
-                    (ConfigPropertyNameAttribute)Attribute.GetCustomAttribute(
-                        property, typeof(ConfigPropertyNameAttribute));
+                    property.GetCustomAttribute<ConfigPropertyNameAttribute>();
                 configPropertyName.SetObjectConfigDefault(property, dynamicParams);
             }
 

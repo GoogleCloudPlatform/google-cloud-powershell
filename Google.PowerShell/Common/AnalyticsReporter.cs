@@ -500,7 +500,8 @@ namespace Google.PowerShell.Common
         private const string VersionName = "version";
 
         // Assembly version of Google.PowerShell.dll.
-        private static readonly Lazy<string> s_appVersion = new Lazy<string>(() => Assembly.GetExecutingAssembly().GetName().Version.ToString());
+        private static readonly Lazy<string> s_appVersion =
+            new Lazy<string>(() => typeof(AnalyticsEvent).GetTypeInfo().Assembly.GetName().Version.ToString());
 
         public string Name { get; }
 

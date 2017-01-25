@@ -201,8 +201,7 @@ namespace Google.PowerShell.Common
             foreach (PropertyInfo property in GetType().GetProperties())
             {
                 ConfigPropertyNameAttribute configPropertyName =
-                    (ConfigPropertyNameAttribute)Attribute.GetCustomAttribute(
-                        property, typeof(ConfigPropertyNameAttribute));
+                    property.GetCustomAttribute<ConfigPropertyNameAttribute>();
                 if (configPropertyName != null && IsActiveParameter(property))
                 {
                     configPropertyName.SetConfigDefault(property, this);
@@ -212,8 +211,7 @@ namespace Google.PowerShell.Common
             foreach (FieldInfo field in GetType().GetFields())
             {
                 ConfigPropertyNameAttribute configPropertyName =
-                    (ConfigPropertyNameAttribute)Attribute.GetCustomAttribute(
-                        field, typeof(ConfigPropertyNameAttribute));
+                    field.GetCustomAttribute<ConfigPropertyNameAttribute>();
                 if (configPropertyName != null && IsActiveParameter(field))
                 {
                     configPropertyName.SetConfigDefault(field, this);
@@ -232,8 +230,7 @@ namespace Google.PowerShell.Common
         /// </returns>
         private bool IsActiveParameter(MemberInfo member)
         {
-            var parameterAttributes = Attribute.GetCustomAttributes(member, typeof(ParameterAttribute))
-                .OfType<ParameterAttribute>()
+            var parameterAttributes = member.GetCustomAttributes<ParameterAttribute>()
                 .Where(pa => string.IsNullOrEmpty(pa.ParameterSetName) ||
                         pa.ParameterSetName.Equals("__AllParameterSets") ||
                         pa.ParameterSetName.Equals(ParameterSetName)
@@ -257,7 +254,7 @@ namespace Google.PowerShell.Common
         /// </summary>
         protected string GetCmdletName()
         {
-            foreach (var attrib in this.GetType().GetCustomAttributes())
+            foreach (var attrib in this.GetType().GetTypeInfo().GetCustomAttributes())
             {
                 if (attrib is CmdletAttribute)
                 {
