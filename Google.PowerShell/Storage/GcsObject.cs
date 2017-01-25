@@ -279,14 +279,14 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// <para type="description">
         /// Set the object's ACL using PredefinedAcl.
-        /// Private__ gives the object owner OWNER permission. All other permissions are removed.
-        /// ProjectPrivate gives permission to the project team based on their roles. Anyone who is part of the team has READER permission.
-        /// Project owners and project editors have OWNER permission. All other permissions are removed.
-        /// AuthenticatedRead gives the object owner OWNER permission and gives all authenticated Google account holders READER permission.
+        /// "Private__" gives the object owner "OWNER" permission. All other permissions are removed.
+        /// "ProjectPrivate" gives permission to the project team based on their roles. Anyone who is part of the team has "READER" permission.
+        /// Project owners and project editors have "OWNER" permission. All other permissions are removed.
+        /// "AuthenticatedRead" gives the object owner "OWNER" permission and gives all authenticated Google account holders "READER" permission.
         /// All other permissions are removed.
-        /// PublicRead gives the object owner OWNER permission and gives all users READER permission. All other permissions are removed.
-        /// BucketOwnerRead gives the object owner OWNER permission and the bucket owner READ permission. All other permissions are removed.
-        /// BucketOwnerFullControl gives the object and bucket owners OWNER permission. All other permissions are removed.
+        /// "PublicRead" gives the object owner "OWNER" permission and gives all users "READER" permission. All other permissions are removed.
+        /// "BucketOwnerRead" gives the object owner "OWNER" permission and the bucket owner "READER" permission. All other permissions are removed.
+        /// "BucketOwnerFullControl" gives the object and bucket owners "OWNER" permission. All other permissions are removed.
         /// </para>
         /// <para type="description">
         /// To set fine-grained (e.g. individual users or domains) ACLs using PowerShell, use Add-GcsObjectAcl cmdlets.
@@ -761,14 +761,14 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// <para type="description">
         /// Set the object's ACL using PredefinedAcl.
-        /// Private__ gives the object owner OWNER permission. All other permissions are removed.
-        /// ProjectPrivate gives permission to the project team based on their roles. Anyone who is part of the team has READER permission.
-        /// Project owners and project editors have OWNER permission. All other permissions are removed.
-        /// AuthenticatedRead gives the object owner OWNER permission and gives all authenticated Google account holders READER permission.
+        /// "Private__" gives the object owner "OWNER" permission. All other permissions are removed.
+        /// "ProjectPrivate" gives permission to the project team based on their roles. Anyone who is part of the team has "READER" permission.
+        /// Project owners and project editors have "OWNER" permission. All other permissions are removed.
+        /// "AuthenticatedRead" gives the object owner "OWNER" permission and gives all authenticated Google account holders "READER" permission.
         /// All other permissions are removed.
-        /// PublicRead gives the object owner OWNER permission and gives all users READER permission. All other permissions are removed.
-        /// BucketOwnerRead gives the object owner OWNER permission and the bucket owner READ permission. All other permissions are removed.
-        /// BucketOwnerFullControl gives the object and bucket owners OWNER permission. All other permissions are removed.
+        /// "PublicRead" gives the object owner "OWNER" permission and gives all users "READER" permission. All other permissions are removed.
+        /// "BucketOwnerRead" gives the object owner "OWNER" permission and the bucket owner "READER" permission. All other permissions are removed.
+        /// "BucketOwnerFullControl" gives the object and bucket owners "OWNER" permission. All other permissions are removed.
         /// </para>
         /// <para type="description">
         /// To set fine-grained (e.g. individual users or domains) ACLs using PowerShell, use Add-GcsObjectAcl cmdlets.
