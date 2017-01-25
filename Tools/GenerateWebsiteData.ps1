@@ -8,6 +8,8 @@ Param(
     [string]$configuration = "Release"
 )
 
+$script:defaultParameterSetName = "Default"
+
 # Unload the module if already loaded. (Weird things happen when debugging...)
 if (Get-Module Google.PowerShell) {
     Write-Warning "Previous version of Google.PowerShell loaded. Unloadig the module."
@@ -77,6 +79,58 @@ function GetLinks ($docObj) {
     return $null
 }
 
+# Generate a PSObject that will be used to populate the cmdlet JSON file based on $parameter.
+function New-DynamicParamObject($parameter) {
+    if ($parameter.Position -ge 0) {
+        $position = $parameter.Position
+    }
+    else {
+        $position = "named"
+    }
+
+    if ($parameter.ValueFromPipeline -and $parameter.ValueFromPipelineByPropertyName) {
+        $pipelineInput = "true (ByValue, ByPropertyName)"
+    }
+    elseif ($parameter.ValueFromPipeline) {
+        $pipelineInput = "true (ByValue)"
+    }
+    elseif ($parameter.ValueFromPipelineByPropertyName) {
+        $pipelineInput = "true (ByPropertyName)"
+    }
+    else {
+        $pipelineInput = "false"
+    }
+
+    $parameterType = @{"name" = $parameter.ParameterType.FullName; "uri" = ""}
+    $parameterValue = @{"value" = $parameter.ParameterType.Name}
+    $parameterDescription = New-Object PSObject -Property @{"Text" = $parameter.HelpMessage}
+
+    $dynamicParameterSyntaxObject = New-Object PSObject -Property @{"name" = $parameter.Name
+                                                                    "required" = "$($parameter.IsMandatory)".ToLower();
+                                                                    "position" = $position;
+                                                                    "pipelineInput" = $pipelineInput;
+                                                                    "globbing" = "false";
+                                                                    "type" = $parameterType;
+                                                                    "parameterValue" = $parameterValue;
+                                                                    "description" = $parameterDescription}
+
+    # If there is a validate set, add the set to parameterValue.
+    $validateSetAttribute = $parameter.Attributes | Where-Object {$_.TypeId.Name -eq "ValidateSetAttribute"}
+    if ($null -ne $validateSetAttribute -and $null -ne $validateSetAttribute.ValidValues) {
+        $validateSetJoined = $validateSetAttribute.ValidValues -join " "
+        $parameterValueGroup = @{"parameterValue" = $validateSetJoined}
+        $dynamicParameterSyntaxObject | Add-Member "parameterValueGroup" $parameterValueGroup
+    }
+
+    # If there is an alias, add that to the object too.
+    $aliasAttribute = $parameter.Attributes | Where-Object {$_.TypeId.Name -eq "AliasAttribute"}
+    if ($null -ne $aliasAttribute -and $aliasAttribute.AliasNames.Count -gt 0) {
+        $dynamicParameterSyntaxObject | Add-Member "aliases" $aliasAttribute.AliasNames
+    }
+
+    return $dynamicParameterSyntaxObject
+}
+
 # The PowerShell objects returned from Get-Help are missing a few, key pieces of data. This method
 # updates the Syntax and Parameter objects to cross reference parameters, parameter sets, and
 # cmdlet invocation syntax.
@@ -99,7 +153,7 @@ function AnnotateParametersAndSyntaxObjects($cmdletName, $docObj) {
                 Write-Warning "Assumed only one parameter set named __AllParameterSets"
                 exit
             }
-            $parameterSet.HackName = "Default"
+            $parameterSet.HackName = $script:defaultParameterSetName
         }
 
         ForEach ($parameter in $parameterSet.Parameters) {
@@ -147,9 +201,21 @@ function AnnotateParametersAndSyntaxObjects($cmdletName, $docObj) {
             # the parameter set are honored. It is possible to have one parameter set be a proper
             # subset of another.
             ForEach ($paramSetParam in $parameterSet.Parameters) {
+                # If the parameter is a dynamic parameter, then it won't show up in Get-Help -Full.
+                # So we will have to generate an object that corresponds to this dynamic parameter and add it to $syntaxObj.parameter.
+                if ($paramSetParam.IsDynamic) {
+                    $dynamicParameterSyntaxObject = New-DynamicParamObject $paramSetParam
+
+                    $parameterArray = @($dynamicParameterSyntaxObject) + $syntaxObj.parameter
+
+                    $syntaxObj.parameter = $parameterArray
+                    continue
+                }
+
                 if (-Not $paramSetParam.IsMandatory) {
                     continue
                 }
+
                 $paramInBoth = ($syntaxObj.parameter | Where Name -eq $paramSetParam.Name) -ne $null
                 if (-Not $paramInBoth) {
                     $parameterSetMatches = $false
@@ -175,6 +241,33 @@ function AnnotateParametersAndSyntaxObjects($cmdletName, $docObj) {
     }
 }
 
+# Add dynamic parameter to $docObj.parameters
+function AddDynamicParameterToDocObj($cmdletName, $docObj) {
+    $dynamicParameters = @()
+    $parameterSets = (Get-Command $cmdletName).ParameterSets
+    ForEach($parameterSet in $parameterSets) {
+        ForEach ($paramSetParam in $parameterSet.Parameters) {
+            if ($paramSetParam.IsDynamic) {
+                $dynamicParameterSyntaxObject = New-DynamicParamObject $paramSetParam
+
+                if ($parameterSet.ParameterSetName -eq "__AllParameterSets") {
+                    $dynamicParameterSyntaxObject | Add-Member "parameterSet" $script:defaultParameterSetName
+                }
+                else {
+                    $dynamicParameterSyntaxObject | Add-Member "parameterSet" $parameterSet.Name
+                }
+
+                $dynamicParameters += $dynamicParameterSyntaxObject
+            }
+        }
+    }
+
+    if ($dynamicParameters.Count -gt 0) {
+        CollapseParameterDescriptions($dynamicParameters)
+        $docObj.parameters = $dynamicParameters + $docObj.parameters
+    }
+}
+
 # Each parameter description is either a single string, or an array of PSAutomationObjects with a
 # single Text parameter. Collapse these to just be an array of strings. This makes processing the
 # JSON easier on the frontend.
@@ -195,6 +288,8 @@ $productInfoLookup = @{
     "Gce"   = @{ name = "Google Compute Engine"; shortName = "google-compute-engine"; resources = @() }
     "GcSql" = @{ name = "Google Cloud SQL";      shortName = "google-cloud-sql"     ; resources = @() }
     "Gcd"   = @{ name = "Google Cloud DNS";      shortName = "google-cloud-dns"     ; resources = @() }
+    "Gcps"   = @{ name = "Google Cloud PubSub";      shortName = "google-cloud-pubsub"     ; resources = @() }
+    "GcLog"   = @{ name = "Google Cloud Logging";      shortName = "google-cloud-logging"     ; resources = @() }
 }
 
 # Generate a giant JSON file containing all of our cmdlet's documentation. We later write this as
@@ -225,6 +320,7 @@ ForEach ($cmdlet in $cmdlets) {
         "links"       = GetLinks($helpObj)
     }
 
+    AddDynamicParameterToDocObj $cmdlet.Name $docObj
     AnnotateParametersAndSyntaxObjects $cmdlet.Name $helpObj
     CollapseParameterDescriptions $helpObj.parameters.parameter
 
