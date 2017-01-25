@@ -97,63 +97,11 @@ namespace Google.PowerShell.Logging
     }
 
     /// <summary>
-    /// <para type="synopsis">
-    /// Creates a new log sink.
-    /// </para>
-    /// <para type="description">
-    /// Creates a new log sink to export log entries. The sink will be created in the default project if -Project is not used.
-    /// Will raise an error if the sink already exists.
-    /// There are 3 possible destinations for the sink: Google Cloud Storage bucket, Google BigQuery dataset
-    /// and Google Cloud PubSub topic. The destinations must be created and given appropriate permissions for
-    /// log exporting (see https://cloud.google.com/logging/docs/export/configure_export_v2#destination_authorization)
-    /// The cmdlet will not create the destinations.
-    /// </para>
-    /// <example>
-    ///   <code>PS C:\> New-GcLogSink -SinkName "my-sink" -GcsBucketDestination "my-bucket"</code>
-    ///   <para>
-    ///   This command creates a sink name "my-sink" that exports every log entry in the default project to the
-    ///   Google Cloud Storage bucket "my-bucket".
-    ///   </para>
-    /// </example>
-    /// <example>
-    ///   <code>
-    ///   PS C:\> New-GcLogSink -SinkName "my-sink" -BigQueryDataSetDestination "my_dataset" -LogName "my-log" -Project "my-project"
-    ///   </code>
-    ///   <para>
-    ///   This command creates a sink name "my-sink" that exports every log entry in the log "my-log" in the
-    ///   project "my-project" to the Google Cloud BigQuery dataset "my_dataset" (also in the project "my-project").
-    ///   </para>
-    /// </example>
-    /// <example>
-    ///   <code>
-    ///   PS C:\> New-GcLogSink -SinkName "my-sink" -PubSubTopicDestination "my_dataset" -ResourceType gce_instance -After [DateTime]::Now().AddDays(1)
-    ///   </code>
-    ///   <para>
-    ///   This command creates a sink name "my-sink" that exports every log entry of the resource type gce_instance that is created the next day
-    ///   onwards to the Google Cloud PubSub topic "my-topic".
-    ///   </para>
-    /// </example>
-    /// <example>
-    ///   <code>
-    ///   PS C:\> New-GcLogSink -SinkName "my-sink" -PubSubTopicDestination "my_dataset" -Filter 'textPayload = "textPayload"' -NoUniqueWriterIdentity
-    ///   </code>
-    ///   <para>
-    ///   This command creates a sink name "my-sink" that exports every log entry that matches the provided filter to
-    ///   the Google Cloud PubSub topic "my-topic". The identity of the writer of the logs will be cloud-logs@google.com instead of
-    ///   a unique service account created for this sink.
-    ///   </para>
-    /// </example>
-    /// <para type="link" uri="(https://cloud.google.com/logging/docs/basic-concepts#sinks)">
-    /// [Log Sinks]
-    /// </para>
-    /// <para type="link" uri="(https://cloud.google.com/logging/docs/export/using_exported_logs)">
-    /// [Exporting Logs]
-    /// </para>
+    /// Abstract class for cmdlet that create or update a log sink (both APIs have the same parameters).
     /// </summary>
-    [Cmdlet(VerbsCommon.New, "GcLogSink")]
-    public class NewGcLogSinkCmdlet : GcLogEntryCmdletWithLogFilter
+    public abstract class CreateOrSetGcLogSinkCmdlet : GcLogEntryCmdletWithLogFilter
     {
-        private class ParameterSetNames
+        protected class ParameterSetNames
         {
             public const string BigQueryDataSetDestination = "BigQueryDataSetDestination";
             public const string GcsBucketDestination = "GcsBucketDestination";
@@ -242,6 +190,11 @@ namespace Google.PowerShell.Logging
         [Parameter(Mandatory = false)]
         public SwitchParameter NoUniqueWriterIdentity { get; set; }
 
+        /// <summary>
+        /// Given a log sink, returns either a create or update request that will be used by the cmdlet.
+        /// </summary>
+        protected abstract LoggingBaseServiceRequest<LogSink> GetRequest(LogSink logsink);
+
         protected override void ProcessRecord()
         {
             LogSink logSink = new LogSink()
@@ -294,12 +247,11 @@ namespace Google.PowerShell.Logging
                 logSink.StartTime = XmlConvert.ToString(After.Value, XmlDateTimeSerializationMode.Local);
             }
 
-            ProjectsResource.SinksResource.CreateRequest createRequest = Service.Projects.Sinks.Create(logSink, $"projects/{Project}");
-            createRequest.UniqueWriterIdentity = NoUniqueWriterIdentity.IsPresent ? !NoUniqueWriterIdentity.ToBool() : true;
+            LoggingBaseServiceRequest<LogSink> request = GetRequest(logSink);
 
             try
             {
-                LogSink createdSink = createRequest.Execute();
+                LogSink createdSink = request.Execute();
                 WriteObject(createdSink);
                 // We want to let the user knows that they have to grant appropriate permission to the writer identity
                 // so that the logs can be exported (otherwise, the export will fail).
@@ -312,6 +264,136 @@ namespace Google.PowerShell.Logging
                     errorId: "SubscriptionAlreadyExists",
                     targetObject: LogName);
             }
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Creates a new log sink.
+    /// </para>
+    /// <para type="description">
+    /// Creates a new log sink to export log entries. The sink will be created in the default project if -Project is not used.
+    /// Will raise an error if the sink already exists.
+    /// There are 3 possible destinations for the sink: Google Cloud Storage bucket, Google BigQuery dataset
+    /// and Google Cloud PubSub topic. The destinations must be created and given appropriate permissions for
+    /// log exporting (see https://cloud.google.com/logging/docs/export/configure_export_v2#destination_authorization)
+    /// The cmdlet will not create the destinations.
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> New-GcLogSink -SinkName "my-sink" -GcsBucketDestination "my-bucket"</code>
+    ///   <para>
+    ///   This command creates a sink name "my-sink" that exports every log entry in the default project to the
+    ///   Google Cloud Storage bucket "my-bucket".
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> New-GcLogSink -SinkName "my-sink" -BigQueryDataSetDestination "my_dataset" -LogName "my-log" -Project "my-project"
+    ///   </code>
+    ///   <para>
+    ///   This command creates a sink name "my-sink" that exports every log entry in the log "my-log" in the
+    ///   project "my-project" to the Google Cloud BigQuery dataset "my_dataset" (also in the project "my-project").
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> New-GcLogSink -SinkName "my-sink" -PubSubTopicDestination "my_dataset" -ResourceType gce_instance -After [DateTime]::Now().AddDays(1)
+    ///   </code>
+    ///   <para>
+    ///   This command creates a sink name "my-sink" that exports every log entry of the resource type gce_instance that is created the next day
+    ///   onwards to the Google Cloud PubSub topic "my-topic".
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> New-GcLogSink -SinkName "my-sink" -PubSubTopicDestination "my_dataset" -Filter 'textPayload = "textPayload"' -NoUniqueWriterIdentity
+    ///   </code>
+    ///   <para>
+    ///   This command creates a sink name "my-sink" that exports every log entry that matches the provided filter to
+    ///   the Google Cloud PubSub topic "my-topic". The identity of the writer of the logs will be cloud-logs@google.com instead of
+    ///   a unique service account created for this sink.
+    ///   </para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/logging/docs/basic-concepts#sinks)">
+    /// [Log Sinks]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/logging/docs/export/using_exported_logs)">
+    /// [Exporting Logs]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.New, "GcLogSink")]
+    public class NewGcLogSinkCmdlet : CreateOrSetGcLogSinkCmdlet
+    {
+        protected override LoggingBaseServiceRequest<LogSink> GetRequest(LogSink logSink)
+        {
+            ProjectsResource.SinksResource.CreateRequest createRequest = Service.Projects.Sinks.Create(logSink, $"projects/{Project}");
+            createRequest.UniqueWriterIdentity = NoUniqueWriterIdentity.IsPresent ? !NoUniqueWriterIdentity.ToBool() : true;
+            return createRequest;
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Updates a log sink.
+    /// </para>
+    /// <para type="description">
+    /// Creates a new log sink to export log entries. The sink will be created in the default project if -Project is not used.
+    /// Will raise an error if the sink already exists.
+    /// There are 3 possible destinations for the sink: Google Cloud Storage bucket, Google BigQuery dataset
+    /// and Google Cloud PubSub topic. The destinations must be created and given appropriate permissions for
+    /// log exporting (see https://cloud.google.com/logging/docs/export/configure_export_v2#destination_authorization)
+    /// The cmdlet will not create the destinations.
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> New-GcLogSink -SinkName "my-sink" -GcsBucketDestination "my-bucket"</code>
+    ///   <para>
+    ///   This command creates a sink name "my-sink" that exports every log entry in the default project to the
+    ///   Google Cloud Storage bucket "my-bucket".
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> New-GcLogSink -SinkName "my-sink" -BigQueryDataSetDestination "my_dataset" -LogName "my-log" -Project "my-project"
+    ///   </code>
+    ///   <para>
+    ///   This command creates a sink name "my-sink" that exports every log entry in the log "my-log" in the
+    ///   project "my-project" to the Google Cloud BigQuery dataset "my_dataset" (also in the project "my-project").
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> New-GcLogSink -SinkName "my-sink" -PubSubTopicDestination "my_dataset" -ResourceType gce_instance -After [DateTime]::Now().AddDays(1)
+    ///   </code>
+    ///   <para>
+    ///   This command creates a sink name "my-sink" that exports every log entry of the resource type gce_instance that is created the next day
+    ///   onwards to the Google Cloud PubSub topic "my-topic".
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> New-GcLogSink -SinkName "my-sink" -PubSubTopicDestination "my_dataset" -Filter 'textPayload = "textPayload"' -NoUniqueWriterIdentity
+    ///   </code>
+    ///   <para>
+    ///   This command creates a sink name "my-sink" that exports every log entry that matches the provided filter to
+    ///   the Google Cloud PubSub topic "my-topic". The identity of the writer of the logs will be cloud-logs@google.com instead of
+    ///   a unique service account created for this sink.
+    ///   </para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/logging/docs/basic-concepts#sinks)">
+    /// [Log Sinks]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/logging/docs/export/using_exported_logs)">
+    /// [Exporting Logs]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Set, "GcLogSink")]
+    public class SetGcLogSinkCmdlet : CreateOrSetGcLogSinkCmdlet
+    {
+        protected override LoggingBaseServiceRequest<LogSink> GetRequest(LogSink logSink)
+        {
+            ProjectsResource.SinksResource.CreateRequest createRequest = Service.Projects.Sinks.Create(logSink, $"projects/{Project}");
+            createRequest.UniqueWriterIdentity = NoUniqueWriterIdentity.IsPresent ? !NoUniqueWriterIdentity.ToBool() : true;
+            return createRequest;
         }
     }
 
