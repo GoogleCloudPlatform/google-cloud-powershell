@@ -40,7 +40,10 @@ namespace Google.PowerShell.Common
         /// <summary>Environment variable which contains the Application Data settings.</summary>
         private const string AppdataEnvironmentVariable = "APPDATA";
 
-        /// <summary>GCloud configuration directory in Windows, relative to %APPDATA%.</summary>
+        /// <summary>
+        /// GCloud configuration directory, relative to %APPDATA% in Windows
+        /// and %HOME%/.config in UNIX.
+        /// </summary>
         private const string CloudSDKConfigDirectoryWindows = "gcloud";
 
         /// <summary>Name of the Cloud SDK file containing the name of the active config.</summary>
@@ -118,14 +121,15 @@ namespace Google.PowerShell.Common
         /// </summary>
         public static string GetAnonymousClientID()
         {
-            string appDataFolder = Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
-            if (appDataFolder == null || !Directory.Exists(appDataFolder))
+            string cloudSdkFolder = GetCloudSdkFolder();
+
+            if (cloudSdkFolder == null || !Directory.Exists(cloudSdkFolder))
             {
                 return null;
             }
 
             string uuidFile = Path.Combine(
-                appDataFolder,
+                cloudSdkFolder,
                 CloudSDKConfigDirectoryWindows,
                 ClientIDFileName);
 
@@ -134,6 +138,18 @@ namespace Google.PowerShell.Common
                 return Guid.NewGuid().ToString();
             }
             return File.ReadAllText(uuidFile);
+        }
+
+        /// <summary>
+        /// Returns the folder that contains Cloud SDK Config.
+        /// </summary>
+        private static string GetCloudSdkFolder()
+        {
+#if !UNIX
+            return Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
+#else
+            return Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".config");
+#endif
         }
     }
 }
