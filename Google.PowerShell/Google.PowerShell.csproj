@@ -182,6 +182,7 @@
     <Compile Include="Dns\GcdQuota.cs" />
     <Compile Include="Dns\GcdResourceRecordSet.cs" />
     <Compile Include="Logging\GcLogCmdlets.cs" />
+    <Compile Include="Logging\GcLogMetricCmdlets.cs" />
     <Compile Include="Logging\GcLogSinkCmdlets.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Provider\CacheItem.cs" />

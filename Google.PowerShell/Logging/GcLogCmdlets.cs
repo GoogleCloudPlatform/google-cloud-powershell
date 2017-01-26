@@ -103,6 +103,18 @@ namespace Google.PowerShell.Logging
         }
 
         /// <summary>
+        /// Prefix projects/{project id}/metrics to metricName if not present.
+        /// </summary>
+        protected string PrefixProjectToMetricName(string metricName, string project)
+        {
+            if (!string.IsNullOrWhiteSpace(metricName) && !metricName.StartsWith($"projects/{project}/metrics"))
+            {
+                metricName = $"projects/{project}/metrics/{metricName}";
+            }
+            return metricName;
+        }
+
+        /// <summary>
         /// A cache of the list of valid monitored resource descriptors.
         /// This is used for auto-completion to display possible types of monitored resource.
         /// </summary>
