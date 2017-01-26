@@ -324,16 +324,6 @@ namespace Google.PowerShell.Logging
     [Cmdlet(VerbsCommon.New, "GcLogSink")]
     public class NewGcLogSinkCmdlet : CreateOrSetGcLogSinkCmdlet
     {
-        /// <summary>
-        /// <para type="description">
-        /// Determines the kind of IAM identity returned as writerIdentity in the new sink.
-        /// If this value is provided, then the value returned as writerIdentity is cloud-logs@google.com.
-        /// Otherwise, it will be a unique service account.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = false)]
-        public override SwitchParameter UniqueWriterIdentity { get; set; }
-
         protected override LoggingBaseServiceRequest<LogSink> GetRequest(LogSink logSink)
         {
             ProjectsResource.SinksResource.CreateRequest createRequest = Service.Projects.Sinks.Create(logSink, $"projects/{Project}");

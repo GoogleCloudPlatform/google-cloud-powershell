@@ -122,7 +122,7 @@ Describe "New-GcLogSink" {
             Test-GcLogSink -Name $sinkName `
                            -Destination "storage.googleapis.com/$bucket" `
                            -OutputVersionFormat "V2" `
-                           -Sink $createdSink `
+                           -Sink $createdSink
         }
         finally {
             gcloud beta logging sinks delete $sinkName --quiet 2>$null
