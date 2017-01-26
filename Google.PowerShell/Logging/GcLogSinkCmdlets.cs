@@ -375,10 +375,11 @@ namespace Google.PowerShell.Logging
     /// </example>
     /// <example>
     ///   <code>
-    ///   PS C:\> Set-GcLogSink -SinkName "my-sink" -Filter 'textPayload = "textPayload"' -NoUniqueWriterIdentity
+    ///   PS C:\> Set-GcLogSink -SinkName "my-sink" -Filter 'textPayload = "textPayload"' -UniqueWriterIdentity
     ///   </code>
     ///   <para>
-    ///   This command updates the filter of the log sink "my-sink" to 'textPayload = "textPayload"' .
+    ///   This command updates the filter of the log sink "my-sink" to 'textPayload = "textPayload"' and updates the
+    ///   writer identity of the log sink to a unique service account.
     ///   </para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/logging/docs/basic-concepts#sinks)">
