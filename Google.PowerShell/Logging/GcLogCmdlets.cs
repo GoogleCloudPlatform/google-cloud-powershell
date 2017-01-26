@@ -145,6 +145,28 @@ namespace Google.PowerShell.Logging
         protected string[] AllResourceTypes => s_monitoredResourceDescriptors.Value.Select(descriptor => descriptor.Type).ToArray();
 
         /// <summary>
+        /// Generate -ResourceType dynamic parameter. Cmdlets can use this parameter to filter log entries based on resource types
+        /// such as gce_instance. For a full list of resource types, see https://cloud.google.com/logging/docs/api/v2/resource-list
+        /// </summary>
+        protected RuntimeDefinedParameter GenerateResourceTypeParameter(bool mandatory)
+        {
+            ParameterAttribute paramAttribute = new ParameterAttribute()
+            {
+                Mandatory = mandatory,
+                HelpMessage = "If specified, the cmdlet will filter out log entries based on the resource type."
+            };
+            var validateSetAttribute = new ValidateSetAttribute(AllResourceTypes);
+            validateSetAttribute.IgnoreCase = true;
+            Collection<Attribute> attributes =
+                new Collection<Attribute>(new Attribute[] { validateSetAttribute, paramAttribute });
+            // This parameter can now be thought of as:
+            // [Parameter(Mandatory = mandatory)]
+            // [ValidateSet(validTypeValues)]
+            // public string ResourceType { get; set; }
+            return new RuntimeDefinedParameter("ResourceType", typeof(string), attributes);
+        }
+
+        /// <summary>
         /// Constructs a filter string based on log name, severity, type of log, before and after timestamps
         /// and other advanced filter.
         /// </summary>
@@ -267,21 +289,8 @@ namespace Google.PowerShell.Logging
         {
             if (_dynamicParameters == null)
             {
-                ParameterAttribute paramAttribute = new ParameterAttribute()
-                {
-                    Mandatory = false
-                };
-                ValidateSetAttribute validateSetAttribute = new ValidateSetAttribute(AllResourceTypes);
-                validateSetAttribute.IgnoreCase = true;
-                Collection<Attribute> attributes =
-                    new Collection<Attribute>(new Attribute[] { validateSetAttribute, paramAttribute });
-                // This parameter can now be thought of as:
-                // [Parameter(Mandatory = false)]
-                // [ValidateSet(validTypeValues)]
-                // public string { get; set; }
-                RuntimeDefinedParameter typeParameter = new RuntimeDefinedParameter("ResourceType", typeof(string), attributes);
                 _dynamicParameters = new RuntimeDefinedParameterDictionary();
-                _dynamicParameters.Add("ResourceType", typeParameter);
+                _dynamicParameters.Add("ResourceType", GenerateResourceTypeParameter(mandatory: false));
             }
 
             return _dynamicParameters;
@@ -422,6 +431,12 @@ namespace Google.PowerShell.Logging
     [Cmdlet(VerbsCommon.New, "GcLogMonitoredResource")]
     public class NewGcLogMonitoredResource : GcLogCmdlet, IDynamicParameters
     {
+        /// <summary>
+        /// <para type="description">
+        /// The label that applies to resource type.
+        /// For a complete list, see https://cloud.google.com/logging/docs/api/v2/resource-list.
+        /// </para>
+        /// </summary>
         [Parameter(Mandatory = true)]
         [ValidateNotNullOrEmpty]
         public Hashtable Labels { get; set; }
@@ -443,21 +458,8 @@ namespace Google.PowerShell.Logging
         {
             if (_dynamicParameters == null)
             {
-                ParameterAttribute paramAttribute = new ParameterAttribute()
-                {
-                    Mandatory = true
-                };
-                ValidateSetAttribute validateSetAttribute = new ValidateSetAttribute(AllResourceTypes);
-                validateSetAttribute.IgnoreCase = true;
-                Collection<Attribute> attributes =
-                    new Collection<Attribute>(new Attribute[] { validateSetAttribute, paramAttribute });
-                // This parameter can now be thought of as:
-                // [Parameter(Mandatory = true)]
-                // [ValidateSet(validTypeValues)]
-                // public string { get; set; }
-                RuntimeDefinedParameter typeParameter = new RuntimeDefinedParameter("ResourceType", typeof(string), attributes);
                 _dynamicParameters = new RuntimeDefinedParameterDictionary();
-                _dynamicParameters.Add("ResourceType", typeParameter);
+                _dynamicParameters.Add("ResourceType", GenerateResourceTypeParameter(mandatory: true));
             }
 
             return _dynamicParameters;

@@ -596,6 +596,11 @@ namespace Google.PowerShell.PubSub
     [Cmdlet(VerbsCommon.Set, "GcpsAckDeadline")]
     public class SetGcpsAckDeadline : ProcessGcpsAck
     {
+        /// <summary>
+        /// <para type="description">
+        /// The ack deadline to be set (in seconds).
+        /// </para>
+        /// </summary>
         [Parameter(Mandatory = true)]
         public int AckDeadline { get; set; }
 
