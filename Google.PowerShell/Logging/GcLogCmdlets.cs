@@ -81,7 +81,7 @@ namespace Google.PowerShell.Logging
         /// <summary>
         /// Prefix projects/{project id}/logs to logName if not present.
         /// </summary>
-        protected string PrefixProjectToLogName(string logName, string project)
+        protected static string PrefixProjectToLogName(string logName, string project)
         {
             if (!string.IsNullOrWhiteSpace(logName) && !logName.StartsWith($"projects/{project}/logs"))
             {
@@ -93,7 +93,7 @@ namespace Google.PowerShell.Logging
         /// <summary>
         /// Prefix projects/{project id}/sinks to sinkName if not present.
         /// </summary>
-        protected string PrefixProjectToSinkName(string sinkName, string project)
+        protected static string PrefixProjectToSinkName(string sinkName, string project)
         {
             if (!string.IsNullOrWhiteSpace(sinkName) && !sinkName.StartsWith($"projects/{project}/sinks"))
             {
