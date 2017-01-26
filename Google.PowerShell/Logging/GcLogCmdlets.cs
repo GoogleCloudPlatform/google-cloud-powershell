@@ -145,7 +145,8 @@ namespace Google.PowerShell.Logging
         protected string[] AllResourceTypes => s_monitoredResourceDescriptors.Value.Select(descriptor => descriptor.Type).ToArray();
 
         /// <summary>
-        /// Generate -ResourceType dynamic parameter.
+        /// Generate -ResourceType dynamic parameter. Cmdlets can use this parameter to filter log entries based on resource types
+        /// such as gce_instance. For a full list of resource types, see https://cloud.google.com/logging/docs/api/v2/resource-list
         /// </summary>
         protected RuntimeDefinedParameter GenerateResourceTypeParameter(bool mandatory)
         {
@@ -154,14 +155,14 @@ namespace Google.PowerShell.Logging
                 Mandatory = mandatory,
                 HelpMessage = "If specified, the cmdlet will filter out log entries based on the resource type."
             };
-            ValidateSetAttribute validateSetAttribute = new ValidateSetAttribute(AllResourceTypes);
+            var validateSetAttribute = new ValidateSetAttribute(AllResourceTypes);
             validateSetAttribute.IgnoreCase = true;
             Collection<Attribute> attributes =
                 new Collection<Attribute>(new Attribute[] { validateSetAttribute, paramAttribute });
             // This parameter can now be thought of as:
             // [Parameter(Mandatory = mandatory)]
             // [ValidateSet(validTypeValues)]
-            // public string { get; set; }
+            // public string ResourceType { get; set; }
             return new RuntimeDefinedParameter("ResourceType", typeof(string), attributes);
         }
 
