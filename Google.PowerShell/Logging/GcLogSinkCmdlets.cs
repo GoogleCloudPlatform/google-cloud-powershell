@@ -183,7 +183,7 @@ namespace Google.PowerShell.Logging
         /// <summary>
         /// <para type="description">
         /// Determines the kind of IAM identity returned as writerIdentity in the new sink.
-        /// If this value is provided, then the value returned as writerIdentity is cloud-logs@google.com.
+        /// If this value is not provided, then the value returned as writerIdentity is cloud-logs@google.com.
         /// Otherwise, it will be a unique service account.
         /// </para>
         /// </summary>
