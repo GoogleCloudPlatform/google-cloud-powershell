@@ -162,8 +162,10 @@ namespace Google.PowerShell.Common
         /// </summary>
         private string GetCurrentConfigurationFingerPrint()
         {
-            // Gets the last time sentinel file was touched.
-            DateTime timeStamp = File.GetLastWriteTime(SentinelFile);
+            // Gets the last time sentinel file was touched. Note that if gcloud is used for the first time,
+            // the sentinel file wouldn't exist (it will only get created if there is a change in the config).
+            // On Linux, File.GetLastWriteTime will throw error if the file does not exist so we have to set it to MinValue.
+            DateTime timeStamp = File.Exists(SentinelFile) ? File.GetLastWriteTime(SentinelFile) : DateTime.MinValue;
             string fingerprint = timeStamp.ToString();
 
             // Gets all available CLOUDSDK_* environment variables and their values.
