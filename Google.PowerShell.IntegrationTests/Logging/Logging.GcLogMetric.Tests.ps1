@@ -61,3 +61,6 @@ Describe "Get-GcLogMetric" {
         { Get-GcLogMetric -Metric "non-existent-metric-name" -ErrorAction Stop } | Should Throw "does not exist"
     }
 }
+
+Describe "New-GcLogMetric" {
+}

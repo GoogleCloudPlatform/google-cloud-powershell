@@ -95,4 +95,67 @@ namespace Google.PowerShell.Logging
             }
         }
     }
+
+    [Cmdlet(VerbsCommon.New, "GcLogMetric")]
+    public class NewGcLogMetricCmdlet : GcLogEntryCmdletWithLogFilter
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The project to create the metrics in. If not set via PowerShell parameter processing, will
+        /// default to the Cloud SDK's DefaultProject property.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the metric to be created. This name must be unique within the project.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0)]
+        [ValidateNotNullOrEmpty]
+        public string MetricName { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The description of the metric to be created.
+        /// </para> 
+        /// </summary>
+        [Parameter(Mandatory = false, Position = 1)]
+        public string Description { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            string formattedLogName = PrefixProjectToLogName(LogName, Project);
+            string formattedMetricName = PrefixProjectToMetricName(MetricName, Project);
+
+            LogMetric logMetric = new LogMetric();
+            logMetric.Name = PrefixProjectToMetricName(formattedMetricName, Project);
+            logMetric.Description = Description;
+            logMetric.Filter = ConstructLogFilterString(
+                logName: formattedLogName,
+                logSeverity: Severity,
+                selectedType: SelectedResourceType,
+                before: Before,
+                after: After,
+                otherFilter: Filter);
+
+            try
+            {
+                ProjectsResource.MetricsResource.CreateRequest createRequest =
+                    Service.Projects.Metrics.Create(logMetric, $"projects/{Project}");
+                LogMetric result = createRequest.Execute();
+                WriteObject(result);
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
+            {
+                WriteResourceExistsError(
+                    exceptionMessage: $"Cannot create '{MetricName}' in project '{Project}' because it already exists.",
+                    errorId: "MetricAlreadyExists",
+                    targetObject: MetricName);
+            }
+        }
+    }
 }
