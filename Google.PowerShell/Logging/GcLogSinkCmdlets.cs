@@ -259,7 +259,7 @@ namespace Google.PowerShell.Logging
             {
                 WriteResourceExistsError(
                     exceptionMessage: $"Cannot create '{SinkName}' in project '{Project}' because it already exists.",
-                    errorId: "SubscriptionAlreadyExists",
+                    errorId: "SinkAlreadyExists",
                     targetObject: LogName);
             }
         }

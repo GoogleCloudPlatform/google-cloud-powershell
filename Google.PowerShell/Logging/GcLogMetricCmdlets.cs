@@ -95,4 +95,110 @@ namespace Google.PowerShell.Logging
             }
         }
     }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Creates a new log metric.
+    /// </para>
+    /// <para type="description">
+    /// Creates a new log metric. The metric will be created in the default project if -Project is not used.
+    /// Will raise an error if the metric already exists.
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> New-GcLogMetric -MetricName "my-metric" -LogName "my-log"</code>
+    ///   <para>This command creates a metric to count the number of log entries in log "my-log".</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> New-GcLogMetric -MetricName "my-metric" `
+    ///                           -ResourceType gce_instance
+    ///                           -After [DateTime]::Now().AddDays(1)
+    ///                           -Project "my-project"
+    ///   </code>
+    ///   <para>
+    ///   This command creates a metric name "my-metric" in project "my-project" that counts every log entry
+    ///   of the resource type gce_instance that is created from tomorrow.
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> New-GcLogMetric -MetricName "my-metric" -Filter 'textPayload = "textPayload"'
+    ///   </code>
+    ///   <para>
+    ///   This command creates a metric name "my-metric" that counts every log entry that matches the provided filter.
+    ///   </para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/logging/docs/view/logs_based_metrics)">
+    /// [Log Metrics]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.New, "GcLogMetric")]
+    public class NewGcLogMetricCmdlet : GcLogEntryCmdletWithLogFilter
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The project to create the metrics in. If not set via PowerShell parameter processing, will
+        /// default to the Cloud SDK's DefaultProject property.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the metric to be created. This name must be unique within the project.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0)]
+        [ValidateNotNullOrEmpty]
+        public string MetricName { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The description of the metric to be created.
+        /// </para> 
+        /// </summary>
+        [Parameter(Mandatory = false, Position = 1)]
+        public string Description { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            LogMetric logMetric = new LogMetric()
+            {
+                Name = MetricName,
+                Description = Description
+            };
+
+            logMetric.Filter = ConstructLogFilterString(
+                logName: PrefixProjectToLogName(LogName, Project),
+                logSeverity: Severity,
+                selectedType: SelectedResourceType,
+                before: Before,
+                after: After,
+                otherFilter: Filter);
+
+            if (string.IsNullOrWhiteSpace(logMetric.Filter))
+            {
+                throw new PSArgumentNullException(
+                    "Cannot construct filter for the metric." +
+                    "Please use either -LogName, -Severity, -ResourceType, -Before, -After or -Filter parameters.");
+            }
+
+            try
+            {
+                ProjectsResource.MetricsResource.CreateRequest createRequest =
+                    Service.Projects.Metrics.Create(logMetric, $"projects/{Project}");
+                LogMetric result = createRequest.Execute();
+                WriteObject(result);
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
+            {
+                WriteResourceExistsError(
+                    exceptionMessage: $"Cannot create '{MetricName}' in project '{Project}' because it already exists.",
+                    errorId: "MetricAlreadyExists",
+                    targetObject: MetricName);
+            }
+        }
+    }
 }
