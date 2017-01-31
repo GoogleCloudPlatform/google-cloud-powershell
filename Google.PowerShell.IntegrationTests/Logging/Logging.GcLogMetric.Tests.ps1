@@ -68,11 +68,15 @@ Describe "New-GcLogMetric" {
         $metricName = "gcps-new-gclogmetric-$r"
         $logName = "gcps-new-gclogmetric-log-$r"
         try {
-            New-GcLogMetric $metricName -LogName $logName
-            $createdMetric = Get-GcLogMetric $metricName
-            $createdMetric | Should Not BeNullOrEmpty
-            $createdMetric.Filter | Should BeExactly "logName = `"projects/$project/logs/$logName`""
-            $createdMetric.Description | Should BeNullOrEmpty
+            $createdMetric = New-GcLogMetric $metricName -LogName $logName
+            $onlineMetric = Get-GcLogMetric $metricName
+
+            ForEach ($metric in @($createdMetric, $onlineMetric)) {
+                $metric | Should Not BeNullOrEmpty
+                $metric.Name | Should BeExactly $metricName
+                $metric.Filter | Should BeExactly "logName = `"projects/$project/logs/$logName`""
+                $metric.Description | Should BeNullOrEmpty
+            }
         }
         finally {
             gcloud beta logging metrics delete $metricName --quiet 2>$null
@@ -88,17 +92,24 @@ Describe "New-GcLogMetric" {
         $beforeTimeString = "timestamp <= `"2017-01-01T00:00:00-08:00`""
         $afterTimeString = "timestamp >= `"2017-12-12T00:00:00-08:00`""
         try {
-            New-GcLogMetric $metricName -Before $before
-            New-GcLogMetric $metricNameTwo -After $after
-            $createdMetric = Get-GcLogMetric $metricName
-            $createdMetric | Should Not BeNullOrEmpty
-            $createdMetric.Filter | Should BeExactly $beforeTimeString
-            $createdMetric.Description | Should BeNullOrEmpty
+            $createdMetricOne = New-GcLogMetric $metricName -Before $before
+            $createdMetricTwo = New-GcLogMetric $metricNameTwo -After $after
+            $onlineMetricOne = Get-GcLogMetric $metricName
+            $onlineMetricTwo = Get-GcLogMetric $metricNameTwo
 
-            $createdMetricTwo = Get-GcLogMetric $metricNameTwo
-            $createdMetricTwo | Should Not BeNullOrEmpty
-            $createdMetricTwo.Filter | Should BeExactly $afterTimeString
-            $createdMetricTwo.Description | Should BeNullOrEmpty
+            ForEach ($metric in @($createdMetricOne, $onlineMetricOne)) {
+                $metric | Should Not BeNullOrEmpty
+                $metric.Name | Should BeExactly $metricName
+                $metric.Filter | Should BeExactly $beforeTimeString
+                $metric.Description | Should BeNullOrEmpty
+            }
+            
+            ForEach ($metric in @($createdMetricTwo, $onlineMetricTwo)) {
+                $metric | Should Not BeNullOrEmpty
+                $metric.Name | Should BeExactly $metricNameTwo
+                $metric.Filter | Should BeExactly $afterTimeString
+                $metric.Description | Should BeNullOrEmpty
+            }
         }
         finally {
             gcloud beta logging metrics delete $metricName --quiet 2>$null
@@ -110,11 +121,15 @@ Describe "New-GcLogMetric" {
         $r = Get-Random
         $metricName = "gcps-new-gclogmetric-$r"
         try {
-            New-GcLogMetric $metricName -Severity ERROR
-            $createdMetric = Get-GcLogMetric $metricName
-            $createdMetric | Should Not BeNullOrEmpty
-            $createdMetric.Filter | Should BeExactly "severity = ERROR"
-            $createdMetric.Description | Should BeNullOrEmpty
+            $createdMetric = New-GcLogMetric $metricName -Severity ERROR
+            $onlineMetric = Get-GcLogMetric $metricName
+
+            ForEach ($metric in @($createdMetric, $onlineMetric)) {
+                $metric | Should Not BeNullOrEmpty
+                $metric.Name | Should BeExactly $metricName
+                $metric.Filter | Should BeExactly "severity = ERROR"
+                $metric.Description | Should BeNullOrEmpty
+            }
         }
         finally {
             gcloud beta logging metrics delete $metricName --quiet 2>$null
@@ -126,11 +141,15 @@ Describe "New-GcLogMetric" {
         $metricName = "gcps-new-gclogmetric-$r"
         $resourceType = "gce_instance"
         try {
-            New-GcLogMetric $metricName -ResourceType $resourceType
-            $createdMetric = Get-GcLogMetric $metricName
-            $createdMetric | Should Not BeNullOrEmpty
-            $createdMetric.Filter | Should BeExactly "resource.type = `"$resourceType`""
-            $createdMetric.Description | Should BeNullOrEmpty
+            $createdMetric = New-GcLogMetric $metricName -ResourceType $resourceType
+            $onlineMetric = Get-GcLogMetric $metricName
+
+            ForEach ($metric in @($createdMetric, $onlineMetric)) {
+                $metric | Should Not BeNullOrEmpty
+                $metric.Name | Should BeExactly $metricName
+                $metric.Filter | Should BeExactly "resource.type = `"$resourceType`""
+                $metric.Description | Should BeNullOrEmpty
+            }
         }
         finally {
             gcloud beta logging metrics delete $metricName --quiet 2>$null
@@ -142,11 +161,15 @@ Describe "New-GcLogMetric" {
         $metricName = "gcps-new-gclogmetric-$r"
         $filter = "textPayload = testing"
         try {
-            New-GcLogMetric $metricName -Severity ERROR
-            $createdMetric = Get-GcLogMetric $metricName
-            $createdMetric | Should Not BeNullOrEmpty
-            $createdMetric.Filter | Should BeExactly "severity = ERROR"
-            $createdMetric.Description | Should BeNullOrEmpty
+            $createdMetric = New-GcLogMetric $metricName -Filter $filter
+            $onlineMetric = Get-GcLogMetric $metricName
+
+            ForEach ($metric in @($createdMetric, $onlineMetric)) {
+                $metric | Should Not BeNullOrEmpty
+                $metric.Name | Should BeExactly $metricName
+                $metric.Filter | Should BeExactly $filter
+                $metric.Description | Should BeNullOrEmpty
+            }
         }
         finally {
             gcloud beta logging metrics delete $metricName --quiet 2>$null
@@ -159,11 +182,15 @@ Describe "New-GcLogMetric" {
         $logName = "gcps-new-gclogmetric-log-$r"
         $description = "This is a log metric"
         try {
-            New-GcLogMetric $metricName -LogName $logName -Description $description
-            $createdMetric = Get-GcLogMetric $metricName
-            $createdMetric | Should Not BeNullOrEmpty
-            $createdMetric.Filter | Should BeExactly "logName = `"projects/$project/logs/$logName`""
-            $createdMetric.Description | Should BeExactly $description
+            $createdMetric = New-GcLogMetric $metricName -LogName $logName -Description $description
+            $onlineMetric = Get-GcLogMetric $metricName
+
+            ForEach ($metric in @($createdMetric, $onlineMetric)) {
+                $metric | Should Not BeNullOrEmpty
+                $metric.Name | Should BeExactly $metricName
+                $metric.Filter | Should BeExactly "logName = `"projects/$project/logs/$logName`""
+                $metric.Description | Should BeExactly $description
+            }
         }
         finally {
             gcloud beta logging metrics delete $metricName --quiet 2>$null
@@ -178,20 +205,27 @@ Describe "New-GcLogMetric" {
         $description = "This is a log metric"
         $after = [DateTime]::new(2017, 12, 12)
         $afterTimeString = "timestamp >= `"2017-12-12T00:00:00-08:00`""
-        try {
-            New-GcLogMetric $metricName -LogName $logName -Description $description -Severity INFO
-            $createdMetric = Get-GcLogMetric $metricName
-            $createdMetric | Should Not BeNullOrEmpty
-            $createdMetric.Filter |
-                Should BeExactly "logName = `"projects/$project/logs/$logName`" AND severity = INFO"
-            $createdMetric.Description | Should BeExactly $description
+        try {            
+            $createdMetric = New-GcLogMetric $metricName -LogName $logName -Description $description -Severity INFO
+            $onlineMetric = Get-GcLogMetric $metricName
 
-            New-GcLogMetric $metricNameTwo -Description $description -Severity ERROR -After $after
-            $createdMetric = Get-GcLogMetric $metricNameTwo
-            $createdMetric | Should Not BeNullOrEmpty
-            $createdMetric.Filter |
-                Should BeExactly "severity = ERROR AND $afterTimeString"
-            $createdMetric.Description | Should BeExactly $description
+            ForEach ($metric in @($createdMetric, $onlineMetric)) {
+                $metric | Should Not BeNullOrEmpty
+                $metric.Name | Should BeExactly $metricName
+                $metric.Filter |
+                    Should BeExactly "logName = `"projects/$project/logs/$logName`" AND severity = INFO"
+                $metric.Description | Should BeExactly $description
+            }
+
+            $createdMetric = New-GcLogMetric $metricNameTwo -Description $description -Severity ERROR -After $after
+            $onlineMetric = Get-GcLogMetric $metricNameTwo
+
+            ForEach ($metric in @($createdMetric, $onlineMetric)) {
+                $metric | Should Not BeNullOrEmpty
+                $metric.Name | Should BeExactly $metricNameTwo
+                $metric.Filter | Should BeExactly "severity = ERROR AND $afterTimeString"
+                $metric.Description | Should BeExactly $description
+            }
         }
         finally {
             gcloud beta logging metrics delete $metricName --quiet 2>$null
