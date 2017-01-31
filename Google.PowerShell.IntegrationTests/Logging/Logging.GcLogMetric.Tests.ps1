@@ -260,3 +260,60 @@ Describe "New-GcLogMetric" {
         }
     }
 }
+
+Describe "Remove-GcLogMetric" {
+    It "should throw error for non-existent log metric" {
+        { Remove-GcLogMetric -MetricName "non-existent-log-metric-powershell-testing" -ErrorAction Stop } |
+            Should Throw "does not exist"
+    }
+
+    It "should work" {
+        $r = Get-Random
+        $metricName = "gcps-remove-gclogmetric-$r"
+        New-GcLogMetric $metricName -Filter "This is a filter"
+        Get-GcLogMetric -MetricName $metricName | Should Not BeNullOrEmpty
+
+        Remove-GcLogMetric $metricName
+        { Get-GcLogMetric -MetricName $metricName -ErrorAction Stop } | Should Throw "does not exist"
+    }
+
+
+    It "should work for multiple metrics" {
+        $r = Get-Random
+        $metricName = "gcps-remove-gclogmetric-$r"
+        $metricNameTwo = "gcps-remove-gclogmetric-2-$r"
+        New-GcLogMetric $metricName -Filter "This is a filter"
+        New-GcLogMetric $metricNameTwo -Filter "This is a filter"
+        Get-GcLogMetric -MetricName $metricName | Should Not BeNullOrEmpty
+        Get-GcLogMetric -MetricName $metricNameTwo | Should Not BeNullOrEmpty
+
+        Remove-GcLogMetric $metricName, $metricNameTwo
+        { Get-GcLogMetric -MetricName $metricName -ErrorAction Stop } | Should Throw "does not exist"
+        { Get-GcLogMetric -MetricName $metricNameTwo -ErrorAction Stop } | Should Throw "does not exist"
+    }
+
+    It "should work for log metric object" {
+        $r = Get-Random
+        $metricName = "gcps-remove-gclogmetric-$r"
+        New-GcLogMetric $metricName -Filter "This is a filter"
+
+        $createdMetricObject = Get-GcLogMetric -MetricName $metricName
+
+        Remove-GcLogMetric $createdMetricObject
+        { Get-GcLogMetric -MetricName $metricName -ErrorAction Stop } | Should Throw "does not exist"
+    }
+
+    It "should work with pipelining" {
+        $r = Get-Random
+        $metricName = "gcps-remove-gclogmetric-$r"
+        $metricNameTwo = "gcps-remove-gclogmetric-2-$r"
+        New-GcLogMetric $metricName -Filter "This is a filter"
+        New-GcLogMetric $metricNameTwo -Filter "This is a filter"
+        Get-GcLogMetric -MetricName $metricName | Should Not BeNullOrEmpty
+        Get-GcLogMetric -MetricName $metricNameTwo | Should Not BeNullOrEmpty
+
+        Get-GcLogMetric -MetricName $metricName, $metricNameTwo | Remove-GcLogMetric
+        { Get-GcLogMetric -MetricName $metricName -ErrorAction Stop } | Should Throw "does not exist"
+        { Get-GcLogMetric -MetricName $metricNameTwo -ErrorAction Stop } | Should Throw "does not exist"
+    }
+}

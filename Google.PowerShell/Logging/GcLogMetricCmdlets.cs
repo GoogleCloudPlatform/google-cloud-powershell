@@ -201,4 +201,72 @@ namespace Google.PowerShell.Logging
             }
         }
     }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Removes one or more log metrics from a project.
+    /// </para>
+    /// <para type="description">
+    /// Removes one or more log metrics from a project based on the name of the metrics.
+    /// If -Project is not specified, the default project will be used.
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> Remove-GcLogMetric -MetricName "my-metric"</code>
+    ///   <para>This command removes "my-metric" from the default project.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Remove-GcLogMetric -MetricName "my-metric", "my-metric2" -Project "my-project"</code>
+    ///   <para>This command removes "my-metric" and "my-metric2" from project "my-project".</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/logging/docs/view/logs_based_metrics)">
+    /// [Log Metrics]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Remove, "GcLogMetric", SupportsShouldProcess = true)]
+    public class RemoveGcLogMetricCmdlet : GcLogCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The project to check for log metrics in. If not set via PowerShell parameter processing, will
+        /// default to the Cloud SDK's DefaultProject property.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The names of the metrics to be removed.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true)]
+        [ArrayPropertyTransform(typeof(LogMetric), nameof(LogMetric.Name))]
+        [ValidateNotNullOrEmpty]
+        [Alias("Name")]
+        public string[] MetricName { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            foreach (string metric in MetricName)
+            {
+                string formattedLogMetric = PrefixProjectToMetricName(metric, Project);
+                try
+                {
+                    if (ShouldProcess(formattedLogMetric, "Remove Log Metric"))
+                    {
+                        ProjectsResource.MetricsResource.DeleteRequest request = Service.Projects.Metrics.Delete(formattedLogMetric);
+                        request.Execute();
+                    }
+                }
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+                {
+                    WriteResourceMissingError(
+                        exceptionMessage: $"Metric '{metric}' does not exist in project '{Project}'.",
+                        errorId: "MetricNotFound",
+                        targetObject: metric);
+                }
+            }
+        }
+    }
 }
