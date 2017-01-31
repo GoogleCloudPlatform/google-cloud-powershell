@@ -63,4 +63,166 @@ Describe "Get-GcLogMetric" {
 }
 
 Describe "New-GcLogMetric" {
+    It "should work with -LogName" {
+        $r = Get-Random
+        $metricName = "gcps-new-gclogmetric-$r"
+        $logName = "gcps-new-gclogmetric-log-$r"
+        try {
+            New-GcLogMetric $metricName -LogName $logName
+            $createdMetric = Get-GcLogMetric $metricName
+            $createdMetric | Should Not BeNullOrEmpty
+            $createdMetric.Filter | Should BeExactly "logName = `"projects/$project/logs/$logName`""
+            $createdMetric.Description | Should BeNullOrEmpty
+        }
+        finally {
+            gcloud beta logging metrics delete $metricName --quiet 2>$null
+        }
+    }
+
+    It "should work with -Before and -After" {
+        $r = Get-Random
+        $metricName = "gcps-new-gclogmetric-$r"
+        $metricNameTwo = "gcps-new-gclogmetric-2-$r"
+        $before = [DateTime]::new(2017, 1, 1)
+        $after = [DateTime]::new(2017, 12, 12)
+        $beforeTimeString = "timestamp <= `"2017-01-01T00:00:00-08:00`""
+        $afterTimeString = "timestamp >= `"2017-12-12T00:00:00-08:00`""
+        try {
+            New-GcLogMetric $metricName -Before $before
+            New-GcLogMetric $metricNameTwo -After $after
+            $createdMetric = Get-GcLogMetric $metricName
+            $createdMetric | Should Not BeNullOrEmpty
+            $createdMetric.Filter | Should BeExactly $beforeTimeString
+            $createdMetric.Description | Should BeNullOrEmpty
+
+            $createdMetricTwo = Get-GcLogMetric $metricNameTwo
+            $createdMetricTwo | Should Not BeNullOrEmpty
+            $createdMetricTwo.Filter | Should BeExactly $afterTimeString
+            $createdMetricTwo.Description | Should BeNullOrEmpty
+        }
+        finally {
+            gcloud beta logging metrics delete $metricName --quiet 2>$null
+            gcloud beta logging metrics delete $metricNameTwo --quiet 2>$null
+        }
+    }
+
+    It "should work with -Severity" {
+        $r = Get-Random
+        $metricName = "gcps-new-gclogmetric-$r"
+        try {
+            New-GcLogMetric $metricName -Severity ERROR
+            $createdMetric = Get-GcLogMetric $metricName
+            $createdMetric | Should Not BeNullOrEmpty
+            $createdMetric.Filter | Should BeExactly "severity = ERROR"
+            $createdMetric.Description | Should BeNullOrEmpty
+        }
+        finally {
+            gcloud beta logging metrics delete $metricName --quiet 2>$null
+        }
+    }
+
+    It "should work with -ResourceType" {
+        $r = Get-Random
+        $metricName = "gcps-new-gclogmetric-$r"
+        $resourceType = "gce_instance"
+        try {
+            New-GcLogMetric $metricName -ResourceType $resourceType
+            $createdMetric = Get-GcLogMetric $metricName
+            $createdMetric | Should Not BeNullOrEmpty
+            $createdMetric.Filter | Should BeExactly "resource.type = `"$resourceType`""
+            $createdMetric.Description | Should BeNullOrEmpty
+        }
+        finally {
+            gcloud beta logging metrics delete $metricName --quiet 2>$null
+        }
+    }
+
+    It "should work with -Filter" {
+        $r = Get-Random
+        $metricName = "gcps-new-gclogmetric-$r"
+        $filter = "textPayload = testing"
+        try {
+            New-GcLogMetric $metricName -Severity ERROR
+            $createdMetric = Get-GcLogMetric $metricName
+            $createdMetric | Should Not BeNullOrEmpty
+            $createdMetric.Filter | Should BeExactly "severity = ERROR"
+            $createdMetric.Description | Should BeNullOrEmpty
+        }
+        finally {
+            gcloud beta logging metrics delete $metricName --quiet 2>$null
+        }
+    }
+
+    It "should work with -Description" {
+        $r = Get-Random
+        $metricName = "gcps-new-gclogmetric-$r"
+        $logName = "gcps-new-gclogmetric-log-$r"
+        $description = "This is a log metric"
+        try {
+            New-GcLogMetric $metricName -LogName $logName -Description $description
+            $createdMetric = Get-GcLogMetric $metricName
+            $createdMetric | Should Not BeNullOrEmpty
+            $createdMetric.Filter | Should BeExactly "logName = `"projects/$project/logs/$logName`""
+            $createdMetric.Description | Should BeExactly $description
+        }
+        finally {
+            gcloud beta logging metrics delete $metricName --quiet 2>$null
+        }
+    }
+
+    It "should work with multiple parameters" {
+        $r = Get-Random
+        $metricName = "gcps-new-gclogmetric-$r"
+        $metricNameTwo = "gcps-new-gclogmetric-2-$r"
+        $logName = "gcps-new-gclogmetric-log-$r"
+        $description = "This is a log metric"
+        $after = [DateTime]::new(2017, 12, 12)
+        $afterTimeString = "timestamp >= `"2017-12-12T00:00:00-08:00`""
+        try {
+            New-GcLogMetric $metricName -LogName $logName -Description $description -Severity INFO
+            $createdMetric = Get-GcLogMetric $metricName
+            $createdMetric | Should Not BeNullOrEmpty
+            $createdMetric.Filter |
+                Should BeExactly "logName = `"projects/$project/logs/$logName`" AND severity = INFO"
+            $createdMetric.Description | Should BeExactly $description
+
+            New-GcLogMetric $metricNameTwo -Description $description -Severity ERROR -After $after
+            $createdMetric = Get-GcLogMetric $metricNameTwo
+            $createdMetric | Should Not BeNullOrEmpty
+            $createdMetric.Filter |
+                Should BeExactly "severity = ERROR AND $afterTimeString"
+            $createdMetric.Description | Should BeExactly $description
+        }
+        finally {
+            gcloud beta logging metrics delete $metricName --quiet 2>$null
+            gcloud beta logging metrics delete $metricNameTwo --quiet 2>$null
+        }
+    }
+
+    It "should throw error for existing log metric" {
+        $r = Get-Random
+        $metricName = "gcps-new-gclogmetric-$r"
+        $logName = "gcps-new-gclogmetric-log-$r"
+        try {
+            New-GcLogMetric $metricName -LogName $logName
+            { New-GcLogMetric $metricName -LogName $logName -ErrorAction Stop } |
+                Should Throw "already exists."
+        }
+        finally {
+            gcloud beta logging metrics delete $metricName --quiet 2>$null
+        }
+    }
+
+    It "should throw error if filter cannot be constructed" {
+        $r = Get-Random
+        $metricName = "gcps-new-gclogmetric-$r"
+        $logName = "gcps-new-gclogmetric-log-$r"
+        try {
+            { New-GcLogMetric $metricName -ErrorAction Stop } |
+                Should Throw "Cannot construct filter"
+        }
+        finally {
+            gcloud beta logging metrics delete $metricName --quiet 2>$null
+        }
+    }
 }

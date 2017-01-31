@@ -96,6 +96,42 @@ namespace Google.PowerShell.Logging
         }
     }
 
+    /// <summary>
+    /// <para type="synopsis">
+    /// Creates a new log metric.
+    /// </para>
+    /// <para type="description">
+    /// Creates a new log metric. The metric will be created in the default project if -Project is not used.
+    /// Will raise an error if the metric already exists.
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> New-GcLogMetric -MetricName "my-metric" -LogName "my-log"</code>
+    ///   <para>This command creates a metric to count the number of log entries in log "my-log".</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> New-GcLogMetric -MetricName "my-metric" `
+    ///                           -ResourceType gce_instance
+    ///                           -After [DateTime]::Now().AddDays(1)
+    ///                           -Project "my-project"
+    ///   </code>
+    ///   <para>
+    ///   This command creates a metric name "my-metric" in project "my-project" that counts every log entry
+    ///   of the resource type gce_instance that is created from tomorrow.
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> New-GcLogMetric -MetricName "my-metric" -Filter 'textPayload = "textPayload"'
+    ///   </code>
+    ///   <para>
+    ///   This command creates a metric name "my-metric" that counts every log entry that matches the provided filter.
+    ///   </para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/logging/docs/view/logs_based_metrics)">
+    /// [Log Metrics]
+    /// </para>
+    /// </summary>
     [Cmdlet(VerbsCommon.New, "GcLogMetric")]
     public class NewGcLogMetricCmdlet : GcLogEntryCmdletWithLogFilter
     {
@@ -128,19 +164,26 @@ namespace Google.PowerShell.Logging
 
         protected override void ProcessRecord()
         {
-            string formattedLogName = PrefixProjectToLogName(LogName, Project);
-            string formattedMetricName = PrefixProjectToMetricName(MetricName, Project);
+            LogMetric logMetric = new LogMetric()
+            {
+                Name = MetricName,
+                Description = Description
+            };
 
-            LogMetric logMetric = new LogMetric();
-            logMetric.Name = PrefixProjectToMetricName(formattedMetricName, Project);
-            logMetric.Description = Description;
             logMetric.Filter = ConstructLogFilterString(
-                logName: formattedLogName,
+                logName: PrefixProjectToLogName(LogName, Project),
                 logSeverity: Severity,
                 selectedType: SelectedResourceType,
                 before: Before,
                 after: After,
                 otherFilter: Filter);
+
+            if (string.IsNullOrWhiteSpace(logMetric.Filter))
+            {
+                throw new PSArgumentNullException(
+                    "Cannot construct filter for the metric." +
+                    "Please use either -LogName, -Severity, -ResourceType, -Before, -After or -Filter parameters.");
+            }
 
             try
             {
