@@ -803,7 +803,7 @@ Describe "Remove-GcLogSink" {
         $r = Get-Random
         $bucket = "gcloud-powershell-testing-logsink-bucket-$r"
         $sinkName = "gcps-new-gclogsink-$r"
-        New-GcLogSink $sinkName -GcsBucketDestination $bucket
+        New-GcLogSink $sinkName -GcsBucketDestination $bucket -UniqueWriterIdentity
         Start-Sleep -Seconds 1
 
         $createdSink = Get-GcLogSink -Sink $sinkName
@@ -819,7 +819,7 @@ Describe "Remove-GcLogSink" {
         $bucket = "gcloud-powershell-testing-logsink-bucket-$r"
         $sinkName = "gcps-new-gclogsink-$r"
         $sinkNameTwo = "gcps-new-gclogsink2-$r"
-        New-GcLogSink $sinkName -GcsBucketDestination $bucket
+        New-GcLogSink $sinkName -GcsBucketDestination $bucket -UniqueWriterIdentity
         New-GcLogSink $sinkNameTwo -GcsBucketDestination $bucket
         Start-Sleep -Seconds 1
 
@@ -835,7 +835,7 @@ Describe "Remove-GcLogSink" {
         $r = Get-Random
         $bucket = "gcloud-powershell-testing-logsink-bucket-$r"
         $sinkName = "gcps-new-gclogsink-$r"
-        New-GcLogSink $sinkName -GcsBucketDestination $bucket
+        New-GcLogSink $sinkName -GcsBucketDestination $bucket -UniqueWriterIdentity
         Start-Sleep -Seconds 1
 
         $createdSinkObject = Get-GcLogSink -Sink $sinkName
