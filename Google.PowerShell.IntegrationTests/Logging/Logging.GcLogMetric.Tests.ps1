@@ -3,6 +3,13 @@ Install-GCloudCmdlets
 
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
+function Get-DateTimeFromFilter($filter) {
+    if ($filter -match ".*timestamp\s*[<>]=\s*`"(.*)`"") {
+        return [DateTime]$Matches[1]
+    }
+    return null
+}
+
 Describe "Get-GcLogMetric" {
     $r = Get-Random
     $script:metricName = "gcps-get-gclogmetric-$r"
@@ -89,8 +96,6 @@ Describe "New-GcLogMetric" {
         $metricNameTwo = "gcps-new-gclogmetric-2-$r"
         $before = [DateTime]::new(2017, 1, 1)
         $after = [DateTime]::new(2017, 12, 12)
-        $beforeTimeString = "timestamp <= `"2017-01-01T00:00:00-08:00`""
-        $afterTimeString = "timestamp >= `"2017-12-12T00:00:00-08:00`""
         try {
             $createdMetricOne = New-GcLogMetric $metricName -Before $before
             $createdMetricTwo = New-GcLogMetric $metricNameTwo -After $after
@@ -100,14 +105,14 @@ Describe "New-GcLogMetric" {
             ForEach ($metric in @($createdMetricOne, $onlineMetricOne)) {
                 $metric | Should Not BeNullOrEmpty
                 $metric.Name | Should BeExactly $metricName
-                $metric.Filter | Should BeExactly $beforeTimeString
+                Get-DateTimeFromFilter $metric.Filter | Should Be $before
                 $metric.Description | Should BeNullOrEmpty
             }
 
             ForEach ($metric in @($createdMetricTwo, $onlineMetricTwo)) {
                 $metric | Should Not BeNullOrEmpty
                 $metric.Name | Should BeExactly $metricNameTwo
-                $metric.Filter | Should BeExactly $afterTimeString
+                Get-DateTimeFromFilter $metric.Filter | Should Be $after
                 $metric.Description | Should BeNullOrEmpty
             }
         }
@@ -204,7 +209,6 @@ Describe "New-GcLogMetric" {
         $logName = "gcps-new-gclogmetric-log-$r"
         $description = "This is a log metric"
         $after = [DateTime]::new(2017, 12, 12)
-        $afterTimeString = "timestamp >= `"2017-12-12T00:00:00-08:00`""
         try {
             $createdMetric = New-GcLogMetric $metricName -LogName $logName -Description $description -Severity INFO
             $onlineMetric = Get-GcLogMetric $metricName
@@ -223,7 +227,8 @@ Describe "New-GcLogMetric" {
             ForEach ($metric in @($createdMetric, $onlineMetric)) {
                 $metric | Should Not BeNullOrEmpty
                 $metric.Name | Should BeExactly $metricNameTwo
-                $metric.Filter | Should BeExactly "severity = ERROR AND $afterTimeString"
+                $metric.Filter | Should Match "severity = ERROR AND timestamp"
+                Get-DateTimeFromFilter $metric.Filter | Should Be $after
                 $metric.Description | Should BeExactly $description
             }
         }
@@ -291,8 +296,6 @@ Describe "Set-GcLogMetric" {
         $metricNameTwo = "gcps-new-gclogmetric-2-$r"
         $before = [DateTime]::new(2017, 1, 1)
         $after = [DateTime]::new(2017, 12, 12)
-        $beforeTimeString = "timestamp <= `"2017-01-01T00:00:00-08:00`""
-        $afterTimeString = "timestamp >= `"2017-12-12T00:00:00-08:00`""
         try {
             New-GcLogMetric $metricName -Before $after
             New-GcLogMetric $metricNameTwo -After $before
@@ -305,14 +308,14 @@ Describe "Set-GcLogMetric" {
             ForEach ($metric in @($updatedMetricOne, $onlineMetricOne)) {
                 $metric | Should Not BeNullOrEmpty
                 $metric.Name | Should BeExactly $metricName
-                $metric.Filter | Should BeExactly $beforeTimeString
+                Get-DateTimeFromFilter $metric.Filter | Should Be $before
                 $metric.Description | Should BeNullOrEmpty
             }
 
             ForEach ($metric in @($updatedMetricTwo, $onlineMetricTwo)) {
                 $metric | Should Not BeNullOrEmpty
                 $metric.Name | Should BeExactly $metricNameTwo
-                $metric.Filter | Should BeExactly $afterTimeString
+                Get-DateTimeFromFilter $metric.Filter | Should Be $after
                 $metric.Description | Should BeNullOrEmpty
             }
         }
@@ -418,7 +421,6 @@ Describe "Set-GcLogMetric" {
         $logName = "gcps-new-gclogmetric-log-$r"
         $description = "This is a log metric"
         $after = [DateTime]::new(2017, 12, 12)
-        $afterTimeString = "timestamp >= `"2017-12-12T00:00:00-08:00`""
         try {
             New-GcLogMetric $metricName -Filter "Testing" -Severity ERROR -Description $description
 
@@ -441,7 +443,8 @@ Describe "Set-GcLogMetric" {
             ForEach ($metric in @($updatedMetric, $onlineMetric)) {
                 $metric | Should Not BeNullOrEmpty
                 $metric.Name | Should BeExactly $metricNameTwo
-                $metric.Filter | Should BeExactly "severity = ERROR AND $afterTimeString"
+                $metric.Filter | Should Match "severity = ERROR AND timestamp"
+                Get-DateTimeFromFilter $metric.Filter | Should Be $after
                 $metric.Description | Should BeExactly $description
             }
         }
