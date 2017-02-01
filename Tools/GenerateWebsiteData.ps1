@@ -148,7 +148,8 @@ function Annotate-ParametersAndSyntaxObjects($cmdletName, $docObj) {
         # Since Name is read-only, we refer to the parameter set name via HackName.
         $parameterSet | Add-Member "HackName" $parameterSet.Name
         if ($parameterSet.HackName -eq "__AllParameterSets") {
-            if ($parameterSets.Count -ne 1) {
+            $parameterSetWithAllParametersName = $parameterSets | Where Name -eq "__AllParameterSets"
+            if ($parameterSetWithAllParametersName.Count -ne 1) {
                 Write-Warning "Assumed only one parameter set named __AllParameterSets"
                 exit
             }
@@ -206,7 +207,6 @@ function Annotate-ParametersAndSyntaxObjects($cmdletName, $docObj) {
                     $dynamicParameterSyntaxObject = New-DynamicParamObject $paramSetParam
                     $parameterArray = @($dynamicParameterSyntaxObject) + $syntaxObj.parameter
                     $syntaxObj.parameter = $parameterArray
-                    continue
                 }
 
                 if (-Not $paramSetParam.IsMandatory) {
