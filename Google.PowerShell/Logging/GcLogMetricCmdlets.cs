@@ -129,7 +129,7 @@ namespace Google.PowerShell.Logging
         public string Description { get; set; }
 
         /// <summary>
-        /// Given a log metric body, returns either a create or update request.
+        /// Given a log metric body, returns request that returns a LogMetric when executed.
         /// </summary>
         protected abstract LoggingBaseServiceRequest<LogMetric> GetRequest(LogMetric logMetric);
 
@@ -180,13 +180,13 @@ namespace Google.PowerShell.Logging
     /// <example>
     ///   <code>
     ///   PS C:\> New-GcLogMetric -MetricName "my-metric" `
-    ///                           -ResourceType gce_instance
+    ///                           -ResourceType "gce_instance"
     ///                           -After [DateTime]::Now().AddDays(1)
     ///                           -Project "my-project"
     ///   </code>
     ///   <para>
     ///   This command creates a metric name "my-metric" in project "my-project" that counts every log entry
-    ///   of the resource type gce_instance that is created from tomorrow.
+    ///   of the resource type "gce_instance" that is created from tomorrow.
     ///   </para>
     /// </example>
     /// <example>
@@ -232,13 +232,13 @@ namespace Google.PowerShell.Logging
     /// <example>
     ///   <code>
     ///   PS C:\> Set-GcLogMetric -MetricName "my-metric" `
-    ///                           -ResourceType gce_instance
+    ///                           -ResourceType "gce_instance"
     ///                           -After [DateTime]::Now().AddDays(1)
     ///                           -Project "my-project"
     ///   </code>
     ///   <para>
     ///   This command updates the metric name "my-metric" in project "my-project" to count every log entry
-    ///   of the resource type gce_instance that is created from tomorrow.
+    ///   of the resource type "gce_instance" that is created from tomorrow.
     ///   </para>
     /// </example>
     /// <example>

@@ -42,7 +42,7 @@ namespace Google.PowerShell.PubSub
     ///   </para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-GcpsMessage -Subscription "my-subscription"</code>
+    ///   <code>PS C:\> Get-GcpsMessage -Subscription "my-subscription" -AutoAck</code>
     ///   <para>
     ///   This command pulls down one or more messages from the subscription "my-subscription" in the default project
     ///   and sends an acknowledgement for each message.

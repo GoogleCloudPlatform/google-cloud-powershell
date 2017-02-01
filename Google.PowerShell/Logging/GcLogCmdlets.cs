@@ -158,7 +158,7 @@ namespace Google.PowerShell.Logging
 
         /// <summary>
         /// Generate -ResourceType dynamic parameter. Cmdlets can use this parameter to filter log entries based on resource types
-        /// such as gce_instance. For a full list of resource types, see https://cloud.google.com/logging/docs/api/v2/resource-list
+        /// such as "gce_instance". For a full list of resource types, see https://cloud.google.com/logging/docs/api/v2/resource-list
         /// </summary>
         protected RuntimeDefinedParameter GenerateResourceTypeParameter(bool mandatory)
         {
@@ -431,10 +431,10 @@ namespace Google.PowerShell.Logging
     /// </para>
     /// <example>
     ///   <code>
-    ///   PS C:\> New-GcLogMonitoredResource -ResourceType gce_instance `
+    ///   PS C:\> New-GcLogMonitoredResource -ResourceType "gce_instance" `
     ///                                      -Labels @{"project_id" = "my-project"; "instance_id" = "my-instance"}.
     ///   </code>
-    ///   <para>This command creates a new monitored resource of type gce_instance with specified labels.</para>
+    ///   <para>This command creates a new monitored resource of type "gce_instance" with specified labels.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/logging/docs/api/v2/resource-list)">
     /// [Monitored Resources and Labels]

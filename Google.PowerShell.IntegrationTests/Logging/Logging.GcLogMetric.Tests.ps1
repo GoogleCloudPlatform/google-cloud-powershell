@@ -3,7 +3,9 @@ Install-GCloudCmdlets
 
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
+# Given a filter, extract the first time stamp from the filter and returns the DateTime.
 function Get-DateTimeFromFilter($filter) {
+    # This regex matches "timestamp = "(DateTime)"
     if ($filter -match ".*timestamp\s*[<>]=\s*`"(.*)`"") {
         return [DateTime]$Matches[1]
     }
@@ -196,7 +198,7 @@ Describe "New-GcLogMetric" {
                 $metric.Filter | Should BeExactly "logName = `"projects/$project/logs/$logName`""
                 $metric.Description | Should BeExactly $description
             }
-        } 
+        }
         finally {
             gcloud beta logging metrics delete $metricName --quiet 2>$null
         }
