@@ -820,7 +820,7 @@ Describe "Remove-GcLogSink" {
         $sinkName = "gcps-new-gclogsink-$r"
         $sinkNameTwo = "gcps-new-gclogsink2-$r"
         New-GcLogSink $sinkName -GcsBucketDestination $bucket -UniqueWriterIdentity
-        New-GcLogSink $sinkNameTwo -GcsBucketDestination $bucket
+        New-GcLogSink $sinkNameTwo -GcsBucketDestination $bucket -UniqueWriterIdentity
         Start-Sleep -Seconds 1
 
         $createdSinks = Get-GcLogSink -Sink $sinkName, $sinkNameTwo

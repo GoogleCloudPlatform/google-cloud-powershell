@@ -298,10 +298,10 @@ namespace Google.PowerShell.Logging
     /// </example>
     /// <example>
     ///   <code>
-    ///   PS C:\> New-GcLogSink -SinkName "my-sink" -PubSubTopicDestination "my_dataset" -ResourceType gce_instance -After [DateTime]::Now().AddDays(1)
+    ///   PS C:\> New-GcLogSink -SinkName "my-sink" -PubSubTopicDestination "my_dataset" -ResourceType "gce_instance" -After [DateTime]::Now().AddDays(1)
     ///   </code>
     ///   <para>
-    ///   This command creates a sink name "my-sink" that exports every log entry of the resource type gce_instance that is created the next day
+    ///   This command creates a sink name "my-sink" that exports every log entry of the resource type "gce_instance" that is created the next day
     ///   onwards to the Google Cloud PubSub topic "my-topic". The identity of the writer of the logs will be cloud-logs@system.gserviceaccount.com.
     ///   </para>
     /// </example>
@@ -366,11 +366,11 @@ namespace Google.PowerShell.Logging
     /// </example>
     /// <example>
     ///   <code>
-    ///   PS C:\> Set-GcLogSink -SinkName "my-sink" -PubSubTopicDestination "my_dataset" -ResourceType gce_instance -After [DateTime]::Now().AddDays(1)
+    ///   PS C:\> Set-GcLogSink -SinkName "my-sink" -PubSubTopicDestination "my_dataset" -ResourceType "gce_instance" -After [DateTime]::Now().AddDays(1)
     ///   </code>
     ///   <para>
     ///   This command changes the destination of the sink name "my-sink" to the Google Cloud PubSub topic "my-topic".
-    ///   The sink will now only export log entries that have resource type gce_instance and that occur 1 day from now.
+    ///   The sink will now only export log entries that have resource type "gce_instance" and that occur 1 day from now.
     ///   </para>
     /// </example>
     /// <example>

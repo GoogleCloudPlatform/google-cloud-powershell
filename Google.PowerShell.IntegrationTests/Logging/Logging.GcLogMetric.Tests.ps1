@@ -3,6 +3,15 @@ Install-GCloudCmdlets
 
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
+# Given a filter, extract the first time stamp from the filter and returns the DateTime.
+function Get-DateTimeFromFilter($filter) {
+    # This regex matches "timestamp = "(DateTime)"
+    if ($filter -match ".*timestamp\s*[<>]=\s*`"(.*)`"") {
+        return [DateTime]$Matches[1]
+    }
+    return null
+}
+
 Describe "Get-GcLogMetric" {
     $r = Get-Random
     $script:metricName = "gcps-get-gclogmetric-$r"
@@ -89,8 +98,6 @@ Describe "New-GcLogMetric" {
         $metricNameTwo = "gcps-new-gclogmetric-2-$r"
         $before = [DateTime]::new(2017, 1, 1)
         $after = [DateTime]::new(2017, 12, 12)
-        $beforeTimeString = "timestamp <= `"2017-01-01T00:00:00-08:00`""
-        $afterTimeString = "timestamp >= `"2017-12-12T00:00:00-08:00`""
         try {
             $createdMetricOne = New-GcLogMetric $metricName -Before $before
             $createdMetricTwo = New-GcLogMetric $metricNameTwo -After $after
@@ -100,14 +107,14 @@ Describe "New-GcLogMetric" {
             ForEach ($metric in @($createdMetricOne, $onlineMetricOne)) {
                 $metric | Should Not BeNullOrEmpty
                 $metric.Name | Should BeExactly $metricName
-                $metric.Filter | Should BeExactly $beforeTimeString
+                Get-DateTimeFromFilter $metric.Filter | Should Be $before
                 $metric.Description | Should BeNullOrEmpty
             }
-            
+
             ForEach ($metric in @($createdMetricTwo, $onlineMetricTwo)) {
                 $metric | Should Not BeNullOrEmpty
                 $metric.Name | Should BeExactly $metricNameTwo
-                $metric.Filter | Should BeExactly $afterTimeString
+                Get-DateTimeFromFilter $metric.Filter | Should Be $after
                 $metric.Description | Should BeNullOrEmpty
             }
         }
@@ -204,8 +211,7 @@ Describe "New-GcLogMetric" {
         $logName = "gcps-new-gclogmetric-log-$r"
         $description = "This is a log metric"
         $after = [DateTime]::new(2017, 12, 12)
-        $afterTimeString = "timestamp >= `"2017-12-12T00:00:00-08:00`""
-        try {            
+        try {
             $createdMetric = New-GcLogMetric $metricName -LogName $logName -Description $description -Severity INFO
             $onlineMetric = Get-GcLogMetric $metricName
 
@@ -223,7 +229,8 @@ Describe "New-GcLogMetric" {
             ForEach ($metric in @($createdMetric, $onlineMetric)) {
                 $metric | Should Not BeNullOrEmpty
                 $metric.Name | Should BeExactly $metricNameTwo
-                $metric.Filter | Should BeExactly "severity = ERROR AND $afterTimeString"
+                $metric.Filter | Should Match "severity = ERROR AND timestamp"
+                Get-DateTimeFromFilter $metric.Filter | Should Be $after
                 $metric.Description | Should BeExactly $description
             }
         }
@@ -254,6 +261,227 @@ Describe "New-GcLogMetric" {
         try {
             { New-GcLogMetric $metricName -ErrorAction Stop } |
                 Should Throw "Cannot construct filter"
+        }
+        finally {
+            gcloud beta logging metrics delete $metricName --quiet 2>$null
+        }
+    }
+}
+
+Describe "Set-GcLogMetric" {
+    It "should work with -LogName" {
+        $r = Get-Random
+        $metricName = "gcps-new-gclogmetric-$r"
+        $logName = "gcps-new-gclogmetric-log-$r"
+        $secondLogName = "gcps-set-gclogmetric-log-$r"
+        try {
+            New-GcLogMetric $metricName -LogName $logName
+
+            $updatedMetric = Set-GcLogMetric $metricName -LogName $secondLogName
+            $onlineMetric = Get-GcLogMetric $metricName
+
+            ForEach ($metric in @($updatedMetric, $onlineMetric)) {
+                $metric | Should Not BeNullOrEmpty
+                $metric.Name | Should BeExactly $metricName
+                $metric.Filter | Should BeExactly "logName = `"projects/$project/logs/$secondLogName`""
+                $metric.Description | Should BeNullOrEmpty
+            }
+        }
+        finally {
+            gcloud beta logging metrics delete $metricName --quiet 2>$null
+        }
+    }
+
+    It "should work with -Before and -After" {
+        $r = Get-Random
+        $metricName = "gcps-new-gclogmetric-$r"
+        $metricNameTwo = "gcps-new-gclogmetric-2-$r"
+        $before = [DateTime]::new(2017, 1, 1)
+        $after = [DateTime]::new(2017, 12, 12)
+        try {
+            New-GcLogMetric $metricName -Before $after
+            New-GcLogMetric $metricNameTwo -After $before
+
+            $updatedMetricOne = Set-GcLogMetric $metricName -Before $before
+            $updatedMetricTwo = Set-GcLogMetric $metricNameTwo -After $after
+            $onlineMetricOne = Get-GcLogMetric $metricName
+            $onlineMetricTwo = Get-GcLogMetric $metricNameTwo
+
+            ForEach ($metric in @($updatedMetricOne, $onlineMetricOne)) {
+                $metric | Should Not BeNullOrEmpty
+                $metric.Name | Should BeExactly $metricName
+                Get-DateTimeFromFilter $metric.Filter | Should Be $before
+                $metric.Description | Should BeNullOrEmpty
+            }
+
+            ForEach ($metric in @($updatedMetricTwo, $onlineMetricTwo)) {
+                $metric | Should Not BeNullOrEmpty
+                $metric.Name | Should BeExactly $metricNameTwo
+                Get-DateTimeFromFilter $metric.Filter | Should Be $after
+                $metric.Description | Should BeNullOrEmpty
+            }
+        }
+        finally {
+            gcloud beta logging metrics delete $metricName --quiet 2>$null
+            gcloud beta logging metrics delete $metricNameTwo --quiet 2>$null
+        }
+    }
+
+    It "should work with -Severity" {
+        $r = Get-Random
+        $metricName = "gcps-new-gclogmetric-$r"
+        try {
+            New-GcLogMetric $metricName -Severity INFO
+
+            $updatedMetric = Set-GcLogMetric $metricName -Severity ERROR
+            $onlineMetric = Get-GcLogMetric $metricName
+
+            ForEach ($metric in @($updatedMetric, $onlineMetric)) {
+                $metric | Should Not BeNullOrEmpty
+                $metric.Name | Should BeExactly $metricName
+                $metric.Filter | Should BeExactly "severity = ERROR"
+                $metric.Description | Should BeNullOrEmpty
+            }
+        }
+        finally {
+            gcloud beta logging metrics delete $metricName --quiet 2>$null
+        }
+    }
+
+    It "should work with -ResourceType" {
+        $r = Get-Random
+        $metricName = "gcps-new-gclogmetric-$r"
+        $resourceType = "gce_instance"
+        try {
+            New-GcLogMetric $metricName -ResourceType global
+
+            $updatedMetric = Set-GcLogMetric $metricName -ResourceType $resourceType
+            $onlineMetric = Get-GcLogMetric $metricName
+
+            ForEach ($metric in @($updatedMetric, $onlineMetric)) {
+                $metric | Should Not BeNullOrEmpty
+                $metric.Name | Should BeExactly $metricName
+                $metric.Filter | Should BeExactly "resource.type = `"$resourceType`""
+                $metric.Description | Should BeNullOrEmpty
+            }
+        }
+        finally {
+            gcloud beta logging metrics delete $metricName --quiet 2>$null
+        }
+    }
+
+    It "should work with -Filter" {
+        $r = Get-Random
+        $metricName = "gcps-new-gclogmetric-$r"
+        $filter = "textPayload = testing"
+        $secondFilter = "textPayload = second-payload"
+        try {
+            New-GcLogMetric $metricName -Filter $filter
+
+            $updatedMetric = Set-GcLogMetric $metricName -Filter $secondFilter
+            $onlineMetric = Get-GcLogMetric $metricName
+
+            ForEach ($metric in @($updatedMetric, $onlineMetric)) {
+                $metric | Should Not BeNullOrEmpty
+                $metric.Name | Should BeExactly $metricName
+                $metric.Filter | Should BeExactly $secondFilter
+                $metric.Description | Should BeNullOrEmpty
+            }
+        }
+        finally {
+            gcloud beta logging metrics delete $metricName --quiet 2>$null
+        }
+    }
+
+    It "should work with -Description" {
+        $r = Get-Random
+        $metricName = "gcps-new-gclogmetric-$r"
+        $logName = "gcps-new-gclogmetric-log-$r"
+        $description = "This is a log metric"
+        try {
+            New-GcLogMetric $metricName -LogName $logName
+
+            $updatedMetric = Set-GcLogMetric $metricName -Description $description
+            $onlineMetric = Get-GcLogMetric $metricName
+
+            ForEach ($metric in @($updatedMetric, $onlineMetric)) {
+                $metric | Should Not BeNullOrEmpty
+                $metric.Name | Should BeExactly $metricName
+                $metric.Filter | Should BeExactly "logName = `"projects/$project/logs/$logName`""
+                $metric.Description | Should BeExactly $description
+            }
+        }
+        finally {
+            gcloud beta logging metrics delete $metricName --quiet 2>$null
+        }
+    }
+
+    It "should work with multiple parameters" {
+        $r = Get-Random
+        $metricName = "gcps-new-gclogmetric-$r"
+        $metricNameTwo = "gcps-new-gclogmetric-2-$r"
+        $logName = "gcps-new-gclogmetric-log-$r"
+        $description = "This is a log metric"
+        $after = [DateTime]::new(2017, 12, 12)
+        try {
+            New-GcLogMetric $metricName -Filter "Testing" -Severity ERROR -Description $description
+
+            $updatedMetric = Set-GcLogMetric $metricName -LogName $logName -Severity INFO
+            $onlineMetric = Get-GcLogMetric $metricName
+
+            ForEach ($metric in @($updatedMetric, $onlineMetric)) {
+                $metric | Should Not BeNullOrEmpty
+                $metric.Name | Should BeExactly $metricName
+                $metric.Filter |
+                    Should BeExactly "logName = `"projects/$project/logs/$logName`" AND severity = INFO"
+                $metric.Description | Should BeExactly $description
+            }
+
+            New-GcLogMetric $metricNameTwo -LogName $logName -Description $description
+
+            $updatedMetric = Set-GcLogMetric $metricNameTwo -Severity ERROR -After $after
+            $onlineMetric = Get-GcLogMetric $metricNameTwo
+
+            ForEach ($metric in @($updatedMetric, $onlineMetric)) {
+                $metric | Should Not BeNullOrEmpty
+                $metric.Name | Should BeExactly $metricNameTwo
+                $metric.Filter | Should Match "severity = ERROR AND timestamp"
+                Get-DateTimeFromFilter $metric.Filter | Should Be $after
+                $metric.Description | Should BeExactly $description
+            }
+        }
+        finally {
+            gcloud beta logging metrics delete $metricName --quiet 2>$null
+            gcloud beta logging metrics delete $metricNameTwo --quiet 2>$null
+        }
+    }
+
+    It "should create a metric if it doesn't exist" {
+        $r = Get-Random
+        $metricName = "gcps-new-gclogmetric-$r"
+        $logName = "gcps-new-gclogmetric-log-$r"
+        try {
+            $createdMetric = Set-GcLogMetric $metricName -LogName $logName
+            $onlineMetric = Get-GcLogMetric $metricName
+
+            ForEach ($metric in @($createdMetric, $onlineMetric)) {
+                $metric | Should Not BeNullOrEmpty
+                $metric.Name | Should BeExactly $metricName
+                $metric.Filter | Should BeExactly "logName = `"projects/$project/logs/$logName`""
+                $metric.Description | Should BeNullOrEmpty
+            }
+        }
+        finally {
+            gcloud beta logging metrics delete $metricName --quiet 2>$null
+        }
+    }
+
+    It "should throw an error if it cannot create a metric" {
+        $r = Get-Random
+        $metricName = "gcps-new-gclogmetric-$r"
+        $logName = "gcps-new-gclogmetric-log-$r"
+        try {
+            { Set-GcLogMetric $metricName } | Should Throw "Cannot construct filter"
         }
         finally {
             gcloud beta logging metrics delete $metricName --quiet 2>$null

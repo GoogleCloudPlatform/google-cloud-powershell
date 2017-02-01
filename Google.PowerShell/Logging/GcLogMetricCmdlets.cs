@@ -97,43 +97,9 @@ namespace Google.PowerShell.Logging
     }
 
     /// <summary>
-    /// <para type="synopsis">
-    /// Creates a new log metric.
-    /// </para>
-    /// <para type="description">
-    /// Creates a new log metric. The metric will be created in the default project if -Project is not used.
-    /// Will raise an error if the metric already exists.
-    /// </para>
-    /// <example>
-    ///   <code>PS C:\> New-GcLogMetric -MetricName "my-metric" -LogName "my-log"</code>
-    ///   <para>This command creates a metric to count the number of log entries in log "my-log".</para>
-    /// </example>
-    /// <example>
-    ///   <code>
-    ///   PS C:\> New-GcLogMetric -MetricName "my-metric" `
-    ///                           -ResourceType gce_instance
-    ///                           -After [DateTime]::Now().AddDays(1)
-    ///                           -Project "my-project"
-    ///   </code>
-    ///   <para>
-    ///   This command creates a metric name "my-metric" in project "my-project" that counts every log entry
-    ///   of the resource type gce_instance that is created from tomorrow.
-    ///   </para>
-    /// </example>
-    /// <example>
-    ///   <code>
-    ///   PS C:\> New-GcLogMetric -MetricName "my-metric" -Filter 'textPayload = "textPayload"'
-    ///   </code>
-    ///   <para>
-    ///   This command creates a metric name "my-metric" that counts every log entry that matches the provided filter.
-    ///   </para>
-    /// </example>
-    /// <para type="link" uri="(https://cloud.google.com/logging/docs/view/logs_based_metrics)">
-    /// [Log Metrics]
-    /// </para>
+    /// Base class for cmdlet that create or update log metrics (both API have the same parameters).
     /// </summary>
-    [Cmdlet(VerbsCommon.New, "GcLogMetric")]
-    public class NewGcLogMetricCmdlet : GcLogEntryCmdletWithLogFilter
+    public abstract class CreateOrUpdateGcLogMetricCmdlet : GcLogEntryCmdletWithLogFilter
     {
         /// <summary>
         /// <para type="description">
@@ -147,7 +113,7 @@ namespace Google.PowerShell.Logging
 
         /// <summary>
         /// <para type="description">
-        /// The name of the metric to be created. This name must be unique within the project.
+        /// The name of the metric. This name must be unique within the project.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0)]
@@ -156,11 +122,16 @@ namespace Google.PowerShell.Logging
 
         /// <summary>
         /// <para type="description">
-        /// The description of the metric to be created.
-        /// </para> 
+        /// The description of the metric.
+        /// </para>
         /// </summary>
         [Parameter(Mandatory = false, Position = 1)]
         public string Description { get; set; }
+
+        /// <summary>
+        /// Given a log metric body, returns request that returns a LogMetric when executed.
+        /// </summary>
+        protected abstract LoggingBaseServiceRequest<LogMetric> GetRequest(LogMetric logMetric);
 
         protected override void ProcessRecord()
         {
@@ -178,18 +149,10 @@ namespace Google.PowerShell.Logging
                 after: After,
                 otherFilter: Filter);
 
-            if (string.IsNullOrWhiteSpace(logMetric.Filter))
-            {
-                throw new PSArgumentNullException(
-                    "Cannot construct filter for the metric." +
-                    "Please use either -LogName, -Severity, -ResourceType, -Before, -After or -Filter parameters.");
-            }
-
             try
             {
-                ProjectsResource.MetricsResource.CreateRequest createRequest =
-                    Service.Projects.Metrics.Create(logMetric, $"projects/{Project}");
-                LogMetric result = createRequest.Execute();
+                LoggingBaseServiceRequest<LogMetric> request = GetRequest(logMetric);
+                LogMetric result = request.Execute();
                 WriteObject(result);
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
@@ -199,6 +162,133 @@ namespace Google.PowerShell.Logging
                     errorId: "MetricAlreadyExists",
                     targetObject: MetricName);
             }
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Creates a new log metric.
+    /// </para>
+    /// <para type="description">
+    /// Creates a new log metric. The metric will be created in the default project if -Project is not used.
+    /// Will raise an error if the metric already exists.
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> New-GcLogMetric -MetricName "my-metric" -LogName "my-log"</code>
+    ///   <para>This command creates a metric to count the number of log entries in log "my-log".</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> New-GcLogMetric -MetricName "my-metric" `
+    ///                           -ResourceType "gce_instance"
+    ///                           -After [DateTime]::Now().AddDays(1)
+    ///                           -Project "my-project"
+    ///   </code>
+    ///   <para>
+    ///   This command creates a metric name "my-metric" in project "my-project" that counts every log entry
+    ///   of the resource type "gce_instance" that is created from tomorrow.
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> New-GcLogMetric -MetricName "my-metric" -Filter 'textPayload = "textPayload"'
+    ///   </code>
+    ///   <para>
+    ///   This command creates a metric name "my-metric" that counts every log entry that matches the provided filter.
+    ///   </para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/logging/docs/view/logs_based_metrics)">
+    /// [Log Metrics]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.New, "GcLogMetric")]
+    public class NewGcLogMetricCmdlet : CreateOrUpdateGcLogMetricCmdlet
+    {
+        protected override LoggingBaseServiceRequest<LogMetric> GetRequest(LogMetric logMetric)
+        {
+            if (string.IsNullOrWhiteSpace(logMetric.Filter))
+            {
+                throw new PSArgumentNullException(
+                    "Cannot construct filter for the metric." +
+                    "Please use either -LogName, -Severity, -ResourceType, -Before, -After or -Filter parameters.");
+            }
+
+            return Service.Projects.Metrics.Create(logMetric, $"projects/{Project}");
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Updates a log metric.
+    /// </para>
+    /// <para type="description">
+    /// Updates a log metric. The cmdlet will create the metric if it does not exist.
+    /// The default project will be used to search for the metric if -Project is not used.
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> Set-GcLogMetric -MetricName "my-metric" -LogName "my-log"</code>
+    ///   <para>This command updates the metric "my-metric" to count the number of log entries in log "my-log".</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Set-GcLogMetric -MetricName "my-metric" `
+    ///                           -ResourceType "gce_instance"
+    ///                           -After [DateTime]::Now().AddDays(1)
+    ///                           -Project "my-project"
+    ///   </code>
+    ///   <para>
+    ///   This command updates the metric name "my-metric" in project "my-project" to count every log entry
+    ///   of the resource type "gce_instance" that is created from tomorrow.
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Set-GcLogMetric -MetricName "my-metric" -Filter 'textPayload = "textPayload"'
+    ///   </code>
+    ///   <para>
+    ///   This command updates the metric name "my-metric" to count every log entry that matches the provided filter.
+    ///   </para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/logging/docs/view/logs_based_metrics)">
+    /// [Log Metrics]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Set, "GcLogMetric")]
+    public class SetGcLogMetricCmdlet : CreateOrUpdateGcLogMetricCmdlet
+    {
+        protected override LoggingBaseServiceRequest<LogMetric> GetRequest(LogMetric logMetric)
+        {
+            string formattedMetricName = PrefixProjectToMetricName(MetricName, Project);
+
+            // If user does not supply filter or description for update request, we have to use the existing metric's filter.
+            if (string.IsNullOrWhiteSpace(logMetric.Filter) || string.IsNullOrWhiteSpace(logMetric.Description))
+            {
+                try
+                {
+                    ProjectsResource.MetricsResource.GetRequest getRequest = Service.Projects.Metrics.Get(formattedMetricName);
+                    LogMetric existingMetric = getRequest.Execute();
+                    if (string.IsNullOrWhiteSpace(logMetric.Filter))
+                    {
+                        logMetric.Filter = existingMetric.Filter;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(logMetric.Description))
+                    {
+                        logMetric.Description = existingMetric.Description;
+                    }
+                }
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+                {
+                    // We don't need to throw for description since it's optional.
+                    if (string.IsNullOrWhiteSpace(logMetric.Filter))
+                    {
+                        throw new PSArgumentNullException(
+                            "Cannot construct filter for the metric." +
+                            "Please use either -LogName, -Severity, -ResourceType, -Before, -After or -Filter parameters.");
+                    }
+                }
+            }
+            return Service.Projects.Metrics.Update(logMetric, PrefixProjectToMetricName(MetricName, Project));
         }
     }
 
