@@ -217,10 +217,10 @@ Import-GcSqlInstance "my-instance-name" "C:\Users\User\file.csv" `
     </p>
     <h2>Publisher</h2>
     <p>
-      Publisher application creates and sends messages to a <em>topic</em>.
-      The <cmdlet-ref name="New-GcpsTopic"></cmdlet-ref> can be called to create an instance
+      The publisher application creates and sends messages to a <em>topic</em>.
+      The <cmdlet-ref name="New-GcpsTopic"></cmdlet-ref> cmdlet can be called to create an instance
       in a particular topic. If your active gcloud configuration has a project, you don't have to
-      use <code>-Project</code> parameter.
+      use the <code>-Project</code> parameter.
     </p>
     <pre>
 # Creates topic "my-topic" in the default project.
@@ -230,7 +230,7 @@ New-GcpsTopic -Topic "my-topic"</pre>
       <cmdlet-ref name="Publish-GcpsMessage"></cmdlet-ref> cmdlet.
     </p>
     <pre>
-# Publish message with data "This is a test" to topic "my-topic".
+# Publishes the message with data "This is a test" to topic "my-topic".
 Publish-GcpsMessage -Data "This is a test" -Topic "my-topic"</pre>
     <p>
       To publish multiple messages to the same topic with a single request, you can use the
@@ -246,10 +246,10 @@ $messageTwo = New-GcpsMessage -Data "Data" -Attributes @{"key" = "value"}
 Publish-GcpsMessage -Message @($messageOne, $messageTwo) -Topic "my-topic"</pre>
     <h2>Subscriber</h2>
     <p>
-      Subscriber application creates a <em>subscription</em> to a topic to receive messages from it.
+      The subscriber application creates a <em>subscription</em> to a topic to receive messages from it.
       The <cmdlet-ref name="New-GcpsSubscription"></cmdlet-ref> cmdlet can be called to create an instance
       in a particular topic. If your active gcloud configuration has a project, you don't have to
-      use <code>-Project</code> parameter.
+      use the <code>-Project</code> parameter.
     </p>
     <p>
       By default, the subscription created is a pull subscription, which means the subscriber will
@@ -263,8 +263,7 @@ New-GcpsSubscription -Topic "my-topic" -Subscription "pull-subscription"
 # Creates push subscription "push-subscription" to topic "my-topic".
 New-GcpsSubscription -Topic "my-topic" `
                      -Subscription "push-subscription" `
-                     -PushEndpoint "http://www.example.com"
-</pre>
+                     -PushEndpoint "http://www.example.com"</pre>
     <p>
       To pull messages from a subscription, the <cmdlet-ref name="Get-GcpsMessage"></cmdlet-ref> cmdlet can
       be used. By default, the cmdlet will block until at least one message is retrieved. To prevent blocking,
@@ -275,10 +274,10 @@ New-GcpsSubscription -Topic "my-topic" `
     </p>
     <pre>
 # Pulls messages from subscription "my-subscription" and sends out acknowledgement automatically.
-Get-GcpsMessage -Subscription "--subscription" -AutoAck
+Get-GcpsMessage -Subscription "my-subscription" -AutoAck
 
 # Pulls messages from subscription "my-subscription" and sends out acknowledgement with Send-GcpsAck.
-$messages = Get-GcpsMessage -Subscription "--subscription"
+$messages = Get-GcpsMessage -Subscription "my-subscription"
 Send-GcpsAck -InputObject $messages</pre>
   </div>
 
@@ -288,7 +287,7 @@ Send-GcpsAck -InputObject $messages</pre>
       Stackdriver Logging allows you to store, search, analyze, monitor and alert on log data
       and events from Google Cloud Platform and Amazon Web Services.
     </p>
-    <h2>Log and log entries</h2>
+    <h2>Logs and Log Entries</h2>
     <p>
       A log is a named collection of log entries within the project. A log entry records status or an event.
       The entry might be created by GCP services, AWS services, third party applications, or your own applications.
@@ -306,12 +305,12 @@ Send-GcpsAck -InputObject $messages</pre>
 # Creates a log entry in the log "my-log".
 New-GcLogEntry -LogName "my-log" -TextPayload "This is a log."
 
-# Creates a log entry associated with Cloud SQL monitored resource.
+# Creates a log entry associated with a Cloud SQL monitored resource.
 $resource = New-GcLogMonitoredResource -ResourceType "cloudsql_database" `
                                        -Labels @{"project_id" = "my-project";
                                                  "database_id" = "id"}
 New-GcLogEntry -LogName "my-log" `
-               -TextPayload "Log" `
+               -TextPayload "This is a log." `
                -MonitoredResource $resource</pre>
     <p>
       You can retrieve log entries with the cmdlet <cmdlet-ref name="Get-GcLogEntry"></cmdlet-ref>.
@@ -334,17 +333,20 @@ Get-GcLogEntry -ResourceName "gce_instance"</pre>
     </p>
     <pre>
 # Creates a log sink for log entries in the default project.
+# The entries will be sent to the GCS bucket "my-bucket".
 New-GcLogSink -Sink "my-sink" -GcsBucketDestination "my-bucket"
 
 # Creates a log sink for log entries in log "my-log".
+# The entries will be sent to the BigQuery data set "my_dataset".
 New-GcLogSink -Sink "my-sink" `
               -LogName "my-log" `
               -BigQueryDataSetDestination "my_dataset"
 
 # Creates a log sink for log entries that match the filter.
+# The entries will be sent to the Pub/Sub topic "my-topic".
 New-GcLogSink -Sink "my-sink" `
               -Filter "textPayload = `"Testing`"" `
-              -PubSubTopicDestination "my_dataset"</pre>
+              -PubSubTopicDestination "my-topic"</pre>
     <h2>Log Metrics</h2>
     <p>
       You can create log metrics that count the number of log entries that match a certain criteria
