@@ -115,6 +115,28 @@ Write-GcsObject -Bucket $bucket -File "test-file.png" -ObjectName "test/test.png
 
 # Download a GCS object to disk.
 Read-GcsObject $bucket "object-name" -OutFile "output-file.png"</pre>
+    <h2>Cloud Storage PowerShell Provider</h2>
+    <p>
+      Cloud Tools for PowerShell includes a PowerShell provider for Google Cloud Storage.
+      This provider allows you to use commands like <code>cd</code>, <code>dir</code>, <code>copy</code> and <code>del</code> to navigate
+      and manipulate your data in Cloud Storage as if the data were on a local file system.
+
+      To directly use the provider, you can start Cloud Tools for PowerShell using the shortcut
+      from the start menu. This will launch a PowerShell console with the provider loaded:
+    </p>
+    <pre>
+# Navigate to Google Cloud Storage
+cd gs:\
+
+# Show the available buckets
+dir
+
+# Create a new bucket
+mkdir my-new-bucket</pre>
+    <p>
+      You can also make the provider available in any PowerShell session by importing
+      the Cloud Tools for PowerShell module via <code>Import-Module GoogleCloud</code>.
+    </p>
   </div>
 
 
