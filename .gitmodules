@@ -1,4 +1,4 @@
-[submodule "website/"]
-	path = website/
+[submodule "website"]
+	path = website
 	url = https://github.com/GoogleCloudPlatform/google-cloud-powershell.git
 	branch = gh-pages
