@@ -25,6 +25,11 @@ namespace Google.PowerShell.Common
         /// <summary>Placeholder for an unknown cmdlet name when reporting telemetry.</summary>
         private const string UnknownCmdletName = "unknown-cmdlet";
 
+        /// <summary>
+        /// The project that is used by the cmdlet. This value will be used in reporting usage.
+        /// </summary>
+        public virtual string Project { get; set; }
+
         public GCloudCmdlet()
         {
             if (CloudSdkSettings.GetOptIntoUsageReporting())
@@ -270,7 +275,7 @@ namespace Google.PowerShell.Common
 
             if (_cmdletInvocationSuccessful)
             {
-                _telemetryReporter.ReportSuccess(cmdletName, parameterSet);
+                _telemetryReporter.ReportSuccess(cmdletName, parameterSet, Project);
             }
             else
             {
@@ -278,7 +283,7 @@ namespace Google.PowerShell.Common
                 // cmdlet threw? If so, use that to determine a more appropriate error code.
                 // We report 1 instead of 0 so that the data can be see in Google Analytics.
                 // (null vs. 0 is ambiguous in the UI.)
-                _telemetryReporter.ReportFailure(cmdletName, parameterSet, 1);
+                _telemetryReporter.ReportFailure(cmdletName, parameterSet, Project, 1);
             }
         }
 

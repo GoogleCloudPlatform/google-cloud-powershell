@@ -53,7 +53,7 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(ParameterSetName = ParameterSetNames.OfRegion)]
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -204,7 +204,7 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(ParameterSetName = ParameterSetNames.RemoveInstanceByName)]
         [Parameter(ParameterSetName = ParameterSetNames.AddInstanceByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         /// <summary>
         /// <para type="description">

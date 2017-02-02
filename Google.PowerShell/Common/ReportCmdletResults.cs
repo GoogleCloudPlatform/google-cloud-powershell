@@ -16,16 +16,17 @@ namespace Google.PowerShell.Common
         /// Report a successful cmdlet invocation. "Expected" errors are considered a success.
         /// For example, Test-XXX should report success even if the existance test fails.
         /// </summary>
-        void ReportSuccess(string cmdletName, string parameterSet);
+        void ReportSuccess(string cmdletName, string parameterSet, string projectNumber);
 
         /// <summary>
         /// Report a cmdlet failing. Failure is defined as any abnormal termination, such as
         /// a runtime exception, user-cancelation, etc.
         /// </summary>
         /// <param name="cmdletName">Name of the cmdlet that failed.</param>
-        /// <param name="parameterSet">Name of the prameter set the cmdlet was running.</param>
+        /// <param name="parameterSet">Name of the parameter set the cmdlet was running.</param>
+        /// <param name="projectNumber">Name of project that the cmdlet was using (if applicable).</param>
         /// <param name="errorCode">Return the HTTP error code as applicable, otherwise use non-zero.</param>
-        void ReportFailure(string cmdletName, string parameterSet, int errorCode);
+        void ReportFailure(string cmdletName, string parameterSet, string projectNumber, int errorCode);
     }
 
     /// <summary>
@@ -43,10 +44,11 @@ namespace Google.PowerShell.Common
         {
             public string cmdletName;
             public string parameterSet;
+            public string projectNumber;
             // MIN_INT will be used to denote the "success"/null case (instead of using Nullable).
             public int errorCode;
 
-            public static EventRecord Create(string cmdletName, string parameterSet, int errorCode)
+            public static EventRecord Create(string cmdletName, string parameterSet, string projectNumber, int errorCode)
             {
                 return new EventRecord
                 {
@@ -70,14 +72,14 @@ namespace Google.PowerShell.Common
             Reset();
         }
 
-        public void ReportSuccess(string cmdletName, string parameterSet)
+        public void ReportSuccess(string cmdletName, string parameterSet, string projectNumber)
         {
-            Report(EventRecord.Create(cmdletName, parameterSet, Int32.MinValue));
+            Report(EventRecord.Create(cmdletName, parameterSet, projectNumber, Int32.MinValue));
         }
 
-        public void ReportFailure(string cmdletName, string parameterSet, int errorCode)
+        public void ReportFailure(string cmdletName, string parameterSet, string projectNumber, int errorCode)
         {
-            Report(EventRecord.Create(cmdletName, parameterSet, errorCode));
+            Report(EventRecord.Create(cmdletName, parameterSet, projectNumber, errorCode));
         }
 
         protected void Report(EventRecord record)
@@ -99,9 +101,13 @@ namespace Google.PowerShell.Common
         /// <summary>
         /// Returns whether or not an event with the given makeup has been recorded.
         /// </summary>
-        public bool ContainsEvent(string cmdletName, string parameterSet, int errorCode = Int32.MinValue)
+        public bool ContainsEvent(
+            string cmdletName,
+            string parameterSet,
+            string projectNumber,
+            int errorCode = Int32.MinValue)
         {
-            var expectedRecord = EventRecord.Create(cmdletName, parameterSet, errorCode);
+            var expectedRecord = EventRecord.Create(cmdletName, parameterSet, projectNumber, errorCode);
             for (int i = 0; i < _events.Length; i++)
             {
                 if (_events[i].Equals(expectedRecord))
@@ -174,17 +180,17 @@ namespace Google.PowerShell.Common
             }
         }
 
-        public void ReportSuccess(string cmdletName, string parameterSet)
+        public void ReportSuccess(string cmdletName, string parameterSet, string projectNumber)
         {
-            Report(cmdletName, parameterSet, null);
+            Report(cmdletName, parameterSet, projectNumber, null);
         }
 
-        public void ReportFailure(string cmdletName, string parameterSet, int errorCode)
+        public void ReportFailure(string cmdletName, string parameterSet, string projectNumber, int errorCode)
         {
-            Report(cmdletName, parameterSet, errorCode);
+            Report(cmdletName, parameterSet, projectNumber, errorCode);
         }
 
-        private void Report(string cmdletName, string parameterSet, int? errorCode)
+        private void Report(string cmdletName, string parameterSet, string projectNumber, int? errorCode)
         {
             // The event type will be CmdletInvocation or ProviderInvocation. The specific cmdlet and parameter set
             // used are encoded in the event's metadata.
@@ -192,6 +198,7 @@ namespace Google.PowerShell.Common
                 _category.ToString(),
                 "cmdletName", cmdletName,
                 "parameterSet", (parameterSet ?? "null"),
+                "projectNumber", (projectNumber ?? "null"),
                 "errorCode", (errorCode.HasValue ? errorCode.ToString() : "null"));
 
             s_reporter.Value.ReportEvent(
@@ -199,7 +206,7 @@ namespace Google.PowerShell.Common
                 eventType: "powershell",
                 eventName: eventData.Name,
                 userLoggedIn: true,
-                projectNumber: null,
+                projectNumber: projectNumber,
                 metadata: eventData.Metadata);
         }
     }

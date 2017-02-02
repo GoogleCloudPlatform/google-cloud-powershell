@@ -56,7 +56,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -252,7 +252,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -427,7 +427,7 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(ParameterSetName = ParameterSetNames.ByNameHttp)]
         [Parameter(ParameterSetName = ParameterSetNames.ByNameHttps)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         /// <summary>
         /// <para type="description">

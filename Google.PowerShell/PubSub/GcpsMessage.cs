@@ -68,7 +68,7 @@ namespace Google.PowerShell.PubSub
         /// </summary>
         [Parameter(Mandatory = false)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -322,7 +322,7 @@ namespace Google.PowerShell.PubSub
         /// </summary>
         [Parameter(Mandatory = false)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -434,7 +434,7 @@ namespace Google.PowerShell.PubSub
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         /// <summary>
         /// <para type="description">

@@ -71,7 +71,7 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(ParameterSetName = ParameterSetNames.OfInstanceGroupManager)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -361,7 +361,7 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -613,7 +613,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -713,7 +713,7 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -813,7 +813,7 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -912,7 +912,7 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -1047,7 +1047,7 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(ParameterSetName = ParameterSetNames.Tag)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Project))]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         private string _project;
 
