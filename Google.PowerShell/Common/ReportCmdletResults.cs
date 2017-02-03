@@ -198,7 +198,6 @@ namespace Google.PowerShell.Common
                 _category.ToString(),
                 "cmdletName", cmdletName,
                 "parameterSet", (parameterSet ?? "null"),
-                "projectNumber", (projectNumber ?? "null"),
                 "errorCode", (errorCode.HasValue ? errorCode.ToString() : "null"));
 
             s_reporter.Value.ReportEvent(

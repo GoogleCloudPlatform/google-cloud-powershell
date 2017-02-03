@@ -1,6 +1,8 @@
 ﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
+using Google.Apis.CloudResourceManager.v1;
+using Google.Apis.CloudResourceManager.v1.Data;
 using Google.Apis.Services;
 using Microsoft.PowerShell.Commands;
 using System;
@@ -27,6 +29,10 @@ namespace Google.PowerShell.Common
 
         /// <summary>
         /// The project that is used by the cmdlet. This value will be used in reporting usage.
+        /// The logic is in the Dispose function. We will map this project id to a project number.
+        /// If the derived class leaves it as null, we will fall back to the active project in
+        /// the Cloud SDK. The project number will also be converted to hash before we use it
+        /// in reporting usage.
         /// </summary>
         public virtual string Project { get; set; }
 
@@ -273,9 +279,27 @@ namespace Google.PowerShell.Common
                 parameterSet = "Default";
             }
 
+            string projectNumber = null;
+
+            // Try to convert the project ID into project number.
+            // Swallow the error if we fail to do so and proceed to reporting.
+            try
+            {
+                if (string.IsNullOrWhiteSpace(Project))
+                {
+                    Project = CloudSdkSettings.GetDefaultProject();
+                }
+
+                var resourceService = new CloudResourceManagerService(GetBaseClientServiceInitializer());
+                ProjectsResource.GetRequest getRequest = resourceService.Projects.Get(Project);
+                Project project = getRequest.Execute();
+                projectNumber = project.ProjectNumber.ToString();
+            }
+            catch { }
+
             if (_cmdletInvocationSuccessful)
             {
-                _telemetryReporter.ReportSuccess(cmdletName, parameterSet, Project);
+                _telemetryReporter.ReportSuccess(cmdletName, parameterSet, projectNumber);
             }
             else
             {
