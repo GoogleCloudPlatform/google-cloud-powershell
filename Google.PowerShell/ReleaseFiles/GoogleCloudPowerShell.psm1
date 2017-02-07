@@ -1,21 +1,27 @@
 ﻿$script:GCloudModule = $ExecutionContext.SessionState.Module
 $script:GCloudModulePath = $script:GCloudModule.ModuleBase
 
-$gCloudSDK = Get-Command gcloud -ErrorAction SilentlyContinue
-
-# Install Google Cloud SDK. To install it non-interactively, use -Force.
+# Check and install Google Cloud SDK if it is not present. To install it non-interactively,
+# set GCLOUD_SDK_INSTALLATION_NO_PROMPT to $true.
 function Install-GCloudSdk {
     [CmdletBinding(SupportsShouldProcess = $true)]
-    Param(
-        [switch]$force
-    )
+    Param()
+
+    $gCloudSDK = Get-Command gcloud -ErrorAction SilentlyContinue
+
+    if ($null -ne $gCloudSDK) {
+        return
+    }
+
+    Write-Host "Google Cloud SDK is not found in PATH. The SDK is required to run the module."
+    $noPrompt = $env:GCLOUD_SDK_INSTALLATION_NO_PROMPT -eq $true
 
     $query = "Do you want to install Google Cloud SDK? If you want to force the installation without prompt," +
              " set `$env:GCLOUD_SDK_INSTALLATION_NO_PROMPT to true."
     $caption = "Installing Google Cloud SDK"
 
     if ($PSCmdlet.ShouldProcess("Google Cloud SDK", "Install")) {
-        if ($Force) {
+        if ($noPrompt) {
             # We use this method of installation instead of the installer because the installer does all the installation
             # in the background so we can't determine when it's done.
             $cloudSdkUri = "https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.zip"
@@ -55,12 +61,6 @@ function Install-GCloudSdk {
             }
         }
     }
-}
-
-if ($null -eq $gCloudSDK) {
-    Write-Host "Google Cloud SDK is not found in PATH. The SDK is required to run the module."
-    $prompt = $env:GCLOUD_SDK_INSTALLATION_NO_PROMPT -eq $true
-    Install-GCloudSdk -force:$prompt
 }
 
 Import-Module "$script:GCloudModulePath\Google.PowerShell.dll"
