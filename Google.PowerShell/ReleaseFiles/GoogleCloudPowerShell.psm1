@@ -63,4 +63,5 @@ function Install-GCloudSdk {
     }
 }
 
+Install-GCloudSdk
 Import-Module "$script:GCloudModulePath\Google.PowerShell.dll"
