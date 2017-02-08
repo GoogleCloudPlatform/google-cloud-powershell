@@ -1,18 +1,45 @@
 ﻿<Configuration>
-  <SelectionSets>
-    <SelectionSet>
-      <Name>GoogleCloudStorageTypes</Name>
-      <Types>
-        <TypeName>Google.Apis.Storage.v1.Data.Bucket</TypeName>
-        <TypeName>Google.Apis.Storage.v1.Data.Object</TypeName>
-      </Types>
-    </SelectionSet>
-  </SelectionSets>
   <ViewDefinitions>
     <View>
-      <Name>Google Cloud Storage Table</Name>
+      <Name>Google Cloud Storage Bucket Table</Name>
       <ViewSelectedBy>
-        <SelectionSetName>GoogleCloudStorageTypes</SelectionSetName>
+        <TypeName>Google.Apis.Storage.v1.Data.Bucket</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>ParentPath</Label>
+        <ScriptBlock>
+          $_.PSParentPath.Replace("Google.PowerShell\GoogleCloudStorage::", "").Replace("\", "/")
+        </ScriptBlock>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Name</Label>
+          </TableColumnHeader>
+          <TableColumnHeader/>
+          <TableColumnHeader/>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <ScriptBlock>($_.PSChildName, $_.Name -ne $null)[0]</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>TimeCreated</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Updated</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <View>
+      <Name>Google Cloud Storage Object Table</Name>
+      <ViewSelectedBy>
+        <TypeName>Google.Apis.Storage.v1.Data.Object</TypeName>
       </ViewSelectedBy>
       <GroupBy>
         <Label>ParentPath</Label>
@@ -47,6 +74,60 @@
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>Updated</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <View>
+      <Name>Google Compute Engine Instance</Name>
+      <ViewSelectedBy>
+        <TypeName>Google.Apis.Compute.v1.Data.Instance</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader/>
+          <TableColumnHeader/>
+          <TableColumnHeader>
+            <Label>MachineType</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Zone</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>TimeCreated</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>Name</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>CpuPlatform</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                    if ($_.MachineType -match "https:.*/zones/[^/]*/machineTypes/([^/]*)") {
+                        $Matches[1]
+                    } else {
+                        $_.MachineType;
+                    }
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                    if ($_.Zone -match "https:.*/zones/([^/]*)") {
+                        $Matches[1]
+                    } else {
+                        $_.Zone;
+                    }
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>CreationTimestamp</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
