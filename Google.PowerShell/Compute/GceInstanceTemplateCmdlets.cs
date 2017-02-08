@@ -190,6 +190,7 @@ namespace Google.PowerShell.ComputeEngine
             ParameterSetName = ParameterSetNames.FromObject)]
         public InstanceTemplate Object { get; set; }
 
+
         /// <summary>
         /// <para type="description">
         /// The name of the new instance template.
@@ -269,6 +270,25 @@ namespace Google.PowerShell.ComputeEngine
         [PropertyByTypeTransformation(Property = nameof(Apis.Compute.v1.Data.Network.SelfLink),
             TypeToTransform = typeof(Network))]
         public override string Network { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The region in which the subnet of the instance will reside. Defaults to the region in the Cloud SDK config.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Region)]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Region))]
+        public override string Region { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the subnetwork to use.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [ValidateNotNullOrEmpty]
+        public override string Subnetwork { get; set; }
 
         /// <summary>
         /// <para type="description">
