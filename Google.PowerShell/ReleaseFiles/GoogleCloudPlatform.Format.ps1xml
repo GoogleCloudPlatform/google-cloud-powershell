@@ -110,10 +110,8 @@
               </TableColumnItem>
               <TableColumnItem>
                 <ScriptBlock>
-                    $reg = [Regex]"https:.*/zones/[^/]*/machineTypes/([^/]*)";
-                    $match = $reg.Match($_.MachineType);
-                    if ($match.Success) {
-                        $match.Groups[1].Value;
+                    if ($_.MachineType -match "https:.*/zones/[^/]*/machineTypes/([^/]*)") {
+                        $Matches[1]
                     } else {
                         $_.MachineType;
                     }
@@ -121,17 +119,15 @@
               </TableColumnItem>
               <TableColumnItem>
                 <ScriptBlock>
-                    $reg = [Regex]"https:.*/zones/([^/]*)";
-                    $match = $reg.Match($_.Zone);
-                    if ($match.Success) {
-                        $match.Groups[1].Value;
+                    if ($_.Zone -match "https:.*/zones/([^/]*)") {
+                        $Matches[1]
                     } else {
                         $_.Zone;
                     }
                 </ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>$_.CreationTimestamp</ScriptBlock>
+                <PropertyName>CreationTimestamp</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
