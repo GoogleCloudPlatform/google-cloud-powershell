@@ -152,6 +152,15 @@ namespace Google.PowerShell.ComputeEngine
     /// <example>
     ///   <code>
     ///   PS C:\> $image = Get-GceImage -Family "window-2012-r2"
+    ///   PS C:\> Add-GceInstanceTemplate "my-template" -BootDiskImage $image -Subnetwork "my-subnet"
+    ///   </code>
+    ///   <para>
+    ///   Creates a new windows 2012 instance template with default settings and uses subnetwork "my-subnet".
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> $image = Get-GceImage -Family "window-2012-r2"
     ///   PS C:\> $serviceAccount = New-GceServiceAccountConfig default -BigQuery
     ///   PS C:\> Add-GceInstanceTemplate $name "n1-standard-4" -BootDiskImage $image `
     ///             -ServiceAccount $serviceAccount

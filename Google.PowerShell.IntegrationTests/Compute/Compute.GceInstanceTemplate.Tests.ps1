@@ -78,6 +78,32 @@ Describe "Add-GceInstanceTemplate" {
         ($prop.ServiceAccounts.Scopes -match "bigquery").Count | Should Be 1
     }
 
+    It "should work with subnet" {
+        $r = Get-Random
+        $newNetwork = "test-network-$r"
+        $templateName = "test-add-gceinstancetemplate-$r"
+
+        try {
+            # Create a network and extract out subnet that corresponds to region "us-central1".
+            $newNetwork = "test-network-$r"
+            gcloud compute networks create $newNetwork 2>$null
+            $region = "us-central1"
+            $zone = "us-central1-a"
+            $network = Get-GceNetwork $newNetwork
+            $subnet = $network.Subnetworks | Where-Object {$_.Contains($region)}
+            $subnet -match "subnetworks/([^/]*)" | Should Be $true
+            $subnetName = $Matches[1]
+
+            Add-GceInstanceTemplate -Name $templateName -BootDiskImage $image -Region $region -Network $network -Subnet $subnetName
+            $template = Get-GceInstanceTemplate $templateName
+            $template.Properties.NetworkInterfaces.Network | Should Match $newNetwork
+            $template.Properties.NetworkInterfaces.Subnetwork | Should Match $subnetName
+        }
+        finally {
+            gcloud compute networks delete $newNetwork -q 2>$null
+        }
+    }
+
     It "should work with object" {
         $oldTemplate = Get-GceInstanceTemplate $name
         $oldTemplate.Name = $name2

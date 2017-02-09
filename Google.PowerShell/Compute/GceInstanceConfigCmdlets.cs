@@ -23,6 +23,15 @@ namespace Google.PowerShell.ComputeEngine
     ///     boot disk from $image.
     ///   </para>
     /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> $config = New-GceInstanceConfig -Name "new-instance" -BootDiskImage $image -Subnetwork "my-subnetwork"
+    ///   </code>
+    ///   <para>
+    ///     Creates a new instance description and saves it to $config. The new instance will create a new
+    ///     boot disk from $image and uses subnetwork "my-subnetwork".
+    ///   </para>
+    /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
     /// [Instance resource definition]
     /// </para>

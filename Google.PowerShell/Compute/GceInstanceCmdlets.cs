@@ -339,6 +339,19 @@ namespace Google.PowerShell.ComputeEngine
     ///     http and https server.
     ///   </para>
     /// </example>
+    /// <example>
+    ///   <code>
+    ///     PS C:\> Add-GceInstance -Name "new-instance" -BootDisk $disk `
+    ///         -MachineType "n1-standard-4" `
+    ///         -Subnetwork "my-subnetwork" `
+    ///         -Address "10.128.0.1"
+    ///   </code>
+    ///   <para>
+    ///     Creates a new instance in the default project and zone. The boot disk is the prexisting disk
+    ///     stored in $disk, the machine type has 4 cores, it uses the subnetwork "my-subnetwork" and
+    ///     the ip address "10.123.0.1" (this address must be within the subnetwork).
+    ///   </para>
+    /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
     /// [Instance resource definition]
     /// </para>

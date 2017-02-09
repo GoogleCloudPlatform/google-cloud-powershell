@@ -139,6 +139,27 @@ Describe "New-GceInstanceConfig" {
         $instanceConfig.Disks.InitializeParams.SourceImage | Should Be $image.SelfLink
     }
 
+    It "should accept subnetwork" {
+        $subnetwork = "subnet-$r"
+        $region = $zone.Substring(0, $zone.Length - 2)
+        $instanceConfig = New-GceInstanceConfig -Name $instance `
+                                                -MachineType "f1-micro" `
+                                                -DiskImage $image `
+                                                -Subnetwork $subnetwork
+        $instanceConfig.NetworkInterfaces.Subnetwork | Should BeExactly "regions/$region/subnetworks/$subnetwork"
+    }
+
+    It "should accept ip address" {
+        $subnetwork = "subnet-$r"
+        $region = $zone.Substring(0, $zone.Length - 2)
+        $address = "10.0.0.0"
+        $instanceConfig = New-GceInstanceConfig -Name $instance `
+                                                -MachineType "f1-micro" `
+                                                -DiskImage $image `
+                                                -Address "10.0.0.0"
+        $instanceConfig.NetworkInterfaces.NetworkIP | Should BeExactly $address
+    }
+
     $persistantDisk = New-GceDisk "test-new-instanceconfig-$r" $image
 
     It "should attach disk" {
@@ -162,42 +183,115 @@ Describe "New-GceInstanceConfig" {
 }
 
 Describe "Add-GceInstance" {
-
-    $r = Get-Random
-    $instance = "gcps-instance-create-$r"
-    $instance2 = "gcps-instance-create2-$r"
-    $instance3 = "gcps-instance-create3-$r"
-    $instance4 = "gcps-instance-create4-$r"
-    $instanceConfig = New-GceInstanceConfig -Name $instance -DiskImage $image -MachineType "f1-micro"
-    $instanceConfig2 = New-GceInstanceConfig -Name $instance2 -DiskImage $image -MachineType "f1-micro"
-    $instanceConfig3 = New-GceInstanceConfig -Name $instance3 -DiskImage $image -MachineType "f1-micro"
-
     It "should work" {
-        Add-GceInstance -Project $project -Zone $zone -Instance $instanceConfig
-        $runningInstance = Get-GceInstance -Project $project -Zone $zone -Name $instance
-        $runningInstance.Name | Should Be $instance
+        $r = Get-Random
+        $instance = "gcps-instance-create-$r"
+        $instanceConfig = New-GceInstanceConfig -Name $instance -DiskImage $image -MachineType "f1-micro"
+
+        try {
+            Add-GceInstance -Project $project -Zone $zone -Instance $instanceConfig
+            $runningInstance = Get-GceInstance -Project $project -Zone $zone -Name $instance
+            $runningInstance.Name | Should Be $instance
+        }
+        finally {
+            Remove-GceInstance $instance -Project $project -Zone $zone -ErrorAction SilentlyContinue
+        }
     }
 
     It "should use pipeline" {
-        $instanceConfig2, $instanceConfig3 | Add-GceInstance -Project $project -Zone $zone
-        $runningInstances = $instance2, $instance3 | Get-GceInstance -Project $project -Zone $zone
-        $runningInstances.Count | Should Be 2
+        $r = Get-Random
+        $instance = "gcps-instance-create-$r"
+        $instance2 = "gcps-instance-create2-$r"
+        $instanceConfig = New-GceInstanceConfig -Name $instance -DiskImage $image -MachineType "f1-micro"
+        $instanceConfig2 = New-GceInstanceConfig -Name $instance2 -DiskImage $image -MachineType "f1-micro"
+
+        try {
+            $instanceConfig, $instanceConfig2 | Add-GceInstance -Project $project -Zone $zone
+            $runningInstances = $instance, $instance2 | Get-GceInstance -Project $project -Zone $zone
+            $runningInstances.Count | Should Be 2
+        }
+        finally {
+            Remove-GceInstance $instance -Project $project -Zone $zone -ErrorAction SilentlyContinue
+            Remove-GceInstance $instance2 -Project $project -Zone $zone -ErrorAction SilentlyContinue
+        }
     }
 
     It "should build with parameters and defaults" {
-        Add-GceInstance -Name $instance4 -DiskImage $image
-        $runningInstance = Get-GceInstance -Project $project -Zone $zone -Name $instance4
-        $runningInstance.Name | Should Be $instance4
-        $runningInstance.SelfLink | Should Match $project
-        $runningInstance.Zone | Should Match $zone
-        $runningInstance.MachineType | Should Match "n1-standard-1"
+        $r = Get-Random
+        $instance = "gcps-instance-create-$r"
+
+        try {
+            Add-GceInstance -Name $instance -DiskImage $image
+            $runningInstance = Get-GceInstance -Project $project -Zone $zone -Name $instance
+            $runningInstance.Name | Should Be $instance
+            $runningInstance.SelfLink | Should Match $project
+            $runningInstance.Zone | Should Match $zone
+            $runningInstance.MachineType | Should Match "n1-standard-1"
+        }
+        finally {
+            Remove-GceInstance $instance -Project $project -Zone $zone -ErrorAction SilentlyContinue
+        }
+    }
+
+    It "should build with subnet" {
+        $r = Get-Random
+        $newNetwork = "test-network-$r"
+        $instance = "gcps-instance-create-$r"
+
+        try {
+            # Create a network and extract out subnet that corresponds to region "us-central1".
+            $newNetwork = "test-network-$r"
+            gcloud compute networks create $newNetwork 2>$null
+            $region = "us-central1"
+            $zone = "us-central1-a"
+            $network = Get-GceNetwork $newNetwork
+            $subnet = $network.Subnetworks | Where-Object {$_.Contains($region)}
+            $subnet -match "subnetworks/([^/]*)" | Should Be $true
+            $subnetName = $Matches[1]
+
+            Add-GceInstance -Name $instance -DiskImage $image -Region $region -Network $network -Subnet $subnetName
+            $runningInstance = Get-GceInstance "$instance"
+            $runningInstance.SelfLink | Should Match $project
+            $runningInstance.NetworkInterfaces.Network | Should Match $newNetwork
+            $runningInstance.NetworkInterfaces.Subnetwork | Should Match $subnetName
+        }
+        finally {
+            Get-GceInstance $instance | Remove-GceInstance -ErrorAction SilentlyContinue
+            gcloud compute networks delete $newNetwork -q 2>$null
+        }
+    }
+
+    It "should build with IP address" {
+        $r = Get-Random
+        $newNetwork = "test-network-$r"
+        $instance = "gcps-instance-create-$r"
+
+        try {
+            $address = "10.128.0.3"
+            gcloud compute networks create $newNetwork 2>$null
+
+            Add-GceInstance -Name $instance -DiskImage $image -Address $address -Network $newNetwork
+            $runningInstance = Get-GceInstance $instance
+            $runningInstance.SelfLink | Should Match $project
+            $runningInstance.NetworkInterfaces.Network | Should Match $newNetwork
+            $runningInstance.NetworkInterfaces.NetworkIP | Should BeExactly $address
+
+            # Should throw if the ip is already used.
+            { Add-GceInstance -Name "$instance-2" -DiskImage $image -Address $address -Network $newNetwork } |
+                Should Throw "is already being used"
+        }
+        finally {
+            Get-GceInstance $instance | Remove-GceInstance -ErrorAction SilentlyContinue
+            gcloud compute networks delete $newNetwork -q 2>$null            
+        }
     }
 
     It "should throw on wrong project" {
+        $r = Get-Random
+        $instance = "gcps-instance-create-$r"
+        $instanceConfig = New-GceInstanceConfig -Name $instance -DiskImage $image -MachineType "f1-micro"
         { Add-GceInstance -Project "asdf" -Zone $zone -Instance $instanceConfig } | Should Throw 403
     }
-
-    $instance, $instance2, $instance3 | Remove-GceInstance -Project $project -Zone $zone
 }
 
 Describe "Remove-GceInstance" {
