@@ -4,7 +4,6 @@
 using Google.Apis.Bigquery.v2;
 using Google.Apis.Bigquery.v2.Data;
 using System.Management.Automation;
-using System;
 
 namespace Google.PowerShell.BigQuery
 {
