@@ -76,6 +76,7 @@
     <None Include="Logging\Logging.GcLog.Tests.ps1" />
     <None Include="Logging\Logging.GcLogMetric.Tests.ps1" />
     <None Include="Logging\Logging.GcLogSink.Tests.ps1" />
+    <None Include="packages.config" />
     <None Include="README.md" />
     <None Include="Provider\Storage.Provider.Tests.ps1" />
     <None Include="PubSub\PubSub.Message.Tests.ps1" />
