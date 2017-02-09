@@ -7,7 +7,7 @@ using Google.PowerShell.Common;
 namespace Google.PowerShell.BigQuery
 {
     /// <summary>
-    /// Base class for Google Cloud PubSub cmdlets.
+    /// Base class for Google Cloud BigQuery cmdlets.
     /// </summary>
     public class GcbqCmdlet : GCloudCmdlet
     {

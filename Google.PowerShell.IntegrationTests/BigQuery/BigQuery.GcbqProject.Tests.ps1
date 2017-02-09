@@ -1,5 +1,5 @@
 ﻿. $PSScriptRoot\..\BigQuery\GcbqCmdlets.ps1
-$project, $configName = Set-GCloudConfig
+$project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Describe "Get-GcbqProject" {
 
@@ -12,11 +12,8 @@ Describe "Get-GcbqProject" {
 		$response.Projects.Count | Should Be 0
     }
 
-	It "should return multiple batches when maxResults < projects." {
-		$batches = New-Object System.Collections.ArrayList
-		Get-GcbqProject -MaxResults 2 | ForEach {
-			$batches.Add($_)
-		}
+	It "should return the list of projects that the user has permissions to view" {
+		$batches = Get-GcbqProject
 		$batches.Count | Should BeGreaterThan 1
     }
 }
