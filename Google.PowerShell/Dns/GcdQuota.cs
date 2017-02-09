@@ -36,7 +36,7 @@ namespace Google.PowerShell.Dns
         /// </summary>
         [Parameter(Position = 0, Mandatory = false)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         protected override void ProcessRecord()
         {

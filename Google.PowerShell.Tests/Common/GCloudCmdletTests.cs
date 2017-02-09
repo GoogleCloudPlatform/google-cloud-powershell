@@ -19,6 +19,13 @@ namespace Google.PowerShell.Tests.Common
     [Cmdlet("Test", "GCloudCmdlets")]
     internal class FakeGCloudCmdlet : GCloudCmdlet
     {
+        internal static string project = "Test-Project";
+
+        /// <summary>
+        /// This cmdlet will always report project as the static string "Test-Project".
+        /// </summary>
+        public override string Project => project;
+
         public FakeGCloudCmdlet()
         {
             ShouldThrowException = false;
@@ -71,7 +78,7 @@ namespace Google.PowerShell.Tests.Common
                 fakeCmdlet.Dispose();
             }
 
-            Assert.IsTrue(reporter.ContainsEvent("Test-GCloudCmdlets", "Default"));
+            Assert.IsTrue(reporter.ContainsEvent("Test-GCloudCmdlets", "Default", FakeGCloudCmdlet.project));
         }
 
         [Test]
@@ -84,7 +91,7 @@ namespace Google.PowerShell.Tests.Common
             Assert.Throws<InvalidOperationException>(() => fakeCmdlet.SimulateInvocation());
             fakeCmdlet.Dispose();
 
-            Assert.IsTrue(reporter.ContainsEvent("Test-GCloudCmdlets", "Default", 1));
+            Assert.IsTrue(reporter.ContainsEvent("Test-GCloudCmdlets", "Default", FakeGCloudCmdlet.project, 1));
         }
     }
 }

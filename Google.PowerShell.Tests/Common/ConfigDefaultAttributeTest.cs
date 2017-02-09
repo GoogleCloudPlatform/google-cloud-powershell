@@ -15,7 +15,7 @@ namespace Google.PowerShell.Tests.Common
         {
             [ConfigPropertyName("project")]
             [Parameter]
-            public string Project { get; set; }
+            public override string Project { get; set; }
 
             public void TestBeginProcessing()
             {
@@ -27,7 +27,7 @@ namespace Google.PowerShell.Tests.Common
         {
             [ConfigPropertyName("not_a_gcloud_config_parameter")]
             [Parameter]
-            public string Project { get; set; }
+            public override string Project { get; set; }
 
             public void TestBeginProcessing()
             {

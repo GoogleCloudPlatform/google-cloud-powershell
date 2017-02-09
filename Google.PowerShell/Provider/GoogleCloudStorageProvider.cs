@@ -469,7 +469,10 @@ namespace Google.PowerShell.CloudStorage
                 default:
                     throw new InvalidOperationException($"Unknown Path Type {gcsPath.Type}");
             }
-            TelemetryReporter.ReportSuccess(nameof(GoogleCloudStorageProvider), nameof(GetItem));
+            TelemetryReporter.ReportSuccess(
+                nameof(GoogleCloudStorageProvider),
+                nameof(GetItem),
+                CloudSdkSettings.GetDefaultProject());
         }
 
         /// <summary>
@@ -495,7 +498,10 @@ namespace Google.PowerShell.CloudStorage
                     WriteItemObject(childName, childGcsPath.ToString().TrimEnd('/'), isContainer);
                 }
             }
-            TelemetryReporter.ReportSuccess(nameof(GoogleCloudStorageProvider), nameof(GetChildNames));
+            TelemetryReporter.ReportSuccess(
+                nameof(GoogleCloudStorageProvider),
+                nameof(GetChildNames),
+                CloudSdkSettings.GetDefaultProject());
         }
 
         /// <summary>
@@ -565,7 +571,10 @@ namespace Google.PowerShell.CloudStorage
                 default:
                     throw new InvalidOperationException($"Unknown Path Type {gcsPath.Type}");
             }
-            TelemetryReporter.ReportSuccess(nameof(GoogleCloudStorageProvider), nameof(GetChildItems));
+            TelemetryReporter.ReportSuccess(
+                nameof(GoogleCloudStorageProvider),
+                nameof(GetChildItems),
+                CloudSdkSettings.GetDefaultProject());
         }
 
         /// <summary>
@@ -605,7 +614,10 @@ namespace Google.PowerShell.CloudStorage
                     throw new InvalidOperationException($"Unknown Path Type {gcsPath.Type}");
             }
             BucketModels.Clear();
-            TelemetryReporter.ReportSuccess(nameof(GoogleCloudStorageProvider), nameof(NewItem));
+            TelemetryReporter.ReportSuccess(
+                nameof(GoogleCloudStorageProvider),
+                nameof(NewItem),
+                CloudSdkSettings.GetDefaultProject());
         }
 
         protected override object NewItemDynamicParameters(string path, string itemTypeName, object newItemValue)
@@ -674,7 +686,10 @@ namespace Google.PowerShell.CloudStorage
                 WriteItemObject(response, copyPath, gcsCopyPath.Type != GcsPath.GcsPathType.Object);
             }
             BucketModels.Clear();
-            TelemetryReporter.ReportSuccess(nameof(GoogleCloudStorageProvider), nameof(CopyItem));
+            TelemetryReporter.ReportSuccess(
+                nameof(GoogleCloudStorageProvider),
+                nameof(CopyItem),
+                CloudSdkSettings.GetDefaultProject());
         }
 
         protected override object CopyItemDynamicParameters(string path, string destination, bool recurse)
@@ -701,7 +716,10 @@ namespace Google.PowerShell.CloudStorage
             var stream = Service.HttpClient.GetStreamAsync(gcsObject.MediaLink).Result;
             IContentReader contentReader = new GcsStringReader(stream);
 
-            TelemetryReporter.ReportSuccess(nameof(GoogleCloudStorageProvider), nameof(GetContentReader));
+            TelemetryReporter.ReportSuccess(
+                nameof(GoogleCloudStorageProvider),
+                nameof(GetContentReader),
+                CloudSdkSettings.GetDefaultProject());
             return contentReader;
         }
 
@@ -736,7 +754,10 @@ namespace Google.PowerShell.CloudStorage
             IContentWriter contentWriter = new GcsContentWriter(inputStream);
             // Force the bucket models to refresh with the potentially new object.
             BucketModels.Clear();
-            TelemetryReporter.ReportSuccess(nameof(GoogleCloudStorageProvider), nameof(GetContentWriter));
+            TelemetryReporter.ReportSuccess(
+                nameof(GoogleCloudStorageProvider),
+                nameof(GetContentWriter),
+                CloudSdkSettings.GetDefaultProject());
             return contentWriter;
         }
 
@@ -770,7 +791,10 @@ namespace Google.PowerShell.CloudStorage
             {
                 throw response.Exception;
             }
-            TelemetryReporter.ReportSuccess(nameof(GoogleCloudStorageProvider), nameof(ClearContent));
+            TelemetryReporter.ReportSuccess(
+                nameof(GoogleCloudStorageProvider),
+                nameof(ClearContent),
+                CloudSdkSettings.GetDefaultProject());
         }
 
         public object ClearContentDynamicParameters(string path)
@@ -822,7 +846,10 @@ namespace Google.PowerShell.CloudStorage
                 default:
                     throw new InvalidOperationException($"Unknown Path Type {gcsPath.Type}");
             }
-            TelemetryReporter.ReportSuccess(nameof(GoogleCloudStorageProvider), nameof(RemoveItem));
+            TelemetryReporter.ReportSuccess(
+                nameof(GoogleCloudStorageProvider),
+                nameof(RemoveItem),
+                CloudSdkSettings.GetDefaultProject());
         }
 
         protected override object RemoveItemDynamicParameters(string path, bool recurse)

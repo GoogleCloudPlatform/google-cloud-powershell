@@ -389,7 +389,7 @@ namespace Google.PowerShell.Logging
         /// </summary>
         [Parameter(Mandatory = false)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -566,7 +566,7 @@ namespace Google.PowerShell.Logging
         /// </summary>
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -724,7 +724,7 @@ namespace Google.PowerShell.Logging
         /// </summary>
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -784,7 +784,7 @@ namespace Google.PowerShell.Logging
         /// </summary>
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         /// <summary>
         /// <para type="description">

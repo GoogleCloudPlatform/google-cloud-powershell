@@ -63,7 +63,7 @@ namespace Google.PowerShell.CloudStorage
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.BucketsByProject)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -134,7 +134,7 @@ namespace Google.PowerShell.CloudStorage
         /// </summary>
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         /// <summary>
         /// <para type="description">

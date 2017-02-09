@@ -37,7 +37,7 @@ namespace Google.PowerShell.Sql
         /// </summary>
         [Parameter]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; set; }
+        public override string Project { get; set; }
 
         protected override void ProcessRecord()
         {
