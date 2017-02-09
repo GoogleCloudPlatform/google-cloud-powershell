@@ -42,7 +42,7 @@ powershell
 Import-Module "<ProjectDirectory>\Google.PowerShell.DotnetCore\bin\Linux\netstandard1.6\win10-x64\publish\Google.PowerShell.dll"
 ```
 
-## On Ubuntu 16.04 (x64)
+## On Ubuntu 16.04 (x64) nad 14.04 (x64)
 First, you will have to install [.NET Core SDK](https://www.microsoft.com/net/core#ubuntu).
 
 You will also have to install OpenSSL:
@@ -54,9 +54,11 @@ Then run the following commands in the terminal:
 cd .\Google.PowerShell.DotnetCore
 dotnet restore
 dotnet publish --runtime ubuntu.16.04-x64 --configuration Linux
+OR
+dotnet publish --runtime ubuntu.14.04-x64 --configuration Linux
 ```
 
-The published folder will be returned on the terminal. Typically, this would be ```bin\Linux\netstandard1.6\ubuntu.16.04-x64\publish```.
+The published folder will be returned on the terminal. Typically, this would be ```bin\Linux\netstandard1.6\ubuntu.16.04-x64\publish``` or ```bin\Linux\netstandard1.6\ubuntu.14.04-x64\publish```.
 
 To run the module, you will first need to install [PowerShell Core](https://github.com/PowerShell/PowerShell/blob/master/docs/installation/linux.md#ubuntu-1604). After installing, run:
 ```
