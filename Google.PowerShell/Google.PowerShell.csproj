@@ -138,6 +138,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CloudResourceManager\CloudResourceManagerCmdlet.cs" />
     <Compile Include="Common\ActiveUserConfig.cs" />
     <Compile Include="Common\JsonExtensions.cs" />
     <Compile Include="Common\TokenResponse.cs" />
