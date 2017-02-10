@@ -28,7 +28,7 @@ namespace Google.PowerShell.BigQuery
     {
         protected override void ProcessRecord()
         {
-            // Create the project list request
+            // Create the project list request.
             ProjectsResource.ListRequest request = Service.Projects.List();
 
             // Send request and parse response, iterating if needed.
