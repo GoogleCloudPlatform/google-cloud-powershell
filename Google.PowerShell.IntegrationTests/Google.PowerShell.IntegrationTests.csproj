@@ -46,6 +46,8 @@
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="BigQuery\BigQuery.GcbqProject.Tests.ps1" />
+    <None Include="BigQuery\GcbqCmdlets.ps1" />
     <None Include="Compute\Compute.GceAddress.Tests.ps1" />
     <None Include="Compute\Compute.GceAttachedDiskConfig.Tests.ps1" />
     <None Include="Compute\Compute.GceBackendService.Tests.ps1" />
@@ -71,6 +73,7 @@
     <None Include="Dns\GcdCmdlets.ps1" />
     <None Include="Compute\Compute.GceUrlMap.Tests.ps1" />
     <None Include="GcloudCmdlets.ps1" />
+    <None Include="packages.config" />
     <None Include="README.md" />
     <None Include="SQL\SQL.GcSqlBackupRuns.Tests.ps1" />
     <None Include="SQL\SQL.GcSqlConfiguration.Tests.ps1" />
