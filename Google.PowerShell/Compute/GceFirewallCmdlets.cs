@@ -206,7 +206,7 @@ namespace Google.PowerShell.ComputeEngine
                 Name = Name,
                 Allowed = _allAllowed,
                 Description = Description,
-                Network = Network,
+                Network = ConstructNetworkName(Network, Project),
                 SourceRanges = SourceRange,
                 SourceTags = SourceTag,
                 TargetTags = TargetTag
