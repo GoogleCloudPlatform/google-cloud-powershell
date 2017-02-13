@@ -152,6 +152,15 @@ namespace Google.PowerShell.ComputeEngine
     /// <example>
     ///   <code>
     ///   PS C:\> $image = Get-GceImage -Family "window-2012-r2"
+    ///   PS C:\> Add-GceInstanceTemplate "my-template" -BootDiskImage $image -Subnetwork "my-subnet"
+    ///   </code>
+    ///   <para>
+    ///   Creates a new windows 2012 instance template with default settings and uses subnetwork "my-subnet".
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> $image = Get-GceImage -Family "window-2012-r2"
     ///   PS C:\> $serviceAccount = New-GceServiceAccountConfig default -BigQuery
     ///   PS C:\> Add-GceInstanceTemplate $name "n1-standard-4" -BootDiskImage $image `
     ///             -ServiceAccount $serviceAccount
@@ -189,6 +198,7 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
             ParameterSetName = ParameterSetNames.FromObject)]
         public InstanceTemplate Object { get; set; }
+
 
         /// <summary>
         /// <para type="description">
@@ -269,6 +279,25 @@ namespace Google.PowerShell.ComputeEngine
         [PropertyByTypeTransformation(Property = nameof(Apis.Compute.v1.Data.Network.SelfLink),
             TypeToTransform = typeof(Network))]
         public override string Network { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The region in which the subnet of the instance will reside. Defaults to the region in the Cloud SDK config.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Region)]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Region))]
+        public override string Region { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the subnetwork to use.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [ValidateNotNullOrEmpty]
+        public override string Subnetwork { get; set; }
 
         /// <summary>
         /// <para type="description">

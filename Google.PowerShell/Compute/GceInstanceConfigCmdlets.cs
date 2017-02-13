@@ -23,6 +23,15 @@ namespace Google.PowerShell.ComputeEngine
     ///     boot disk from $image.
     ///   </para>
     /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> $config = New-GceInstanceConfig -Name "new-instance" -BootDiskImage $image -Subnetwork "my-subnetwork"
+    ///   </code>
+    ///   <para>
+    ///     Creates a new instance description and saves it to $config. The new instance will create a new
+    ///     boot disk from $image and uses subnetwork "my-subnetwork".
+    ///   </para>
+    /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
     /// [Instance resource definition]
     /// </para>
@@ -126,6 +135,25 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
+        /// The region in which the subnet of the instance will reside. Defaults to the region in the Cloud SDK config.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Region)]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Region))]
+        public override string Region { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the subnetwork to use.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [ValidateNotNullOrEmpty]
+        public override string Subnetwork { get; set; }
+
+        /// <summary>
+        /// <para type="description">
         /// If set, the instances will not have an external ip address.
         /// </para>
         /// </summary>
@@ -178,9 +206,10 @@ namespace Google.PowerShell.ComputeEngine
         /// Get-GceAddress.
         /// </para>
         /// </summary>
+        [Parameter]
         [PropertyByTypeTransformation(Property = nameof(Apis.Compute.v1.Data.Address.AddressValue),
             TypeToTransform = typeof(Address))]
-        protected override string Address { get; set; }
+        public override string Address { get; set; }
 
         protected override void ProcessRecord()
         {

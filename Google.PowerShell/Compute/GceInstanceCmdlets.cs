@@ -339,6 +339,19 @@ namespace Google.PowerShell.ComputeEngine
     ///     http and https server.
     ///   </para>
     /// </example>
+    /// <example>
+    ///   <code>
+    ///     PS C:\> Add-GceInstance -Name "new-instance" -BootDisk $disk `
+    ///         -MachineType "n1-standard-4" `
+    ///         -Subnetwork "my-subnetwork" `
+    ///         -Address "10.128.0.1"
+    ///   </code>
+    ///   <para>
+    ///     Creates a new instance in the default project and zone. The boot disk is the prexisting disk
+    ///     stored in $disk, the machine type has 4 cores, it uses the subnetwork "my-subnetwork" and
+    ///     the ip address "10.123.0.1" (this address must be within the subnetwork).
+    ///   </para>
+    /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
     /// [Instance resource definition]
     /// </para>
@@ -437,7 +450,6 @@ namespace Google.PowerShell.ComputeEngine
         [Alias("DiskImage")]
         public override Image BootDiskImage { get; set; }
 
-
         /// <summary>
         /// <para type="description">
         /// An existing disk to attach. It will attach in read-only mode.
@@ -473,6 +485,25 @@ namespace Google.PowerShell.ComputeEngine
         [PropertyByTypeTransformation(Property = nameof(Apis.Compute.v1.Data.Network.SelfLink),
             TypeToTransform = typeof(Network))]
         public override string Network { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The region in which the subnet of the instance will reside. Defaults to the region in the Cloud SDK config.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Region)]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Region))]
+        public override string Region { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the subnetwork to use.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [ValidateNotNullOrEmpty]
+        public override string Subnetwork { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -528,9 +559,10 @@ namespace Google.PowerShell.ComputeEngine
         /// Get-GceAddress.
         /// </para>
         /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
         [PropertyByTypeTransformation(Property = nameof(Apis.Compute.v1.Data.Address.AddressValue),
             TypeToTransform = typeof(Address))]
-        protected override string Address { get; set; }
+        public override string Address { get; set; }
 
         protected override void ProcessRecord()
         {

@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0.
 
 using Google.Apis.Compute.v1.Data;
+using Google.PowerShell.Common;
 using System.Collections;
 using System.Collections.Generic;
 using System.Management.Automation;
@@ -67,6 +68,16 @@ namespace Google.PowerShell.ComputeEngine
         public abstract string Network { get; set; }
 
         /// <summary>
+        /// The region of the subnetwork.
+        /// </summary>
+        public abstract string Region { get; set; }
+
+        /// <summary>
+        /// (Optional) The name of the subnetwork to use.
+        /// </summary>
+        public abstract string Subnetwork { get; set; }
+
+        /// <summary>
         /// If set, the instance will not have an external ip address.
         /// </summary>
         public abstract SwitchParameter NoExternalIp { get; set; }
@@ -125,11 +136,22 @@ namespace Google.PowerShell.ComputeEngine
                 networkUri = $"global/networks/{networkUri}";
             }
 
-            return new NetworkInterface
+            NetworkInterface result = new NetworkInterface
             {
                 Network = networkUri,
                 AccessConfigs = accessConfigs
             };
+
+            if (Subnetwork != null)
+            {
+                if (!Subnetwork.Contains($"regions/{Region}/subnetworks/"))
+                {
+                    Subnetwork = $"regions/{Region}/subnetworks/{Subnetwork}";
+                }
+                result.Subnetwork = Subnetwork;
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -210,7 +232,7 @@ namespace Google.PowerShell.ComputeEngine
 
     /// <summary>
     /// Base cmdlet class indicating what parameters are needed to describe an instance. Used by
-    /// NewGceInstanceConfigCmdlet and AdGceInstanceCmdlet to provide a unifed way to build an instance
+    /// NewGceInstanceConfigCmdlet and AdGceInstanceCmdlet to provide a unified way to build an instance
     /// description.
     /// </summary>
     public abstract class GceInstanceDescriptionCmdlet : GceTemplateDescriptionCmdlet
@@ -225,7 +247,7 @@ namespace Google.PowerShell.ComputeEngine
         /// The static ip address this instance will have.
         /// </para>
         /// </summary>
-        protected abstract string Address { get; set; }
+        public abstract string Address { get; set; }
 
         /// <summary>
         /// Extend the parent BuildAttachedDisks by optionally appending a disk from the BootDisk attribute.
