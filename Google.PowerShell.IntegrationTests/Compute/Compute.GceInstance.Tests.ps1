@@ -240,7 +240,6 @@ Describe "Add-GceInstance" {
 
         try {
             # Create a network and extract out subnet that corresponds to region "us-central1".
-            $newNetwork = "test-network-$r"
             gcloud compute networks create $newNetwork 2>$null
             $region = "us-central1"
             $zone = "us-central1-a"
