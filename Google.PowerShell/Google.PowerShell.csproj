@@ -143,6 +143,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BigQuery\GcbqCmdlet.cs" />
+    <Compile Include="BigQuery\GcbqDataset.cs" />
     <Compile Include="BigQuery\GcbqProject.cs" />
     <Compile Include="Common\ActiveUserConfig.cs" />
     <Compile Include="Common\JsonExtensions.cs" />
