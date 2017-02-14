@@ -134,5 +134,33 @@
         </TableRowEntries>
       </TableControl>
     </View>
+    <View>
+      <Name>Google Cloud IAM Policy</Name>
+      <ViewSelectedBy>
+        <TypeName>Google.Apis.CloudResourceManager.v1.Data.Binding</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Role</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Members</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>Role</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>$_.Members -Join ", "</ScriptBlock>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
   </ViewDefinitions>
 </Configuration>

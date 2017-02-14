@@ -138,6 +138,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CloudResourceManager\CloudResourceManagerCmdlets.cs" />
+    <Compile Include="CloudResourceManager\IamPolicyCmdlets.cs" />
     <Compile Include="Common\ActiveUserConfig.cs" />
     <Compile Include="Common\JsonExtensions.cs" />
     <Compile Include="Common\TokenResponse.cs" />
