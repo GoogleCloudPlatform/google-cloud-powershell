@@ -237,19 +237,14 @@ namespace Google.PowerShell.ComputeEngine
                 networkName = "default";
             }
 
-            if (string.IsNullOrWhiteSpace(project))
+            if (string.IsNullOrWhiteSpace(project) && !networkName.StartsWith("global/networks/"))
             {
-                if (!networkName.StartsWith($"global/networks/"))
-                {
-                    networkName = $"global/networks/{networkName}";
-                }
+                networkName = $"global/networks/{networkName}";
             }
-            else
+            else if (!string.IsNullOrWhiteSpace(project)
+                && !networkName.StartsWith($"projects/{project}/global/networks/"))
             {
-                if (!networkName.StartsWith($"projects/{project}/global/networks/"))
-                {
-                    networkName = $"projects/{project}/global/networks/{networkName}";
-                }
+                networkName = $"projects/{project}/global/networks/{networkName}";
             }
 
             return networkName;

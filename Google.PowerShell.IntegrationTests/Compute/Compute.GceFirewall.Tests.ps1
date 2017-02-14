@@ -66,28 +66,33 @@ Describe "New-GceFirewallProtocol" {
 }
 
 Describe "Add-GceFirewall" {
-    $r = Get-Random
-    $name = "test-add-firewall-$r"
-
     $allowed = New-GceFirewallProtocol "tcp" -Port "5", "7" |
         New-GceFirewallProtocol "esp"
 
     It "should work" {
-        $firewall = Add-GceFirewall -Project $project $name -Allowed $allowed -Description "test Add $r" `
-            -SourceRange "192.168.100.0/22", "192.168.100.0/30" -SourceTag "alpha" -TargetTag "beta"
+        $r = Get-Random
+        $name = "test-add-firewall-$r"
 
-        $firewall.Name | Should Be $name
-        $firewall.Description | Should Be "test Add $r"
-        $firewall.SourceRanges.Count | Should Be 2
-        $firewall.SourceRanges -contains "192.168.100.0/22" | Should Be $true
-        $firewall.SourceRanges -contains "192.168.100.0/30" | Should Be $true
-        $firewall.SourceTags | Should Be "alpha"
-        $firewall.TargetTags | Should Be "beta"
-        $firewall.Network | Should Match "default"
+        try {
+            $firewall = Add-GceFirewall -Project $project $name -Allowed $allowed -Description "test Add $r" `
+                -SourceRange "192.168.100.0/22", "192.168.100.0/30" -SourceTag "alpha" -TargetTag "beta"
 
-        $onlineFirewall = Get-GceFirewall -Project $project $name
-        $onlineFirewall.Description | Should Be "test Add $r"
-        $onlineFirewall.Network | Should Match "default"
+            $firewall.Name | Should Be $name
+            $firewall.Description | Should Be "test Add $r"
+            $firewall.SourceRanges.Count | Should Be 2
+            $firewall.SourceRanges -contains "192.168.100.0/22" | Should Be $true
+            $firewall.SourceRanges -contains "192.168.100.0/30" | Should Be $true
+            $firewall.SourceTags | Should Be "alpha"
+            $firewall.TargetTags | Should Be "beta"
+            $firewall.Network | Should Match "default"
+
+            $onlineFirewall = Get-GceFirewall -Project $project $name
+            $onlineFirewall.Description | Should Be "test Add $r"
+            $onlineFirewall.Network | Should Match "default"
+        }
+        finally {
+            Remove-GceFirewall -Project $project $name
+        }
     }
 
     It "should works with simple network name" {
@@ -113,8 +118,6 @@ Describe "Add-GceFirewall" {
             gcloud compute networks delete $newNetwork -q 2>$null
         }
     }
-
-    Remove-GceFirewall -Project $project $name
 }
 
 Describe "Remove-GceFirewall" {
