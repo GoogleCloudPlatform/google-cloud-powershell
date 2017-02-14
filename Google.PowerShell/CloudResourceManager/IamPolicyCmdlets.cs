@@ -1,4 +1,7 @@
-﻿using Google.Apis.CloudResourceManager.v1;
+﻿// Copyright 2015-2017 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
+
+using Google.Apis.CloudResourceManager.v1;
 using Google.Apis.CloudResourceManager.v1.Data;
 using Google.PowerShell.Common;
 using System.Management.Automation;
