@@ -1,4 +1,4 @@
-﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
+﻿// Copyright 2015-2017 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
 using Google.Apis.Bigquery.v2;
@@ -14,21 +14,19 @@ namespace Google.PowerShell.BigQuery
     /// Creates a new empty dataset in the specified project.
     /// </para>
     /// <para type="description">
-    /// Creates a new empty dataset in the specified project.  This command can either take a premade Dataset object, 
-    /// or build one using parameters.  Premade Datasets can be passed via the pipeline or with the -Dataset parameter.
-    /// If both are supplied, the premade dataset object will be used and the builder values will be ignored.  If no 
-    /// Project is specified, the default project will be used.  This cmdlet returns a Dataset object.  
-    /// The builder option will create a new Dataset object and inject all of the supplied values before insertion. 
-    /// Required build parameters are passed directly after the command, whereas optional parameters are passed as flags.
-    /// -- Builder parameters: 
+    /// Creates a new empty dataset in the specified project from a Dataset Object.  This Dataset can be supplied by object via the 
+    /// pipeline or with the -ByObject parameter, or they can be supplied by value with the flags listed below.  If no Project is 
+    /// specified, the default project will be used.  This cmdlet returns a Dataset object.  Required value parameters are to be 
+    /// passed in order after the command, and optional parameters are passed as flags.
+    ///    ByValue Parameters: 
     /// DatasetId (required) - unique identifier for the dataset.
     /// Name - descriptive name for the dataset.
     /// Description - user-friendly description of the dataset.
     /// Timeout - default duration in ms for tables in the dataset to exist.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> $dataset | New-GcbqDataset -Project $projId </code>
-    ///   <para>This command will take a premade Dataset object from the pipeline and insert it into the Cloud project. 
+    ///   <code>PS C:\> $dataset | New-GcbqDataset -Project "my-project" </code>
+    ///   <para>This command will take a Dataset object from the pipeline and insert it into the Cloud project "my-project". 
     ///   project $projId</para>
     /// </example>
     /// <example>
@@ -42,14 +40,20 @@ namespace Google.PowerShell.BigQuery
     [Cmdlet(VerbsCommon.New, "GcbqDataset")]
     public class NewGcbqDataset : GcbqCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string ByObject = "ByObject";
+            public const string ByValues = "ByValue";
+        }
+
         /// <summary>
         /// <para type="description">
         /// The project to look for datasets in. If not set via PowerShell parameter processing, will
         /// default to the Cloud SDK's DefaultProject property.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = "premade")]
-        [Parameter(Mandatory = false, ParameterSetName = "builder")]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByObject)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public string Project { get; set; }
 
@@ -58,69 +62,70 @@ namespace Google.PowerShell.BigQuery
         /// The dataset object that will be sent to the server to be inserted.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, ValueFromPipeline = true, ParameterSetName = "premade")]
+        [Parameter(Mandatory = false, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ByObject)]
         public Dataset Dataset { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// The DatasetId for the datset reference object.  Must be unique within the project, and must be 1024 
-        /// characters or less.  It must only contain letters (a-z, A-Z), numbers (0-9), or underscores (_).
+        /// The DatasetId for the datset reference object. Must be unique within the project, and must be 1024 
+        /// characters or less. It must only contain letters (a-z, A-Z), numbers (0-9), or underscores (_).
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true, ParameterSetName = "builder")]
+        [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.ByValues)]
         public string DatasetId { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// The "friendly name" field for the dataset.  Used for a descriptive name for the dataset.
+        /// The "friendly name" field for the dataset. Used for a descriptive name for the dataset.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = "builder")]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
         public string Name { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// The "description" field for the dataset.  Used for a user-friendly description of the dataset.
+        /// The "description" field for the dataset. Used for a user-friendly description of the dataset.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = "builder")]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
         public string Description { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// The default lifetime for tables in the dataset to exist in ms.  Minimum is 3600000 (1hr).  
+        /// The default lifetime for tables in the dataset to exist in ms. Minimum is 3600000 (1hr).  
         /// When the expiration time is reached, the table will be automatically deleted.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = "builder")]
-        public int Timeout { get; set; }
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
+        [ValidateRange(3600000, long.MaxValue)]
+        public long Timeout { get; set; }
 
         protected override void ProcessRecord()
         {
+            // Set up the Dataset based on parameters
             Dataset newData;
-            // Check whether they are passing in a completed Dataset object or are building one with params.
-            if (Dataset != null)
+            switch (ParameterSetName)
             {
-                newData = Dataset;
-            }
-            // Builder mode selected.
-            else
-            {
-                // Check for required fields.
-                if (DatasetId == null)
-                {
-                    WriteError(new ErrorRecord(new Exception("DatasetId missing."), "Insert failed.",
-                        ErrorCategory.InvalidArgument, DatasetId));
-                    return;
-                }
-                // Everything present.  Create a new Dataset object.
-                newData = new Dataset();
-                newData.FriendlyName = (Name != null) ? Name : "New Dataset";
-                newData.Description = (Description != null) ? Description : "New Dataset";
-                newData.DefaultTableExpirationMs = Timeout;
-                newData.DatasetReference = new DatasetReference();
-                newData.DatasetReference.DatasetId = DatasetId;
-                newData.DatasetReference.ProjectId = Project;
+                case ParameterSetNames.ByObject:
+                    newData = Dataset;
+                    break;
+                case ParameterSetNames.ByValues:
+                    if (DatasetId == null)
+                    {
+                        WriteError(new ErrorRecord(new Exception("DatasetId missing."), "Insert failed.",
+                            ErrorCategory.InvalidArgument, DatasetId));
+                        return;
+                    }
+                    newData = new Dataset();
+                    newData.FriendlyName = (Name != null) ? Name : "New Dataset";
+                    newData.Description = (Description != null) ? Description : "New Dataset";
+                    newData.DefaultTableExpirationMs = Timeout;
+                    newData.DatasetReference = new DatasetReference();
+                    newData.DatasetReference.DatasetId = DatasetId;
+                    newData.DatasetReference.ProjectId = Project;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
             }
 
             // Add the new dataset to the project supplied.
@@ -128,7 +133,7 @@ namespace Google.PowerShell.BigQuery
             Dataset response = request.Execute();
             if (response != null)
             {
-                WriteObject(response, true);
+                WriteObject(response);
             }
             else
             {
