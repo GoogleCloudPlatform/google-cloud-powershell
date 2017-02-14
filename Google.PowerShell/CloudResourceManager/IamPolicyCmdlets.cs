@@ -25,7 +25,7 @@ namespace Google.PowerShell.CloudResourceManager
     {
         /// <summary>
         /// <para type="description">
-        /// The project to check for Iam Policies. If not set via PowerShell parameter processing, will
+        /// The project to check for IAM Policies. If not set via PowerShell parameter processing, will
         /// default to the Cloud SDK's DefaultProject property.
         /// </para>
         /// </summary>
