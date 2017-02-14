@@ -39,7 +39,15 @@ Describe "New-GcbqDataset" {
 	}
 
 	It "should not work with no arguments (meaning no datasetId)" {
-		$data = New-GcbqDataset | Should Throw
+		{ New-GcbqDataset } | Should Throw 400
+	}
+
+	It "should reject datasets with malformed ids" {
+		{ New-GcbqDataset "test-?ata-4" } | Should Throw 400
+	}
+
+	It "should reject datasets with empty ids" {
+		{ New-GcbqDataset "" } | Should Throw "Cannot validate argument on parameter 'DatasetId'"
 	}
 
 	It "should reject datasets that do not have unique ids" {
@@ -50,7 +58,7 @@ Describe "New-GcbqDataset" {
 		$data2.DatasetReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.DatasetReference
 		$data2.DatasetReference.DatasetId = "test_data_id6"
 		$data | New-GcbqDataset
-		{ $data2 | New-GcbqDataset } | Should Throw
+		{ $data2 | New-GcbqDataset } | Should Throw 409
 	}
 
 	It "should use the -Project tag correctly" {
@@ -60,14 +68,14 @@ Describe "New-GcbqDataset" {
 	}
 
 	It "should throw when you try to add to a project that doesnt exist" {
-		{ New-GcbqDataset -Project $nonExistProject "test_data_id8" -Name "Testdata" -Description "Some interesting data!" } | Should Throw
+		{ New-GcbqDataset -Project $nonExistProject "test_data_id8" -Name "Testdata" -Description "Some interesting data!" } | Should Throw 404
     }
 
 	It "should throw when you try to add to a project that is not yours" {
-		{ New-GcbqDataset -Project $accessErrProject "test_data_id9" -Name "Testdata" -Description "Some interesting data!" } | Should Throw
+		{ New-GcbqDataset -Project $accessErrProject "test_data_id9" -Name "Testdata" -Description "Some interesting data!" } | Should Throw 400
 	}
 
-	#add afterall block that deletes test datasets when remove-x command is done
+	# TODO (ahandley) add afterall block that deletes test datasets when remove-x command is done
 }
 
 Describe "Get-GcbqDataset" {

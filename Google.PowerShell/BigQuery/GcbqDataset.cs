@@ -22,7 +22,7 @@ namespace Google.PowerShell.BigQuery
     /// DatasetId (required) - unique identifier for the dataset.
     /// Name - descriptive name for the dataset.
     /// Description - user-friendly description of the dataset.
-    /// Timeout - default duration in ms for tables in the dataset to exist.
+    /// Timeout - default duration in ms for tables in the dataset to exist. 
     /// </para>
     /// <example>
     ///   <code>PS C:\> $dataset | New-GcbqDataset -Project "my-project" </code>
@@ -72,6 +72,8 @@ namespace Google.PowerShell.BigQuery
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.ByValues)]
+        [ValidatePattern("[a-zA-Z0-9]")]
+        [ValidateLength(1, 1024)]
         public string DatasetId { get; set; }
 
         /// <summary>
@@ -110,19 +112,13 @@ namespace Google.PowerShell.BigQuery
                     newData = Dataset;
                     break;
                 case ParameterSetNames.ByValues:
-                    if (DatasetId == null)
-                    {
-                        WriteError(new ErrorRecord(new Exception("DatasetId missing."), "Insert failed.",
-                            ErrorCategory.InvalidArgument, DatasetId));
-                        return;
-                    }
                     newData = new Dataset();
-                    newData.FriendlyName = (Name != null) ? Name : "New Dataset";
-                    newData.Description = (Description != null) ? Description : "New Dataset";
-                    newData.DefaultTableExpirationMs = Timeout;
                     newData.DatasetReference = new DatasetReference();
                     newData.DatasetReference.DatasetId = DatasetId;
                     newData.DatasetReference.ProjectId = Project;
+                    newData.FriendlyName = Name;
+                    newData.Description = Description;
+                    newData.DefaultTableExpirationMs = Timeout;
                     break;
                 default:
                     throw UnknownParameterSetException;
@@ -137,7 +133,7 @@ namespace Google.PowerShell.BigQuery
             }
             else
             {
-                WriteError(new ErrorRecord(new Exception("Insert request failed."), "Insert failed.",
+                WriteError(new ErrorRecord(new Exception("400"), "Insert request to server failed.",
                     ErrorCategory.InvalidArgument, newData));
             }
         }
