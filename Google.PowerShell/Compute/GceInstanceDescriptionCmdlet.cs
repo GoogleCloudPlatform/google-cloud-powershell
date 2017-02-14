@@ -131,10 +131,7 @@ namespace Google.PowerShell.ComputeEngine
                 networkUri = "default";
             }
 
-            if (!networkUri.Contains("global/networks"))
-            {
-                networkUri = $"global/networks/{networkUri}";
-            }
+            networkUri = ConstructNetworkName(networkUri, Project);
 
             NetworkInterface result = new NetworkInterface
             {

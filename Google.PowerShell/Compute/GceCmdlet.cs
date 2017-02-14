@@ -218,6 +218,37 @@ namespace Google.PowerShell.ComputeEngine
         {
             return GetUriPart("regions", uri);
         }
+
+        /// <summary>
+        /// Constructs network identifier. If networkName is an absolute URI, returns the URI.
+        /// If networkName is empty, we will use the default network.
+        /// If project is empty, we will use the default project.
+        /// We will use the networkName and project's name to construct a network identifier and returns that.
+        /// </summary>
+        public static string ConstructNetworkName(string networkName, string project)
+        {
+            if (Uri.IsWellFormedUriString(networkName, UriKind.Absolute))
+            {
+                return networkName;
+            }
+
+            if (string.IsNullOrWhiteSpace(networkName))
+            {
+                networkName = "default";
+            }
+
+            if (string.IsNullOrWhiteSpace(project) && !networkName.StartsWith("global/networks/"))
+            {
+                networkName = $"global/networks/{networkName}";
+            }
+            else if (!string.IsNullOrWhiteSpace(project)
+                && !networkName.StartsWith($"projects/{project}/global/networks/"))
+            {
+                networkName = $"projects/{project}/global/networks/{networkName}";
+            }
+
+            return networkName;
+        }
     }
 
     /// <summary>
