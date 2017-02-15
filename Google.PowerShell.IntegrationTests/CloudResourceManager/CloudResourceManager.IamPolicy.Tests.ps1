@@ -4,9 +4,9 @@ Install-GcloudCmdlets
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 $script:appveyorServiceAccEmail = "serviceAccount:appveyorci-testing@gcloud-powershell-testing.iam.gserviceaccount.com"
 
-Describe "Get-GcIamPolicy" {
+Describe "Get-GcIamPolicyBinding" {
     It "should work" {
-        $policies = Get-GcIamPolicy
+        $policies = Get-GcIamPolicyBinding
         $policies.Count -gt 0 | Should Be $true
 
         $editors = $policies | Where-Object {$_.Role -eq "roles/editor"}
@@ -15,6 +15,6 @@ Describe "Get-GcIamPolicy" {
     }
 
     It "should throw if we don't have permission" {
-        { Get-GcIamPolicy -Project "asdf" } | Should Throw "403"
+        { Get-GcIamPolicyBinding -Project "asdf" } | Should Throw "403"
     }
 }
