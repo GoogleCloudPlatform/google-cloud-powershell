@@ -17,27 +17,26 @@ namespace Google.PowerShell.BigQuery
     /// If a DatasetId is specified, it will return an object describing that dataset. If no DatasetId is 
     /// specified, this cmdlet lists all datasets in the specified project to which you have been granted the 
     /// READER dataset role. The -All flag will include hidden datasets in the search results. The -Filter 
-    /// flag allows you to filter results by label. The syntax is "labels.name[:value]". Multiple filters 
-    /// can be ANDed together by connecting with a space. See the link below for more information. This command 
-    /// will read a ProjectData object from the pipeline if provided and will use that as the selected project.
+    /// flag allows you to filter results by label. The syntax to filter is "labels.name[:value]". Multiple filters 
+    /// can be ANDed together by connecting with a space. See the link below for more information.
     /// If no Project is specified, the default project will be used. This cmdlet returns a DatasetList if 
     /// no DatasetId was specified, and a Dataset otherwise.
     /// </para>
     /// <example>
     ///   <code>PS C:\> Get-GcbqDataset "my-dataset"</code>
-    ///   <para>This command will return a Dataset object from the default project of the dataset with id my-dataset</para>
+    ///   <para>This returns a Dataset object from the default project of the dataset with id <code>my-dataset</code>.</para>
     /// </example>
     /// <example>
     ///   <code>PS C:\> Get-GcbqDataset -Project my-project</code>
-    ///   <para>This command will list all of the non-hidden datasets in the Cloud project $projId.</para>
+    ///   <para>This lists all of the non-hidden datasets in the Cloud project <code>my-project</code>.</para>
     /// </example>
     /// <example>
     ///   <code>PS C:\> Get-GcbqDataset -All</code>
-    ///   <para>This command will list all of the datasets in the default Cloud project for your account.</para>
+    ///   <para>This lists all of the datasets in the default Cloud project for your account.</para>
     /// </example>
     /// <example>
     ///   <code>PS C:\> Get-GcbqDataset -All -Filter "labels.department:shipping"</code>
-    ///   <para>This command will list all of the datasets in the default Cloud project for your account that have 
+    ///   <para>This lists all of the datasets in the default Cloud project for your account that have 
     ///   the <code>department</code> key with a value <code>shipping</code>.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets)">
@@ -58,18 +57,17 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// The project to look for datasets in. If not set via PowerShell parameter processing, will
+        /// The project to look for datasets in. If not set via PowerShell parameter processing, it will
         /// default to the Cloud SDK's DefaultProject property.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.List)]
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.Get)]
+        [Parameter(Mandatory = false)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         override public string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// Flag to include hidden datasets in the search results.
+        /// Includes hidden datasets in the output if set.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.List)]
@@ -77,8 +75,8 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// Flag to filter results by label. The syntax is "labels./<name/>[:/<value/>]". Multiple filters can 
-        /// be ANDed together by connecting with a space.
+        /// Filters results by label. The syntax is "labels./<name/>[:/<value/>]". Multiple filters can 
+        /// be ANDed together by a space.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.List)]
@@ -107,8 +105,11 @@ namespace Google.PowerShell.BigQuery
                     }
                     else
                     {
-                        WriteError(new ErrorRecord(new Exception("400"), "List request to server failed.",
-                            ErrorCategory.InvalidArgument, Project));
+                        WriteError(new ErrorRecord(
+                            new Exception("400"), 
+                            "List request to server failed.",
+                            ErrorCategory.InvalidArgument, 
+                            Project));
                     }
                     break;
                 case ParameterSetNames.Get:
@@ -120,8 +121,11 @@ namespace Google.PowerShell.BigQuery
                     }
                     else
                     {
-                        WriteError(new ErrorRecord(new Exception("400"), "Get request to server failed.",
-                            ErrorCategory.InvalidArgument, Dataset));
+                        WriteError(new ErrorRecord(
+                            new Exception("400"), 
+                            "Get request to server failed.",
+                            ErrorCategory.InvalidArgument, 
+                            Dataset));
                     }
                     break;
                 default:
@@ -135,24 +139,18 @@ namespace Google.PowerShell.BigQuery
     /// Creates a new empty dataset in the specified project.
     /// </para>
     /// <para type="description">
-    /// Creates a new empty dataset in the specified project from a Dataset Object.  This Dataset can be supplied by object via the 
-    /// pipeline or with the -ByObject parameter, or they can be supplied by value with the flags listed below.  If no Project is 
-    /// specified, the default project will be used.  This cmdlet returns a Dataset object.  Required value parameters are to be 
-    /// passed in order after the command, and optional parameters are passed as flags.
-    ///    ByValue Parameters: 
-    /// DatasetId (required) - unique identifier for the dataset.
-    /// Name - descriptive name for the dataset.
-    /// Description - user-friendly description of the dataset.
-    /// Timeout - default duration in ms for tables in the dataset to exist. 
+    /// Creates a new, empty dataset in the specified project. A Dataset can be supplied by object via the 
+    /// pipeline or the -ByObject parameter, or it can be instantiated by value with the flags below. 
+    /// If no Project is specified, the default project will be used. This cmdlet returns a Dataset object.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> $dataset | New-GcbqDataset -Project "my-project" </code>
-    ///   <para>This command will take a Dataset object from the pipeline and insert it into the Cloud project "my-project". 
-    ///   project $projId</para>
+    ///   <code>PS C:\> $dataset | New-GcbqDataset -Project "my-project"</code>
+    ///   <para>This takes a Dataset object from the pipeline and inserts it into the Cloud project "my-project".</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> New-GcbqDataset "test_data_id" -Name "Testdata" -Description "Some interesting data!" -Timeout 86400000</code>
-    ///   <para>This command will build a new dataset with the supplied datasetId, name, description, and a timeout of 1 day.</para>
+    ///   <code>PS C:\> New-GcbqDataset "test_data_id" -Name "Testdata" `
+    ///   -Description "Some interesting data!" -Expiration 86400000</code>
+    ///   <para>This builds a new dataset with the supplied datasetId, name, description, and an Expiration of 1 day.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets)">
     /// [BigQuery Datasets]
@@ -173,8 +171,7 @@ namespace Google.PowerShell.BigQuery
         /// default to the Cloud SDK's DefaultProject property.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByObject)]
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(Mandatory = false)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         override public string Project { get; set; }
 
@@ -188,18 +185,17 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// The DatasetId for the datset reference object. Must be unique within the project, and must be 1024 
-        /// characters or less. It must only contain letters (a-z, A-Z), numbers (0-9), or underscores (_).
+        /// The DatasetId must be unique within the project and match the pattern [a-zA-Z0-9_]+.
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.ByValues)]
-        [ValidatePattern("[a-zA-Z0-9]")]
+        [ValidatePattern("[a-zA-Z0-9_]")]
         [ValidateLength(1, 1024)]
         public string DatasetId { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// The "friendly name" field for the dataset. Used for a descriptive name for the dataset.
+        /// User-friendly name for the dataset
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
@@ -207,7 +203,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// The "description" field for the dataset. Used for a user-friendly description of the dataset.
+        /// Description of the dataset.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
@@ -215,13 +211,12 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// The default lifetime for tables in the dataset to exist in ms. Minimum is 3600000 (1hr).  
-        /// When the expiration time is reached, the table will be automatically deleted.
+        /// The default lifetime for tables in the dataset (in seconds).
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
-        [ValidateRange(3600000, long.MaxValue)]
-        public long Timeout { get; set; }
+        [ValidateRange(3600, (long.MaxValue/1000))]
+        public long Expiration { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -239,7 +234,10 @@ namespace Google.PowerShell.BigQuery
                     newData.DatasetReference.ProjectId = Project;
                     newData.FriendlyName = Name;
                     newData.Description = Description;
-                    newData.DefaultTableExpirationMs = Timeout;
+                    if (Expiration != 0)
+                    {
+                        newData.DefaultTableExpirationMs = Expiration * 1000;
+                    }
                     break;
                 default:
                     throw UnknownParameterSetException;
@@ -254,8 +252,11 @@ namespace Google.PowerShell.BigQuery
             }
             else
             {
-                WriteError(new ErrorRecord(new Exception("400"), "Insert request to server failed.",
-                    ErrorCategory.InvalidArgument, newData));
+                WriteError(new ErrorRecord(
+                    new Exception("400"), 
+                    "Insert request to server failed.",
+                    ErrorCategory.InvalidArgument, 
+                    newData));
             }
         }
     }
@@ -267,17 +268,17 @@ namespace Google.PowerShell.BigQuery
     /// <para type="description">
     /// Deletes the specified dataset. This command takes a Dataset object as input, typically off the pipeline. 
     /// You can also use the -ByObject flag and pass it as a parameter. The dataset must be empty to be deleted.  
-    /// Use the Force flag if the dataset is not empty to confirm deletion of all tables in the dataset. 
+    /// Use the -Force flag if the dataset is not empty to confirm deletion of all tables in the dataset. 
     /// Once this operation is complete, you may create a new dataset with the same name. If no Project is specified, 
     /// the default project will be used. If the deletion runs without error, this cmdlet has no output.
     /// </para>
     /// <example>
     ///   <code>PS C:\> Get-GcbqDataset "my-values" | Remove-GcbqDataset </code>
-    ///   <para>This command will delete "my-values" only if it is empty.</para>
+    ///   <para>This deletes "my-values" only if it is empty.</para>
     /// </example>
     /// <example>
     ///   <code>PS C:\> Get-GcbqDataset "test-values" | Remove-GcbqDataset -Force</code>
-    ///   <para>This command will delete "test-values" and all of its contents.</para>
+    ///   <para>This deletes "test-values" and all of its contents.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets)">
     /// [BigQuery Datasets]
@@ -298,7 +299,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// The Dataset object to delete. This must be empty, or you also need to specify --DeleteContents.
+        /// Dataset to delete.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ValueFromPipeline = true)]
@@ -306,7 +307,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// Bypass confirmation of removal operations in the case that the Dataset contains tables.
+        /// Forces deletion of tables inside a non-empty Dataset.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
@@ -315,7 +316,8 @@ namespace Google.PowerShell.BigQuery
         protected override void ProcessRecord()
         {
             // Form and send request.
-            DatasetsResource.DeleteRequest request = new DatasetsResource.DeleteRequest(Service, Project, ByObject.DatasetReference.DatasetId);
+            DatasetsResource.DeleteRequest request = 
+                new DatasetsResource.DeleteRequest(Service, Project, ByObject.DatasetReference.DatasetId);
             String response = "Dataset Removal Stopped.";
             if (ShouldProcess(ByObject.DatasetReference.DatasetId))
             {
@@ -326,13 +328,16 @@ namespace Google.PowerShell.BigQuery
                 }
                 else
                 {
-                    TablesResource.ListRequest checkTables = new TablesResource.ListRequest(Service, Project, ByObject.DatasetReference.DatasetId);
+                    TablesResource.ListRequest checkTables = 
+                        new TablesResource.ListRequest(Service, Project, ByObject.DatasetReference.DatasetId);
                     var tableResponse = checkTables.Execute();
                     if (tableResponse.TotalItems == 0)
                     {
                         response = request.Execute();
                     }
-                    else if (ShouldContinue(GetConfirmationMessage(ByObject, tableResponse.TotalItems), "Confirm Deletion"))
+                    else if (ShouldContinue(
+                        GetConfirmationMessage(ByObject, tableResponse.TotalItems), 
+                        "Confirm Deletion"))
                     {
                         request.DeleteContents = true;
                         response = request.Execute();
@@ -347,18 +352,13 @@ namespace Google.PowerShell.BigQuery
             }
         }
 
-        /// <summary>
-        /// Helper method to generate the confirmation message for deletion of a dataset that still contains tables
-        /// </summary>
-        /// <param name="d">Dataset in question</param>
-        /// <param name="tables">Number of tables that will be deleted</param>
-        /// <returns></returns>
         private string GetConfirmationMessage(Dataset d, int? tables)
         {
             return d.DatasetReference.DatasetId
                 + " has "
                 + tables
-                + " tables and the Force parameter was not specified. If you continue, all tables will be removed with the dataset. Are you sure you want to continue?";
+                + " tables and the Force parameter was not specified. If you continue, all tables will be removed"
+                + " with the dataset. Are you sure you want to continue?";
         }
     }
 }

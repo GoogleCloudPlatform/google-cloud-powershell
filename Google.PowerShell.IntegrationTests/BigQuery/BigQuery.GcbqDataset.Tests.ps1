@@ -4,12 +4,13 @@ $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 Describe "New-GcbqDataset" {
 
 	It "should take a name, description, and time to make a dataset" {
-		$data = New-GcbqDataset "test_data_id1" -Name "Testdata" -Description "Some interesting data!" -Timeout 86400000
+		$oneDay = 86400
+		$data = New-GcbqDataset "test_data_id1" -Name "Testdata" -Description "Some interesting data!" -Expiration $oneDay
 		$data | Should Not BeNullOrEmpty
 		$data.DatasetReference.DatasetId | Should Be "test_data_id1"
 		$data.FriendlyName | Should Be "Testdata"
 		$data.Description | Should Be "Some interesting data!"
-		$data.DefaultTableExpirationMs | Should Be 86400000
+		$data.DefaultTableExpirationMs | Should Be ($oneDay * 1000)
 		Get-GcbqDataset "test_data_id1" | Remove-GcbqDataset
 	}
 
@@ -24,6 +25,21 @@ Describe "New-GcbqDataset" {
 		$newdata | Should Not BeNullOrEmpty
 		$newdata.DatasetReference.DatasetId | Should Be "test_data_id2"
 		$newdata.FriendlyName | Should Be "PipeTest"
+		Get-GcbqDataset "test_data_id2" | Remove-GcbqDataset
+	}
+
+	It "should accept a more complex dataset object from pipeline" {
+		$data = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Dataset
+		$data.DatasetReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.DatasetReference
+		$data.DatasetReference.DatasetId = "test_data_id2"
+		$data.DatasetReference.ProjectId = $project
+		$data.FriendlyName = "Pipe-Object Test3!"
+		$data.Description = "Some cool data from the pipeline!<>?>#$%^!@&''~"
+		$data | New-GcbqDataset -outvariable newdata
+		$newdata | Should Not BeNullOrEmpty
+		$newdata.DatasetReference.DatasetId | Should Be "test_data_id2"
+		$newdata.FriendlyName | Should Be "Pipe-Object Test3!"
+		$newdata.Description | Should Be "Some cool data from the pipeline!<>?>#$%^!@&''~"
 		Get-GcbqDataset "test_data_id2" | Remove-GcbqDataset
 	}
 
@@ -73,11 +89,13 @@ Describe "New-GcbqDataset" {
 	}
 
 	It "should throw when you try to add to a project that doesnt exist" {
-		{ New-GcbqDataset -Project $nonExistProject "test_data_id8" -Name "Testdata" -Description "Some interesting data!" } | Should Throw 404
+		{ New-GcbqDataset -Project $nonExistProject "test_data_id8" `
+			-Name "Testdata" -Description "Some interesting data!" } | Should Throw 404
     }
 
 	It "should throw when you try to add to a project that is not yours" {
-		{ New-GcbqDataset -Project $accessErrProject "test_data_id9" -Name "Testdata" -Description "Some interesting data!" } | Should Throw 400
+		{ New-GcbqDataset -Project $accessErrProject "test_data_id9" `
+			-Name "Testdata" -Description "Some interesting data!" } | Should Throw 400
 	}
 }
 
@@ -137,7 +155,7 @@ Describe "Remove-GcbqDataset" {
 		Remove-GcbqDataset -ByObject $a
 	}
 
-	#TODO (ahandley) add in test that check the -Force switch when New-GcbqTable is written
+	#TODO(ahandley): Add in tests that check the -Force switch when New-GcbqTable is written.
 
 	It "should handle when a dataset does not exist" {
 		$data = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Dataset
@@ -149,21 +167,19 @@ Describe "Remove-GcbqDataset" {
 
 	It "should handle projects that do not exist" {
 		$data = New-GcbqDataset "test_set_4"
-		{ Get-GcbqDataset "test_set_4" | Remove-GcbqDataset -Project $nonExistProject } | Should Throw 404
+		{ Get-GcbqDataset "test_set_4" | Remove-GcbqDataset `
+			-Project $nonExistProject } | Should Throw 404
 		Remove-GcbqDataset -ByObject $data
 	}
 
 	It "should handle projects that the user does not have permissions for" {
 		$data = New-GcbqDataset "test_set_5"
-		{ Get-GcbqDataset "test_set_5" | Remove-GcbqDataset -Project $accessErrProject } | Should Throw 400
+		{ Get-GcbqDataset "test_set_5" | Remove-GcbqDataset `
+			-Project $accessErrProject } | Should Throw 400
 		Remove-GcbqDataset -ByObject $data
 	}
-
-	#TODO (ahandley) add in logic at the end of each DESCRIBE block to kill all remaining datasets - use get-* filter
 }
 
-Describe "Set-GcbqDataset" {
-
-}
+#TODO(ahandley): Describe "Set-GcbqDataset".
 
 Reset-GCloudConfig $oldActiveConfig $configName
