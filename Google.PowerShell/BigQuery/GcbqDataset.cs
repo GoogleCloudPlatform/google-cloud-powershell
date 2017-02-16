@@ -65,7 +65,7 @@ namespace Google.PowerShell.BigQuery
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.List)]
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.Get)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; set; }
+        override public string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -176,7 +176,7 @@ namespace Google.PowerShell.BigQuery
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByObject)]
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; set; }
+        override public string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -294,7 +294,7 @@ namespace Google.PowerShell.BigQuery
         /// </summary>
         [Parameter(Mandatory = false)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        public string Project { get; set; }
+        override public string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
