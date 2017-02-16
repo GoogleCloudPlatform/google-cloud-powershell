@@ -58,10 +58,6 @@ namespace Google.PowerShell.CloudResourceManager
     /// Add an IAM policy binding to a project. The cmdlet will use the default project if -Project is not used.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Add-GcIamPolicyBinding -Role roles/viewer -AllAuthenticatedUsers</code>
-    ///   <para>This command gives all authenticated users viewer role in the default project.</para>
-    /// </example>
-    /// <example>
     ///   <code>PS C:\> Add-GcIamPolicyBinding -Role roles/owner -User abc@google.com -Project "my-project"</code>
     ///   <para>This command gives user abc@google.com owner role in the project "my-project".</para>
     /// </example>
@@ -80,12 +76,6 @@ namespace Google.PowerShell.CloudResourceManager
     ///   </para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Add-GcIamPolicyBinding -Role roles/viewer -AllUsers</code>
-    ///   <para>
-    ///   This command gives all users, with or without Google account viewer role in the default project.
-    ///   </para>
-    /// </example>
-    /// <example>
     ///   <code>PS C:\> Add-GcIamPolicyBinding -Role roles/editor -Domain example.com</code>
     ///   <para>This command gives all users of the domain example.com editor role in the default project.</para>
     /// </example>
@@ -98,8 +88,6 @@ namespace Google.PowerShell.CloudResourceManager
     {
         private class ParameterSetNames
         {
-            public const string AllUsers = nameof(AllUsers);
-            public const string AllAuthenticatedUsers = nameof(AllAuthenticatedUsers);
             public const string User = nameof(User);
             public const string ServiceAccount = nameof(ServiceAccount);
             public const string Group = nameof(Group);
@@ -153,22 +141,6 @@ namespace Google.PowerShell.CloudResourceManager
         public string Domain { get; set; }
 
         /// <summary>
-        /// <para type="description">
-        /// Represents anyone on the Internet, with or without a Google account.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.AllUsers)]
-        public SwitchParameter AllUsers { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// Represents anyone who is authenticated with a Google account or a service account.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.AllAuthenticatedUsers)]
-        public SwitchParameter AllAuthenticatedUsers { get; set; }
-
-        /// <summary>
         /// This dynamic parameter dictionary is used by PowerShell to generate parameters dynamically.
         /// </summary>
         private RuntimeDefinedParameterDictionary _dynamicParameters;
@@ -194,14 +166,34 @@ namespace Google.PowerShell.CloudResourceManager
                 };
                 List<Attribute> attributeLists = new List<Attribute>() { paramAttribute };
 
-                // If user has not entered parameter for project yet, project will be null here.
+                if (Project != null)
+                {
+                    // If the cmdlet is not executing and user is only using tab completion, the string project
+                    // will have double quotes at the start and end so we have to trim that.
+                    Project = Project.Trim('"');
+
+                    // If the project is a variable, then we have to extract out the variable name.
+                    if (Project.StartsWith("$"))
+                    {
+                        // In case project is something like $script:variableName.
+                        if (Project.Contains(":"))
+                        {
+                            Project = Project.Split(new char[] { ':' }, 2).Last();
+                        } else
+                        {
+                            Project = Project.Substring(1);
+                        }
+                        // If we cannot get the variable, set it to empty.
+                        Project = GetVariableValue(Project, string.Empty).ToString();
+                    }
+                }
+
+                // If we cannot resolve variable or user has not entered parameter for project yet, project
+                // will be null here.
                 if (string.IsNullOrWhiteSpace(Project))
                 {
                     Project = CloudSdkSettings.GetSettingsValue(CloudSdkSettings.CommonProperties.Project);
                 }
-                // Also, if the cmdlet is not executing and user is only using tab completion, the string project
-                // will have double quotes at the start and end so we have to trim that.
-                Project = Project.Trim('"');
 
                 if (!s_rolesDictionary.ContainsKey(Project))
                 {
@@ -252,10 +244,6 @@ namespace Google.PowerShell.CloudResourceManager
                     return $"domain:{Domain.ToLower()}";
                 case ParameterSetNames.ServiceAccount:
                     return $"serviceAccount:{ServiceAccount.ToLower()}";
-                case ParameterSetNames.AllUsers:
-                    return "allUsers";
-                case ParameterSetNames.AllAuthenticatedUsers:
-                    return "allAuthenticatedUsers";
                 default:
                     throw UnknownParameterSetException;
             }
