@@ -14,6 +14,52 @@ using IamService = Google.Apis.Iam.v1.IamService;
 
 namespace Google.PowerShell.CloudResourceManager
 {
+    public class GcIamPolicyBindingCmdlet : CloudResourceManagerCmdlet
+    {
+        // IAM Service used for getting roles that can be granted to a project.
+        private Lazy<IamService> iamService =
+            new Lazy<IamService>(() => new IamService(GetBaseClientServiceInitializer()));
+
+        /// <summary>
+        /// Dictionary of roles with key as project and value as the roles available in the project.
+        /// This dictionary is used for caching the various roles available in a project.
+        /// </summary>
+        private static ConcurrentDictionary<string, string[]> s_rolesDictionary =
+            new ConcurrentDictionary<string, string[]>();
+
+        /// <summary>
+        /// Returns all the possible roles that can be granted in a project.
+        /// This is used to provide tab completion for -Role parameter.
+        /// </summary>
+        protected string[] GetGrantableRoles(string projectName)
+        {
+            // We cache the roles in s_rolesDictionary to speed up processing.
+            if (!s_rolesDictionary.ContainsKey(projectName))
+            {
+                var roleRequestBody = new Apis.Iam.v1.Data.QueryGrantableRolesRequest()
+                {
+                    FullResourceName = $"//cloudresourcemanager.googleapis.com/projects/{projectName}"
+                };
+
+                try
+                {
+                    Apis.Iam.v1.RolesResource.QueryGrantableRolesRequest roleRequest =
+                        iamService.Value.Roles.QueryGrantableRoles(roleRequestBody);
+                    Apis.Iam.v1.Data.QueryGrantableRolesResponse response = roleRequest.Execute();
+
+                    s_rolesDictionary[projectName] = response.Roles.Select(role => role.Name).ToArray();
+                }
+                catch
+                {
+                    // In the case that we cannot get all the possible roles, we just do not provide tab completion.
+                    s_rolesDictionary[projectName] = new string[] { };
+                }
+            }
+
+            return s_rolesDictionary[projectName];
+        }
+    }
+
     /// <summary>
     /// <para type="synopsis">
     /// Lists all IAM policy bindings in a project.
@@ -30,7 +76,7 @@ namespace Google.PowerShell.CloudResourceManager
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcIamPolicyBinding")]
-    public class GetGcIamPolicyBindingCmdlet : CloudResourceManagerCmdlet
+    public class GetGcIamPolicyBindingCmdlet : GcIamPolicyBindingCmdlet
     {
         /// <summary>
         /// <para type="description">
@@ -84,7 +130,7 @@ namespace Google.PowerShell.CloudResourceManager
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GcIamPolicyBinding", DefaultParameterSetName = ParameterSetNames.User)]
-    public class AddGcIamPolicyBindingCmdlet : CloudResourceManagerCmdlet, IDynamicParameters
+    public class AddGcIamPolicyBindingCmdlet : GcIamPolicyBindingCmdlet, IDynamicParameters
     {
         private class ParameterSetNames
         {
@@ -146,14 +192,13 @@ namespace Google.PowerShell.CloudResourceManager
         private RuntimeDefinedParameterDictionary _dynamicParameters;
 
         /// <summary>
-        /// Dictionary of roles with key as project and value as the roles available in the project.
-        /// This dictionary is used for caching the various roles available in a project.
+        /// Creates a dynamic parameter "Role" based on the Project parameter.
+        /// This function will first issue a call to the server to get all the possible roles based on
+        /// the Project parameter. It will then create a dynamic parameter that corresponds to:
+        /// [Parameter(Mandatory = true, HelpMessage = "Role that is assigned to the specified member.")]
+        /// [ValidateSet(The possible roles we get from the server)]
+        /// public string Role { get; set; }
         /// </summary>
-        private static ConcurrentDictionary<string, string[]> s_rolesDictionary =
-            new ConcurrentDictionary<string, string[]>();
-
-        private IamService iamService = new IamService(GetBaseClientServiceInitializer());
-
         public object GetDynamicParameters()
         {
             if (_dynamicParameters == null)
@@ -162,64 +207,36 @@ namespace Google.PowerShell.CloudResourceManager
                 ParameterAttribute paramAttribute = new ParameterAttribute()
                 {
                     Mandatory = true,
-                    HelpMessage = "Role that is assigned to the specified members."
+                    HelpMessage = "Role that is assigned to the specified member."
                 };
                 List<Attribute> attributeLists = new List<Attribute>() { paramAttribute };
 
                 if (Project != null)
                 {
-                    // If the cmdlet is not executing and user is only using tab completion, the string project
+                    // If the cmdlet is not executing and the user is only using tab completion, the string project
                     // will have double quotes at the start and end so we have to trim that.
                     Project = Project.Trim('"');
 
                     // If the project is a variable, then we have to extract out the variable name.
                     if (Project.StartsWith("$"))
                     {
-                        // In case project is something like $script:variableName.
-                        if (Project.Contains(":"))
-                        {
-                            Project = Project.Split(new char[] { ':' }, 2).Last();
-                        } else
-                        {
-                            Project = Project.Substring(1);
-                        }
-                        // If we cannot get the variable, set it to empty.
-                        Project = GetVariableValue(Project, string.Empty).ToString();
+                        // Try to resolve the variable project, if unsuccessful, set it to an empty string.
+                        Project = ResolveVariable(Project, string.Empty).ToString();
                     }
                 }
 
-                // If we cannot resolve variable or user has not entered parameter for project yet, project
-                // will be null here.
+                // If we cannot resolve the variable or the user has not entered parameter for the project yet,
+                // project will be null here.
                 if (string.IsNullOrWhiteSpace(Project))
                 {
                     Project = CloudSdkSettings.GetSettingsValue(CloudSdkSettings.CommonProperties.Project);
                 }
 
-                if (!s_rolesDictionary.ContainsKey(Project))
-                {
-                    var roleRequestBody = new Apis.Iam.v1.Data.QueryGrantableRolesRequest()
-                    {
-                        FullResourceName = $"//cloudresourcemanager.googleapis.com/projects/{Project}"
-                    };
-
-                    try
-                    {
-                        Apis.Iam.v1.RolesResource.QueryGrantableRolesRequest roleRequest =
-                            iamService.Roles.QueryGrantableRoles(roleRequestBody);
-                        Apis.Iam.v1.Data.QueryGrantableRolesResponse response = roleRequest.Execute();
-
-                        s_rolesDictionary[Project] = response.Roles.Select(role => role.Name).ToArray();
-                    }
-                    catch
-                    {
-                        s_rolesDictionary[Project] = new string[] { };
-                    }
-                }
-
-                string[] roles = s_rolesDictionary[Project];
+                string[] roles = GetGrantableRoles(Project);
+                // If there are no roles, do not add validate set attribute to the parameter (hence, no tab completion).
                 if (roles.Length != 0)
                 {
-                    var validateSetAttribute = new ValidateSetAttribute(s_rolesDictionary[Project]);
+                    var validateSetAttribute = new ValidateSetAttribute(roles);
                     validateSetAttribute.IgnoreCase = true;
                     attributeLists.Add(validateSetAttribute);
                 }
@@ -232,6 +249,9 @@ namespace Google.PowerShell.CloudResourceManager
             return _dynamicParameters;
         }
 
+        /// <summary>
+        /// Returns the appropriate member string based on the parameter set.
+        /// </summary>
         private string GetMember()
         {
             switch (ParameterSetName)
@@ -253,7 +273,7 @@ namespace Google.PowerShell.CloudResourceManager
         {
             if (_dynamicParameters == null
                 || !_dynamicParameters.ContainsKey("Role")
-                || _dynamicParameters["Role"].Value == null)
+                || string.IsNullOrWhiteSpace(_dynamicParameters["Role"].Value?.ToString()))
             {
                 throw new PSArgumentNullException("Role");
             }
@@ -277,7 +297,8 @@ namespace Google.PowerShell.CloudResourceManager
                     if (!binding.Members.Contains(role, StringComparer.OrdinalIgnoreCase))
                     {
                         binding.Members.Add(member);
-                    } else
+                    }
+                    else
                     {
                         needToExecuteRequest = false;
                     }
