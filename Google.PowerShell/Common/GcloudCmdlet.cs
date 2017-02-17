@@ -274,6 +274,11 @@ namespace Google.PowerShell.Common
         /// </summary>
         protected object ResolveVariable(string variable, object defaultValue)
         {
+            if (!variable.StartsWith("$"))
+            {
+                throw new ArgumentException($"Variable '{variable}' has to start with '$'.");
+            }
+
             // In case the variable is something like $script:variableName.
             if (variable.Contains(":"))
             {

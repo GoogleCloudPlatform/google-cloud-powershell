@@ -6,6 +6,10 @@ $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 $script:gcloudPowerShellProject2 = "gcloud-powershell-testing-2"
 # Service account email that is used by appveyor. This service acccount has permission on both PowerShell testing projects.
 $script:appveyorServiceAccEmail = "appveyorci-testing@gcloud-powershell-testing.iam.gserviceaccount.com"
+# Test google account email.
+$script:user = "powershelltesting@gmail.com"
+# Test google group.
+$script:group = "test-group-for-google-cloud-powershell@google.com"
 
 Describe "Get-GcIamPolicyBinding" {
     It "should work" {
@@ -35,7 +39,6 @@ Describe "Add-GcIamPolicyBinding" {
 
     It "should work for -User" {
         $role = "roles/browser"
-        $user = "quoct@google.com"
         $member = "user:$user"
 
         try {
@@ -51,7 +54,6 @@ Describe "Add-GcIamPolicyBinding" {
 
     It "should work for -Group" {
         $role = "roles/logging.viewer"
-        $group = "cloudsharp-eng@google.com"
         $member = "group:$group"
 
         try {

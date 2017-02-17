@@ -17,7 +17,7 @@ namespace Google.PowerShell.CloudResourceManager
     public class GcIamPolicyBindingCmdlet : CloudResourceManagerCmdlet
     {
         // IAM Service used for getting roles that can be granted to a project.
-        private Lazy<IamService> iamService =
+        private Lazy<IamService> _iamService =
             new Lazy<IamService>(() => new IamService(GetBaseClientServiceInitializer()));
 
         /// <summary>
@@ -38,13 +38,14 @@ namespace Google.PowerShell.CloudResourceManager
             {
                 var roleRequestBody = new Apis.Iam.v1.Data.QueryGrantableRolesRequest()
                 {
+                    // The full resource name has to start with "//".
                     FullResourceName = $"//cloudresourcemanager.googleapis.com/projects/{projectName}"
                 };
 
                 try
                 {
                     Apis.Iam.v1.RolesResource.QueryGrantableRolesRequest roleRequest =
-                        iamService.Value.Roles.QueryGrantableRoles(roleRequestBody);
+                        _iamService.Value.Roles.QueryGrantableRoles(roleRequestBody);
                     Apis.Iam.v1.Data.QueryGrantableRolesResponse response = roleRequest.Execute();
 
                     s_rolesDictionary[projectName] = response.Roles.Select(role => role.Name).ToArray();
