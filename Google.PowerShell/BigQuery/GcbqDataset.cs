@@ -267,7 +267,7 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <para type="description">
     /// Deletes the specified dataset. This command takes a Dataset object as input, typically off the pipeline. 
-    /// You can also use the -ByObject flag and pass it as a parameter. The dataset must be empty to be deleted.  
+    /// You can also use the -ByObject flag and pass it as a parameter. The dataset must be empty to be deleted. 
     /// Use the -Force flag if the dataset is not empty to confirm deletion of all tables in the dataset. 
     /// Once this operation is complete, you may create a new dataset with the same name. If no Project is specified, 
     /// the default project will be used. If the deletion runs without error, this cmdlet has no output.
@@ -354,11 +354,8 @@ namespace Google.PowerShell.BigQuery
 
         private string GetConfirmationMessage(Dataset d, int? tables)
         {
-            return d.DatasetReference.DatasetId
-                + " has "
-                + tables
-                + " tables and the Force parameter was not specified. If you continue, all tables will be removed"
-                + " with the dataset. Are you sure you want to continue?";
+            return $@"{d.DatasetReference.DatasetId} has {tables} tables and the -Force parameter was not specified. "
+                + "If you continue, all tables will be removed with the dataset. Are you sure you want to continue?";
         }
     }
 }
