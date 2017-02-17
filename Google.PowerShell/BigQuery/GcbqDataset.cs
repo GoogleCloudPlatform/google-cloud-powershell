@@ -136,6 +136,68 @@ namespace Google.PowerShell.BigQuery
 
     /// <summary>
     /// <para type="synopsis">
+    /// Updates information in an existing dataset.
+    /// </para>
+    /// <para type="description">
+    /// Updates information in an existing dataset. If no Project is specified, the default project will be used. 
+    /// This cmdlet returns a Dataset object.
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> $updatedSet | Set-GcbqDataset</code>
+    ///   <para>This will update the values stored in the cloud for the dataset passed via pipeline.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Set-GcbqDataset -Project my_project -ByObject $modifedSet</code>
+    ///   <para>This overwrites my_project:my_data_id with the dataset from $modifiedSet.</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets)">
+    /// [BigQuery Datasets]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Set, "GcbqDataset")]
+    public class SetGcbqDataset : GcbqCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The project to look for datasets in. If not set via PowerShell parameter processing, it will
+        /// default to the Cloud SDK's DefaultProject property.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        override public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The updated Dataset object.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ValueFromPipeline = true)]
+        public Dataset ByObject { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            Dataset response;
+            var request = new DatasetsResource.UpdateRequest(Service, ByObject, Project, ByObject.DatasetReference.DatasetId);
+            response = request.Execute();
+            
+            if (response != null)
+            {
+                WriteObject(response);
+            }
+            else
+            {
+                WriteError(new ErrorRecord(
+                    new Exception("400"),
+                    $"Set request for {ByObject.DatasetReference.DatasetId} failed.",
+                    ErrorCategory.InvalidArgument,
+                    ByObject));
+            }
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
     /// Creates a new empty dataset in the specified project.
     /// </para>
     /// <para type="description">

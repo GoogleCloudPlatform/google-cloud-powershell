@@ -4,14 +4,13 @@ $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 Describe "New-GcbqDataset" {
 
     It "should take a name, description, and time to make a dataset" {
-        $oneDay = 86400
         try {
-            $data = New-GcbqDataset "test_data_id1" -Name "Testdata" -Description "Some interesting data!" -Expiration $oneDay
+            $data = New-GcbqDataset "test_data_id1" -Name "Testdata" -Description "Some interesting data!" -Expiration $oneDaySec
             $data | Should Not BeNullOrEmpty
             $data.DatasetReference.DatasetId | Should Be "test_data_id1"
             $data.FriendlyName | Should Be "Testdata"
             $data.Description | Should Be "Some interesting data!"
-            $data.DefaultTableExpirationMs | Should Be ($oneDay * 1000)
+            $data.DefaultTableExpirationMs | Should Be $oneDayMs
         }
         finally {
             Get-GcbqDataset "test_data_id1" | Remove-GcbqDataset
@@ -236,6 +235,46 @@ Describe "Remove-GcbqDataset" {
     }
 }
 
-#TODO(ahandley): Describe "Set-GcbqDataset".
+Describe "Set-GcbqDataset" {
+
+    It "should update trivial metadata fields via pipeline (not DatabaseId)" {
+        try {
+            New-GcbqDataset "test_dataset_id1" -Name "Testdata" -Description "Some interesting data!" -Expiration $oneDaySec
+            $data = Get-GcbqDataset "test_dataset_id1"
+            $data.FriendlyName = "Some Test Data"
+            $data.Description = "A new description!"
+            $data.DefaultTableExpirationMs = $threeDayMs
+            $data | Set-GcbqDataset -outvariable data
+            $data | Should Not BeNullOrEmpty
+            $data.FriendlyName | Should Be "Some Test Data"
+            $data.Description | Should Be "A new description!"
+            $data.DefaultTableExpirationMs | Should Be $threeDayMs
+        }
+        finally {
+            Get-GcbqDataset "test_dataset_id1" | Remove-GcbqDataset
+        }
+    }
+
+    It "should update trivial metadata fields via parameter (not DatabaseId)" {
+        try {
+            New-GcbqDataset "test_dataset_id1" -Name "Testdata" -Description "Some interesting data!" -Expiration $oneDaySec
+            $data = Get-GcbqDataset "test_dataset_id1"
+            $data.FriendlyName = "Some Test Data"
+            $data.Description = "A new description!"
+            $data.DefaultTableExpirationMs = $threeDayMs
+            $data = Set-GcbqDataset -ByObject $data
+            $data | Should Not BeNullOrEmpty
+            $data.FriendlyName | Should Be "Some Test Data"
+            $data.Description | Should Be "A new description!"
+            $data.DefaultTableExpirationMs | Should Be $threeDayMs
+        }
+        finally {
+            Get-GcbqDataset "test_dataset_id1" | Remove-GcbqDataset
+        }
+    }
+
+    #TODO(ahandley): Add in tests for updating Access field when cmdlet support has been built.
+
+}
 
 Reset-GCloudConfig $oldActiveConfig $configName
