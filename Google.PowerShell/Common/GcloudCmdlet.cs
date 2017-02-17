@@ -268,6 +268,30 @@ namespace Google.PowerShell.Common
             return UnknownCmdletName;
         }
 
+        /// <summary>
+        /// Given a variable name, resolve it to an object.
+        /// If we cannot resolve it, returns the defaultValue.
+        /// </summary>
+        protected object ResolveVariable(string variable, object defaultValue)
+        {
+            if (!variable.StartsWith("$"))
+            {
+                throw new ArgumentException($"Variable '{variable}' has to start with '$'.");
+            }
+
+            // In case the variable is something like $script:variableName.
+            if (variable.Contains(":"))
+            {
+                variable = variable.Split(new char[] { ':' }, 2).Last();
+            }
+            else
+            {
+                variable = variable.Substring(1);
+            }
+
+            return GetVariableValue(variable, defaultValue);
+        }
+
         public void Dispose()
         {
             string cmdletName = GetCmdletName();

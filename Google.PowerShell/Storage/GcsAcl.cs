@@ -19,10 +19,10 @@ namespace Google.PowerShell.CloudStorage
     {
         protected class ParameterSetNames
         {
-            public const string Project = "User";
-            public const string User = "Group";
-            public const string Group = "Domain";
-            public const string Domain = "Team";
+            public const string Project = "Team";
+            public const string User = "User";
+            public const string Group = "Group";
+            public const string Domain = "Domain";
             public const string AllUsers = "AllUsers";
             public const string AllAuthenticatedUsers = "AllAuthenticatedUsers";
         }

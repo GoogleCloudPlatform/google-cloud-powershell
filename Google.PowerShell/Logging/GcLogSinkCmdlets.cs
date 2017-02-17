@@ -321,7 +321,7 @@ namespace Google.PowerShell.Logging
     /// [Exporting Logs]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.New, "GcLogSink")]
+    [Cmdlet(VerbsCommon.New, "GcLogSink", DefaultParameterSetName = ParameterSetNames.GcsBucketDestination)]
     public class NewGcLogSinkCmdlet : CreateOrSetGcLogSinkCmdlet
     {
         protected override LoggingBaseServiceRequest<LogSink> GetRequest(LogSink logSink)
