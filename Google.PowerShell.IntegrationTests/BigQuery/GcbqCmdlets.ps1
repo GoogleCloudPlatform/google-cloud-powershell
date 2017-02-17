@@ -6,5 +6,3 @@ $nonExistProject = "project-no-exist"
 $accessErrProject = "asdf"
 
 # Define functions that will be used in testing
-
-
