@@ -99,12 +99,11 @@ namespace Google.PowerShell.BigQuery
                     DatasetsResource.ListRequest lRequest = new DatasetsResource.ListRequest(Service, Project);
                     lRequest.All = All;
                     lRequest.Filter = Filter;
-                    try
-                    {
-                        var lResponse = lRequest.Execute();
+                    var lResponse = lRequest.Execute();
+                    if (lResponse != null) { 
                         WriteObject(lResponse, true);
                     }
-                    catch
+                    else
                     {
                         WriteError(new ErrorRecord(
                             new Exception("400"), 
@@ -122,7 +121,7 @@ namespace Google.PowerShell.BigQuery
                     }
                     catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
                     {
-                        WriteError(new ErrorRecord(new Exception("404"), 
+                        WriteError(new ErrorRecord(ex, 
                             $"Error 404: Dataset {Dataset} not found in {Project}.",
                             ErrorCategory.ObjectNotFound, 
                             Dataset));
