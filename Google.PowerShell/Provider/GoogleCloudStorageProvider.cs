@@ -651,8 +651,9 @@ namespace Google.PowerShell.CloudStorage
             var dyanmicParameters = (GcsCopyItemDynamicParameters)DynamicParameters;
             if (recurse)
             {
-                path = path.TrimEnd('\\') + "\\";
-                copyPath = copyPath.TrimEnd('\\') + "\\";
+                char directorySeparator = Path.DirectorySeparatorChar;
+                path = path.TrimEnd(directorySeparator) + directorySeparator;
+                copyPath = copyPath.TrimEnd(directorySeparator) + directorySeparator;
             }
             var gcsPath = GcsPath.Parse(path);
             var gcsCopyPath = GcsPath.Parse(copyPath);
@@ -835,6 +836,7 @@ namespace Google.PowerShell.CloudStorage
                 case GcsPath.GcsPathType.Object:
                     if (IsItemContainer(path))
                     {
+                        path = path.TrimEnd("/\\".ToCharArray());
                         RemoveFolder(GcsPath.Parse(path + "/"), recurse);
                     }
                     else
@@ -859,13 +861,32 @@ namespace Google.PowerShell.CloudStorage
 
         private void RemoveFolder(GcsPath gcsPath, bool recurse)
         {
+            IEnumerable<Object> children = ListChildren(gcsPath, true);
+            string query = $"The item at the path '{gcsPath.ObjectPath}' has children and the Recurse parameter was not specified."
+                + " If you continue, all children will be removed with the item. Are you sure you want to continue?";
+            string caption = "Confirm";
+
+            // Ask the user for permission to delete children of the folder if -Recurse is not supplied.
+            if (children.Any() && !recurse)
+            {
+                if (ShouldContinue(query, caption))
+                {
+                    recurse = true;
+                }
+                else
+                {
+                    return;
+                }
+            }
+
             if (GetBucketModel(gcsPath.Bucket).IsReal(gcsPath.ObjectPath))
             {
                 Service.Objects.Delete(gcsPath.Bucket, gcsPath.ObjectPath).Execute();
             }
+
             if (recurse)
             {
-                foreach (var childObject in ListChildren(gcsPath, true))
+                foreach (var childObject in children)
                 {
                     Service.Objects.Delete(childObject.Bucket, childObject.Name).Execute();
                 }
