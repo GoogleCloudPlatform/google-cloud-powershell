@@ -5,6 +5,7 @@ using Google.Apis.Bigquery.v2;
 using Google.Apis.Bigquery.v2.Data;
 using Google.PowerShell.Common;
 using System;
+using System.Net;
 using System.Management.Automation;
 
 namespace Google.PowerShell.BigQuery
@@ -98,33 +99,32 @@ namespace Google.PowerShell.BigQuery
                     DatasetsResource.ListRequest lRequest = new DatasetsResource.ListRequest(Service, Project);
                     lRequest.All = All;
                     lRequest.Filter = Filter;
-                    var lResponse = lRequest.Execute();
-                    if (lResponse != null)
+                    try
                     {
+                        var lResponse = lRequest.Execute();
                         WriteObject(lResponse, true);
                     }
-                    else
+                    catch
                     {
                         WriteError(new ErrorRecord(
                             new Exception("400"), 
-                            "List request to server failed.",
+                            "Error 400: List request to server failed.",
                             ErrorCategory.InvalidArgument, 
                             Project));
                     }
                     break;
                 case ParameterSetNames.Get:
                     DatasetsResource.GetRequest gRequest = new DatasetsResource.GetRequest(Service, Project, Dataset);
-                    var gResponse = gRequest.Execute();
-                    if (gResponse != null)
+                    try
                     {
+                        var gResponse = gRequest.Execute();
                         WriteObject(gResponse);
                     }
-                    else
+                    catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
                     {
-                        WriteError(new ErrorRecord(
-                            new Exception("400"), 
-                            "Get request to server failed.",
-                            ErrorCategory.InvalidArgument, 
+                        WriteError(new ErrorRecord(new Exception("404"), 
+                            $"Error 404: Dataset {Dataset} not found in {Project}.",
+                            ErrorCategory.ObjectNotFound, 
                             Dataset));
                     }
                     break;
@@ -136,19 +136,24 @@ namespace Google.PowerShell.BigQuery
 
     /// <summary>
     /// <para type="synopsis">
-    /// Updates information in an existing dataset.
+    /// Updates information describing an existing BigQuery dataset.
     /// </para>
     /// <para type="description">
-    /// Updates information in an existing dataset. If no Project is specified, the default project will be used. 
-    /// This cmdlet returns a Dataset object.
+    /// Updates information describing an existing BigQuery dataset. If no Project is specified, the 
+    /// default project will be used. This cmdlet returns a Dataset object.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> $updatedSet | Set-GcbqDataset</code>
-    ///   <para>This will update the values stored in the cloud for the dataset passed via pipeline.</para>
+    ///   <code>PS C:\> $updatedSet = Get-GcbqDataset "my_dataset"
+    ///   $updatedSet.Description = "An updated summary of the data contents."
+    ///   PS C:\ $updatedSet | Set-GcbqDataset</code>
+    ///   <para>This will update the values stored for the Bigquery dataset passed in the default project.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Set-GcbqDataset -Project my_project -ByObject $modifedSet</code>
-    ///   <para>This overwrites my_project:my_data_id with the dataset from $modifiedSet.</para>
+    ///   <code>PS C:\> $updatedSet = Get-GcbqDataset "my_dataset"
+    ///   $updatedSet.DefaultTableExpirationMs = 60 * 60 * 24 * 7
+    ///   $updatedSet.Description = "A set of tables that last for exactly one week."
+    ///   PS C:\> Set-GcbqDataset -Project my_project -InputObject $updatedSet</code>
+    ///   <para>This will update the values stored for my_dataset and shows how to pass it in as a parameter.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets)">
     /// [BigQuery Datasets]
@@ -169,29 +174,34 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// The updated Dataset object.
+        /// The updated Dataset object.  Must have the same datasetId as an existing dataset in the project specified.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ValueFromPipeline = true)]
-        public Dataset ByObject { get; set; }
+        public Dataset InputObject { get; set; }
 
         protected override void ProcessRecord()
         {
             Dataset response;
-            var request = new DatasetsResource.UpdateRequest(Service, ByObject, Project, ByObject.DatasetReference.DatasetId);
-            response = request.Execute();
-            
-            if (response != null)
+            var request = new DatasetsResource.UpdateRequest(Service, InputObject, Project, InputObject.DatasetReference.DatasetId);
+            try
             {
+                response = request.Execute();
                 WriteObject(response);
             }
-            else
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
             {
-                WriteError(new ErrorRecord(
-                    new Exception("400"),
-                    $"Set request for {ByObject.DatasetReference.DatasetId} failed.",
-                    ErrorCategory.InvalidArgument,
-                    ByObject));
+                WriteError(new ErrorRecord(ex,
+                    $"Conflict while updating {InputObject.DatasetReference.DatasetId}.",
+                    ErrorCategory.WriteError,
+                    InputObject));
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Forbidden)
+            {
+                WriteError(new ErrorRecord(ex,
+                    $"You do not have permission to modify {InputObject.DatasetReference.DatasetId}.",
+                    ErrorCategory.PermissionDenied,
+                    InputObject));
             }
         }
     }
@@ -202,7 +212,7 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <para type="description">
     /// Creates a new, empty dataset in the specified project. A Dataset can be supplied by object via the 
-    /// pipeline or the -ByObject parameter, or it can be instantiated by value with the flags below. 
+    /// pipeline or the -InputObject parameter, or it can be instantiated by value with the flags below. 
     /// If no Project is specified, the default project will be used. This cmdlet returns a Dataset object.
     /// </para>
     /// <example>
@@ -307,16 +317,15 @@ namespace Google.PowerShell.BigQuery
 
             // Add the new dataset to the project supplied.
             DatasetsResource.InsertRequest request = Service.Datasets.Insert(newData, Project);
-            Dataset response = request.Execute();
-            if (response != null)
+            try
             {
+                Dataset response = request.Execute();
                 WriteObject(response);
             }
-            else
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
             {
-                WriteError(new ErrorRecord(
-                    new Exception("400"), 
-                    "Insert request to server failed.",
+                WriteError(new ErrorRecord(ex,  
+                    $"A dataset with the name {DatasetId} already exists.",
                     ErrorCategory.InvalidArgument, 
                     newData));
             }
@@ -329,7 +338,7 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <para type="description">
     /// Deletes the specified dataset. This command takes a Dataset object as input, typically off the pipeline. 
-    /// You can also use the -ByObject flag and pass it as a parameter. The dataset must be empty to be deleted. 
+    /// You can also use the -InputObject flag and pass it as a parameter. The dataset must be empty to be deleted. 
     /// Use the -Force flag if the dataset is not empty to confirm deletion of all tables in the dataset. 
     /// Once this operation is complete, you may create a new dataset with the same name. If no Project is specified, 
     /// the default project will be used. If the deletion runs without error, this cmdlet has no output.
@@ -365,7 +374,7 @@ namespace Google.PowerShell.BigQuery
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ValueFromPipeline = true)]
-        public Dataset ByObject { get; set; }
+        public Dataset InputObject { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -379,38 +388,43 @@ namespace Google.PowerShell.BigQuery
         {
             // Form and send request.
             DatasetsResource.DeleteRequest request = 
-                new DatasetsResource.DeleteRequest(Service, Project, ByObject.DatasetReference.DatasetId);
+                new DatasetsResource.DeleteRequest(Service, Project, InputObject.DatasetReference.DatasetId);
             String response = "Dataset Removal Stopped.";
-            if (ShouldProcess(ByObject.DatasetReference.DatasetId))
+            if (ShouldProcess(InputObject.DatasetReference.DatasetId))
             {
-                if (Force == true)
+                try
                 {
-                    request.DeleteContents = true;
-                    response = request.Execute();
-                }
-                else
-                {
-                    TablesResource.ListRequest checkTables = 
-                        new TablesResource.ListRequest(Service, Project, ByObject.DatasetReference.DatasetId);
-                    var tableResponse = checkTables.Execute();
-                    if (tableResponse.TotalItems == 0)
-                    {
-                        response = request.Execute();
-                    }
-                    else if (ShouldContinue(
-                        GetConfirmationMessage(ByObject, tableResponse.TotalItems), 
-                        "Confirm Deletion"))
+                    if (Force == true)
                     {
                         request.DeleteContents = true;
                         response = request.Execute();
                     }
+                    else
+                    {
+                        TablesResource.ListRequest checkTables =
+                            new TablesResource.ListRequest(Service, Project, InputObject.DatasetReference.DatasetId);
+                        var tableResponse = checkTables.Execute();
+                        if (tableResponse.TotalItems == 0)
+                        {
+                            response = request.Execute();
+                        }
+                        else if (ShouldContinue(
+                            GetConfirmationMessage(InputObject, tableResponse.TotalItems),
+                            "Confirm Deletion"))
+                        {
+                            request.DeleteContents = true;
+                            response = request.Execute();
+                        }
+                    }
+                    WriteObject(response);
                 }
-
-                if (response.Length > 0)
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Forbidden)
                 {
-                    WriteError(new ErrorRecord(new Exception(response), "Deletion failed.",
-                        ErrorCategory.OperationStopped, response));
-                }
+                    WriteError(new ErrorRecord(ex, 
+                        $"You do not have permission to delete {InputObject.DatasetReference.DatasetId}.",
+                        ErrorCategory.PermissionDenied, 
+                        InputObject));
+                } 
             }
         }
 
