@@ -428,6 +428,9 @@ Describe "ConvertTo-GcSqlInstance" {
 }
 
 Describe "Restore-GcSqlInstanceBackup" {
+    # We skip some of the tests on AppVeyor because they take too long
+    $skipTest = $env:test_folder -eq "SQL2"
+
     # For these tests, test-db4 and mynewinstance were used because an instance must have backups enabled and a 
     # binarylog to be backed up. This kind of instance cannot be easily/quickly instantiated like those in other tests.
     $backupInstance1 = "test-db4"
@@ -451,7 +454,7 @@ Describe "Restore-GcSqlInstanceBackup" {
         $operations[0].Error | Should Match ""
     }
 
-     It "should backup pipelined test-db4 to its own backup (test-db4 and default projects same)" {
+     It "should backup pipelined test-db4 to its own backup (test-db4 and default projects same)" -Skip:$skipTest {
          $backupRunId = $backupRunIds1[1]
 
         Get-GcSqlInstance -Name $backupInstance1 | Restore-GcSqlInstanceBackup $backupRunId
@@ -463,7 +466,7 @@ Describe "Restore-GcSqlInstanceBackup" {
         $operations[0].Error | Should Match ""
      }
 
-    It "should backup pipelined test-db4 to its own backup (test-db4 and default projects differ)" {
+    It "should backup pipelined test-db4 to its own backup (test-db4 and default projects differ)" -Skip:$skipTest {
         $nonDefaultProject = "asdf"
         $defaultProject = "gcloud-powershell-testing"
 
@@ -487,7 +490,7 @@ Describe "Restore-GcSqlInstanceBackup" {
         }
      }
 
-    It "should backup pipelined mynewinstance to test-db4's backup" -Pending {
+    It "should backup pipelined mynewinstance to test-db4's backup" -Skip:$skipTest {
         $backupRunId = $backupRunIds1[0]
 
         Get-GcSqlInstance -Name $backupInstance2 | Restore-GcSqlInstanceBackup $backupRunId -BackupInstance $backupInstance1
