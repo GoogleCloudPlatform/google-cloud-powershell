@@ -123,7 +123,111 @@ Describe "Add-GcIamPolicyBinding" {
 
     It "should throw if we don't have permission" {
         $role = "roles/browser"
-        $user = "quoct@google.com"
         { Add-GcIamPolicyBinding -User $user -Role $role -Project "asdf" } | Should Throw "403"
+    }
+}
+
+Describe "Remove-GcIamPolicyBinding" {
+    # Returns true if binding for member $member to role $role exists in project $projectToCheck.
+    function Test-Binding($member, $role, $projectToCheck) {
+        $bindings = Get-GcIamPolicyBinding -Project $projectToCheck
+        $binding = $bindings | Where-Object {$_.Role -eq $role}
+        if ($null -eq $binding -or $null -eq $binding.Members) {
+            return $false
+        }
+        return ($binding.Members -contains $member)
+    }
+
+    It "should work for -User" {
+        $role = "roles/browser"
+        $member = "user:$user"
+
+        try {
+            Add-GcIamPolicyBinding -User $user -Role $role -Project $gcloudPowerShellProject2
+            Test-Binding $member $role $gcloudPowerShellProject2 | Should Be $true
+        }
+        finally {
+            Remove-GcIamPolicyBinding -User $user -Role $role -Project $gcloudPowerShellProject2
+            Test-Binding $member $role $gcloudPowerShellProject2 | Should Be $false
+        }
+    }
+
+    It "should work for -Group" {
+        $role = "roles/logging.viewer"
+        $member = "group:$group"
+
+        try {
+            Add-GcIamPolicyBinding -Group $group -Role $role -Project $gcloudPowerShellProject2
+            Test-Binding $member $role $gcloudPowerShellProject2 | Should Be $true
+        }
+        finally {
+            Remove-GcIamPolicyBinding -Group $group -Role $role -Project $gcloudPowerShellProject2
+            Test-Binding $member $role $gcloudPowerShellProject2 | Should Be $false
+        }
+    }
+
+    It "should work for -ServiceAccount" {
+        $role = "roles/datastore.viewer"
+        $member = "serviceAccount:$appveyorServiceAccEmail"
+
+        try {
+            Add-GcIamPolicyBinding -ServiceAccount $appveyorServiceAccEmail `
+                                   -Role $role `
+                                   -Project $gcloudPowerShellProject2
+            Test-Binding $member $role $gcloudPowerShellProject2 | Should Be $true
+        }
+        finally {
+            Remove-GcIamPolicyBinding -ServiceAccount $appveyorServiceAccEmail `
+                                   -Role $role `
+                                   -Project $gcloudPowerShellProject2
+            Test-Binding $member $role $gcloudPowerShellProject2 | Should Be $false
+        }
+    }
+
+    It "should work for -Domain" {
+        $role = "roles/viewer"
+        $domain = "google.com"
+        $member = "domain:$domain"
+
+        try {
+            Add-GcIamPolicyBinding -Domain $domain -Role $role -Project $gcloudPowerShellProject2
+            Test-Binding $member $role $gcloudPowerShellProject2 | Should Be $true
+        }
+        finally {
+            Remove-GcIamPolicyBinding -Domain $domain -Role $role -Project $gcloudPowerShellProject2
+            Test-Binding $member $role $gcloudPowerShellProject2 | Should Be $false
+        }
+    }
+
+    It "should work if we remove binding multiple times" {
+        $role = "roles/browser"
+        $user = "quoct@google.com"
+        $group = "cloudsharp-eng@google.com"
+        $memberOne = "user:$user"
+        $memberTwo = "group:$group"
+
+        try {
+            Add-GcIamPolicyBinding -User $user -Role $role -Project $gcloudPowerShellProject2
+            Add-GcIamPolicyBinding -Group $group -Role $role -Project $gcloudPowerShellProject2
+            Test-Binding $memberOne $role $gcloudPowerShellProject2 | Should Be $true
+            Test-Binding $memberTwo $role $gcloudPowerShellProject2 | Should Be $true
+        }
+        finally {
+            Remove-GcIamPolicyBinding -User $user -Role $role -Project $gcloudPowerShellProject2
+            Remove-GcIamPolicyBinding -Group $group -Role $role -Project $gcloudPowerShellProject2
+            Test-Binding $memberOne $role $gcloudPowerShellProject2 | Should Be $false
+            Test-Binding $memberTwo $role $gcloudPowerShellProject2 | Should Be $false
+        }
+    }
+
+    It "should not throw error if the binding does not exist" {
+        $role = "roles/owner"
+        { Remove-GcIamPolicyBinding -User $user -Role $role -Project $gcloudPowerShellProject2 } |
+            Should Not Throw
+    }
+
+    It "should throw if we don't have permission" {
+        $role = "roles/browser"
+        { Remove-GcIamPolicyBinding -User $user -Role $role -Project "asdf" } | Should Throw "403"
     }
 }
