@@ -77,7 +77,9 @@ namespace Google.PowerShell.CloudStorage
                 // Find the prefixes (parent folders) of this object.
                 string prefix = gcsObject.Name.TrimEnd(Separator);
                 int lastSeparator = gcsObject.Name.LastIndexOf(Separator);
-                bool children = false;
+                // If the object name is testing/blah.txt, then the first prefix "testing" has children
+                // since '/' is not at the end. Otherwise, we don't know yet.
+                bool children = 0 < lastSeparator && lastSeparator < prefix.Length - 1;
                 while (lastSeparator > 0)
                 {
                     prefix = prefix.Substring(0, lastSeparator);

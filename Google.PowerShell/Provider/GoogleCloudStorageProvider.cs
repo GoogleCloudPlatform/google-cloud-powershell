@@ -651,8 +651,9 @@ namespace Google.PowerShell.CloudStorage
             var dyanmicParameters = (GcsCopyItemDynamicParameters)DynamicParameters;
             if (recurse)
             {
-                path = path.TrimEnd('\\') + "\\";
-                copyPath = copyPath.TrimEnd('\\') + "\\";
+                char directorySeparator = Path.DirectorySeparatorChar;
+                path = path.TrimEnd(directorySeparator) + directorySeparator;
+                copyPath = copyPath.TrimEnd(directorySeparator) + directorySeparator;
             }
             var gcsPath = GcsPath.Parse(path);
             var gcsCopyPath = GcsPath.Parse(copyPath);
@@ -835,6 +836,7 @@ namespace Google.PowerShell.CloudStorage
                 case GcsPath.GcsPathType.Object:
                     if (IsItemContainer(path))
                     {
+                        path = path.TrimEnd("/\\".ToCharArray());
                         RemoveFolder(GcsPath.Parse(path + "/"), recurse);
                     }
                     else
