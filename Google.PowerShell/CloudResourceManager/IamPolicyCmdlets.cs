@@ -387,7 +387,8 @@ namespace Google.PowerShell.CloudResourceManager
     /// [Google Cloud IAM]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Remove, "GcIamPolicyBinding", DefaultParameterSetName = ParameterSetNames.User)]
+    [Cmdlet(VerbsCommon.Remove, "GcIamPolicyBinding", SupportsShouldProcess = true,
+        DefaultParameterSetName = ParameterSetNames.User)]
     public class RemoveGcIamPolicyBindingCmdlet : AddOrRemoveGcIamPolicyBindingCmdlet
     {
         protected override void ProcessRecord()
@@ -419,12 +420,15 @@ namespace Google.PowerShell.CloudResourceManager
             }
             else
             {
-                var requestBody = new SetIamPolicyRequest() { Policy = existingPolicy };
-                ProjectsResource.SetIamPolicyRequest setRequest =
-                    Service.Projects.SetIamPolicy(requestBody, $"{Project}");
+                if (ShouldProcess($"{member}", $"Remove IAM policy binding in project '{Project}' for role '{role}'"))
+                {
+                    var requestBody = new SetIamPolicyRequest() { Policy = existingPolicy };
+                    ProjectsResource.SetIamPolicyRequest setRequest =
+                        Service.Projects.SetIamPolicy(requestBody, $"{Project}");
 
-                Policy changedPolicy = setRequest.Execute();
-                WriteObject(changedPolicy.Bindings, true);
+                    Policy changedPolicy = setRequest.Execute();
+                    WriteObject(changedPolicy.Bindings, true);
+                }
             }
         }
     }

@@ -220,6 +220,20 @@ Describe "Remove-GcIamPolicyBinding" {
         }
     }
 
+    It "should not remove binding if -WhatIf is used" {
+        $role = "roles/browser"
+        $member = "user:$user"
+
+        try {
+            Add-GcIamPolicyBinding -User $user -Role $role -Project $gcloudPowerShellProject2
+            Test-Binding $member $role $gcloudPowerShellProject2 | Should Be $true
+        }
+        finally {
+            Remove-GcIamPolicyBinding -User $user -Role $role -Project $gcloudPowerShellProject2 -WhatIf
+            Test-Binding $member $role $gcloudPowerShellProject2 | Should Be $true
+        }
+    }
+
     It "should not throw error if the binding does not exist" {
         $role = "roles/owner"
         { Remove-GcIamPolicyBinding -User $user -Role $role -Project $gcloudPowerShellProject2 } |
