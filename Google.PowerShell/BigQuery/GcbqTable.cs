@@ -12,15 +12,27 @@ namespace Google.PowerShell.BigQuery
 {
     /// <summary>
     /// <para type="synopsis">
-    /// Lists BigQuery Tables from a specific project and dataset and returns individual table descriptor objects.
+    /// Lists all tables in the specified dataset or returns a specific table.
     /// </para>
     /// <para type="description">
-    /// test
+    /// Lists all tables in the specified dataset. Requires the READER dataset role. If a table ID is specified, 
+    /// it will return the table resource, which describes the data in the table. Note that this is not the 
+    /// actual data from the table. If no Project is specified, the default project will be used. The dataset 
+    /// may be selected by passing in a Dataset object via pipeline or by passing the dataset ID with the 
+    /// -Dataset parameter. This cmdlet returns a TableList object if no Table was specified, and a Table otherwise.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Get-GcbqTable</code>
-    ///   <para>This does a thing</para>
+    ///   <code>PS C:\> Get-GcbqDataset “my_data” | Get-GcbqTable</code>
+    ///   <para>This will list all of the tables in the dataset "my_data" in the default project.</para>
     /// </example>
+    /// <example>
+    ///   <code>PS C:\> Get-GcbqDataset “my_data” | Get-GcbqTable "my_table"</code>
+    ///   <para>This will return a Table descriptor object for "my_table" in "my_data".</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Get-GcbqTable -Project "my_proj" -Dataset "my_data" "my_table"</code>
+    ///   <para>This returns a Table descriptor object for this project:dataset:table combination.</para>
+    /// </example> 
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/tables)">
     /// [BigQuery Tables]
     /// </para>
@@ -28,8 +40,91 @@ namespace Google.PowerShell.BigQuery
     [Cmdlet(VerbsCommon.Get, "GcbqTable")]
     public class GetGcbqTable : GcbqCmdlet
     {
+        //TODO(ahandley): Find a way to set a default or "last accessed" dataset  (and update docs)
+        /// <summary>
+        /// <para type="description">
+        /// The project to look for datasets in. If not set via PowerShell parameter processing, it will
+        /// default to the Cloud SDK's DefaultProject property.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        override public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The ID of the dataset that you want to get a descriptor object for.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ValidatePattern("[a-zA-Z0-9_]")]
+        public string Dataset { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The ID of the dataset that you want to get a descriptor object for. 
+        /// (This will be used if both InputObject and Dataset are provided)
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ValueFromPipeline = true)]
+        public Dataset InputObject { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The ID of the dataset that you want to get a descriptor object for.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, Position = 0)]
+        public string Table { get; set; }
+
         protected override void ProcessRecord()
         {
+            // Select the DatasetID. Favor InputObject if both present. Default if neither present.
+            if (InputObject == null && Dataset == null)
+            {
+                ThrowTerminatingError(new ErrorRecord(
+                    new Exception("No Dataset Specified"),
+                    "No Dataset Specified",
+                    ErrorCategory.InvalidArgument,
+                    InputObject));
+                return;
+            }
+            Dataset = (InputObject != null) ? InputObject.DatasetReference.DatasetId : Dataset;
+
+            // Create and execute request.
+            if (Table == null)
+            {
+                TablesResource.ListRequest request = new TablesResource.ListRequest(Service, Project, Dataset);
+                var response = request.Execute();
+                if (response != null)
+                {
+                    WriteObject(response, true);
+                }
+                else
+                {
+                    WriteError(new ErrorRecord(
+                        new Exception("400"),
+                        "Error 400: List request to server failed.",
+                        ErrorCategory.InvalidArgument,
+                        Dataset));
+                }
+            }
+            else
+            {
+                TablesResource.GetRequest request = new TablesResource.GetRequest(Service, Project, Dataset, Table);
+                try
+                {
+                    var response = request.Execute();
+                    WriteObject(response);
+                }
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+                {
+                    WriteError(new ErrorRecord(ex,
+                        $"Error 404: Table {Table} not found in {Dataset}.",
+                        ErrorCategory.ObjectNotFound,
+                        Table));
+                }
+            }
         }
     }
 
