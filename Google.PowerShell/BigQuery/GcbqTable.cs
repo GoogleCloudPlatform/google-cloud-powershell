@@ -40,7 +40,6 @@ namespace Google.PowerShell.BigQuery
     [Cmdlet(VerbsCommon.Get, "GcbqTable")]
     public class GetGcbqTable : GcbqCmdlet
     {
-        //TODO(ahandley): Find a way to set a default or "last accessed" dataset  (and update docs)
         /// <summary>
         /// <para type="description">
         /// The project to look for datasets in. If not set via PowerShell parameter processing, it will
