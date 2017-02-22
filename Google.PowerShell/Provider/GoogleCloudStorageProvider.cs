@@ -1135,11 +1135,17 @@ namespace Google.PowerShell.CloudStorage
         {
             BlockingCollection<Bucket> bucketCollections = new BlockingCollection<Bucket>();
             ConcurrentDictionary<string, Bucket> bucketDict = new ConcurrentDictionary<string, Bucket>();
-            IEnumerable<Project> projects = ListAllProjects();
-            // In each of these tasks, the buckets will be added to the blocking collection bucketCollections.
-            IEnumerable<Task> taskWithActions = projects.Select(project => ListBucketsAsync(project, bucketCollections));
-            // Once all the tasks are done, we signal to the blocking collection that there is nothing to be added.
-            Task.Factory.ContinueWhenAll(taskWithActions.ToArray(), result => { bucketCollections.CompleteAdding(); });
+
+            // If we don't do these steps in a new thread, it will block until the task array (taskWithActions)
+            // is created and this may take a while if there are lots of projects.
+            Task.Factory.StartNew(() =>
+            {
+                IEnumerable<Project> projects = ListAllProjects();
+                // In each of these tasks, the buckets will be added to the blocking collection bucketCollections.
+                IEnumerable<Task> taskWithActions = projects.Select(project => ListBucketsAsync(project, bucketCollections));
+                // Once all the tasks are done, we signal to the blocking collection that there is nothing to be added.
+                Task.Factory.ContinueWhenAll(taskWithActions.ToArray(), result => { bucketCollections.CompleteAdding(); });
+            });
 
             // bucketCollections.IsCompleted is true if CompleteAdding is called.
             while (!bucketCollections.IsCompleted)
