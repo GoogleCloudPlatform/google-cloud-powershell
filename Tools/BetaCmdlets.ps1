@@ -6,5 +6,6 @@ $cmdletsToBeExported = @("Get-GcLogEntry", "New-GcLogEntry", "New-GcLogMonitored
                          "Get-GcpsSubscription", "Set-GcpsSubscriptionConfig",
                          "Remove-GcpsSubscription", "New-GcpsMessage", "Publish-GcpsMessage",
                          "Get-GcpsMessage", "Set-GcpsAckDeadline", "Send-GcpsAck"
-                         "Get-GcIamPolicyBinding", "Add-GcIamPolicyBinding")
+                         "Get-GcIamPolicyBinding", "Add-GcIamPolicyBinding",
+                         "Get-GcProject")
 $cmdletsToBeExported

@@ -16,6 +16,7 @@ environment:
     - test_folder: "Compute2"
     - test_folder: "SQL"
     - test_folder: "SQL2"
+    - test_folder: "SQL3"
 before_build:
   - nuget restore
   - nuget install secure-file -ExcludeVersion
