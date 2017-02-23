@@ -7,6 +7,7 @@ using Google.PowerShell.Common;
 using System;
 using System.Net;
 using System.Management.Automation;
+using System.Collections.Generic;
 
 namespace Google.PowerShell.BigQuery
 {
@@ -20,8 +21,8 @@ namespace Google.PowerShell.BigQuery
     /// READER dataset role. The -All flag will include hidden datasets in the search results. The -Filter 
     /// flag allows you to filter results by label. The syntax to filter is "labels.name[:value]". Multiple filters 
     /// can be ANDed together by connecting with a space. See the link below for more information.
-    /// If no Project is specified, the default project will be used. This cmdlet returns a DatasetList if 
-    /// no DatasetId was specified, and a Dataset otherwise.
+    /// If no Project is specified, the default project will be used. This cmdlet returns any number of 
+    /// DatasetList.DatasetData objects if no DatasetId was specified, and a Dataset otherwise.
     /// </para>
     /// <example>
     ///   <code>PS C:\> Get-GcbqDataset "my-dataset"</code>
@@ -96,43 +97,61 @@ namespace Google.PowerShell.BigQuery
             switch (ParameterSetName)
             {
                 case ParameterSetNames.List:
-                    DatasetsResource.ListRequest lRequest = Service.Datasets.List(Project);
-                    lRequest.All = All;
-                    lRequest.Filter = Filter;
-                    do
-                    {
-                        DatasetList response = lRequest.Execute();
-                        if (response == null)
-                        {
-                            WriteError(new ErrorRecord(
-                                new Exception("List request to server responded with null."),
-                                "List request returned null", ErrorCategory.InvalidArgument, Project));
-                        }
-                        if (response.Datasets != null)
-                        {
-                            WriteObject(response.Datasets, true);
-                        }
-                        lRequest.PageToken = response.NextPageToken;
-                    }
-                    while (!Stopping && lRequest.PageToken != null);
+                    var datasets = DoListRequest(Project);
+                    WriteObject(datasets, true);
                     break;
                 case ParameterSetNames.Get:
-                    DatasetsResource.GetRequest gRequest = Service.Datasets.Get(Project, Dataset);
-                    try
-                    {
-                        var gResponse = gRequest.Execute();
-                        WriteObject(gResponse);
-                    }
-                    catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
-                    {
-                        WriteError(new ErrorRecord(ex, 
-                            $"Error 404: Dataset {Dataset} not found in {Project}.",
-                            ErrorCategory.ObjectNotFound, 
-                            Dataset));
-                    }
+                    var dataset = DoGetRequest(Project, Dataset);
+                    WriteObject(dataset);
                     break;
                 default:
                     throw UnknownParameterSetException;
+            }
+        }
+
+        private IEnumerable<DatasetList.DatasetsData> DoListRequest(string project)
+        {
+            DatasetsResource.ListRequest lRequest = Service.Datasets.List(project);
+            lRequest.All = All;
+            lRequest.Filter = Filter;
+            do
+            {
+                DatasetList response = lRequest.Execute();
+                if (response == null)
+                {
+                    WriteError(new ErrorRecord(
+                        new Exception("List request to server responded with null."),
+                        "List request returned null", ErrorCategory.InvalidArgument, project));
+                }
+                if (response.Datasets != null)
+                {
+                    foreach(DatasetList.DatasetsData d in response.Datasets)
+                    {
+                        yield return d;
+                    }
+                    WriteObject(response.Datasets, true);
+                }
+                lRequest.PageToken = response.NextPageToken;
+            }
+            while (!Stopping && lRequest.PageToken != null);
+            yield break;
+        }
+
+        private Dataset DoGetRequest(string project, string dataset)
+        {
+            DatasetsResource.GetRequest gRequest = Service.Datasets.Get(project, dataset);
+            try
+            {
+                var gResponse = gRequest.Execute();
+                return gResponse;
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+            {
+                WriteError(new ErrorRecord(ex,
+                    $"Error 404: Dataset {dataset} not found in {project}.",
+                    ErrorCategory.ObjectNotFound,
+                    Dataset));
+                return null;
             }
         }
     }
@@ -390,7 +409,8 @@ namespace Google.PowerShell.BigQuery
         protected override void ProcessRecord()
         {
             // Form and send request.
-            DatasetsResource.DeleteRequest request = Service.Datasets.Delete(Project, InputObject.DatasetReference.DatasetId);
+            DatasetsResource.DeleteRequest request = Service.Datasets.Delete(Project, 
+                InputObject.DatasetReference.DatasetId);
             String response = "Dataset Removal Stopped.";
             if (ShouldProcess(InputObject.DatasetReference.DatasetId))
             {

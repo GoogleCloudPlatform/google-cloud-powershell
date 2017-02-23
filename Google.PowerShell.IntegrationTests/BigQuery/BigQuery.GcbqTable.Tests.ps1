@@ -11,8 +11,8 @@ Describe "Get-GcbqTable" {
     }
 
     It "should list tables from a dataset object via parameter."{
-        $table = Get-GcbqDataset “pshell_testing” 
-        $tables = Get-GcbqTable -Dataset $table
+        $dataset = Get-GcbqDataset “pshell_testing” 
+        $tables = Get-GcbqTable -Dataset $dataset
         $tables.Count | Should BeGreaterThan 0
     }
 
@@ -24,20 +24,20 @@ Describe "Get-GcbqTable" {
     It "should get a singular table with a dataset object from pipeline."{
         $table = Get-GcbqDataset “pshell_testing” | Get-GcbqTable "my_table"
         $table.TableReference.TableId | Should be "my_table"
-        $table.Description | Should Be "TEST"
+        $table.Description | Should Be "Test data table"
     }
 
     It "should get a singular table with a dataset object via parameter."{
-        $dset = Get-GcbqDataset “pshell_testing”
-        $table = Get-GcbqTable -Dataset $dset "my_other_table"
+        $dataset = Get-GcbqDataset “pshell_testing”
+        $table = Get-GcbqTable -Dataset $dataset "my_other_table"
         $table.TableReference.TableId | Should be "my_other_table"
-        $table.Description | Should Be "TEST SET 2"
+        $table.Description | Should Be "Another test table"
     }
 
     It "should get a singular table with a dataset ID by parameter."{
         $table = Get-GcbqTable -Dataset “pshell_testing” "my_table"
         $table.TableReference.TableId | Should be "my_table"
-        $table.Description | Should Be "TEST"
+        $table.Description | Should Be "Test data table"
     }
 
     It "should throw when the table is not found."{

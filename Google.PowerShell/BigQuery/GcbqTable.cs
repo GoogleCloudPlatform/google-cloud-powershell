@@ -53,7 +53,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// The ID of the dataset to search.  Can be a string or a dataset object.
+        /// The ID of the dataset to search. Can be a string or a dataset object.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ValueFromPipeline = true)]
@@ -103,7 +103,7 @@ namespace Google.PowerShell.BigQuery
                 catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
                 {
                     WriteError(new ErrorRecord(ex,
-                        $"Error 404: Table {Table} not found in {Dataset}.",
+                        $"Error {ex.HttpStatusCode}: Table {Table} not found in {Dataset}.",
                         ErrorCategory.ObjectNotFound,
                         Table));
                 }
