@@ -24,10 +24,10 @@ namespace Google.PowerShell.CloudResourceManager
     /// </example>
     /// <example>
     ///   <code>PS C:\> Get-GcProject -Id "my-id"</code>
-    ///   <para>This command gets the project that has the Id "My Project".</para>
+    ///   <para>This command gets the project that has the Id "my-id".</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-GcProject -Label {"environment" = "test"}</code>
+    ///   <code>PS C:\> Get-GcProject -Label @{"environment" = "test"}</code>
     ///   <para>This command gets all the projects that has the label "environment" with value "test".</para>
     /// </example>
     /// <para
@@ -39,7 +39,7 @@ namespace Google.PowerShell.CloudResourceManager
     /// [Labels]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Get, "GcProject")]
+    [Cmdlet(VerbsCommon.Get, "GcpProject")]
     public class GetGcProjectCmdlet : CloudResourceManagerCmdlet
     {
         /// <summary>
@@ -74,29 +74,38 @@ namespace Google.PowerShell.CloudResourceManager
 
         protected override void ProcessRecord()
         {
+            string filter = ConstructFilter(Name, ProjectId, Label);
+            WriteObject(GetProjects(filter));
+        }
+
+        /// <summary>
+        /// Constructs filter for the list request based on name, projectid and label.
+        /// </summary>
+        private string ConstructFilter(string name, string projectId, Hashtable labels)
+        {
             // Filter is case insensitive.
             string filter = string.Empty;
-            if (Name != null)
+            if (name != null)
             {
-                filter = $"name:'{Name}'";
+                filter = $"name:'{name}'";
             }
 
-            if (ProjectId != null)
+            if (projectId != null)
             {
-                filter += $" id:'{ProjectId}'";
+                filter += $" id:'{projectId}'";
             }
 
-            if (Label != null && Label.Count > 0)
+            if (labels != null && labels.Count > 0)
             {
                 // Each label is represented in the filter as labels.key:value.
-                foreach (string key in Label.Keys)
+                foreach (string key in labels.Keys)
                 {
-                    string value = Label[key]?.ToString();
+                    string value = labels[key]?.ToString();
                     if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(value))
                     {
                         throw new PSArgumentException(
                             "Label dictionary should not have null or empty key or value",
-                            nameof(Label));
+                            nameof(labels));
                     }
 
                     // The key and value needs to be in lower case and they cannot have space.
@@ -104,14 +113,20 @@ namespace Google.PowerShell.CloudResourceManager
                     value = value.Trim().ToLower();
                     if (formattedKey.Contains(" ") || value.Contains(" "))
                     {
-                        throw new PSArgumentException("Label key and value cannot contain white spaces", nameof(Label));
+                        throw new PSArgumentException("Label key and value cannot contain white spaces", nameof(labels));
                     }
 
                     filter += $" labels.{key.ToLower()}:{value.ToLower()}";
                 }
             }
-            filter = filter.Trim().Replace('\'', '"');
+            return filter.Trim().Replace('\'', '"');
+        }
 
+        /// <summary>
+        /// Returns list of projects based on the filter.
+        /// </summary>
+        private IEnumerable<Project> GetProjects(string filter)
+        {
             ProjectsResource.ListRequest request = Service.Projects.List();
             if (!string.IsNullOrWhiteSpace(filter))
             {
@@ -123,7 +138,10 @@ namespace Google.PowerShell.CloudResourceManager
                 ListProjectsResponse response = request.Execute();
                 if (response.Projects != null)
                 {
-                    WriteObject(response.Projects, true);
+                    foreach (Project project in response.Projects)
+                    {
+                        yield return project;
+                    }
                 }
                 request.PageToken = response.NextPageToken;
             }
