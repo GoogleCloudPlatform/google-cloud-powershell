@@ -89,6 +89,7 @@
     <None Include="SQL2\public.pem" />
     <None Include="SQL2\sample-table.csv" />
     <None Include="SQL2\SQL.GcSqlInstances.Tests.ps1" />
+    <None Include="SQL3\SQL.GcSqlInstances.Two.Tests.ps1" />
     <None Include="Storage\Storage.GcsAcl.Tests.ps1" />
     <None Include="Storage\Storage.GcsBucket.Tests.ps1" />
     <None Include="Storage\Storage.GcsBucketLogging.Tests.ps1" />
