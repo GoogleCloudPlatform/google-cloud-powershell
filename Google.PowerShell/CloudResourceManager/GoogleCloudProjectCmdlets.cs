@@ -3,6 +3,7 @@ using Google.Apis.CloudResourceManager.v1.Data;
 using System.Collections;
 using System.Collections.Generic;
 using System.Management.Automation;
+using System.Text;
 
 namespace Google.PowerShell.CloudResourceManager
 {
@@ -40,7 +41,7 @@ namespace Google.PowerShell.CloudResourceManager
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GcpProject")]
-    public class GetGcProjectCmdlet : CloudResourceManagerCmdlet
+    public class GetGcpProjectCmdlet : CloudResourceManagerCmdlet
     {
         /// <summary>
         /// <para type="description">
@@ -83,16 +84,16 @@ namespace Google.PowerShell.CloudResourceManager
         /// </summary>
         private string ConstructFilter(string name, string projectId, Hashtable labels)
         {
-            // Filter is case insensitive.
-            string filter = string.Empty;
+            // Filter is case insensitive
+            StringBuilder filter = new StringBuilder();
             if (name != null)
             {
-                filter = $"name:'{name}'";
+                filter.Append($"name:'{name}'");
             }
 
             if (projectId != null)
             {
-                filter += $" id:'{projectId}'";
+                filter.Append($" id:'{projectId}'");
             }
 
             if (labels != null && labels.Count > 0)
@@ -116,10 +117,10 @@ namespace Google.PowerShell.CloudResourceManager
                         throw new PSArgumentException("Label key and value cannot contain white spaces", nameof(labels));
                     }
 
-                    filter += $" labels.{key.ToLower()}:{value.ToLower()}";
+                    filter.Append($" labels.{key.ToLower()}:{value.ToLower()}");
                 }
             }
-            return filter.Trim().Replace('\'', '"');
+            return filter.ToString().Trim().Replace('\'', '"');
         }
 
         /// <summary>
