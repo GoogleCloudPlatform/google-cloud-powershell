@@ -96,24 +96,28 @@ namespace Google.PowerShell.BigQuery
             switch (ParameterSetName)
             {
                 case ParameterSetNames.List:
-                    DatasetsResource.ListRequest lRequest = new DatasetsResource.ListRequest(Service, Project);
+                    DatasetsResource.ListRequest lRequest = Service.Datasets.List(Project);
                     lRequest.All = All;
                     lRequest.Filter = Filter;
-                    var lResponse = lRequest.Execute();
-                    if (lResponse != null) { 
-                        WriteObject(lResponse, true);
-                    }
-                    else
+                    do
                     {
-                        WriteError(new ErrorRecord(
-                            new Exception("400"), 
-                            "Error 400: List request to server failed.",
-                            ErrorCategory.InvalidArgument, 
-                            Project));
+                        DatasetList response = lRequest.Execute();
+                        if (response == null)
+                        {
+                            WriteError(new ErrorRecord(
+                                new Exception("List request to server responded with null."),
+                                "List request returned null", ErrorCategory.InvalidArgument, Project));
+                        }
+                        if (response.Datasets != null)
+                        {
+                            WriteObject(response.Datasets, true);
+                        }
+                        lRequest.PageToken = response.NextPageToken;
                     }
+                    while (!Stopping && lRequest.PageToken != null);
                     break;
                 case ParameterSetNames.Get:
-                    DatasetsResource.GetRequest gRequest = new DatasetsResource.GetRequest(Service, Project, Dataset);
+                    DatasetsResource.GetRequest gRequest = Service.Datasets.Get(Project, Dataset);
                     try
                     {
                         var gResponse = gRequest.Execute();
@@ -182,7 +186,7 @@ namespace Google.PowerShell.BigQuery
         protected override void ProcessRecord()
         {
             Dataset response;
-            var request = new DatasetsResource.UpdateRequest(Service, InputObject, Project, InputObject.DatasetReference.DatasetId);
+            var request = Service.Datasets.Update(InputObject, Project, InputObject.DatasetReference.DatasetId);
             try
             {
                 response = request.Execute();
@@ -386,8 +390,7 @@ namespace Google.PowerShell.BigQuery
         protected override void ProcessRecord()
         {
             // Form and send request.
-            DatasetsResource.DeleteRequest request = 
-                new DatasetsResource.DeleteRequest(Service, Project, InputObject.DatasetReference.DatasetId);
+            DatasetsResource.DeleteRequest request = Service.Datasets.Delete(Project, InputObject.DatasetReference.DatasetId);
             String response = "Dataset Removal Stopped.";
             if (ShouldProcess(InputObject.DatasetReference.DatasetId))
             {

@@ -8,7 +8,7 @@ Describe "Get-GcbqDataset" {
             New-GcbqDataset "test_id_2"
             New-GcbqDataset "test_id_3"
             $a = Get-GcbqDataset
-            $a.Datasets.Count | Should Not Be 0
+            $a.Count | Should BeGreaterThan 1
         }
         finally {
             Get-GcbqDataset "test_id_2" |  Remove-GcbqDataset
