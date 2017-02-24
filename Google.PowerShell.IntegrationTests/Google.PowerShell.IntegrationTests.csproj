@@ -49,6 +49,7 @@
     <None Include="BigQuery\BigQuery.GcbqDataset.Tests.ps1" />
     <None Include="BigQuery\BigQuery.GcbqProject.Tests.ps1" />
     <None Include="BigQuery\GcbqCmdlets.ps1" />
+    <None Include="CloudResourceManager\CloudResourceManager.IamPolicy.Tests.ps1" />
     <None Include="Compute\Compute.GceAddress.Tests.ps1" />
     <None Include="Compute\Compute.GceAttachedDiskConfig.Tests.ps1" />
     <None Include="Compute\Compute.GceBackendService.Tests.ps1" />
@@ -98,9 +99,7 @@
     <None Include="Storage\Storage.GcsBucketWebsite.Tests.ps1" />
     <None Include="Storage\Storage.GcsObject.Tests.ps1" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="CloudResourceManager\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -23,7 +23,7 @@ Describe "Storage Provider"{
     # The string we set as the content of a file.
     $content2 = "file content 2 $r"
 
-    It "Should have drive initalized" {
+    It "Should have drive initialized" {
         Test-Path gs:\ | Should Be $true
         cd gs:\ 2>&1 | Should BeNullOrEmpty
     }
@@ -75,7 +75,7 @@ Describe "Storage Provider"{
         cd gs:\$bucketName\$folderName
         rm $fileName
         Set-Content $fileName -Value $content1
-        Sleep 1
+        Sleep 2
         Test-Path $fileName | Should Be $true
         Get-Content $fileName | Should Be $content1
     }
@@ -85,7 +85,7 @@ Describe "Storage Provider"{
         Clear-Content $fileName
         Test-Path $fileName | Should Be $true
         Get-Content $fileName | Should BeNullOrEmpty
-        $object = Get-GcsObject $bucketName "$folderName/$fileName"
+        $object = Get-GcsObject -ObjectName $fileName
         $object.Size | Should Be 0
     }
 
@@ -141,7 +141,7 @@ Describe "Storage Provider"{
     It "Should remove folder" {
         cd gs:\$bucketName
         rm $cpFolderName -Recurse
-        Sleep 1
+        Sleep 2
         Test-Path $cpFolderName | Should Be $false
         Test-GcsObject $bucketName "$cpFolderName/" | Should Be $false
     }
@@ -158,6 +158,14 @@ Describe "Storage Provider"{
         $file = ls
         $file.Count | Should Be 1
         Compare-Object $newFile $file | Should Be $null
+    }
+
+    It "Should remove folder that is not at the root" {
+        cd gs:\$bucketName\$folderName
+        mkdir $fakeFolderName
+        Test-Path $fakeFolderName | Should Be $true
+        Remove-Item ".\$fakeFolderName\"
+        Test-Path $fakeFolderName | Should Be $false
     }
 
     It "Should not remove with -WhatIf" {

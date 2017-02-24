@@ -107,8 +107,7 @@ namespace Google.PowerShell.CloudStorage
                 // Path is of the form <bucket-name>\prefix.
                 if (!string.IsNullOrWhiteSpace(providerPath))
                 {
-                    // TODO (quoct): When doing cross-platform, add if-def to change \ to / on Linux.
-                    string[] result = providerPath.Split(new char[] { '\\' }, 2);
+                    string[] result = providerPath.Split(new char[] { Path.DirectorySeparatorChar }, 2);
                     actionOnBucket(result[0]);
                     if (result.Length == 2)
                     {
@@ -129,7 +128,7 @@ namespace Google.PowerShell.CloudStorage
         /// </summary>
         protected static string ConvertLocalToGcsFolderPath(string localFilePath)
         {
-            return localFilePath.Replace('\\', '/');
+            return localFilePath.Replace(Path.DirectorySeparatorChar, '/');
         }
     }
 
