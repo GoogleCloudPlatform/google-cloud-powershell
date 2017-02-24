@@ -8,7 +8,7 @@ Describe "Get-GcbqDataset" {
             New-GcbqDataset "test_id_2"
             New-GcbqDataset "test_id_3"
             $a = Get-GcbqDataset
-            $a.Datasets.Count | Should Not Be 0
+            $a.Count | Should BeGreaterThan 1
         }
         finally {
             Get-GcbqDataset "test_id_2" |  Remove-GcbqDataset
@@ -24,6 +24,17 @@ Describe "Get-GcbqDataset" {
         }
         finally {
             Get-GcbqDataset "test_id_4" |  Remove-GcbqDataset
+        }
+    }
+
+    It "should list datasets and then get complete dataset objects from the DatasetData" {
+        try {
+            New-GcbqDataset "test_id_2"
+            $a = Get-GcbqDataset | Get-GcbqDataset
+            $a[0].GetType() | Should Be "Google.Apis.Bigquery.v2.Data.Dataset"
+        }
+        finally {
+            Get-GcbqDataset "test_id_2" |  Remove-GcbqDataset
         }
     }
 

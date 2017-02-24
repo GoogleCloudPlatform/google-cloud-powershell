@@ -7,6 +7,7 @@ using Google.PowerShell.Common;
 using System;
 using System.Net;
 using System.Management.Automation;
+using System.Collections.Generic;
 
 namespace Google.PowerShell.BigQuery
 {
@@ -17,11 +18,11 @@ namespace Google.PowerShell.BigQuery
     /// <para type="description">
     /// If a DatasetId is specified, it will return an object describing that dataset. If no DatasetId is 
     /// specified, this cmdlet lists all datasets in the specified project to which you have been granted the 
-    /// READER dataset role. The -All flag will include hidden datasets in the search results. The -Filter 
+    /// READER dataset role. The -IncludeHidden flag will include hidden datasets in the search results. The -Filter 
     /// flag allows you to filter results by label. The syntax to filter is "labels.name[:value]". Multiple filters 
     /// can be ANDed together by connecting with a space. See the link below for more information.
-    /// If no Project is specified, the default project will be used. This cmdlet returns a DatasetList if 
-    /// no DatasetId was specified, and a Dataset otherwise.
+    /// If no Project is specified, the default project will be used. This cmdlet returns any number of 
+    /// DatasetList.DatasetData objects if no DatasetId was specified, and a Dataset otherwise.
     /// </para>
     /// <example>
     ///   <code>PS C:\> Get-GcbqDataset "my-dataset"</code>
@@ -32,13 +33,17 @@ namespace Google.PowerShell.BigQuery
     ///   <para>This lists all of the non-hidden datasets in the Cloud project <code>my-project</code>.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-GcbqDataset -All</code>
+    ///   <code>PS C:\> Get-GcbqDataset -IncludeHidden</code>
     ///   <para>This lists all of the datasets in the default Cloud project for your account.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-GcbqDataset -All -Filter "labels.department:shipping"</code>
+    ///   <code>PS C:\> Get-GcbqDataset -IncludeHidden -Filter "labels.department:shipping"</code>
     ///   <para>This lists all of the datasets in the default Cloud project for your account that have 
     ///   the <code>department</code> key with a value <code>shipping</code>.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Get-GcbqDataset -IncludeHidden -Filter "labels.department:shipping labels.location:usa"</code>
+    ///   <para>This is an example of ANDing multiple filters.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets)">
     /// [BigQuery Datasets]
@@ -71,8 +76,9 @@ namespace Google.PowerShell.BigQuery
         /// Includes hidden datasets in the output if set.
         /// </para>
         /// </summary>
+        [Alias("All")]
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.List)]
-        public SwitchParameter All { get; set; }
+        public SwitchParameter IncludeHidden { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -85,10 +91,15 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// The ID of the dataset that you want to get a descriptor object for.
+        /// The ID of the dataset that you want to get a descriptor object for. This field also accepts 
+        /// DatasetData objects so they can be mapped to full Dataset objects.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.Get)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.Get)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(DatasetList.DatasetsData),
+            Property = nameof(DatasetList.DatasetsData.DatasetReference))]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Dataset), Property = nameof(Apis.Bigquery.v2.Data.Dataset.DatasetReference))]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(DatasetReference), Property = nameof(DatasetReference.DatasetId))]
         public string Dataset { get; set; }
 
         protected override void ProcessRecord()
@@ -96,39 +107,61 @@ namespace Google.PowerShell.BigQuery
             switch (ParameterSetName)
             {
                 case ParameterSetNames.List:
-                    DatasetsResource.ListRequest lRequest = new DatasetsResource.ListRequest(Service, Project);
-                    lRequest.All = All;
-                    lRequest.Filter = Filter;
-                    var lResponse = lRequest.Execute();
-                    if (lResponse != null) { 
-                        WriteObject(lResponse, true);
-                    }
-                    else
-                    {
-                        WriteError(new ErrorRecord(
-                            new Exception("400"), 
-                            "Error 400: List request to server failed.",
-                            ErrorCategory.InvalidArgument, 
-                            Project));
-                    }
+                    var datasets = DoListRequest(Project);
+                    WriteObject(datasets, true);
                     break;
                 case ParameterSetNames.Get:
-                    DatasetsResource.GetRequest gRequest = new DatasetsResource.GetRequest(Service, Project, Dataset);
-                    try
+                    var dataset = DoGetRequest(Project, Dataset);
+                    if (dataset != null)
                     {
-                        var gResponse = gRequest.Execute();
-                        WriteObject(gResponse);
-                    }
-                    catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
-                    {
-                        WriteError(new ErrorRecord(ex, 
-                            $"Error 404: Dataset {Dataset} not found in {Project}.",
-                            ErrorCategory.ObjectNotFound, 
-                            Dataset));
+                        WriteObject(dataset);
                     }
                     break;
                 default:
                     throw UnknownParameterSetException;
+            }
+        }
+
+        private IEnumerable<DatasetList.DatasetsData> DoListRequest(string project)
+        {
+            DatasetsResource.ListRequest lRequest = Service.Datasets.List(project);
+            lRequest.All = IncludeHidden;
+            lRequest.Filter = Filter;
+            do
+            {
+                DatasetList response = lRequest.Execute();
+                if (response == null)
+                {
+                    WriteError(new ErrorRecord(
+                        new Exception("List request to server responded with null."),
+                        "List request returned null", ErrorCategory.InvalidArgument, project));
+                }
+                if (response.Datasets != null)
+                {
+                    foreach(DatasetList.DatasetsData d in response.Datasets)
+                    {
+                        yield return d;
+                    }
+                }
+                lRequest.PageToken = response.NextPageToken;
+            }
+            while (!Stopping && lRequest.PageToken != null);
+        }
+
+        private Dataset DoGetRequest(string project, string dataset)
+        {
+            DatasetsResource.GetRequest gRequest = Service.Datasets.Get(project, dataset);
+            try
+            {
+                return gRequest.Execute();
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+            {
+                WriteError(new ErrorRecord(ex,
+                    $"Error 404: Dataset {dataset} not found in {project}.",
+                    ErrorCategory.ObjectNotFound,
+                    dataset));
+                return null;
             }
         }
     }
@@ -182,7 +215,7 @@ namespace Google.PowerShell.BigQuery
         protected override void ProcessRecord()
         {
             Dataset response;
-            var request = new DatasetsResource.UpdateRequest(Service, InputObject, Project, InputObject.DatasetReference.DatasetId);
+            var request = Service.Datasets.Update(InputObject, Project, InputObject.DatasetReference.DatasetId);
             try
             {
                 response = request.Execute();
@@ -386,8 +419,8 @@ namespace Google.PowerShell.BigQuery
         protected override void ProcessRecord()
         {
             // Form and send request.
-            DatasetsResource.DeleteRequest request = 
-                new DatasetsResource.DeleteRequest(Service, Project, InputObject.DatasetReference.DatasetId);
+            DatasetsResource.DeleteRequest request = Service.Datasets.Delete(Project, 
+                InputObject.DatasetReference.DatasetId);
             String response = "Dataset Removal Stopped.";
             if (ShouldProcess(InputObject.DatasetReference.DatasetId))
             {
