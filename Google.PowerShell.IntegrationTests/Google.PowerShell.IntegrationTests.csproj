@@ -46,6 +46,7 @@
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="CloudResourceManager\CloudResourceManager.GcpProject.Tests.ps1" />
     <None Include="CloudResourceManager\CloudResourceManager.IamPolicy.Tests.ps1" />
     <None Include="Compute\Compute.GceAddress.Tests.ps1" />
     <None Include="Compute\Compute.GceAttachedDiskConfig.Tests.ps1" />
@@ -89,6 +90,7 @@
     <None Include="SQL2\public.pem" />
     <None Include="SQL2\sample-table.csv" />
     <None Include="SQL2\SQL.GcSqlInstances.Tests.ps1" />
+    <None Include="SQL3\SQL.GcSqlInstances.Two.Tests.ps1" />
     <None Include="Storage\Storage.GcsAcl.Tests.ps1" />
     <None Include="Storage\Storage.GcsBucket.Tests.ps1" />
     <None Include="Storage\Storage.GcsBucketLogging.Tests.ps1" />

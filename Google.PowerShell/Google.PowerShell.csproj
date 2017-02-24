@@ -143,6 +143,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CloudResourceManager\CloudResourceManagerCmdlets.cs" />
+    <Compile Include="CloudResourceManager\GoogleCloudProjectCmdlets.cs" />
     <Compile Include="CloudResourceManager\IamPolicyCmdlets.cs" />
     <Compile Include="Common\ActiveUserConfig.cs" />
     <Compile Include="Common\JsonExtensions.cs" />
