@@ -18,7 +18,7 @@ namespace Google.PowerShell.BigQuery
     /// <para type="description">
     /// If a DatasetId is specified, it will return an object describing that dataset. If no DatasetId is 
     /// specified, this cmdlet lists all datasets in the specified project to which you have been granted the 
-    /// READER dataset role. The -All flag will include hidden datasets in the search results. The -Filter 
+    /// READER dataset role. The -IncludeHidden flag will include hidden datasets in the search results. The -Filter 
     /// flag allows you to filter results by label. The syntax to filter is "labels.name[:value]". Multiple filters 
     /// can be ANDed together by connecting with a space. See the link below for more information.
     /// If no Project is specified, the default project will be used. This cmdlet returns any number of 
@@ -33,13 +33,17 @@ namespace Google.PowerShell.BigQuery
     ///   <para>This lists all of the non-hidden datasets in the Cloud project <code>my-project</code>.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-GcbqDataset -All</code>
+    ///   <code>PS C:\> Get-GcbqDataset -IncludeHidden</code>
     ///   <para>This lists all of the datasets in the default Cloud project for your account.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-GcbqDataset -All -Filter "labels.department:shipping"</code>
+    ///   <code>PS C:\> Get-GcbqDataset -IncludeHidden -Filter "labels.department:shipping"</code>
     ///   <para>This lists all of the datasets in the default Cloud project for your account that have 
     ///   the <code>department</code> key with a value <code>shipping</code>.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Get-GcbqDataset -IncludeHidden -Filter "labels.department:shipping labels.location:usa"</code>
+    ///   <para>This is an example of ANDing multiple filters.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets)">
     /// [BigQuery Datasets]
@@ -72,8 +76,9 @@ namespace Google.PowerShell.BigQuery
         /// Includes hidden datasets in the output if set.
         /// </para>
         /// </summary>
+        [Alias("All")]
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.List)]
-        public SwitchParameter All { get; set; }
+        public SwitchParameter IncludeHidden { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -93,6 +98,7 @@ namespace Google.PowerShell.BigQuery
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.Get)]
         [PropertyByTypeTransformation(TypeToTransform = typeof(DatasetList.DatasetsData),
             Property = nameof(DatasetList.DatasetsData.DatasetReference))]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Dataset), Property = nameof(Apis.Bigquery.v2.Data.Dataset.DatasetReference))]
         [PropertyByTypeTransformation(TypeToTransform = typeof(DatasetReference), Property = nameof(DatasetReference.DatasetId))]
         public string Dataset { get; set; }
 
@@ -119,7 +125,7 @@ namespace Google.PowerShell.BigQuery
         private IEnumerable<DatasetList.DatasetsData> DoListRequest(string project)
         {
             DatasetsResource.ListRequest lRequest = Service.Datasets.List(project);
-            lRequest.All = All;
+            lRequest.All = IncludeHidden;
             lRequest.Filter = Filter;
             do
             {
@@ -154,7 +160,7 @@ namespace Google.PowerShell.BigQuery
                 WriteError(new ErrorRecord(ex,
                     $"Error 404: Dataset {dataset} not found in {project}.",
                     ErrorCategory.ObjectNotFound,
-                    Dataset));
+                    dataset));
                 return null;
             }
         }
