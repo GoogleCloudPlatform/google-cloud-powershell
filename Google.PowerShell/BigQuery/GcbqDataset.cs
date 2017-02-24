@@ -86,10 +86,14 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// The ID of the dataset that you want to get a descriptor object for.
+        /// The ID of the dataset that you want to get a descriptor object for. This field also accepts 
+        /// DatasetData objects so they can be mapped to full Dataset objects.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.Get)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.Get)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(DatasetList.DatasetsData),
+            Property = nameof(DatasetList.DatasetsData.DatasetReference))]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(DatasetReference), Property = nameof(DatasetReference.DatasetId))]
         public string Dataset { get; set; }
 
         protected override void ProcessRecord()
@@ -102,7 +106,10 @@ namespace Google.PowerShell.BigQuery
                     break;
                 case ParameterSetNames.Get:
                     var dataset = DoGetRequest(Project, Dataset);
-                    WriteObject(dataset);
+                    if (dataset != null)
+                    {
+                        WriteObject(dataset);
+                    }
                     break;
                 default:
                     throw UnknownParameterSetException;
@@ -129,12 +136,10 @@ namespace Google.PowerShell.BigQuery
                     {
                         yield return d;
                     }
-                    WriteObject(response.Datasets, true);
                 }
                 lRequest.PageToken = response.NextPageToken;
             }
             while (!Stopping && lRequest.PageToken != null);
-            yield break;
         }
 
         private Dataset DoGetRequest(string project, string dataset)
@@ -142,8 +147,7 @@ namespace Google.PowerShell.BigQuery
             DatasetsResource.GetRequest gRequest = Service.Datasets.Get(project, dataset);
             try
             {
-                var gResponse = gRequest.Execute();
-                return gResponse;
+                return gRequest.Execute();
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
             {

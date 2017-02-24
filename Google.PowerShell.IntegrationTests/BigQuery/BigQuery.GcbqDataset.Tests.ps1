@@ -27,6 +27,17 @@ Describe "Get-GcbqDataset" {
         }
     }
 
+    It "should list datasets and then get complete dataset objects from the DatasetData" {
+        try {
+            New-GcbqDataset "test_id_2"
+            $a = Get-GcbqDataset | Get-GcbqDataset
+            $a[0].GetType() | Should Be "Google.Apis.Bigquery.v2.Data.Dataset"
+        }
+        finally {
+            Get-GcbqDataset "test_id_2" |  Remove-GcbqDataset
+        }
+    }
+
     It "should handle when a dataset does not exist" {
         { Get-GcbqDataset "test_id_5" -ErrorAction Stop } | Should Throw 404
     }

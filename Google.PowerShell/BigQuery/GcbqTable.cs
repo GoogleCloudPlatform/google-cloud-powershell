@@ -58,6 +58,8 @@ namespace Google.PowerShell.BigQuery
         /// </summary>
         [Parameter(Mandatory = true, ValueFromPipeline = true)]
         [ValidatePattern("[a-zA-Z0-9_]")]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(DatasetList.DatasetsData), 
+            Property = nameof(DatasetList.DatasetsData.DatasetReference))]
         [PropertyByTypeTransformation(TypeToTransform = typeof(Dataset), Property = nameof(Apis.Bigquery.v2.Data.Dataset.DatasetReference))]
         [PropertyByTypeTransformation(TypeToTransform = typeof(DatasetReference), Property = nameof(DatasetReference.DatasetId))]
         public string Dataset { get; set; }
