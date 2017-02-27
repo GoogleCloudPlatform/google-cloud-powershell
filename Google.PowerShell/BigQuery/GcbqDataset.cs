@@ -58,7 +58,8 @@ namespace Google.PowerShell.BigQuery
         private class ParameterSetNames
         {
             public const string List = "List";
-            public const string Get = "Get";
+            public const string GetWithString = "GetWithString";
+            public const string GetWithRef = "GetWithRef";
         }
 
         /// <summary>
@@ -95,12 +96,22 @@ namespace Google.PowerShell.BigQuery
         /// DatasetData objects so they can be mapped to full Dataset objects.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.Get)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, 
+            ParameterSetName = ParameterSetNames.GetWithString)]
+        public string Dataset { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// INSERT TEXT HERE
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, 
+            ParameterSetName = ParameterSetNames.GetWithRef)]
         [PropertyByTypeTransformation(TypeToTransform = typeof(DatasetList.DatasetsData),
             Property = nameof(DatasetList.DatasetsData.DatasetReference))]
-        [PropertyByTypeTransformation(TypeToTransform = typeof(Dataset), Property = nameof(Apis.Bigquery.v2.Data.Dataset.DatasetReference))]
-        [PropertyByTypeTransformation(TypeToTransform = typeof(DatasetReference), Property = nameof(DatasetReference.DatasetId))]
-        public string Dataset { get; set; }
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Dataset), 
+            Property = nameof(Apis.Bigquery.v2.Data.Dataset.DatasetReference))]
+        public DatasetReference DatasetRef { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -110,11 +121,18 @@ namespace Google.PowerShell.BigQuery
                     var datasets = DoListRequest(Project);
                     WriteObject(datasets, true);
                     break;
-                case ParameterSetNames.Get:
+                case ParameterSetNames.GetWithString:
                     var dataset = DoGetRequest(Project, Dataset);
                     if (dataset != null)
                     {
                         WriteObject(dataset);
+                    }
+                    break;
+                case ParameterSetNames.GetWithRef:
+                    var datasetDR = DoGetRequest(DatasetRef.ProjectId, DatasetRef.DatasetId);
+                    if (datasetDR != null)
+                    {
+                        WriteObject(datasetDR);
                     }
                     break;
                 default:

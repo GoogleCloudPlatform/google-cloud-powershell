@@ -38,6 +38,30 @@ Describe "Get-GcbqDataset" {
         }
     }
 
+    It "should get using a pre-existing Dataset (to refresh data from the cloud)" {
+        try {
+            New-GcbqDataset "test_id_2"
+            $a = Get-GcbqDataset "test_id_2"
+            $b = $a | Get-GcbqDataset
+            $b.GetType() | Should Be "Google.Apis.Bigquery.v2.Data.Dataset"
+        }
+        finally {
+            Get-GcbqDataset "test_id_2" |  Remove-GcbqDataset
+        }
+    }
+
+    It "should get using a DatasetReference" {
+        try {
+            New-GcbqDataset "test_id_2"
+            $a = Get-GcbqDataset "test_id_2"
+            $b = $a.DatasetReference | Get-GcbqDataset
+            $b.GetType() | Should Be "Google.Apis.Bigquery.v2.Data.Dataset"
+        }
+        finally {
+            Get-GcbqDataset "test_id_2" |  Remove-GcbqDataset
+        }
+    }
+
     It "should handle when a dataset does not exist" {
         { Get-GcbqDataset "test_id_5" -ErrorAction Stop } | Should Throw 404
     }
