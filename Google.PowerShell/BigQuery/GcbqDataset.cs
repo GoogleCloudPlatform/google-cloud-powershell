@@ -176,8 +176,8 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <example>
     ///   <code>PS C:\> $updatedSet = Get-GcbqDataset "my_dataset"
-    ///   $updatedSet.Description = "An updated summary of the data contents."
-    ///   PS C:\ $updatedSet | Set-GcbqDataset</code>
+    ///   PS C:\> $updatedSet.Description = "An updated summary of the data contents."
+    ///   PS C:\> $updatedSet | Set-GcbqDataset</code>
     ///   <para>This will update the values stored for the Bigquery dataset passed in the default project.</para>
     /// </example>
     /// <example>
@@ -385,6 +385,9 @@ namespace Google.PowerShell.BigQuery
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets)">
     /// [BigQuery Datasets]
+    /// </para>
+    /// <para type="link" uri="(https://msdn.microsoft.com/en-us/library/ms568267.aspx)">
+    /// [ShouldProcess]
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GcbqDataset", SupportsShouldProcess = true)]

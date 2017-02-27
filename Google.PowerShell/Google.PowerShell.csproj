@@ -145,7 +145,6 @@
     <Compile Include="BigQuery\GcbqCmdlet.cs" />
     <Compile Include="BigQuery\GcbqTable.cs" />
     <Compile Include="BigQuery\GcbqDataset.cs" />
-    <Compile Include="BigQuery\GcbqProject.cs" />
     <Compile Include="CloudResourceManager\CloudResourceManagerCmdlets.cs" />
     <Compile Include="CloudResourceManager\IamPolicyCmdlets.cs" />
     <Compile Include="Common\ActiveUserConfig.cs" />
