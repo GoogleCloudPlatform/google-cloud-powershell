@@ -74,8 +74,8 @@ Describe "Set-GcbqDataset" {
 
     It "should update trivial metadata fields via parameter (not DatabaseId)" {
         try {
-            New-GcbqDataset "test_dataset_id1" -Name "Testdata" -Description "Some interesting data!" -Expiration $oneDaySec
-            $data = Get-GcbqDataset "test_dataset_id1"
+            New-GcbqDataset "test_dataset_id2" -Name "Testdata" -Description "Some interesting data!" -Expiration $oneDaySec
+            $data = Get-GcbqDataset "test_dataset_id2"
             $data.FriendlyName = "Some Test Data"
             $data.Description = "A new description!"
             $data.DefaultTableExpirationMs = $threeDayMs
@@ -87,10 +87,31 @@ Describe "Set-GcbqDataset" {
             $data.DefaultTableExpirationMs | Should Be $threeDayMs
         }
         finally {
-            Get-GcbqDataset "test_dataset_id1" | Remove-GcbqDataset
+            Get-GcbqDataset "test_dataset_id2" | Remove-GcbqDataset
         }
     }
 
+    It "should not overwrite data if a set request is malformed" {
+        try {
+            New-GcbqDataset "test_dataset_id3" -Name "Testdata" -Description "Some interesting data!" -Expiration $oneDaySec
+            $data = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Dataset
+            $data.DatasetReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.DatasetReference
+            { Set-GcbqDataset -InputObject $data } | Should Throw "is missing"
+        }
+        finally {
+            Get-GcbqDataset "test_dataset_id3" | Remove-GcbqDataset
+        }
+    } 
+
+    It "should not update a set that does not exist" {
+        $data = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Dataset
+        $data.DatasetReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.DatasetReference
+        $data.DatasetReference.DatasetId = "test_dataset_id4"
+        { Set-GcbqDataset -InputObject $data } | Should Throw 404
+    } 
+
+    #TODO(ahandley): Find reason behind occasional (25%) 412 Precondition error (If-Match - header).
+    
     #TODO(ahandley): Add in tests for updating Access field when cmdlet support has been built.
 
 }

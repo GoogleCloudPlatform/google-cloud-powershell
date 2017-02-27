@@ -48,7 +48,6 @@
   <ItemGroup>
     <None Include="BigQuery\BigQuery.GcbqTable.Tests.ps1" />
     <None Include="BigQuery\BigQuery.GcbqDataset.Tests.ps1" />
-    <None Include="BigQuery\BigQuery.GcbqProject.Tests.ps1" />
     <None Include="BigQuery\GcbqCmdlets.ps1" />
     <None Include="Compute\Compute.GceAddress.Tests.ps1" />
     <None Include="Compute\Compute.GceAttachedDiskConfig.Tests.ps1" />
