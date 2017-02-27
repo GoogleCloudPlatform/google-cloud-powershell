@@ -102,7 +102,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// INSERT TEXT HERE
+        /// DatasetRefrence object used to pass in Project and Dataset values.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, 
