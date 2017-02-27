@@ -21,6 +21,7 @@ would still need to agree to the terms of service (usually, Google's
 Developer Terms of Service at https://developers.google.com/terms) for those
 APIs separately, as this code does not grant you any special rights to use
 the services.
+
 We collect anonymized usage data and anonymized stacktraces when crashes are encountered;
 additional information is available at <https://cloud.google.com/sdk/usage-statistics>.
 
