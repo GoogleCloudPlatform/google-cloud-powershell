@@ -103,12 +103,17 @@ Describe "New-GcbqTable" {
         $newtab.Description | Should Be "Some cool stuff in a table?!@>><#'()*&^%"
     }
 
+    It "should throw when there is already a table with the same ID."{
+        New-GcbqTable "my_table_4" -Dataset $testDataset 
+        { New-GcbqTable "my_table_4" -Dataset $testDataset -ErrorAction Stop } | Should Throw "409"
+    }
+
     It "should throw when the dataset is not found."{
-        { New-GcbqTable "my_table_1" -Dataset $nonExistDataset } | Should Throw "404"
+        { New-GcbqTable "my_table_5" -Dataset $nonExistDataset } | Should Throw "404"
     }
 
     It "should throw when the project is not found."{
-        { New-GcbqTable -Dataset $testDataset "my_table_1" -project $nonExistProject} | Should Throw "404"
+        { New-GcbqTable -Dataset $testDataset "my_table_6" -project $nonExistProject} | Should Throw "404"
     }
 
     $d | Remove-GcbqDataset -Force
