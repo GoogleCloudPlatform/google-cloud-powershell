@@ -105,7 +105,7 @@ PrivateData = @{
         ProjectUri = 'https://github.com/GoogleCloudPlatform/google-cloud-powershell'
 
         # A URL to an icon representing this module.
-        # IconUri = ''
+        IconUri = 'https://raw.githubusercontent.com/GoogleCloudPlatform/google-cloud-powershell/master/Assets/LOGO.png'
 
         # ReleaseNotes of this module
         ReleaseNotes = @"
