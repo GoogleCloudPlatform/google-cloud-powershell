@@ -102,7 +102,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// INSERT TEXT HERE
+        /// DatasetRefrence object used to pass in Project and Dataset values.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, 
@@ -303,7 +303,7 @@ namespace Google.PowerShell.BigQuery
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ByObject)]
-        public Dataset Dataset { get; set; }
+        public Dataset InputObject { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -347,7 +347,7 @@ namespace Google.PowerShell.BigQuery
             switch (ParameterSetName)
             {
                 case ParameterSetNames.ByObject:
-                    newData = Dataset;
+                    newData = InputObject;
                     break;
                 case ParameterSetNames.ByValues:
                     newData = new Dataset();
@@ -375,7 +375,7 @@ namespace Google.PowerShell.BigQuery
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
             {
                 WriteError(new ErrorRecord(ex,  
-                    $"A dataset with the name {DatasetId} already exists.",
+                    $"A dataset with the name {DatasetId} already exists in this project.",
                     ErrorCategory.InvalidArgument, 
                     newData));
             }
