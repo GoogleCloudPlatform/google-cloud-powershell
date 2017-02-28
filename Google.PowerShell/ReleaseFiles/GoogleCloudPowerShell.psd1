@@ -96,7 +96,7 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = @('Google', 'Cloud')
+        Tags = @('Google', 'Cloud', 'Compute', 'Storage', 'GCS', 'GCE', 'SQL', 'DNS')
 
         # A URL to the license for this module.
         LicenseUri = 'https://github.com/GoogleCloudPlatform/google-cloud-powershell/blob/master/LICENSE'
@@ -109,9 +109,9 @@ PrivateData = @{
 
         # ReleaseNotes of this module
         ReleaseNotes = @"
-    This module contains a set of cmdlets that lets you manage Google Cloud Platform resources.
-    Currently, the supported resources are Google Cloud Storage resources, Google Compute Engine
-    resources, Google Cloud DNS resources and Google Cloud SQL resources.
+    This module contains a set of cmdlets that let you manage Google Cloud Platform resources.
+    Currently, the supported resources are Google Cloud Storage, Google Compute Engine,
+    Google Cloud DNS and Google Cloud SQL.
 
     The module also contains a PowerShell provider for Google Cloud Storage. This provider allows
     you to use commands like 'cd', 'dir', 'copy' and 'del' to navigate and manipulate your data
