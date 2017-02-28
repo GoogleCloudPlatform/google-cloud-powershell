@@ -162,7 +162,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// The Dataset that you would like to add to.  This field takes strings, Datasets, and DatasetRefrences.
+        /// The Dataset that you would like to add to. This field takes strings, Datasets, and DatasetRefrences.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ByValues)]
@@ -182,7 +182,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// User-friendly name for the table
+        /// User-friendly name for the table.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
@@ -199,7 +199,6 @@ namespace Google.PowerShell.BigQuery
         /// <summary>
         /// <para type="description">
         /// The lifetime of this table from the time of creation (in seconds).
-        /// Get-Date -UFormat "%s"  ######DEBUG
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
@@ -208,7 +207,6 @@ namespace Google.PowerShell.BigQuery
 
         protected override void ProcessRecord()
         {
-
             // Set up the Dataset based on parameters
             Table newTab;
             TablesResource.InsertRequest request;
