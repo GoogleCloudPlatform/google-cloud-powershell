@@ -93,6 +93,7 @@ function Install-GCloudSdk {
                 Write-Warning "You may have to restart the shell before gcloud can be used."
             }
         }
+        Write-Warning "Please also make sure to run 'gcloud init' before using the module."
     }
 }
 
