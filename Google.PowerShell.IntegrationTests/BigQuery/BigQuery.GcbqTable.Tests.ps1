@@ -3,7 +3,7 @@ $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Describe "Get-GcbqTable" {
 
-    BeforeAll{
+    BeforeAll {
         $r = Get-Random
         $datasetName = "pshell_testing_$r"
         $test_set = New-GcbqDataset $datasetName
@@ -58,7 +58,7 @@ Describe "Get-GcbqTable" {
         { Get-GcbqTable -project $nonExistProject -Dataset $datasetName} | Should Throw "404"
     }
 
-    AfterAll{
+    AfterAll {
         $test_set | Remove-GcbqDataset -Force
     }
 }
@@ -154,7 +154,7 @@ Describe "New-GcbqTable" {
         { New-GcbqTable -DatasetId $datasetName "my_table_p404" -project $nonExistProject} | Should Throw "404"
     }
 
-    Afterall {
+    AfterAll {
         $test_set | Remove-GcbqDataset -Force
     }
 }
