@@ -154,7 +154,7 @@ namespace Google.PowerShell.BigQuery
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
             {
                 WriteError(new ErrorRecord(ex,
-                    $"Error {ex.HttpStatusCode}: Table {Table} not found in {Dataset}.",
+                    $"Error {ex.HttpStatusCode}: Table '{Table}' not found in '{Dataset}'.",
                     ErrorCategory.ObjectNotFound,
                     Table));
             }
@@ -301,7 +301,7 @@ namespace Google.PowerShell.BigQuery
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
             {
                 WriteError(new ErrorRecord(ex,
-                    $"A table with the name {TableId} already exists in {Project}:{DatasetId}.",
+                    $"A table with the name '{TableId}' already exists in '{Project}:{DatasetId}'.",
                     ErrorCategory.InvalidArgument,
                     TableId));
             }

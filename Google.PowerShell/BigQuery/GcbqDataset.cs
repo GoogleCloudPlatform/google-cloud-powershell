@@ -176,7 +176,7 @@ namespace Google.PowerShell.BigQuery
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
             {
                 WriteError(new ErrorRecord(ex,
-                    $"Error 404: Dataset {dataset} not found in {project}.",
+                    $"Error 404: Dataset '{dataset}' not found in '{project}'.",
                     ErrorCategory.ObjectNotFound,
                     dataset));
                 return null;
@@ -242,14 +242,14 @@ namespace Google.PowerShell.BigQuery
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
             {
                 WriteError(new ErrorRecord(ex,
-                    $"Conflict while updating {InputObject.DatasetReference.DatasetId}.",
+                    $"Conflict while updating '{InputObject.DatasetReference.DatasetId}'.",
                     ErrorCategory.WriteError,
                     InputObject));
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Forbidden)
             {
                 WriteError(new ErrorRecord(ex,
-                    $"You do not have permission to modify {InputObject.DatasetReference.DatasetId}.",
+                    $"You do not have permission to modify '{InputObject.DatasetReference.DatasetId}'.",
                     ErrorCategory.PermissionDenied,
                     InputObject));
             }
@@ -376,7 +376,7 @@ namespace Google.PowerShell.BigQuery
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
             {
                 WriteError(new ErrorRecord(ex,  
-                    $"A dataset with the name {DatasetId} already exists in project{Project}.",
+                    $"A dataset with the name '{DatasetId}' already exists in project '{Project}'.",
                     ErrorCategory.InvalidArgument, 
                     newData));
             }
@@ -506,7 +506,7 @@ namespace Google.PowerShell.BigQuery
                 catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Forbidden)
                 {
                     WriteError(new ErrorRecord(ex, 
-                        $"You do not have permission to delete {Dataset}.",
+                        $"You do not have permission to delete '{Dataset}'.",
                         ErrorCategory.PermissionDenied, 
                         Dataset));
                 } 
@@ -515,7 +515,7 @@ namespace Google.PowerShell.BigQuery
 
         private string GetConfirmationMessage(string datasetId, int? tables)
         {
-            return $@"{datasetId} has {tables} tables and the -Force parameter was not specified. "
+            return $@"'{datasetId}' has '{tables}' tables and the -Force parameter was not specified. "
                 + "If you continue, all tables will be removed with the dataset. Are you sure you want to continue?";
         }
     }

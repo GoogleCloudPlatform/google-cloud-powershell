@@ -263,6 +263,18 @@ Describe "New-GcbqDataset" {
 
 Describe "Remove-GcbqDataset" {
 
+    It "should not delete the dataset if -WhatIf is specified" {
+        try{
+            $dataset = New-GcbqDataset "test_set_if"
+            $dataset | Remove-GcbqDataset -WhatIf
+            $remainder = Get-GcbqDataset "test_set_if"
+            $remainder.DatasetReference.DatasetId | Should Be "test_set_if"
+        }
+        finally {
+            Get-GcbqDataset "test_set_if" | Remove-GcbqDataset
+        }
+    }
+    
     It "should delete an empty dataset from the pipeline with no -Force" {
         try{
             New-GcbqDataset "test_set_1"
