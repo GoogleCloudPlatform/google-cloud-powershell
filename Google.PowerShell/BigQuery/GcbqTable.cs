@@ -44,7 +44,7 @@ namespace Google.PowerShell.BigQuery
         private class ParameterSetNames
         {
             public const string ByValue = "ByValue";
-            public const string ByHybrid = "ByHybrid";
+            public const string ByDatasetObject = "ByDatasetObject";
             public const string ByObject = "ByObject";
         }
 
@@ -64,7 +64,7 @@ namespace Google.PowerShell.BigQuery
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, Position = 0, ParameterSetName = ParameterSetNames.ByValue)]
-        [Parameter(Mandatory = false, Position = 0, ParameterSetName = ParameterSetNames.ByHybrid)]
+        [Parameter(Mandatory = false, Position = 0, ParameterSetName = ParameterSetNames.ByDatasetObject)]
         public string Table { get; set; }
 
         /// <summary>
@@ -81,7 +81,7 @@ namespace Google.PowerShell.BigQuery
         /// The Dataset that you would like to search. This field takes Dataset or DatasetRefrence objects.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ByHybrid)]
+        [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ByDatasetObject)]
         [PropertyByTypeTransformation(TypeToTransform = typeof(Dataset), 
             Property = nameof(Apis.Bigquery.v2.Data.Dataset.DatasetReference))]
         public DatasetReference Dataset { get; set; }
@@ -106,7 +106,7 @@ namespace Google.PowerShell.BigQuery
                     DatasetId = InputObject.TableReference.DatasetId;
                     Table = InputObject.TableReference.TableId;
                     break;
-                case ParameterSetNames.ByHybrid:
+                case ParameterSetNames.ByDatasetObject:
                     Project = Dataset.ProjectId;
                     DatasetId = Dataset.DatasetId;
                     break;
