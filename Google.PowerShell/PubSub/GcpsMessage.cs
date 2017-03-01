@@ -443,7 +443,7 @@ namespace Google.PowerShell.PubSub
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByName)]
-        [PropertyByTypeTransformation(TypeToTransform = typeof(Subscription), Property =nameof(Apis.Pubsub.v1.Data.Subscription.Name))]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Subscription), Property = nameof(Apis.Pubsub.v1.Data.Subscription.Name))]
         [Alias("Name")]
         [ValidateNotNullOrEmpty]
         public string Subscription { get; set; }
@@ -573,8 +573,10 @@ namespace Google.PowerShell.PubSub
     ///   </para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Set-GcpsAckDeadline -Subscription "my-subscription" `
-    ///                                     -AckId "ackId1", "ackId2" -Project "my-project" -AckDeadline 10</code>
+    ///   <code>
+    ///     PS C:\> Set-GcpsAckDeadline -Subscription "my-subscription" `
+    ///                 -AckId "ackId1", "ackId2" -Project "my-project" -AckDeadline 10
+    ///   </code>
     ///   <para>
     ///   This command sets the acknowledgement deadline for messages with Ack Ids "ackId1" and "ackId2" from subscription
     ///   "my-subscription" in the project "my-project" to 10s.

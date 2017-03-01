@@ -1096,8 +1096,8 @@ namespace Google.PowerShell.Sql
     /// </example>
     /// <example>
     ///   <code>
-    ///     PS C:\> Restore-GcSqlInstanceBackup -Project "testing" -BackupRunId 0 -Instance "testRepl1"
-    ///     -BackupInstance "testRepl2"
+    ///     PS C:\> Restore-GcSqlInstanceBackup -Project "testing" -BackupRunId 0 -Instance "testRepl1" `
+    ///                                         -BackupInstance "testRepl2"
     ///   </code>
     ///   <para>
     ///   Restores backup run with id 0 of the SQL Instance "testRepl2" from the Project "testing" to the SQL Instance 
