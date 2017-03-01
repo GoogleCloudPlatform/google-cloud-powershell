@@ -64,11 +64,18 @@ function CleanUp-PrivateDataAndExportVariables($moduleManifest) {
             $fieldNeededFromPSData = @("Tags", "LicenseUri", "ProjectUri", "IconUri", "ReleaseNotes")
             foreach ($field in $fieldNeededFromPSData) {
                 if ($psData.ContainsKey($field)) {
-                    $moduleManifest[$field] = $psData[$field]
+                    # For the array of tags, we have to explicitly convert them.
+                    if ($field -eq "Tags" -and $null -ne $psData[$field]) {
+                        $moduleManifest["Tags"] = [string[]]$psData[$field]
+                    }
+                    else {
+                        $moduleManifest[$field] = $psData[$field]
+                    }
                 }
             }
         }
     }
+
 
     $moduleManifest.Remove("PrivateData")
     $moduleManifest["VariablesToExport"] = $toBeReplaced
@@ -76,14 +83,15 @@ function CleanUp-PrivateDataAndExportVariables($moduleManifest) {
     $moduleManifest["AliasesToExport"] = $toBeReplaced
 }
 
-# Helper function to change the encoding of the module manifest file
-# to UTF8. This is needed because module manifest created by
-# New-ModuleManifest does not have UTF8 encoding.
-# We also replaced 'TOBEREPLACED' with @()
-function Set-ModuleManifestEncoding($moduleManifestFile) {
-    $content = Get-Content $moduleManifestFile
+# Helper function create a module manifest file by splashing a dictionary of argument.
+# This function will also make sure that the encoding of the module manifest file is UTF8.
+# This is needed because module manifest created byNew-ModuleManifest does not have UTF8 encoding.
+# We also replaced 'TOBEREPLACED' with @().
+function New-ModuleManifestFromDict($path, $manifest) {
+    New-ModuleManifest -Path $path @manifest
+    $content = Get-Content $path
     $content = $content.Replace("'$toBeReplaced'", "@()")
-    Set-Content -Value $content -Encoding UTF8 $moduleManifestFile
+    Set-Content -Value $content -Encoding UTF8 $path
 }
 
 # Change the module manifest version.
@@ -91,8 +99,7 @@ $moduleManifestFile = Join-Path $projectRoot "Google.PowerShell\ReleaseFiles\Goo
 $moduleManifestContent = Import-PowerShellDataFile $moduleManifestFile
 CleanUp-PrivateDataAndExportVariables $moduleManifestContent
 $moduleManifestContent.ModuleVersion = $normalizedVersion
-New-ModuleManifest -Path $moduleManifestFile @moduleManifestContent
-Set-ModuleManifestEncoding $moduleManifestFile
+New-ModuleManifestFromDict -Path $moduleManifestFile -Manifest $moduleManifestContent
 
 # Change version in AssemblyInfo file.
 $assemblyInfoFile = Join-Path $projectRoot "Google.PowerShell\Properties\AssemblyInfo.cs"
@@ -134,8 +141,7 @@ $gCloudManifestPath = Join-Path $configDir "GoogleCloud.psd1"
 $gCloudManifest = Import-PowerShellDataFile $gCloudManifestPath
 CleanUp-PrivateDataAndExportVariables $gCloudManifest
 $gCloudManifest.CmdletsToExport = $cmdletsList
-New-ModuleManifest -Path $gCloudManifestPath @gCloudManifest
-Set-ModuleManifestEncoding $gCloudManifestPath
+New-ModuleManifestFromDict -Path $gCloudManifestPath -Manifest $gCloudManifest
 
 # HACK: Move the GoogleCloudPowerShell.psd1 into a different folder to keep Cloud SDK installations
 # before 9/29/2016 working. We changed the location of the path we add to PSModulePath during the
@@ -152,14 +158,13 @@ New-Item -ItemType Directory $gcpsDir
 # Add the version folder in front of Google.PowerShell.dll and GoogleCloudPlatform.Format.ps1xml.
 $gCloudPowerShellManifest = Import-PowerShellDataFile (Join-Path $configDir "GoogleCloudPowerShell.psd1")
 CleanUp-PrivateDataAndExportVariables $gCloudPowerShellManifest
-$gCloudPowerShellManifest.RootModule = $gCloudPowerShellManifest.RootModule -replace "Google.PowerShell.dll", `
-                                                                                   "$normalizedVersion\Google.PowerShell.dll"
+$gCloudPowerShellManifest.RootModule = $gCloudPowerShellManifest.RootModule -replace "GoogleCloud.psm1", `
+                                                                                   "$normalizedVersion\GoogleCloud.psm1"
 $gCloudPowerShellManifest.FormatsToProcess = $gCloudPowerShellManifest.FormatsToProcess -replace "GoogleCloudPlatform.Format.ps1xml", `
                                                                                                "$normalizedVersion\GoogleCloudPlatform.Format.ps1xml"
 $gCloudPowerShellManifest.CmdletsToExport = $cmdletsList
 $gCloudPowerShellManifest.ModuleVersion = $normalizedVersion
-New-ModuleManifest -Path "$gcpsDir\GoogleCloudPowerShell.psd1" @gCloudPowerShellManifest
-Set-ModuleManifestEncoding "$gcpsDir\GoogleCloudPowerShell.psd1"
+New-ModuleManifestFromDict -Path "$gcpsDir\GoogleCloudPowerShell.psd1" -Manifest $gCloudPowerShellManifest
 
 # Package the bits. Requires setting up the right directory structure.
 Write-Host -ForegroundColor Cyan "*** Packaging the bits ***"
@@ -195,7 +200,7 @@ $gCloudBetaManifest.CmdletsToExport = $betaCmdlets
 
 # Change the name of the manifest from GoogleCloud.psd1 to GoogleCloudBeta.psd1.
 $betaGCloudManifestPath = Join-Path $googleCloudBetaDir "GoogleCloudBeta.psd1"
-New-ModuleManifest -Path $betaGCloudManifestPath @gCloudBetaManifest
+New-ModuleManifestFromDict -Path $betaGCloudManifestPath -Manifest $gCloudBetaManifest
 
 # Remove unnecessary manifest files.
 Remove-Item -Path "$googleCloudBetaDir\GoogleCloud.psd1" -Force
@@ -214,8 +219,11 @@ function ConfirmExists($relativePath) {
 
 ConfirmExists "PowerShell\GoogleCloud\$normalizedVersion\GoogleCloud.psd1"
 ConfirmExists "PowerShell\GoogleCloud\$normalizedVersion\Google.PowerShell.dll"
+ConfirmExists "PowerShell\GoogleCloud\$normalizedVersion\GoogleCloud.psm1"
 ConfirmExists "PowerShell\GoogleCloud\$normalizedVersion\BootstrapCloudToolsForPowerShell.ps1"
 ConfirmExists "GoogleCloudPowerShell\GoogleCloudPowerShell.psd1"
+ConfirmExists "PowerShell\GoogleCloudBeta\$normalizedVersion\GoogleCloudBeta.psd1"
+ConfirmExists "PowerShell\GoogleCloudBeta\$normalizedVersion\GoogleCloud.psm1"
 ConfirmExists "PowerShell\GoogleCloudBeta\$normalizedVersion\Google.PowerShell.dll"
 ConfirmExists "PowerShell\GoogleCloudBeta\$normalizedVersion\BootstrapCloudToolsForPowerShell.ps1"
 
