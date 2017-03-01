@@ -269,6 +269,7 @@ Describe "Remove-GcbqDataset" {
         }
         finally {
             Get-GcbqDataset "test_set_1" | Remove-GcbqDataset
+            { Get-GcbqDataset "test_set_1" -ErrorAction Stop } | Should Throw 404
         }
     }
 
@@ -279,43 +280,49 @@ Describe "Remove-GcbqDataset" {
         }
         finally {
             Remove-GcbqDataset -InputObject $a
+            { Get-GcbqDataset "test_set_2" -ErrorAction Stop } | Should Throw 404
         }
     }
 
-    #TODO(ahandley): Add in tests that check the -Force switch when New-GcbqTable is written.
-
-    It "should handle when a dataset does not exist" {
+    It "should delete a dataset by value with explicit project" {
         try {
-            $data = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Dataset
-            $data.DatasetReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.DatasetReference
-            $data.DatasetReference.DatasetId = "test_set_3"
-            $data.DatasetReference.ProjectId = $project
+            New-GcbqDataset -Project $project "test_set_explicit"
         }
         finally {
-            { Remove-GcbqDataset -InputObject $data } | Should Throw 404
+            Remove-GcbqDataset -Project $project -Dataset "test_set_explicit"
+            { Get-GcbqDataset "test_set_explicit" -ErrorAction Stop } | Should Throw 404
         }
+    }
+
+    It "should delete a nonempty dataset as long as -Force is specified" {
+        try {
+            New-GcbqDataset -Project $project "test_set_force"
+            New-GcbqTable -Project $project -DatasetId "test_set_force" -Table "force_test_table"
+        }
+        finally {
+            Remove-GcbqDataset -Project $project -Dataset "test_set_force" -Force
+            { Get-GcbqDataset "test_set_force" -ErrorAction Stop } | Should Throw 404
+        }
+    }
+
+    It "should handle when a dataset does not exist" {
+        $data = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Dataset
+        $data.DatasetReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.DatasetReference
+        $data.DatasetReference.DatasetId = "test_set_not_on_server"
+        $data.DatasetReference.ProjectId = $project
+        { Remove-GcbqDataset -InputObject $data } | Should Throw 404
     }
 
     It "should handle projects that do not exist" {
-        try {
-            $data = New-GcbqDataset "test_set_4"
-            { Get-GcbqDataset "test_set_4" | Remove-GcbqDataset `
-                -Project $nonExistProject } | Should Throw 404
-        }
-        finally {
-            Remove-GcbqDataset -InputObject $data
-        }
+        { Remove-GcbqDataset -Project $nonExistProject -Dataset $nonExistDataset } | Should Throw 404
+    }
+
+    It "should handle project:dataset combinations that do not exist" {
+        { Remove-GcbqDataset -Project $project -Dataset $nonExistDataset } | Should Throw 404
     }
 
     It "should handle projects that the user does not have permissions for" {
-        try {
-            $data = New-GcbqDataset "test_set_5"
-            { Get-GcbqDataset "test_set_5" | Remove-GcbqDataset `
-                -Project $accessErrProject } | Should Throw 400
-        }
-        finally {
-            Remove-GcbqDataset -InputObject $data
-        }
+        { Remove-GcbqDataset -Project $accessErrProject -Dataset $nonExistDataset } | Should Throw 400
     }
 }
 
