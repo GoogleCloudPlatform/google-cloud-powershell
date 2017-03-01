@@ -15,12 +15,12 @@ namespace Google.PowerShell.BigQuery
     /// Lists all tables in the specified dataset or finds a specific table by name.
     /// </para>
     /// <para type="description">
-    /// Lists all tables in the specified dataset if no Table ID is specified. Requires the READER dataset 
-    /// role. If a table ID is specified, it will return the table resource, which describes the data in 
-    /// the table. Note that this is not the actual data from the table. If no Project is specified, the 
-    /// default project will be used. The -Dataset parameter takes a string or a Dataset object, and will 
-    /// extract the DatasetId.  This can be passed via parameter or on the pipeline. This cmdlet returns 
-    /// a single Table if a table ID is specified, and any number of Tables otherwise.
+    /// If no table is specified, lists all tables in the specified dataset (Requires the READER 
+    /// dataset role). If a table is specified, it will return the table resource. Note that 
+    /// this is not the actual data from the table. If no Project is specified, the default 
+    /// project will be used. Dataset can be specified by the -DatasetId parameter or by 
+    /// passing in a Dataset object.  This cmdlet returns a single Table if a table ID is 
+    /// specified, and any number of TableList.TablesData objects otherwise.
     /// </para>
     /// <example>
     ///   <code>PS C:\> Get-GcbqDataset “my_data” | Get-GcbqTable</code>
@@ -41,74 +41,122 @@ namespace Google.PowerShell.BigQuery
     [Cmdlet(VerbsCommon.Get, "GcbqTable")]
     public class GetGcbqTable : GcbqCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string ByValue = "ByValue";
+            public const string ByDatasetObject = "ByDatasetObject";
+            public const string ByObject = "ByObject";
+        }
+
         /// <summary>
         /// <para type="description">
         /// The project to look for tables in. If not set via PowerShell parameter processing, it will
         /// default to the Cloud SDK's DefaultProject property.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValue)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         override public string Project { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The ID of the dataset to search. Can be a string, a Dataset, a DatasetReference, or a DatasetsData object.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = true, ValueFromPipeline = true)]
-        [ValidatePattern("[a-zA-Z0-9_]")]
-        [PropertyByTypeTransformation(TypeToTransform = typeof(DatasetList.DatasetsData), 
-            Property = nameof(DatasetList.DatasetsData.DatasetReference))]
-        [PropertyByTypeTransformation(TypeToTransform = typeof(Dataset), Property = nameof(Apis.Bigquery.v2.Data.Dataset.DatasetReference))]
-        [PropertyByTypeTransformation(TypeToTransform = typeof(DatasetReference), Property = nameof(DatasetReference.DatasetId))]
-        public string Dataset { get; set; }
 
         /// <summary>
         /// <para type="description">
         /// The ID of the table that you want to get a descriptor object for.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, Position = 0)]
+        [Parameter(Mandatory = false, Position = 0, ParameterSetName = ParameterSetNames.ByValue)]
+        [Parameter(Mandatory = false, Position = 0, ParameterSetName = ParameterSetNames.ByDatasetObject)]
         public string Table { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The ID of the dataset to search. Can be a string, a Dataset, a DatasetReference, or a DatasetsData object.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByValue)]
+        [ValidatePattern("[a-zA-Z0-9_]")]
+        public string DatasetId { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The Dataset that you would like to search. This field takes Dataset or DatasetRefrence objects.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ByDatasetObject)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Dataset), 
+            Property = nameof(Apis.Bigquery.v2.Data.Dataset.DatasetReference))]
+        public DatasetReference Dataset { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The Table object that will be sent to the server to be inserted.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ByObject)]
+        public Table InputObject { get; set; }
 
         protected override void ProcessRecord()
         {
-            if (Table == null)
+            switch (ParameterSetName)
             {
-                TablesResource.ListRequest request = Service.Tables.List(Project, Dataset);
-                do
-                {
-                    TableList response = request.Execute();
-                    if (response == null)
-                    {
-                        WriteError(new ErrorRecord(
-                            new Exception("The List query returned null instead of a well formed list."),
-                            "Null List Returned", ErrorCategory.ReadError, Dataset));
-                    }
-                    if (response.Tables != null)
-                    {
-                        WriteObject(response.Tables, true);
-                    }
-                    request.PageToken = response.NextPageToken;
-                }
-                while (!Stopping && request.PageToken != null);
+                // No processing needed for ByValue parameter sets.
+                case ParameterSetNames.ByValue:
+                    break;
+                case ParameterSetNames.ByObject:
+                    Project = InputObject.TableReference.ProjectId;
+                    DatasetId = InputObject.TableReference.DatasetId;
+                    Table = InputObject.TableReference.TableId;
+                    break;
+                case ParameterSetNames.ByDatasetObject:
+                    Project = Dataset.ProjectId;
+                    DatasetId = Dataset.DatasetId;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+
+            if (Table == null && InputObject == null)
+            {
+                DoListRequest(Service.Tables.List(Project, DatasetId));
             }
             else
             {
-                TablesResource.GetRequest request = Service.Tables.Get(Project, Dataset, Table);
-                try
+                DoGetRequest(Service.Tables.Get(Project, DatasetId, Table));
+            }
+        }
+
+        public void DoListRequest(TablesResource.ListRequest request)
+        {
+            do
+            {
+                TableList response = request.Execute();
+                if (response == null)
                 {
-                    var response = request.Execute();
-                    WriteObject(response);
+                    WriteError(new ErrorRecord(
+                        new Exception("The List query returned null instead of a well formed list."),
+                        "Null List Returned", ErrorCategory.ReadError, Dataset));
                 }
-                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+                if (response.Tables != null)
                 {
-                    WriteError(new ErrorRecord(ex,
-                        $"Error {ex.HttpStatusCode}: Table {Table} not found in {Dataset}.",
-                        ErrorCategory.ObjectNotFound,
-                        Table));
+                    WriteObject(response.Tables, true);
                 }
+                request.PageToken = response.NextPageToken;
+            }
+            while (!Stopping && request.PageToken != null);
+        }
+
+        public void DoGetRequest(TablesResource.GetRequest request)
+        {
+            try
+            {
+                var response = request.Execute();
+                WriteObject(response);
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+            {
+                WriteError(new ErrorRecord(ex,
+                    $"Error {ex.HttpStatusCode}: Table '{Table}' not found in '{Dataset}'.",
+                    ErrorCategory.ObjectNotFound,
+                    Table));
             }
         }
     }
@@ -142,7 +190,7 @@ namespace Google.PowerShell.BigQuery
         private class ParameterSetNames
         {
             public const string ByObject = "ByObject";
-            public const string ByValues = "ByValue";
+            public const string ByValue = "ByValue";
             public const string ByValueWithRef = "ByValueWithRef";
         }
 
@@ -160,7 +208,7 @@ namespace Google.PowerShell.BigQuery
         /// default to the Cloud SDK's DefaultProject property.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValue)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public override string Project { get; set; }
 
@@ -170,7 +218,7 @@ namespace Google.PowerShell.BigQuery
         /// To pass in an object to specify datasetId, use the Dataset parameter.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ByValue)]
         public string DatasetId { get; set; }
 
         /// <summary>
@@ -187,7 +235,7 @@ namespace Google.PowerShell.BigQuery
         /// The TableId must be unique within the Dataset and match the pattern [a-zA-Z0-9_]+.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.ByValue)]
         [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.ByValueWithRef)]
         [ValidatePattern("[a-zA-Z0-9_]")]
         [ValidateLength(1, 1024)]
@@ -198,7 +246,7 @@ namespace Google.PowerShell.BigQuery
         /// User-friendly name for the table.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValue)]
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValueWithRef)]
         public string Name { get; set; }
 
@@ -207,7 +255,7 @@ namespace Google.PowerShell.BigQuery
         /// Description of the table.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValue)]
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValueWithRef)]
         public string Description { get; set; }
 
@@ -216,7 +264,7 @@ namespace Google.PowerShell.BigQuery
         /// The lifetime of this table from the time of creation (in seconds).
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValue)]
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValueWithRef)]
         [ValidateRange(1, (long.MaxValue / 1000))]
         public long Expiration { get; set; }
@@ -237,7 +285,7 @@ namespace Google.PowerShell.BigQuery
                     DatasetId = Dataset.DatasetId;
                     request = makeInsertReq();
                     break;
-                case ParameterSetNames.ByValues:
+                case ParameterSetNames.ByValue:
                     request = makeInsertReq();
                     break;
                 default:
@@ -253,7 +301,7 @@ namespace Google.PowerShell.BigQuery
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
             {
                 WriteError(new ErrorRecord(ex,
-                    $"A table with the name {TableId} already exists in {Project}:{DatasetId}.",
+                    $"A table with the name '{TableId}' already exists in '{Project}:{DatasetId}'.",
                     ErrorCategory.InvalidArgument,
                     TableId));
             }

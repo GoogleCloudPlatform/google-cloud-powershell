@@ -23,7 +23,7 @@ Describe "Get-GcbqTable" {
     }
 
     It "should list tables from a dataset ID by parameter"{
-        $tables = Get-GcbqTable -Dataset $datasetName
+        $tables = Get-GcbqTable -DatasetId $datasetName
         $tables.Count | Should BeGreaterThan 0
     }
 
@@ -41,21 +41,21 @@ Describe "Get-GcbqTable" {
     }
 
     It "should get a singular table with a dataset ID by parameter"{
-        $table = Get-GcbqTable -Dataset $datasetName "my_table"
+        $table = Get-GcbqTable -DatasetId $datasetName "my_table"
         $table.TableReference.TableId | Should be "my_table"
         $table.Description | Should Be "Test data table"
     }
 
     It "should throw when the table is not found"{
-        { Get-GcbqTable -Dataset $datasetName $nonExistTable -ErrorAction Stop} | Should Throw "404"
+        { Get-GcbqTable -DatasetId $datasetName $nonExistTable -ErrorAction Stop} | Should Throw "404"
     }
 
     It "should throw when the dataset is not found"{
-        { Get-GcbqTable -Dataset $nonExistDataset } | Should Throw "404"
+        { Get-GcbqTable -DatasetId $nonExistDataset } | Should Throw "404"
     }
 
     It "should throw when the project is not found"{
-        { Get-GcbqTable -project $nonExistProject -Dataset $datasetName} | Should Throw "404"
+        { Get-GcbqTable -project $nonExistProject -DatasetId $datasetName} | Should Throw "404"
     }
 
     AfterAll {
