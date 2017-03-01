@@ -126,8 +126,8 @@ namespace Google.PowerShell.BigQuery
     /// a Table object.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> New-GcbqTable “new_tab” -Dataset “my_data” -Description “Some nice data!” 
-    ///         -Expiration (60*60*24*30)</code>
+    ///   <code>PS C:\> New-GcbqTable “new_tab” -Dataset “my_data” -Description “Some nice data!” `
+    ///   -Expiration (60*60*24*30)</code>
     ///   <para>This makes a new Table called "new_tab" with a lifetime of 30 days.</para>
     ///   <code>PS C:\> Get-GcbqDataset "my_data" | New-GcbqTable “new_tab”</code>
     ///   <para>This shows how the pipeline can be used to specify Dataset and Project.</para>
@@ -167,7 +167,7 @@ namespace Google.PowerShell.BigQuery
         /// <summary>
         /// <para type="description">
         /// The DatasetId that you would like to add to. This field takes strings.
-        /// To pass in a Dataset or DatasetId object for this field, use the ByValuesWithRef parameter set.
+        /// To pass in an object to specify datasetId, use the Dataset parameter.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ByValues)]
