@@ -7,28 +7,29 @@ using System.Management.Automation;
 namespace Google.PowerShell.ComputeEngine
 {
     /// <summary>
-    /// <para type="synopsis">
-    /// Use this cmdlet when you need to provide additional information to Set-GceInstance -AddDisk or
-    /// Add-GceInstance.
-    /// </para>
-    /// <para type="description">
-    /// Creates a single new AttachedDisk object. These objects are used by New-GceInstanceConfig,
-    /// Add-GceInstance, Add-GceInstanceTemplate and Set-GceInstance. They provide additional information about
-    /// the disk being attached, such as the local name of the disk, or whether the disk should be
-    /// automatically deleted.
-    /// </para>
-    /// </summary>
-    /// <example>
-    /// <code>
-    /// PS C:\> $disks = (New-GceAttachedDiskConfig (Get-GceImage "windows-cloud" -Family "windows-2012-r2") -Boot -AutoDelete), `
+    ///   <para type="synopsis">
+    ///     Use this cmdlet when you need to provide additional information to Set-GceInstance -AddDisk or
+    ///     Add-GceInstance.
+    ///   </para>
+    ///   <para type="description">
+    ///     Creates a single new AttachedDisk object. These objects are used by New-GceInstanceConfig,
+    ///     Add-GceInstance, Add-GceInstanceTemplate and Set-GceInstance. They provide additional information
+    ///     about the disk being attached, such as the local name of the disk, or whether the disk should be
+    ///     automatically deleted.
+    ///   </para>
+    ///   <example>
+    ///     <code>
+    /// PS C:\> $image = Get-GceImage "windows-cloud" -Family "windows-2012-r2"
+    /// PS C:\> $disks = (New-GceAttachedDiskConfig $image -Boot -AutoDelete), `
     ///                  (New-GceAttachedDiskConfig (Get-GceDisk "persistant-disk-name") -ReadOnly)
     /// PS C:\> Add-GceInstanceTemplate -Name "template-name" -Disk $disks
-    /// </code>
-    /// <para>Creates two attached disk objects, and creates a new template using them.</para>
-    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances/attachDisk#request-body)">
-    /// [Attached Disk resource definition]
-    /// </para>
-    ///  </example>
+    ///     </code>
+    ///     <para>Creates two attached disk objects, and creates a new template using them.</para>
+    ///   </example>
+    ///   <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances/attachDisk#request-body)">
+    ///     [Attached Disk resource definition]
+    ///   </para>
+    /// </summary>
     [Cmdlet(VerbsCommon.New, "GceAttachedDiskConfig", DefaultParameterSetName = ParameterSetNames.Persistant)]
     [OutputType(typeof(AttachedDisk))]
     public class NewGceAttachedDiskConfigCmdlet : GceCmdlet
