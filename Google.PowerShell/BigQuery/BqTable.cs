@@ -23,23 +23,23 @@ namespace Google.PowerShell.BigQuery
     /// specified, and any number of TableList.TablesData objects otherwise.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Get-GcbqDataset “my_data” | Get-GcbqTable</code>
+    ///   <code>PS C:\> Get-BqDataset “my_data” | Get-BqTable</code>
     ///   <para>This will list all of the tables in the dataset "my_data" in the default project.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-GcbqDataset “my_data” | Get-GcbqTable "my_table"</code>
+    ///   <code>PS C:\> Get-BqDataset “my_data” | Get-BqTable "my_table"</code>
     ///   <para>This will return a Table descriptor object for "my_table" in "my_data".</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-GcbqTable -Project "my_proj" -Dataset "my_data" "my_table"</code>
+    ///   <code>PS C:\> Get-BqTable -Project "my_proj" -Dataset "my_data" "my_table"</code>
     ///   <para>This returns a Table descriptor object for this project:dataset:table combination.</para>
     /// </example> 
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/tables)">
     /// [BigQuery Tables]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Get, "GcbqTable")]
-    public class GetGcbqTable : GcbqCmdlet
+    [Cmdlet(VerbsCommon.Get, "BqTable")]
+    public class GetBqTable : BqCmdlet
     {
         private class ParameterSetNames
         {
@@ -174,18 +174,18 @@ namespace Google.PowerShell.BigQuery
     /// a Table object.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> New-GcbqTable “new_tab” -Dataset “my_data” -Description “Some nice data!” `
+    ///   <code>PS C:\> New-BqTable “new_tab” -Dataset “my_data” -Description “Some nice data!” `
     ///   -Expiration (60*60*24*30)</code>
     ///   <para>This makes a new Table called "new_tab" with a lifetime of 30 days.</para>
-    ///   <code>PS C:\> Get-GcbqDataset "my_data" | New-GcbqTable “new_tab”</code>
+    ///   <code>PS C:\> Get-BqDataset "my_data" | New-BqTable “new_tab”</code>
     ///   <para>This shows how the pipeline can be used to specify Dataset and Project.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/tables)">
     /// [BigQuery Tables]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.New, "GcbqTable")]
-    public class NewGcbqTable : GcbqCmdlet
+    [Cmdlet(VerbsCommon.New, "BqTable")]
+    public class NewBqTable : BqCmdlet
     {
         private class ParameterSetNames
         {
