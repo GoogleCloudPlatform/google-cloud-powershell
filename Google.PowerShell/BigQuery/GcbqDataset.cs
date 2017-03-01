@@ -375,7 +375,7 @@ namespace Google.PowerShell.BigQuery
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
             {
                 WriteError(new ErrorRecord(ex,  
-                    $"A dataset with the name {DatasetId} already exists in this project.",
+                    $"A dataset with the name {DatasetId} already exists in project{Project}.",
                     ErrorCategory.InvalidArgument, 
                     newData));
             }
