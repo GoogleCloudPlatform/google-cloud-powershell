@@ -261,30 +261,25 @@ namespace Google.PowerShell.BigQuery
 
         public TablesResource.InsertRequest makeInsertReq()
         {
-            Table newTab;
-            newTab = new Table();
-            newTab.TableReference = getTableRef(Project, DatasetId, TableId);
-            newTab.FriendlyName = Name;
-            newTab.Description = Description;
+            Table newTable = new Table();
+            newTable.TableReference = new TableReference
+            {
+                ProjectId = Project,
+                DatasetId = DatasetId,
+                TableId = TableId
+            };
+            newTable.FriendlyName = Name;
+            newTable.Description = Description;
             if (Expiration != 0)
             {
                 long currentMillis = Convert.ToInt64(DateTime.Now.ToUniversalTime().Subtract(
                     new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                     ).TotalMilliseconds);
-                newTab.ExpirationTime = (Expiration * 1000) + currentMillis;
+                newTable.ExpirationTime = (Expiration * 1000) + currentMillis;
                 // Note: The code below is a more elegant solution, but is not supported by the current version
-                //newTab.ExpirationTime = new DateTimeOffset(DateTime.Now).ToUnixTimeMilliseconds();
+                //newTable.ExpirationTime = new DateTimeOffset(DateTime.Now).ToUnixTimeMilliseconds();
             }
-            return Service.Tables.Insert(newTab, Project, DatasetId);
-        }
-
-        public TableReference getTableRef(string p, string d, string t)
-        {
-            TableReference tr = new TableReference();
-            tr.ProjectId = p;
-            tr.DatasetId = d;
-            tr.TableId = t;
-            return tr;
+            return Service.Tables.Insert(newTable, Project, DatasetId);
         }
     }
 }
