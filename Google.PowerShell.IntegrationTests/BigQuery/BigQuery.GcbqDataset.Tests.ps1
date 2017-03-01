@@ -77,7 +77,7 @@ Describe "Get-GcbqDataset" {
 
 Describe "Set-GcbqDataset" {
 
-    It "should update trivial metadata fields via pipeline (not DatabaseId)" {
+    It "should update trivial metadata fields via pipeline. (not DatabaseId)" {
         try {
             New-GcbqDataset "test_dataset_id1" -Name "Testdata" -Description "Some interesting data!" -Expiration $oneDaySec
             $data = Get-GcbqDataset "test_dataset_id1"
@@ -96,7 +96,7 @@ Describe "Set-GcbqDataset" {
         }
     }
 
-    It "should update trivial metadata fields via parameter (not DatabaseId)" {
+    It "should update trivial metadata fields via parameter. (not DatabaseId)" {
         try {
             New-GcbqDataset "test_dataset_id2" -Name "Testdata" -Description "Some interesting data!" -Expiration $oneDaySec
             $data = Get-GcbqDataset "test_dataset_id2"
@@ -201,7 +201,7 @@ Describe "New-GcbqDataset" {
             $data.DatasetReference.ProjectId = $project
             $data.FriendlyName = "PipeTest"
             $data.Description = "Some cool data coming hot off the pipeline!"
-            $newdata = New-GcbqDataset -Dataset $data
+            $newdata = New-GcbqDataset -InputObject $data
             $newdata | Should Not BeNullOrEmpty
             $newdata.DatasetReference.DatasetId | Should Be "test_data_id3"
             $newdata.FriendlyName | Should Be "PipeTest"
@@ -211,7 +211,7 @@ Describe "New-GcbqDataset" {
         }
     }
 
-    It "should not work with no arguments (meaning no datasetId)" {
+    It "should not work with no arguments. (meaning no datasetId)" {
         { New-GcbqDataset } | Should Throw 400
     }
 
