@@ -13,7 +13,7 @@
 @{
 
 # Script module or binary module file associated with this manifest.
-RootModule = '..\PowerShell\GoogleCloud\GoogleCloudPowerShell.psm1'
+RootModule = '..\PowerShell\GoogleCloud\GoogleCloud.psm1'
 
 # Version number of this module.
 ModuleVersion = '0.1.10.0'
@@ -96,7 +96,7 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = @('Google', 'Cloud', 'Compute', 'Storage', 'GCS', 'GCE', 'SQL', 'DNS')
+        Tags = 'Google', 'Cloud', 'Compute', 'Storage', 'GCS', 'GCE', 'SQL', 'DNS'
 
         # A URL to the license for this module.
         LicenseUri = 'https://github.com/GoogleCloudPlatform/google-cloud-powershell/blob/master/LICENSE'
@@ -108,17 +108,16 @@ PrivateData = @{
         IconUri = 'https://raw.githubusercontent.com/GoogleCloudPlatform/google-cloud-powershell/master/Assets/LOGO.png'
 
         # ReleaseNotes of this module
-        ReleaseNotes = @"
-    This module contains a set of cmdlets that let you manage Google Cloud Platform resources.
-    Currently, the supported resources are Google Cloud Storage, Google Compute Engine,
-    Google Cloud DNS and Google Cloud SQL.
+        ReleaseNotes = 'This module contains a set of cmdlets that let you manage Google Cloud Platform resources.
+Currently, the supported resources are Google Cloud Storage, Google Compute Engine,
+Google Cloud DNS and Google Cloud SQL.
 
-    The module also contains a PowerShell provider for Google Cloud Storage. This provider allows
-    you to use commands like 'cd', 'dir', 'copy' and 'del' to navigate and manipulate your data
-    in Cloud Storage as if the data were on a local file system.
+The module also contains a PowerShell provider for Google Cloud Storage. This provider allows
+you to use commands like ''cd'', ''dir'', ''copy'' and ''del'' to navigate and manipulate your data
+in Cloud Storage as if the data were on a local file system.
 
-    The module requires Google Cloud SDK to work.
-"@
+The module requires Google Cloud SDK to work.'
+
     } # End of PSData hashtable
 
 } # End of PrivateData hashtable
