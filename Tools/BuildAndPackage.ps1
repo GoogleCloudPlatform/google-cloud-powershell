@@ -65,10 +65,9 @@ function CleanUp-PrivateDataAndExportVariables($moduleManifest) {
             foreach ($field in $fieldNeededFromPSData) {
                 if ($psData.ContainsKey($field)) {
                     # For the array of tags, we have to explicitly convert them.
-                    if ($field -eq "Tags" -and $null -ne $psData[$field]) {
+                    if ($field -eq "Tags") {
                         $moduleManifest["Tags"] = [string[]]$psData[$field]
-                    }
-                    else {
+                    } else {
                         $moduleManifest[$field] = $psData[$field]
                     }
                 }
