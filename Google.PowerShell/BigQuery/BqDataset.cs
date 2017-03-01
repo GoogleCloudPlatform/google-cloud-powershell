@@ -25,24 +25,24 @@ namespace Google.PowerShell.BigQuery
     /// DatasetList.DatasetData objects if no DatasetId was specified, or a Dataset otherwise.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Get-GcbqDataset "my-dataset"</code>
+    ///   <code>PS C:\> Get-BqDataset "my-dataset"</code>
     ///   <para>This returns a Dataset object from the default project of the dataset with id <code>my-dataset</code>.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-GcbqDataset -Project my-project</code>
+    ///   <code>PS C:\> Get-BqDataset -Project my-project</code>
     ///   <para>This lists all of the non-hidden datasets in the Cloud project <code>my-project</code>.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-GcbqDataset -IncludeHidden</code>
+    ///   <code>PS C:\> Get-BqDataset -IncludeHidden</code>
     ///   <para>This lists all of the datasets in the default Cloud project for your account.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-GcbqDataset -IncludeHidden -Filter "labels.department:shipping"</code>
+    ///   <code>PS C:\> Get-BqDataset -IncludeHidden -Filter "labels.department:shipping"</code>
     ///   <para>This lists all of the datasets in the default Cloud project for your account that have 
     ///   the <code>department</code> key with a value <code>shipping</code>.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-GcbqDataset -IncludeHidden -Filter "labels.department:shipping labels.location:usa"</code>
+    ///   <code>PS C:\> Get-BqDataset -IncludeHidden -Filter "labels.department:shipping labels.location:usa"</code>
     ///   <para>This is an example of ANDing multiple filters.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets)">
@@ -52,8 +52,8 @@ namespace Google.PowerShell.BigQuery
     /// [Filtering datasets using labels]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Get, "GcbqDataset")]
-    public class GetGcbqDataset : GcbqCmdlet
+    [Cmdlet(VerbsCommon.Get, "BqDataset")]
+    public class GetBqDataset : BqCmdlet
     {
         private class ParameterSetNames
         {
@@ -193,24 +193,24 @@ namespace Google.PowerShell.BigQuery
     /// default project will be used. This cmdlet returns a Dataset object.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> $updatedSet = Get-GcbqDataset "my_dataset"
+    ///   <code>PS C:\> $updatedSet = Get-BqDataset "my_dataset"
     ///   PS C:\> $updatedSet.Description = "An updated summary of the data contents."
-    ///   PS C:\> $updatedSet | Set-GcbqDataset</code>
+    ///   PS C:\> $updatedSet | Set-BqDataset</code>
     ///   <para>This will update the values stored for the Bigquery dataset passed in the default project.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> $updatedSet = Get-GcbqDataset "my_dataset"
+    ///   <code>PS C:\> $updatedSet = Get-BqDataset "my_dataset"
     ///   $updatedSet.DefaultTableExpirationMs = 60 * 60 * 24 * 7
     ///   $updatedSet.Description = "A set of tables that last for exactly one week."
-    ///   PS C:\> Set-GcbqDataset -Project my_project -InputObject $updatedSet</code>
+    ///   PS C:\> Set-BqDataset -Project my_project -InputObject $updatedSet</code>
     ///   <para>This will update the values stored for my_dataset and shows how to pass it in as a parameter.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets)">
     /// [BigQuery Datasets]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Set, "GcbqDataset")]
-    public class SetGcbqDataset : GcbqCmdlet
+    [Cmdlet(VerbsCommon.Set, "BqDataset")]
+    public class SetBqDataset : BqCmdlet
     {
         /// <summary>
         /// <para type="description">
@@ -266,11 +266,11 @@ namespace Google.PowerShell.BigQuery
     /// If no Project is specified, the default project will be used. This cmdlet returns a Dataset object.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> $dataset | New-GcbqDataset</code>
+    ///   <code>PS C:\> $dataset | New-BqDataset</code>
     ///   <para>This takes a Dataset object from the pipeline and inserts it into the Cloud project "my-project".</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> New-GcbqDataset "test_data_id" -Name "Testdata" `
+    ///   <code>PS C:\> New-BqDataset "test_data_id" -Name "Testdata" `
     ///   -Description "Some interesting data!" -Expiration 86400000</code>
     ///   <para>This builds a new dataset with the supplied datasetId, name, description, and an Expiration of 1 day.</para>
     /// </example>
@@ -278,8 +278,8 @@ namespace Google.PowerShell.BigQuery
     /// [BigQuery Datasets]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.New, "GcbqDataset")]
-    public class NewGcbqDataset : GcbqCmdlet
+    [Cmdlet(VerbsCommon.New, "BqDataset")]
+    public class NewBqDataset : BqCmdlet
     {
         private class ParameterSetNames
         {
@@ -398,11 +398,11 @@ namespace Google.PowerShell.BigQuery
     /// -WhatIf and -Confirm flags.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Get-GcbqDataset "my-values" | Remove-GcbqDataset </code>
+    ///   <code>PS C:\> Get-BqDataset "my-values" | Remove-BqDataset </code>
     ///   <para>This deletes "my-values" only if it is empty.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-GcbqDataset "test-values" | Remove-GcbqDataset -Force</code>
+    ///   <code>PS C:\> Get-BqDataset "test-values" | Remove-BqDataset -Force</code>
     ///   <para>This deletes "test-values" and all of its contents.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets)">
@@ -412,8 +412,8 @@ namespace Google.PowerShell.BigQuery
     /// [ShouldProcess]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Remove, "GcbqDataset", SupportsShouldProcess = true)]
-    public class RemoveGcbqDataset : GcbqCmdlet
+    [Cmdlet(VerbsCommon.Remove, "BqDataset", SupportsShouldProcess = true)]
+    public class RemoveBqDataset : BqCmdlet
     {
         private class ParameterSetNames
         {

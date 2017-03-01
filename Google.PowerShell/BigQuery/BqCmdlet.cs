@@ -9,11 +9,11 @@ namespace Google.PowerShell.BigQuery
     /// <summary>
     /// Base class for Google Cloud BigQuery cmdlets.
     /// </summary>
-    public class GcbqCmdlet : GCloudCmdlet
+    public class BqCmdlet : GCloudCmdlet
     {
         public BigqueryService Service { get; private set; }
 
-        public GcbqCmdlet()
+        public BqCmdlet()
         {
             Service = new BigqueryService(GetBaseClientServiceInitializer());
         }

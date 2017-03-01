@@ -6,18 +6,18 @@ Describe "Get-GcbqTable" {
     BeforeAll {
         $r = Get-Random
         $datasetName = "pshell_testing_$r"
-        $test_set = New-GcbqDataset $datasetName
+        $test_set = New-BqDataset $datasetName
         $test_set | New-GcbqTable "my_table" -Name "my_table" -Description "Test data table"
         $test_set | New-GcbqTable "my_other_table" -Name "my_other_table" -Description "Another test table"
     }
 
     It "should list tables from a dataset object from pipeline"{
-        $tables = Get-GcbqDataset $datasetName | Get-GcbqTable
+        $tables = Get-BqDataset $datasetName | Get-GcbqTable
         $tables.Count | Should BeGreaterThan 0
     }
 
     It "should list tables from a dataset object via parameter"{
-        $dataset = Get-GcbqDataset $datasetName 
+        $dataset = Get-BqDataset $datasetName 
         $tables = Get-GcbqTable -Dataset $dataset
         $tables.Count | Should BeGreaterThan 0
     }
@@ -28,13 +28,13 @@ Describe "Get-GcbqTable" {
     }
 
     It "should get a singular table with a dataset object from pipeline"{
-        $table = Get-GcbqDataset $datasetName | Get-GcbqTable "my_table"
+        $table = Get-BqDataset $datasetName | Get-GcbqTable "my_table"
         $table.TableReference.TableId | Should be "my_table"
         $table.Description | Should Be "Test data table"
     }
 
     It "should get a singular table with a dataset object via parameter"{
-        $dataset = Get-GcbqDataset $datasetName
+        $dataset = Get-BqDataset $datasetName
         $table = Get-GcbqTable -Dataset $dataset "my_other_table"
         $table.TableReference.TableId | Should be "my_other_table"
         $table.Description | Should Be "Another test table"
@@ -59,7 +59,7 @@ Describe "Get-GcbqTable" {
     }
 
     AfterAll {
-        $test_set | Remove-GcbqDataset -Force
+        $test_set | Remove-BqDataset -Force
     }
 }
 
@@ -68,7 +68,7 @@ Describe "New-GcbqTable" {
     BeforeAll {
         $r = Get-Random
         $datasetName = "pshell_testing_$r"
-        $test_set = New-GcbqDataset $datasetName
+        $test_set = New-BqDataset $datasetName
     }
 
     It "should take strings, name, description, and time to make a table"{
@@ -155,7 +155,7 @@ Describe "New-GcbqTable" {
     }
 
     AfterAll {
-        $test_set | Remove-GcbqDataset -Force
+        $test_set | Remove-BqDataset -Force
     }
 }
 
