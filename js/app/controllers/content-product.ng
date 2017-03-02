@@ -386,6 +386,64 @@ New-GcLogMetric -Metric "my-metric" -ResourceType "gce_instance"
 New-GcLogMetric -Metric "my-metric" -Filter "textPayload = `"Testing`""</pre>
   </div>
 
+  <!-- Google Cloud IAM -->
+  <div ng-switch-when="google-cloud-iam">
+    <p>
+      Google Cloud Identity & Access Management (IAM) allows you manage fine-grainted access control
+      and visibility for centrally managing cloud resources.
+    </p>
+    <h2>IAM policy bindings</h2>
+    <p>
+      An IAM policy binding describes the access that an entity has to a cloud resources.
+      The cmdlet <cmdlet-ref name="Add-GcIamPolicyBinding"></cmdlet-ref> can be used to add an
+      IAM policy binding. You will have to specify the access level with -Role parameter.
+      The entity that the role applies to is specified with either -User, -Group, -ServiceAccount
+      or -Domain (which corresponds to a Google account email address, a Google group email address,
+      a service account email address and a domain respectively). If -Project parameter is not used,
+      the cmdlet will add the binding to resources in the default project.
+    </p>
+    <pre>
+# Gives user test-user@google.com owner role in the project "my-project".
+Add-GcIamPolicyBinding -Role roles/owner -User test-user@google.com -Project "my-project"
+
+# Gives group test-group@google.com browser role in the default project.
+Add-GcIamPolicyBinding -Role roles/browser -Group test-group@google.com</pre>
+    <p>
+      You can view existing bindings with the cmdlet <cmdlet-ref name="Get-GcIamPolicyBinding"></cmdlet-ref>.
+      The cmdlet will use the default project if -Project parameter is not used.
+    </p>
+    <pre>
+# Gets all IAM policy bindings in the project "my-project".
+Get-GcIamPolicyBinding -Project "my-project"</pre>
+    <p>
+      You can remove existing bindings with the cmdlet <cmdlet-ref name="Remove-GcIamPolicyBinding"></cmdlet-ref>.
+      The cmdlet will not raise an error if the binding does not exist.
+    </p>
+    <pre>
+# Removes the container admin role of the service account
+# service@project.iam.gserviceaccount.com in the default project.
+Remove-GcIamPolicyBinding -Role roles/container.admin -ServiceAccount service@project.iam.gserviceaccount.com
+
+# Removes the editor role of all users of the domain
+# example.com in the default project.
+Remove-GcIamPolicyBinding -Role roles/editor -Domain example.com</pre>
+  </div>
+
+  <!-- Google Cloud Project -->
+  <div ng-switch-when="google-cloud-project">
+    <p>
+      Google Cloud Project cmdlets let you manage your project.
+    </p>
+    <h2>Google Cloud Projects</h2>
+    <p>
+      The cmdlet <cmdlet-ref name="Get-GcpProject"></cmdlet-ref> lists all Google Cloud projects
+      that you have access to.
+    </p>
+    <pre>
+# Lists all available Google Cloud projects.
+Get-GcpProject</pre>
+  </div>
+
   <!-- Default. Should not get here if cmdlet data is well-formed. -->
   <div ng-switch-default>
   </div>
