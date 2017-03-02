@@ -348,10 +348,10 @@ namespace Google.PowerShell.BigQuery
     ///   <code>PS C:\> $table = Get-BqTable -Dataset "my_dataset" -Table "my_table"
     ///   PS C:\> $table | Remove-BqTable</code>
     ///   <para>This will remove "my_table" if it is empty, and will prompt for user confirmation 
-    ///   if it is not. All data in "my_table" will be deleted if the user accepts</para>
+    ///   if it is not. All data in "my_table" will be deleted if the user accepts.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Remove-BqTable -Dataset "my_dataset" -Table "my_table" -Force</code>
+    ///   <code>PS C:\> Remove-BqTable -DatasetId "my_dataset" -Table "my_table" -Force</code>
     ///   <para>This will remove "my_table" and all of its data.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/tables)">
@@ -419,7 +419,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// Forces deletion of tables inside a non-empty Table.
+        /// Forces deletion of non-empty tables and the data contained in them.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
@@ -429,8 +429,8 @@ namespace Google.PowerShell.BigQuery
         {
             switch (ParameterSetName)
             {
-                // No processing needed for ByValue parameter sets.
                 case ParameterSetNames.ByValue:
+                    // No processing needed for ByValue parameter sets.
                     break;
                 case ParameterSetNames.ByObject:
                     Project = InputObject.ProjectId;
