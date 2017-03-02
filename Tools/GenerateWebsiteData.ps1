@@ -287,6 +287,12 @@ $productInfoLookup = @{
     "Gcd"   = @{ name = "Google Cloud DNS";      shortName = "google-cloud-dns"     ; resources = @() }
     "Gcps"   = @{ name = "Google Cloud PubSub";      shortName = "google-cloud-pubsub"     ; resources = @() }
     "GcLog"   = @{ name = "Google Cloud Logging";      shortName = "google-cloud-logging"     ; resources = @() }
+    "GcIam"   = @{ name = "Google Cloud IAM";
+                   shortName = "google-cloud-iam";
+                   resources = @() }
+    "GcpProject"   = @{ name = "Google Cloud Project";
+                   shortName = "google-cloud-project";
+                   resources = @() }
 }
 
 # Generate a giant JSON file containing all of our cmdlet's documentation. We later write this as
