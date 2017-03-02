@@ -330,4 +330,163 @@ namespace Google.PowerShell.BigQuery
             return Service.Tables.Insert(newTable, Project, DatasetId);
         }
     }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Deletes the specified table.
+    /// </para>
+    /// <para type="description">
+    /// Deletes the specified table from the dataset. The table to be deleted can be passed 
+    /// in via the pipeline or with the -InputObject parameter. If the table contains data, 
+    /// this operation will prompt the user for confirmation before any deletions are performed. 
+    /// To delete a non-empty table automatically, use the -Force parameter. If no Project is 
+    /// specified, the default project will be used. This cmdlet returns a Table object. 
+    /// This cmdlet supports the ShouldProcess function, so it has the corresponding -WhatIf 
+    /// and -Confirm flags.
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> $table = Get-BqTable -Dataset "my_dataset" -Table "my_table"
+    ///   PS C:\> $table | Remove-BqTable</code>
+    ///   <para>This will remove "my_table" if it is empty, and will prompt for user confirmation 
+    ///   if it is not. All data in "my_table" will be deleted if the user accepts</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Remove-BqTable -Dataset "my_dataset" -Table "my_table" -Force</code>
+    ///   <para>This will remove "my_table" and all of its data.</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/tables)">
+    /// [BigQuery Tables]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Remove, "BqTable", SupportsShouldProcess = true)]
+    
+    public class RemoveGcbqTable : BqCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string ByValue = "ByValue";
+            public const string ByDatasetObject = "ByDatasetObject";
+            public const string ByObject = "ByObject";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// The project to look for tables in. If not set via PowerShell parameter processing, it will
+        /// default to the Cloud SDK's DefaultProject property.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValue)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        override public string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The ID of the table that you want to get a descriptor object for.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByValue)]
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByDatasetObject)]
+        public string Table { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The ID of the dataset to search. Can be a string, a Dataset, a DatasetReference, or a DatasetsData object.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByValue)]
+        [ValidatePattern("[a-zA-Z0-9_]")]
+        public string DatasetId { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The Dataset that you would like to search. This field takes Dataset or DatasetRefrence objects.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ByDatasetObject)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Dataset),
+            Property = nameof(Apis.Bigquery.v2.Data.Dataset.DatasetReference))]
+        public DatasetReference Dataset { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The Table object that will be sent to the server to be inserted. Also takes TableReferences.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ByObject)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Table),
+            Property = nameof(Apis.Bigquery.v2.Data.Table.TableReference))]
+        public TableReference InputObject { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Forces deletion of tables inside a non-empty Table.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public SwitchParameter Force { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            switch (ParameterSetName)
+            {
+                // No processing needed for ByValue parameter sets.
+                case ParameterSetNames.ByValue:
+                    break;
+                case ParameterSetNames.ByObject:
+                    Project = InputObject.ProjectId;
+                    DatasetId = InputObject.DatasetId;
+                    Table = InputObject.TableId;
+                    break;
+                case ParameterSetNames.ByDatasetObject:
+                    Project = Dataset.ProjectId;
+                    DatasetId = Dataset.DatasetId;
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+
+            TablesResource.DeleteRequest request = Service.Tables.Delete(Project, DatasetId, Table);
+            String response = "Table Removal Stopped.";
+            if (ShouldProcess(Table))
+            {
+                try
+                {
+                    if (Force == true)
+                    {
+                        response = request.Execute();
+                    }
+                    else
+                    {
+                        TablesResource.GetRequest checkTables =
+                            new TablesResource.GetRequest(Service, Project, DatasetId, Table);
+                        var tableResponse = checkTables.Execute();
+                        if (tableResponse.NumRows == 0)
+                        {
+                            response = request.Execute();
+                        }
+                        else if (ShouldContinue(
+                            GetConfirmationMessage(Table, tableResponse.NumRows),
+                            "Confirm Deletion"))
+                        {
+                            response = request.Execute();
+                        }
+                    }
+                    WriteObject(response);
+                }
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Forbidden)
+                {
+                    WriteError(new ErrorRecord(ex,
+                        $"Error {ex.HttpStatusCode}: Table {Table} not found in {Dataset}.",
+                        ErrorCategory.ObjectNotFound,
+                        Table));
+                }
+            }
+        }
+
+        private string GetConfirmationMessage(string tableId, ulong? rows)
+        {
+            return $@"'{tableId}' has '{rows}' rows and the -Force parameter was not specified. "
+                + "If you continue, all data will be deleted with the table. Are you sure you want to continue?";
+        }
+    }
 }

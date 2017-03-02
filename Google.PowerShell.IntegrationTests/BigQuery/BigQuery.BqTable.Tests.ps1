@@ -1,61 +1,61 @@
-﻿. $PSScriptRoot\..\BigQuery\GcbqCmdlets.ps1
+﻿. $PSScriptRoot\..\BigQuery\BqCmdlets.ps1
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
-Describe "Get-GcbqTable" {
+Describe "Get-BqTable" {
 
     BeforeAll {
         $r = Get-Random
         $datasetName = "pshell_testing_$r"
         $test_set = New-BqDataset $datasetName
-        $test_set | New-GcbqTable "my_table" -Name "my_table" -Description "Test data table"
-        $test_set | New-GcbqTable "my_other_table" -Name "my_other_table" -Description "Another test table"
+        $test_set | New-BqTable "my_table" -Name "my_table" -Description "Test data table"
+        $test_set | New-BqTable "my_other_table" -Name "my_other_table" -Description "Another test table"
     }
 
     It "should list tables from a dataset object from pipeline"{
-        $tables = Get-BqDataset $datasetName | Get-GcbqTable
+        $tables = Get-BqDataset $datasetName | Get-BqTable
         $tables.Count | Should BeGreaterThan 0
     }
 
     It "should list tables from a dataset object via parameter"{
         $dataset = Get-BqDataset $datasetName 
-        $tables = Get-GcbqTable -Dataset $dataset
+        $tables = Get-BqTable -Dataset $dataset
         $tables.Count | Should BeGreaterThan 0
     }
 
     It "should list tables from a dataset ID by parameter"{
-        $tables = Get-GcbqTable -DatasetId $datasetName
+        $tables = Get-BqTable -DatasetId $datasetName
         $tables.Count | Should BeGreaterThan 0
     }
 
     It "should get a singular table with a dataset object from pipeline"{
-        $table = Get-BqDataset $datasetName | Get-GcbqTable "my_table"
+        $table = Get-BqDataset $datasetName | Get-BqTable "my_table"
         $table.TableReference.TableId | Should be "my_table"
         $table.Description | Should Be "Test data table"
     }
 
     It "should get a singular table with a dataset object via parameter"{
         $dataset = Get-BqDataset $datasetName
-        $table = Get-GcbqTable -Dataset $dataset "my_other_table"
+        $table = Get-BqTable -Dataset $dataset "my_other_table"
         $table.TableReference.TableId | Should be "my_other_table"
         $table.Description | Should Be "Another test table"
     }
 
     It "should get a singular table with a dataset ID by parameter"{
-        $table = Get-GcbqTable -DatasetId $datasetName "my_table"
+        $table = Get-BqTable -DatasetId $datasetName "my_table"
         $table.TableReference.TableId | Should be "my_table"
         $table.Description | Should Be "Test data table"
     }
 
     It "should throw when the table is not found"{
-        { Get-GcbqTable -DatasetId $datasetName $nonExistTable -ErrorAction Stop} | Should Throw "404"
+        { Get-BqTable -DatasetId $datasetName $nonExistTable -ErrorAction Stop} | Should Throw "404"
     }
 
     It "should throw when the dataset is not found"{
-        { Get-GcbqTable -DatasetId $nonExistDataset } | Should Throw "404"
+        { Get-BqTable -DatasetId $nonExistDataset } | Should Throw "404"
     }
 
     It "should throw when the project is not found"{
-        { Get-GcbqTable -project $nonExistProject -DatasetId $datasetName} | Should Throw "404"
+        { Get-BqTable -project $nonExistProject -DatasetId $datasetName} | Should Throw "404"
     }
 
     AfterAll {
@@ -63,7 +63,7 @@ Describe "Get-GcbqTable" {
     }
 }
 
-Describe "New-GcbqTable" {
+Describe "New-BqTable" {
 
     BeforeAll {
         $r = Get-Random
@@ -72,7 +72,7 @@ Describe "New-GcbqTable" {
     }
 
     It "should take strings, name, description, and time to make a table"{
-        $table = New-GcbqTable -Project $test_set.DatasetReference.ProjectId `
+        $table = New-BqTable -Project $test_set.DatasetReference.ProjectId `
             -DatasetId $test_set.DatasetReference.DatasetId "my_table_str" `
             -Name "CSV" -Description "Some Comma Separated Values"
         $table.TableReference.TableId | Should Be "my_table_str"
@@ -83,7 +83,7 @@ Describe "New-GcbqTable" {
     }
 
     It "should take a Dataset, name, description, and time to make a table"{
-        $table = New-GcbqTable -Dataset $test_set "my_table_ds" -Name "CSV" `
+        $table = New-BqTable -Dataset $test_set "my_table_ds" -Name "CSV" `
             -Description "Some Comma Separated Values"
         $table.TableReference.TableId | Should Be "my_table_ds"
         $table.TableReference.DatasetId | Should Be $test_set.DatasetReference.DatasetId
@@ -93,7 +93,7 @@ Describe "New-GcbqTable" {
     }
 
     It "should take a DatasetReference name, description, and time to make a table"{
-        $table = New-GcbqTable -Dataset $test_set.DatasetReference "my_table_dr" `
+        $table = New-BqTable -Dataset $test_set.DatasetReference "my_table_dr" `
             -Name "CSV" -Description "Some Comma Separated Values"
         $table.TableReference.TableId | Should Be "my_table_dr"
         $table.TableReference.DatasetId | Should Be $test_set.DatasetReference.DatasetId
@@ -110,7 +110,7 @@ Describe "New-GcbqTable" {
         $tab.TableReference.ProjectId = $project
         $tab.FriendlyName = "PipeTest"
         $tab.Description = "Some cool stuff in a table"
-        $newtab = $tab | New-GcbqTable
+        $newtab = $tab | New-BqTable
         $newtab | Should Not BeNullOrEmpty
         $newtab.TableReference.TableId | Should Be "my_table_pipe"
         $newtab.TableReference.DatasetId | Should Be $datasetName
@@ -126,7 +126,7 @@ Describe "New-GcbqTable" {
         $tab.TableReference.ProjectId = $project
         $tab.FriendlyName = "PipeTest!@#456><"
         $tab.Description = "Some cool stuff in a table?!@>><#'()*&^%"
-        $newtab = $tab | New-GcbqTable
+        $newtab = $tab | New-BqTable
         $newtab | Should Not BeNullOrEmpty
         $newtab.TableReference.TableId | Should Be "my_table_pipeComplex"
         $newtab.TableReference.DatasetId | Should Be $datasetName
@@ -136,22 +136,85 @@ Describe "New-GcbqTable" {
 
     It "should properly set the duration of time for which the tables last" {
         $expireInSec = 3600
-        $table = New-GcbqTable -DatasetId $datasetName "my_table_duration" -Expiration $expireInSec
+        $table = New-BqTable -DatasetId $datasetName "my_table_duration" -Expiration $expireInSec
         $calculatedTime = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalMilliseconds
         $table.ExpirationTime | Should BeLessThan ($calculatedTime + (($expireInSec + 5) * 1000))
     }
 
     It "should throw when there is already a table with the same ID"{
-        New-GcbqTable "my_table_repeat" -DatasetId $datasetName 
-        { New-GcbqTable "my_table_repeat" -DatasetId $datasetName -ErrorAction Stop } | Should Throw "409"
+        New-BqTable "my_table_repeat" -DatasetId $datasetName 
+        { New-BqTable "my_table_repeat" -DatasetId $datasetName -ErrorAction Stop } | Should Throw "409"
     }
 
     It "should throw when the dataset is not found"{
-        { New-GcbqTable "my_table_d404" -DatasetId $nonExistDataset } | Should Throw "404"
+        { New-BqTable "my_table_d404" -DatasetId $nonExistDataset } | Should Throw "404"
     }
 
     It "should throw when the project is not found"{
-        { New-GcbqTable -DatasetId $datasetName "my_table_p404" -project $nonExistProject} | Should Throw "404"
+        { New-BqTable -DatasetId $datasetName "my_table_p404" -project $nonExistProject} | Should Throw "404"
+    }
+
+    AfterAll {
+        $test_set | Remove-BqDataset -Force
+    }
+}
+
+Describe "Remove-BqTable" {
+
+    BeforeAll {
+        $r = Get-Random
+        $datasetName = "pshell_testing_$r"
+        $test_set = New-BqDataset $datasetName
+    }
+
+    It "should not delete the table if -WhatIf is specified" {
+        $table = New-BqTable -Dataset $test_set -Table "table_if"
+        $table | Remove-BqTable -WhatIf
+        $remainder = Get-BqTable -Dataset $test_set "table_if"
+        $remainder.TableReference.TableId | Should Be "table_if"
+        Get-BqTable -Dataset $test_set "table_if" | Remove-BqTable
+    }
+    
+    It "should delete an empty table from the pipeline with no -Force" {
+        New-BqTable -Dataset $test_set -Table "table_empty_pipe"
+        Get-BqTable -Dataset $test_set "table_empty_pipe" | Remove-BqTable
+        { Get-BqTable -Dataset $test_set "table_empty_pipe" -ErrorAction Stop } | Should Throw 404
+    }
+
+    It "should delete an empty table from an argument with no -Force" {
+        New-BqTable -Dataset $test_set "table_empty_arg"
+        $a = Get-BqTable -Dataset $test_set "table_empty_arg" 
+        Remove-BqTable -InputObject $a
+        { Get-BqTable -Dataset $test_set "table_empty_arg" -ErrorAction Stop } | Should Throw 404
+    }
+
+    It "should delete a table by value with explicit project" {
+        New-BqTable -Project $project -DatasetId $datasetName -Table "table_explicit"
+        Remove-BqTable -Project $project -DatasetId $datasetName -Table "table_explicit"
+        { Get-BqTable -Dataset $test_set "table_explicit" -ErrorAction Stop } | Should Throw 404
+    }
+
+    #TODO(ahandley): It "should delete a nonempty table as long as -Force is specified" #needs set-tabledata
+
+    It "should handle when a table does not exist" {
+        $table = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Table
+        $table.TableReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.TableReference
+        $table.TableReference.DatasetId = $test_set
+        $table.TableReference.ProjectId = $project
+        $table.TableReference.TableId = "table_not_actually_there_for_some_reason"
+        { Remove-BqTable -InputObject $table } | Should Throw 404
+    }
+
+    It "should handle projects that do not exist" {
+        { Remove-BqTable -Project $nonExistProject -DatasetId $nonExistDataset -Table "table" } | Should Throw 404
+    }
+
+    It "should handle project:dataset combinations that do not exist" {
+        { Remove-BqTable -Project $project -DatasetId $nonExistDataset -Table "table" } | Should Throw 404
+    }
+
+    It "should handle projects that the user does not have permissions for" {
+        { Remove-BqTable -Project $accessErrProject -DatasetId $nonExistDataset -Table "table" } | Should Throw 400
     }
 
     AfterAll {

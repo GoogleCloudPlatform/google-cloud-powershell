@@ -1,4 +1,4 @@
-﻿. $PSScriptRoot\..\BigQuery\GcbqCmdlets.ps1
+﻿. $PSScriptRoot\..\BigQuery\BqCmdlets.ps1
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Describe "Get-BqDataset" {
@@ -309,7 +309,7 @@ Describe "Remove-BqDataset" {
     It "should delete a nonempty dataset as long as -Force is specified" {
         try {
             New-BqDataset -Project $project "test_set_force"
-            New-GcbqTable -Project $project -DatasetId "test_set_force" -Table "force_test_table"
+            New-BqTable -Project $project -DatasetId "test_set_force" -Table "force_test_table"
         }
         finally {
             Remove-BqDataset -Project $project -Dataset "test_set_force" -Force
