@@ -63,6 +63,76 @@ Describe "Get-BqTable" {
     }
 }
 
+Describe "Set-BqTable" {
+
+    BeforeAll {
+        $r = Get-Random
+        $datasetName = "pshell_testing_$r"
+        $test_set = New-BqDataset $datasetName
+    }
+
+    It "should update trivial metadata fields via pipeline" {
+        try {
+            New-BqTable -Dataset $test_set "pipe_table" -Name "test" -Description "my table"
+            $table = Get-BqTable -Dataset $test_set "pipe_table"
+            $table.FriendlyName = "Some Test Data"
+            $table.Description = "A new description!"
+            $table | Set-BqTable
+
+            $table = Get-BqTable -Dataset $test_set "pipe_table"
+            $table | Should Not BeNullOrEmpty
+            $table.FriendlyName | Should Be "Some Test Data"
+            $table.Description | Should Be "A new description!"
+        }
+        finally {
+            Remove-BqTable -Dataset $test_set "pipe_table"
+        }
+    }
+
+    It "should update trivial metadata fields via parameter" {
+        try {
+            New-BqTable -DatasetId $datasetName "param_table" -Name "test" -Description "my table"
+            $table = Get-BqTable -DatasetId $datasetName "param_table"
+            $table.FriendlyName = "Some Test Data"
+            $table.Description = "A new description!"
+            Set-BqTable -InputObject $table
+
+            $table = Get-BqTable -DatasetId $datasetName "param_table"
+            $table | Should Not BeNullOrEmpty
+            $table.FriendlyName | Should Be "Some Test Data"
+            $table.Description | Should Be "A new description!"
+        }
+        finally {
+            Remove-BqTable -Dataset $test_set "param_table"
+        }
+    }
+
+    It "should not overwrite resources if a set request is malformed" {
+        try {
+            New-BqTable -DatasetId $datasetName "tab_overwrite" -Name "Testdata" -Description "Some interesting data!"
+            $table = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Table
+            $table.TableReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.TableReference
+            { Set-BqTable -InputObject $table } | Should Throw "is missing"
+        }
+        finally {
+            Remove-BqTable -Dataset $test_set "tab_overwrite"
+        }
+    }
+
+    It "should not update a table that does not exist" {
+        $table = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Table
+        $table.TableReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.TableReference
+        $table.TableReference.ProjectId = $project
+        $table.TableReference.DatasetId = $datasetName
+        $table.TableReference.TableId = "not_gonna_happen_today"
+        { Set-BqTable -InputObject $table } | Should Throw 404
+    } 
+
+    AfterAll {
+        $test_set | Remove-BqDataset -Force
+    }
+}
+
 Describe "New-BqTable" {
 
     BeforeAll {

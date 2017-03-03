@@ -163,6 +163,63 @@ namespace Google.PowerShell.BigQuery
 
     /// <summary>
     /// <para type="synopsis">
+    /// Updates information describing an existing BigQuery table.
+    /// </para>
+    /// <para type="description">
+    /// text
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> $my_tab = Get-BqTable -DatasetId “my_data” “my_table”
+    /// PS C:\> $my_tab.Description = “Some new description!”
+    /// PS C:\> $my_tab | Set-BqTable</code>
+    ///   <para>This is an example of how to locally update a field within a table and then 
+    ///   push your changes to the cloud resource</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/tables)">
+    /// [BigQuery Tables]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Set, "BqTable")]
+    public class SetBqTable : BqCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The updated Table object.  Must have the same tableId as an existing table in the dataset.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ValueFromPipeline = true)]
+        public Table InputObject { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            Table response;
+            var request = Service.Tables.Update(InputObject,
+                InputObject.TableReference.ProjectId,
+                InputObject.TableReference.DatasetId,
+                InputObject.TableReference.TableId);
+            try
+            {
+                response = request.Execute();
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
+            {
+                WriteError(new ErrorRecord(ex,
+                    $"Conflict while updating '{InputObject.TableReference.DatasetId}'.",
+                    ErrorCategory.WriteError,
+                    InputObject));
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Forbidden)
+            {
+                WriteError(new ErrorRecord(ex,
+                    $"You do not have permission to modify '{InputObject.TableReference.DatasetId}'.",
+                    ErrorCategory.PermissionDenied,
+                    InputObject));
+            }
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
     /// Creates a new empty table in the specified project and dataset.
     /// </para>
     /// <para type="description">
@@ -481,8 +538,7 @@ namespace Google.PowerShell.BigQuery
                 var tableResponse = new TablesResource.GetRequest(
                     Service, Project, DatasetId, Table).Execute();
 
-                return (tableResponse.NumRows == 0) ? true : 
-                    ShouldContinue(
+                return (tableResponse.NumRows == 0) || ShouldContinue(
                     GetConfirmationMessage(Table, tableResponse.NumRows),
                     "Confirm Deletion", ref yesToAll, ref noToAll);
             }
