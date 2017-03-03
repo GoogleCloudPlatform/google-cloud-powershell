@@ -1,4 +1,4 @@
-﻿. $PSScriptRoot\..\BigQuery\GcbqCmdlets.ps1
+﻿. $PSScriptRoot\..\BigQuery\BqCmdlets.ps1
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Describe "Get-BqDataset" {
@@ -131,6 +131,7 @@ Describe "Set-BqDataset" {
         $data = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Dataset
         $data.DatasetReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.DatasetReference
         $data.DatasetReference.DatasetId = "test_dataset_id4"
+        $data.DatasetReference.ProjectId = $project
         { Set-BqDataset -InputObject $data } | Should Throw 404
     } 
 
@@ -211,10 +212,6 @@ Describe "New-BqDataset" {
         }
     }
 
-    It "should not work with no arguments. (meaning no datasetId)" {
-        { New-BqDataset } | Should Throw 400
-    }
-
     It "should reject datasets with malformed ids" {
         { New-BqDataset "test-?ata-4" } | Should Throw 400
     }
@@ -228,9 +225,11 @@ Describe "New-BqDataset" {
             $data = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Dataset
             $data.DatasetReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.DatasetReference
             $data.DatasetReference.DatasetId = "test_data_id6"
+            $data.DatasetReference.ProjectId = $project
             $data2 = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Dataset
             $data2.DatasetReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.DatasetReference
             $data2.DatasetReference.DatasetId = "test_data_id6"
+            $data2.DatasetReference.ProjectId = $project
             $data | New-BqDataset
             { $data2 | New-BqDataset -ErrorAction Stop} | Should Throw 409
         }
@@ -309,7 +308,7 @@ Describe "Remove-BqDataset" {
     It "should delete a nonempty dataset as long as -Force is specified" {
         try {
             New-BqDataset -Project $project "test_set_force"
-            New-GcbqTable -Project $project -DatasetId "test_set_force" -Table "force_test_table"
+            New-BqTable -Project $project -DatasetId "test_set_force" -Table "force_test_table"
         }
         finally {
             Remove-BqDataset -Project $project -Dataset "test_set_force" -Force
