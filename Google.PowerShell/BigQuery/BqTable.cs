@@ -56,7 +56,7 @@ namespace Google.PowerShell.BigQuery
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValue)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        override public string Project { get; set; }
+        public override string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -362,15 +362,14 @@ namespace Google.PowerShell.BigQuery
     
     public class RemoveBqTable : BqCmdlet
     {
+        private bool yesToAll = false;
+        private bool noToAll = false;
         private class ParameterSetNames
         {
             public const string ByValue = "ByValue";
             public const string ByDatasetObject = "ByDatasetObject";
             public const string ByObject = "ByObject";
         }
-
-        private bool yesToAll = false;
-        private bool noToAll = false;
 
         /// <summary>
         /// <para type="description">
@@ -380,7 +379,7 @@ namespace Google.PowerShell.BigQuery
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValue)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        override public string Project { get; set; }
+        public override string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -452,51 +451,46 @@ namespace Google.PowerShell.BigQuery
                     throw UnknownParameterSetException;
             }
 
-            TablesResource.DeleteRequest request = Service.Tables.Delete(Project, DatasetId, Table);
-            String response = "Table Removal Stopped.";
-            if (ShouldProcess(Table))
+            try
             {
-                try
+                if (ShouldDelete())
                 {
-                    if (Force)
-                    {
-                        response = request.Execute();
-                    }
-                    else if (noToAll)
-                    {
-                        response = "Removal Stopped: NoToAll";
-                    }
-                    else
-                    {
-                        TablesResource.GetRequest checkTables =
-                            new TablesResource.GetRequest(Service, Project, DatasetId, Table);
-                        var tableResponse = checkTables.Execute();
-                        if (tableResponse.NumRows == 0)
-                        {
-                            response = request.Execute();
-                        }
-                        else if (yesToAll || ShouldContinue(
-                            GetConfirmationMessage(Table, tableResponse.NumRows),
-                            "Confirm Deletion", ref yesToAll, ref noToAll))
-                        {
-                            response = request.Execute();
-                        }
-                    }
-                    WriteObject(response);
+                    Service.Tables.Delete(Project, DatasetId, Table).Execute();
                 }
-                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
-                {
-                    WriteError(new ErrorRecord(ex,
-                        $"Error {ex.HttpStatusCode}: '{Table}' not found in '{Dataset}'.",
-                        ErrorCategory.ObjectNotFound,
-                        Table));
-                }
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+            {
+                WriteError(new ErrorRecord(ex,
+                    $"Error {ex.HttpStatusCode}: '{Table}' not found in '{Dataset}'.",
+                    ErrorCategory.ObjectNotFound, Table));
+            }
+        }
+
+        private bool ShouldDelete()
+        {
+            if (!ShouldProcess(Table) || noToAll)
+            {
+                return false;
+            }
+            else if (Force || yesToAll)
+            {
+                return true;
+            }
+            else
+            {
+                var tableResponse = new TablesResource.GetRequest(
+                    Service, Project, DatasetId, Table).Execute();
+
+                return (tableResponse.NumRows == 0) ? true : 
+                    ShouldContinue(
+                    GetConfirmationMessage(Table, tableResponse.NumRows),
+                    "Confirm Deletion", ref yesToAll, ref noToAll);
             }
         }
 
         private string GetConfirmationMessage(string tableId, ulong? rows)
         {
-            return $@"'{tableId}' has '{rows}' rows and the -Force parameter was not specified. "
+            return $@"'{tableId}' has {rows} rows and the -Force parameter was not specified. "
                 + "If you continue, all data will be deleted with the table. Are you sure you want to continue?";
         }
     }

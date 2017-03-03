@@ -65,12 +65,12 @@ namespace Google.PowerShell.BigQuery
         /// <summary>
         /// <para type="description">
         /// The project to look for datasets in. If not set via PowerShell parameter processing, it will
-        /// default to the Cloud SDK's DefaultProject property.
+        /// default to the Cloud SDK's default project.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        override public string Project { get; set; }
+        public override string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -189,8 +189,8 @@ namespace Google.PowerShell.BigQuery
     /// Updates information describing an existing BigQuery dataset.
     /// </para>
     /// <para type="description">
-    /// Updates information describing an existing BigQuery dataset. If no Project is specified, the 
-    /// default project will be used. This cmdlet returns a Dataset object.
+    /// Updates information describing an existing BigQuery dataset. The projet and dataset specified 
+    /// in the dataset's DatasetReference will be used. This cmdlet returns a Dataset object.
     /// </para>
     /// <example>
     ///   <code>PS C:\> $updatedSet = Get-BqDataset "my_dataset"
@@ -202,7 +202,7 @@ namespace Google.PowerShell.BigQuery
     ///   <code>PS C:\> $updatedSet = Get-BqDataset "my_dataset"
     ///   $updatedSet.DefaultTableExpirationMs = 60 * 60 * 24 * 7
     ///   $updatedSet.Description = "A set of tables that last for exactly one week."
-    ///   PS C:\> Set-BqDataset -Project my_project -InputObject $updatedSet</code>
+    ///   PS C:\> Set-BqDataset -InputObject $updatedSet</code>
     ///   <para>This will update the values stored for my_dataset and shows how to pass it in as a parameter.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets)">
@@ -214,17 +214,17 @@ namespace Google.PowerShell.BigQuery
     {
         /// <summary>
         /// <para type="description">
-        /// The project to look for datasets in. If not set via PowerShell parameter processing, it will
-        /// default to the Cloud SDK's DefaultProject property.
+        /// The projectId from the InputObject will be preferred.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        override public string Project { get; set; }
+        public override string Project { get; set; }
 
         /// <summary>
-        /// <para type="description">
-        /// The updated Dataset object.  Must have the same datasetId as an existing dataset in the project specified.
+        /// <para type="description"> 
+        /// The updated Dataset object.  Must have the same datasetId as an existing 
+        /// dataset in the project specified.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ValueFromPipeline = true)]
@@ -233,7 +233,9 @@ namespace Google.PowerShell.BigQuery
         protected override void ProcessRecord()
         {
             Dataset response;
-            var request = Service.Datasets.Update(InputObject, Project, InputObject.DatasetReference.DatasetId);
+            var request = Service.Datasets.Update(InputObject,
+                InputObject.DatasetReference.ProjectId, 
+                InputObject.DatasetReference.DatasetId);
             try
             {
                 response = request.Execute();
@@ -290,12 +292,12 @@ namespace Google.PowerShell.BigQuery
         /// <summary>
         /// <para type="description">
         /// The project to look for datasets in. If not set via PowerShell parameter processing, will
-        /// default to the Cloud SDK's DefaultProject property.
+        /// default to the Cloud SDK's default project.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
-        override public string Project { get; set; }
+        public override string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -424,10 +426,10 @@ namespace Google.PowerShell.BigQuery
         /// <summary>
         /// <para type="description">
         /// The project to look for datasets in. If not set via PowerShell parameter processing, will
-        /// default to the Cloud SDK's DefaultProject property.
+        /// default to the Cloud SDK's default project.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(Mandatory = false)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public override string Project { get; set; }
 
@@ -441,10 +443,12 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// Dataset to delete.  Takes Dataset and DatasetReference Objects.
+        /// Dataset to delete. Takes Dataset, DatasetsData, and DatasetReference Objects.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ByObject)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(DatasetList.DatasetsData),
+            Property = nameof(DatasetList.DatasetsData.DatasetReference))]
         [PropertyByTypeTransformation(TypeToTransform = typeof(Dataset),
             Property = nameof(Apis.Bigquery.v2.Data.Dataset.DatasetReference))]
         public DatasetReference InputObject { get; set; }
@@ -515,7 +519,7 @@ namespace Google.PowerShell.BigQuery
 
         private string GetConfirmationMessage(string datasetId, int? tables)
         {
-            return $@"'{datasetId}' has '{tables}' tables and the -Force parameter was not specified. "
+            return $@"'{datasetId}' has {tables} tables and the -Force parameter was not specified. "
                 + "If you continue, all tables will be removed with the dataset. Are you sure you want to continue?";
         }
     }

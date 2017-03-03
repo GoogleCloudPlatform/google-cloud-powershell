@@ -131,6 +131,7 @@ Describe "Set-BqDataset" {
         $data = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Dataset
         $data.DatasetReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.DatasetReference
         $data.DatasetReference.DatasetId = "test_dataset_id4"
+        $data.DatasetReference.ProjectId = $project
         { Set-BqDataset -InputObject $data } | Should Throw 404
     } 
 
@@ -211,10 +212,6 @@ Describe "New-BqDataset" {
         }
     }
 
-    It "should not work with no arguments. (meaning no datasetId)" {
-        { New-BqDataset } | Should Throw 400
-    }
-
     It "should reject datasets with malformed ids" {
         { New-BqDataset "test-?ata-4" } | Should Throw 400
     }
@@ -228,9 +225,11 @@ Describe "New-BqDataset" {
             $data = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Dataset
             $data.DatasetReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.DatasetReference
             $data.DatasetReference.DatasetId = "test_data_id6"
+            $data.DatasetReference.ProjectId = $project
             $data2 = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Dataset
             $data2.DatasetReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.DatasetReference
             $data2.DatasetReference.DatasetId = "test_data_id6"
+            $data2.DatasetReference.ProjectId = $project
             $data | New-BqDataset
             { $data2 | New-BqDataset -ErrorAction Stop} | Should Throw 409
         }
