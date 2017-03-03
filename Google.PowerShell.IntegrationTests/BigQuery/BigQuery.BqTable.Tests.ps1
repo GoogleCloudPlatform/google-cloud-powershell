@@ -183,8 +183,8 @@ Describe "Remove-BqTable" {
 
     It "should delete an empty table from an argument with no -Force" {
         New-BqTable -Dataset $test_set "table_empty_arg"
-        $a = Get-BqTable -Dataset $test_set "table_empty_arg" 
-        Remove-BqTable -InputObject $a
+        $table = Get-BqTable -Dataset $test_set "table_empty_arg" 
+        Remove-BqTable -InputObject $table
         { Get-BqTable -Dataset $test_set "table_empty_arg" -ErrorAction Stop } | Should Throw 404
     }
 
@@ -202,19 +202,22 @@ Describe "Remove-BqTable" {
         $table.TableReference.DatasetId = $test_set
         $table.TableReference.ProjectId = $project
         $table.TableReference.TableId = "table_not_actually_there_for_some_reason"
-        { Remove-BqTable -InputObject $table } | Should Throw 404
+        { Remove-BqTable -InputObject $table -ErrorAction Stop } | Should Throw 404
     }
 
     It "should handle projects that do not exist" {
-        { Remove-BqTable -Project $nonExistProject -DatasetId $nonExistDataset -Table "table" } | Should Throw 404
+        { Remove-BqTable -Project $nonExistProject -DatasetId $nonExistDataset `
+            -Table "table" -ErrorAction Stop } | Should Throw 404
     }
 
     It "should handle project:dataset combinations that do not exist" {
-        { Remove-BqTable -Project $project -DatasetId $nonExistDataset -Table "table" } | Should Throw 404
+        { Remove-BqTable -Project $project -DatasetId $nonExistDataset `
+            -Table "table" -ErrorAction Stop } | Should Throw 404
     }
 
     It "should handle projects that the user does not have permissions for" {
-        { Remove-BqTable -Project $accessErrProject -DatasetId $nonExistDataset -Table "table" } | Should Throw 400
+        { Remove-BqTable -Project $accessErrProject -DatasetId $nonExistDataset `
+            -Table "table" -ErrorAction Stop } | Should Throw 400
     }
 
     AfterAll {

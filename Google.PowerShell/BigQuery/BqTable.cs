@@ -51,7 +51,7 @@ namespace Google.PowerShell.BigQuery
         /// <summary>
         /// <para type="description">
         /// The project to look for tables in. If not set via PowerShell parameter processing, it will
-        /// default to the Cloud SDK's DefaultProject property.
+        /// default to the Cloud SDK's default project.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValue)]
@@ -88,7 +88,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// The Table object that will be sent to the server to be inserted.
+        /// The Table object to get a reference for.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ByObject)]
@@ -205,7 +205,7 @@ namespace Google.PowerShell.BigQuery
         /// <summary>
         /// <para type="description">
         /// The project to put the table in. If not set via PowerShell parameter processing, will
-        /// default to the Cloud SDK's DefaultProject property.
+        /// default to the Cloud SDK's default project.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValue)]
@@ -360,7 +360,7 @@ namespace Google.PowerShell.BigQuery
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "BqTable", SupportsShouldProcess = true)]
     
-    public class RemoveGcbqTable : BqCmdlet
+    public class RemoveBqTable : BqCmdlet
     {
         private class ParameterSetNames
         {
@@ -369,10 +369,13 @@ namespace Google.PowerShell.BigQuery
             public const string ByObject = "ByObject";
         }
 
+        private bool yesToAll = false;
+        private bool noToAll = false;
+
         /// <summary>
         /// <para type="description">
         /// The project to look for tables in. If not set via PowerShell parameter processing, it will
-        /// default to the Cloud SDK's DefaultProject property.
+        /// default to the Cloud SDK's default project.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValue)]
@@ -381,7 +384,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// The ID of the table that you want to get a descriptor object for.
+        /// The ID of the table that you want to remove.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByValue)]
@@ -390,7 +393,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// The ID of the dataset to search. Can be a string, a Dataset, a DatasetReference, or a DatasetsData object.
+        /// The ID of the dataset to search. This dataset should contain the table you wish to remove.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByValue)]
@@ -400,6 +403,7 @@ namespace Google.PowerShell.BigQuery
         /// <summary>
         /// <para type="description">
         /// The Dataset that you would like to search. This field takes Dataset or DatasetRefrence objects.
+        /// This dataset should contain the table you wish to remove.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ByDatasetObject)]
@@ -409,10 +413,13 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// The Table object that will be sent to the server to be inserted. Also takes TableReferences.
+        /// The Table object that will be sent to the server to be removed. 
+        /// Also takes TableReference and TableList.TablesData objects.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ByObject)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(TableList.TablesData),
+            Property = nameof(TableList.TablesData.TableReference))]
         [PropertyByTypeTransformation(TypeToTransform = typeof(Table),
             Property = nameof(Apis.Bigquery.v2.Data.Table.TableReference))]
         public TableReference InputObject { get; set; }
@@ -451,9 +458,13 @@ namespace Google.PowerShell.BigQuery
             {
                 try
                 {
-                    if (Force == true)
+                    if (Force)
                     {
                         response = request.Execute();
+                    }
+                    else if (noToAll)
+                    {
+                        response = "Removal Stopped: NoToAll";
                     }
                     else
                     {
@@ -464,19 +475,19 @@ namespace Google.PowerShell.BigQuery
                         {
                             response = request.Execute();
                         }
-                        else if (ShouldContinue(
+                        else if (yesToAll || ShouldContinue(
                             GetConfirmationMessage(Table, tableResponse.NumRows),
-                            "Confirm Deletion"))
+                            "Confirm Deletion", ref yesToAll, ref noToAll))
                         {
                             response = request.Execute();
                         }
                     }
                     WriteObject(response);
                 }
-                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Forbidden)
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
                 {
                     WriteError(new ErrorRecord(ex,
-                        $"Error {ex.HttpStatusCode}: Table {Table} not found in {Dataset}.",
+                        $"Error {ex.HttpStatusCode}: '{Table}' not found in '{Dataset}'.",
                         ErrorCategory.ObjectNotFound,
                         Table));
                 }
