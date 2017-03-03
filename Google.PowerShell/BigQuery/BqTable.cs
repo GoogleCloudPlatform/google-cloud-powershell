@@ -481,8 +481,7 @@ namespace Google.PowerShell.BigQuery
                 var tableResponse = new TablesResource.GetRequest(
                     Service, Project, DatasetId, Table).Execute();
 
-                return (tableResponse.NumRows == 0) ? true : 
-                    ShouldContinue(
+                return (tableResponse.NumRows == 0) || ShouldContinue(
                     GetConfirmationMessage(Table, tableResponse.NumRows),
                     "Confirm Deletion", ref yesToAll, ref noToAll);
             }
