@@ -166,12 +166,15 @@ namespace Google.PowerShell.BigQuery
     /// Updates information describing an existing BigQuery table.
     /// </para>
     /// <para type="description">
-    /// text
+    /// Updates information in an existing table. Pass in the updated Table object via the 
+    /// pipeline or the -InputObject parameter. This cmdlet returns the updated Table object.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> $my_tab = Get-BqTable -DatasetId “my_data” “my_table”
+    ///   <code>
+    /// PS C:\> $my_tab = Get-BqTable -DatasetId “my_data” “my_table”
     /// PS C:\> $my_tab.Description = “Some new description!”
-    /// PS C:\> $my_tab | Set-BqTable</code>
+    /// PS C:\> $my_tab | Set-BqTable
+    ///   </code>
     ///   <para>This is an example of how to locally update a field within a table and then 
     ///   push your changes to the cloud resource</para>
     /// </example>
@@ -200,6 +203,7 @@ namespace Google.PowerShell.BigQuery
             try
             {
                 response = request.Execute();
+                WriteObject(response);
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
             {
@@ -231,8 +235,10 @@ namespace Google.PowerShell.BigQuery
     /// a Table object.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> New-BqTable “new_tab” -Dataset “my_data” -Description “Some nice data!” `
-    ///   -Expiration (60*60*24*30)</code>
+    ///   <code>
+    /// PS C:\> New-BqTable “new_tab” -Dataset “my_data” -Description “Some nice data!” `
+    /// -Expiration (60*60*24*30)
+    ///   </code>
     ///   <para>This makes a new Table called "new_tab" with a lifetime of 30 days.</para>
     ///   <code>PS C:\> Get-BqDataset "my_data" | New-BqTable “new_tab”</code>
     ///   <para>This shows how the pipeline can be used to specify Dataset and Project.</para>
@@ -402,8 +408,10 @@ namespace Google.PowerShell.BigQuery
     /// and -Confirm flags.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> $table = Get-BqTable -Dataset "my_dataset" -Table "my_table"
-    ///   PS C:\> $table | Remove-BqTable</code>
+    ///   <code>
+    /// PS C:\> $table = Get-BqTable -Dataset "my_dataset" -Table "my_table"
+    /// PS C:\> $table | Remove-BqTable
+    ///   </code>
     ///   <para>This will remove "my_table" if it is empty, and will prompt for user confirmation 
     ///   if it is not. All data in "my_table" will be deleted if the user accepts.</para>
     /// </example>

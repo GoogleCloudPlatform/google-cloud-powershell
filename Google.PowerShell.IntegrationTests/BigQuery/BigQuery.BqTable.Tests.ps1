@@ -83,8 +83,7 @@ Describe "Set-BqTable" {
             $table | Should Not BeNullOrEmpty
             $table.FriendlyName | Should Be "Some Test Data"
             $table.Description | Should Be "A new description!"
-        }
-        finally {
+        } finally {
             Remove-BqTable -Dataset $test_set "pipe_table"
         }
     }
@@ -101,8 +100,7 @@ Describe "Set-BqTable" {
             $table | Should Not BeNullOrEmpty
             $table.FriendlyName | Should Be "Some Test Data"
             $table.Description | Should Be "A new description!"
-        }
-        finally {
+        } finally {
             Remove-BqTable -Dataset $test_set "param_table"
         }
     }
@@ -113,8 +111,7 @@ Describe "Set-BqTable" {
             $table = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Table
             $table.TableReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.TableReference
             { Set-BqTable -InputObject $table } | Should Throw "is missing"
-        }
-        finally {
+        } finally {
             Remove-BqTable -Dataset $test_set "tab_overwrite"
         }
     }
