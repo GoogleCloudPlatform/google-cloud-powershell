@@ -9,8 +9,7 @@ Describe "Get-BqDataset" {
             New-BqDataset "test_id_3"
             $a = Get-BqDataset
             $a.Count | Should BeGreaterThan 1
-        }
-        finally {
+        } finally {
             Get-BqDataset "test_id_2" |  Remove-BqDataset
             Get-BqDataset "test_id_3" |  Remove-BqDataset
         }
@@ -21,8 +20,7 @@ Describe "Get-BqDataset" {
             New-BqDataset "test_id_4"
             $a = Get-BqDataset "test_id_4"
             $a.DatasetReference.DatasetId | Should Be "test_id_4"
-        }
-        finally {
+        } finally {
             Get-BqDataset "test_id_4" |  Remove-BqDataset
         }
     }
@@ -32,8 +30,7 @@ Describe "Get-BqDataset" {
             New-BqDataset "test_id_2"
             $a = Get-BqDataset | Get-BqDataset
             $a[0].GetType() | Should Be "Google.Apis.Bigquery.v2.Data.Dataset"
-        }
-        finally {
+        } finally {
             Get-BqDataset "test_id_2" |  Remove-BqDataset
         }
     }
@@ -44,8 +41,7 @@ Describe "Get-BqDataset" {
             $a = Get-BqDataset "test_id_2"
             $b = $a | Get-BqDataset
             $b.GetType() | Should Be "Google.Apis.Bigquery.v2.Data.Dataset"
-        }
-        finally {
+        } finally {
             Get-BqDataset "test_id_2" |  Remove-BqDataset
         }
     }
@@ -56,8 +52,7 @@ Describe "Get-BqDataset" {
             $a = Get-BqDataset "test_id_2"
             $b = $a.DatasetReference | Get-BqDataset
             $b.GetType() | Should Be "Google.Apis.Bigquery.v2.Data.Dataset"
-        }
-        finally {
+        } finally {
             Get-BqDataset "test_id_2" |  Remove-BqDataset
         }
     }
@@ -90,8 +85,7 @@ Describe "Set-BqDataset" {
             $data.FriendlyName | Should Be "Some Test Data"
             $data.Description | Should Be "A new description!"
             $data.DefaultTableExpirationMs | Should Be $threeDayMs
-        }
-        finally {
+        } finally {
             Get-BqDataset "test_dataset_id1" | Remove-BqDataset
         }
     }
@@ -109,8 +103,7 @@ Describe "Set-BqDataset" {
             $data.FriendlyName | Should Be "Some Test Data"
             $data.Description | Should Be "A new description!"
             $data.DefaultTableExpirationMs | Should Be $threeDayMs
-        }
-        finally {
+        } finally {
             Get-BqDataset "test_dataset_id2" | Remove-BqDataset
         }
     }
@@ -121,8 +114,7 @@ Describe "Set-BqDataset" {
             $data = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Dataset
             $data.DatasetReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.DatasetReference
             { Set-BqDataset -InputObject $data } | Should Throw "is missing"
-        }
-        finally {
+        } finally {
             Get-BqDataset "test_dataset_id3" | Remove-BqDataset
         }
     } 
@@ -151,8 +143,7 @@ Describe "New-BqDataset" {
             $data.FriendlyName | Should Be "Testdata"
             $data.Description | Should Be "Some interesting data!"
             $data.DefaultTableExpirationMs | Should Be $oneDayMs
-        }
-        finally {
+        } finally {
             Get-BqDataset "test_data_id1" | Remove-BqDataset
         }
     }
@@ -169,8 +160,7 @@ Describe "New-BqDataset" {
             $newdata | Should Not BeNullOrEmpty
             $newdata.DatasetReference.DatasetId | Should Be "test_data_id2"
             $newdata.FriendlyName | Should Be "PipeTest"
-        }
-        finally {
+        } finally {
             Get-BqDataset "test_data_id2" | Remove-BqDataset
         }
     }
@@ -188,8 +178,7 @@ Describe "New-BqDataset" {
             $newdata.DatasetReference.DatasetId | Should Be "test_data_id2"
             $newdata.FriendlyName | Should Be "Pipe-Object Test3!"
             $newdata.Description | Should Be "Some cool data from the pipeline!<>?>#$%^!@&''~"
-        }
-        finally {
+        } finally {
             Get-BqDataset "test_data_id2" | Remove-BqDataset
         }
     }
@@ -206,8 +195,7 @@ Describe "New-BqDataset" {
             $newdata | Should Not BeNullOrEmpty
             $newdata.DatasetReference.DatasetId | Should Be "test_data_id3"
             $newdata.FriendlyName | Should Be "PipeTest"
-        }
-        finally {
+        } finally {
             Get-BqDataset "test_data_id3" | Remove-BqDataset
         }
     }
@@ -232,8 +220,7 @@ Describe "New-BqDataset" {
             $data2.DatasetReference.ProjectId = $project
             $data | New-BqDataset
             { $data2 | New-BqDataset -ErrorAction Stop} | Should Throw 409
-        }
-        finally {
+        } finally {
             Get-BqDataset "test_data_id6" | Remove-BqDataset
         }
     }
@@ -243,8 +230,7 @@ Describe "New-BqDataset" {
             $data = New-BqDataset -Project $project "test_data_id7" -Name "Testdata" -Description "Some interesting data!"
             $data | Should Not BeNullOrEmpty
             $data.DatasetReference.ProjectId | Should Be $project
-        }
-        finally {
+        } finally {
             Get-BqDataset "test_data_id7" | Remove-BqDataset
         }
     }
@@ -268,8 +254,7 @@ Describe "Remove-BqDataset" {
             $dataset | Remove-BqDataset -WhatIf
             $remainder = Get-BqDataset "test_set_if"
             $remainder.DatasetReference.DatasetId | Should Be "test_set_if"
-        }
-        finally {
+        } finally {
             Get-BqDataset "test_set_if" | Remove-BqDataset
         }
     }
@@ -277,8 +262,7 @@ Describe "Remove-BqDataset" {
     It "should delete an empty dataset from the pipeline with no -Force" {
         try{
             New-BqDataset "test_set_1"
-        }
-        finally {
+        } finally {
             Get-BqDataset "test_set_1" | Remove-BqDataset
             { Get-BqDataset "test_set_1" -ErrorAction Stop } | Should Throw 404
         }
@@ -288,8 +272,7 @@ Describe "Remove-BqDataset" {
         try {
             New-BqDataset "test_set_2"
             $a = Get-BqDataset "test_set_2" 
-        }
-        finally {
+        } finally {
             Remove-BqDataset -InputObject $a
             { Get-BqDataset "test_set_2" -ErrorAction Stop } | Should Throw 404
         }
@@ -298,8 +281,7 @@ Describe "Remove-BqDataset" {
     It "should delete a dataset by value with explicit project" {
         try {
             New-BqDataset -Project $project "test_set_explicit"
-        }
-        finally {
+        } finally {
             Remove-BqDataset -Project $project -Dataset "test_set_explicit"
             { Get-BqDataset "test_set_explicit" -ErrorAction Stop } | Should Throw 404
         }
@@ -309,8 +291,7 @@ Describe "Remove-BqDataset" {
         try {
             New-BqDataset -Project $project "test_set_force"
             New-BqTable -Project $project -DatasetId "test_set_force" -Table "force_test_table"
-        }
-        finally {
+        } finally {
             Remove-BqDataset -Project $project -Dataset "test_set_force" -Force
             { Get-BqDataset "test_set_force" -ErrorAction Stop } | Should Throw 404
         }

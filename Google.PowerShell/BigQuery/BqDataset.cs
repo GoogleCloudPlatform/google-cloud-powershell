@@ -193,16 +193,20 @@ namespace Google.PowerShell.BigQuery
     /// in the dataset's DatasetReference will be used. This cmdlet returns a Dataset object.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> $updatedSet = Get-BqDataset "my_dataset"
-    ///   PS C:\> $updatedSet.Description = "An updated summary of the data contents."
-    ///   PS C:\> $updatedSet | Set-BqDataset</code>
+    ///   <code>
+    /// PS C:\> $updatedSet = Get-BqDataset "my_dataset"
+    /// PS C:\> $updatedSet.Description = "An updated summary of the data contents."
+    /// PS C:\> $updatedSet | Set-BqDataset
+    ///   </code>
     ///   <para>This will update the values stored for the Bigquery dataset passed in the default project.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> $updatedSet = Get-BqDataset "my_dataset"
-    ///   $updatedSet.DefaultTableExpirationMs = 60 * 60 * 24 * 7
-    ///   $updatedSet.Description = "A set of tables that last for exactly one week."
-    ///   PS C:\> Set-BqDataset -InputObject $updatedSet</code>
+    ///   <code>
+    /// PS C:\> $updatedSet = Get-BqDataset "my_dataset"
+    /// PS C:\> $updatedSet.DefaultTableExpirationMs = 60 * 60 * 24 * 7
+    /// PS C:\> $updatedSet.Description = "A set of tables that last for exactly one week."
+    /// PS C:\> Set-BqDataset -InputObject $updatedSet
+    ///   </code>
     ///   <para>This will update the values stored for my_dataset and shows how to pass it in as a parameter.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets)">
@@ -272,8 +276,12 @@ namespace Google.PowerShell.BigQuery
     ///   <para>This takes a Dataset object from the pipeline and inserts it into the Cloud project "my-project".</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> New-BqDataset "test_data_id" -Name "Testdata" `
-    ///   -Description "Some interesting data!" -Expiration 86400000</code>
+    ///   <code>
+    /// PS C:\> New-BqDataset "test_data_id" 
+    ///                       -Name "Testdata" `
+    ///                       -Description "Some interesting data!" 
+    ///                       -Expiration 86400000
+    ///   </code>
     ///   <para>This builds a new dataset with the supplied datasetId, name, description, and an Expiration of 1 day.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets)">

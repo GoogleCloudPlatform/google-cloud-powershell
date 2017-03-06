@@ -163,6 +163,67 @@ namespace Google.PowerShell.BigQuery
 
     /// <summary>
     /// <para type="synopsis">
+    /// Updates information describing an existing BigQuery table.
+    /// </para>
+    /// <para type="description">
+    /// Updates information in an existing table. Pass in the updated Table object via the 
+    /// pipeline or the -InputObject parameter. This cmdlet returns the updated Table object.
+    /// </para>
+    /// <example>
+    ///   <code>
+    /// PS C:\> $my_tab = Get-BqTable -DatasetId “my_data” “my_table”
+    /// PS C:\> $my_tab.Description = “Some new description!”
+    /// PS C:\> $my_tab | Set-BqTable
+    ///   </code>
+    ///   <para>This is an example of how to locally update a field within a table and then 
+    ///   push your changes to the cloud resource</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/tables)">
+    /// [BigQuery Tables]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Set, "BqTable")]
+    public class SetBqTable : BqCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The updated Table object.  Must have the same tableId as an existing table in the dataset.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ValueFromPipeline = true)]
+        public Table InputObject { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            Table response;
+            var request = Service.Tables.Update(InputObject,
+                InputObject.TableReference.ProjectId,
+                InputObject.TableReference.DatasetId,
+                InputObject.TableReference.TableId);
+            try
+            {
+                response = request.Execute();
+                WriteObject(response);
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
+            {
+                WriteError(new ErrorRecord(ex,
+                    $"Conflict while updating '{InputObject.TableReference.DatasetId}'.",
+                    ErrorCategory.WriteError,
+                    InputObject));
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Forbidden)
+            {
+                WriteError(new ErrorRecord(ex,
+                    $"You do not have permission to modify '{InputObject.TableReference.DatasetId}'.",
+                    ErrorCategory.PermissionDenied,
+                    InputObject));
+            }
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
     /// Creates a new empty table in the specified project and dataset.
     /// </para>
     /// <para type="description">
@@ -174,8 +235,12 @@ namespace Google.PowerShell.BigQuery
     /// a Table object.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> New-BqTable “new_tab” -Dataset “my_data” -Description “Some nice data!” `
-    ///   -Expiration (60*60*24*30)</code>
+    ///   <code>
+    /// PS C:\> New-BqTable “new_tab” 
+    ///                     -Dataset “my_data” 
+    ///                     -Description “Some nice data!” 
+    ///                     -Expiration (60*60*24*30)
+    ///   </code>
     ///   <para>This makes a new Table called "new_tab" with a lifetime of 30 days.</para>
     ///   <code>PS C:\> Get-BqDataset "my_data" | New-BqTable “new_tab”</code>
     ///   <para>This shows how the pipeline can be used to specify Dataset and Project.</para>
@@ -345,8 +410,10 @@ namespace Google.PowerShell.BigQuery
     /// and -Confirm flags.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> $table = Get-BqTable -Dataset "my_dataset" -Table "my_table"
-    ///   PS C:\> $table | Remove-BqTable</code>
+    ///   <code>
+    /// PS C:\> $table = Get-BqTable -Dataset "my_dataset" -Table "my_table"
+    /// PS C:\> $table | Remove-BqTable
+    ///   </code>
     ///   <para>This will remove "my_table" if it is empty, and will prompt for user confirmation 
     ///   if it is not. All data in "my_table" will be deleted if the user accepts.</para>
     /// </example>
