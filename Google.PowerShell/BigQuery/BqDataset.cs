@@ -277,8 +277,10 @@ namespace Google.PowerShell.BigQuery
     /// </example>
     /// <example>
     ///   <code>
-    /// PS C:\> New-BqDataset "test_data_id" -Name "Testdata" `
-    /// -Description "Some interesting data!" -Expiration 86400000
+    /// PS C:\> New-BqDataset "test_data_id" 
+    ///                       -Name "Testdata" `
+    ///                       -Description "Some interesting data!" 
+    ///                       -Expiration 86400000
     ///   </code>
     ///   <para>This builds a new dataset with the supplied datasetId, name, description, and an Expiration of 1 day.</para>
     /// </example>

@@ -236,8 +236,10 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <example>
     ///   <code>
-    /// PS C:\> New-BqTable “new_tab” -Dataset “my_data” -Description “Some nice data!” `
-    /// -Expiration (60*60*24*30)
+    /// PS C:\> New-BqTable “new_tab” 
+    ///                     -Dataset “my_data” 
+    ///                     -Description “Some nice data!” 
+    ///                     -Expiration (60*60*24*30)
     ///   </code>
     ///   <para>This makes a new Table called "new_tab" with a lifetime of 30 days.</para>
     ///   <code>PS C:\> Get-BqDataset "my_data" | New-BqTable “new_tab”</code>
