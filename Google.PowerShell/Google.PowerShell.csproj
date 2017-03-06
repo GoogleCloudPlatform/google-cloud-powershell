@@ -142,6 +142,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BigQuery\BqCmdlet.cs" />
+    <Compile Include="BigQuery\BqTable.cs" />
+    <Compile Include="BigQuery\BqDataset.cs" />
     <Compile Include="CloudResourceManager\CloudResourceManagerCmdlets.cs" />
     <Compile Include="CloudResourceManager\IamPolicyCmdlets.cs" />
     <Compile Include="Common\ActiveUserConfig.cs" />

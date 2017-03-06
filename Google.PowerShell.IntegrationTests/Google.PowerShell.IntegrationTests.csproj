@@ -46,10 +46,9 @@
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="BigQuery\BigQuery.GcbqDataset.Tests.ps1" />
-    <None Include="BigQuery\BigQuery.GcbqProject.Tests.ps1" />
-    <None Include="BigQuery\GcbqCmdlets.ps1" />
-    <None Include="CloudResourceManager\CloudResourceManager.IamPolicy.Tests.ps1" />
+    <None Include="BigQuery\BigQuery.BqTable.Tests.ps1" />
+    <None Include="BigQuery\BigQuery.BqDataset.Tests.ps1" />
+    <None Include="BigQuery\BqCmdlets.ps1" />
     <None Include="Compute\Compute.GceAddress.Tests.ps1" />
     <None Include="Compute\Compute.GceAttachedDiskConfig.Tests.ps1" />
     <None Include="Compute\Compute.GceBackendService.Tests.ps1" />
