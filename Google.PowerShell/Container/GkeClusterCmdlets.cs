@@ -16,7 +16,7 @@ namespace Google.PowerShell.Container
     /// </para>
     /// <para type="description">
     /// Gets Google Container Clusters. If -Project parameter is not specified, the default project will be used.
-    /// If -Zone or -ClusterName is not used, the cmdlet will return every clusters in every zone in the project.
+    /// If neither -Zone nor -ClusterName is used, the cmdlet will return every clusters in every zone in the project.
     /// If -Zone is used without -ClusterName, the cmdlet will return every clusters in the specified zone.
     /// If -ClusterName is used without -Zone, the cmdlet will return the specified clusters in the default zone
     /// (set in Cloud SDK Config). If -Clustername is used with -Zone, the cmdlet will return the specified
@@ -40,8 +40,8 @@ namespace Google.PowerShell.Container
     ///   Gets the cluster "my-cluster", "my-cluster-2" in the zone "us-central1-a" of the default project.
     ///   </para>
     /// </example>
-    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/machineTypes#resource)">
-    /// [Machine Type resource definition]
+    /// <para type="link" uri="(https://cloud.google.com/container-engine/docs/clusters/)">
+    /// [Container Clusters]
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Get, "GkeCluster", DefaultParameterSetName = ParameterSetNames.AllZone)]
@@ -148,6 +148,14 @@ namespace Google.PowerShell.Container
                 foreach (Cluster cluster in response.Clusters)
                 {
                     yield return cluster;
+                }
+            }
+            // The list of clusters returned may be missing these zones.
+            if (response.MissingZones != null)
+            {
+                foreach (string missingZone in response.MissingZones)
+                {
+                    WriteWarning(missingZone);
                 }
             }
         }
