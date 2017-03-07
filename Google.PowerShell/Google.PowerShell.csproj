@@ -52,6 +52,10 @@
       <HintPath>..\packages\Google.Apis.Auth.1.21.0\lib\net45\Google.Apis.Auth.PlatformServices.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Google.Apis.Bigquery.v2, Version=1.21.0.779, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.Bigquery.v2.1.21.0.779\lib\net45\Google.Apis.Bigquery.v2.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Google.Apis.CloudResourceManager.v1">
       <HintPath>..\packages\Google.Apis.CloudResourceManager.v1.1.21.0.769\lib\net45\Google.Apis.CloudResourceManager.v1.dll</HintPath>
       <Private>True</Private>
@@ -143,6 +147,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BigQuery\BqCmdlet.cs" />
+    <Compile Include="BigQuery\BqTabledata.cs" />
     <Compile Include="BigQuery\BqTable.cs" />
     <Compile Include="BigQuery\BqDataset.cs" />
     <Compile Include="CloudResourceManager\CloudResourceManagerCmdlets.cs" />
