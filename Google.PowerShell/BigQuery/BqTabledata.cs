@@ -146,4 +146,78 @@ namespace Google.PowerShell.BigQuery
             WriteObject(InputObject);
         }
     }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Attaches a TableSchema to a BQ Table.
+    /// </para>
+    /// <para type="description">
+    /// This command takes a Table and sets its schema to be the TableSchema object passed in. 
+    /// This command returns the modified Table object after updating the cloud resource.
+    /// </para>
+    /// <example>
+    ///   <code>
+    /// PS C:\> $table = Get-BqDataset “book_data” | Get-BqTable "21st_century"
+    /// PS C:\> $schema = New-BqSchema -Name “Title” -Type “STRING”
+    /// PS C:\> $schema | Set-BqSchema $table
+    ///   </code>
+    ///   <para>This will create a new schema, assign it to a table, and then send the 
+    ///   revised table to the server to be saved.</para>
+    /// </example> 
+    /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/tables)">
+    /// [BigQuery Tables]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Set, "BqSchema")]
+    public class SetBqSchema : BqCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The existing TableSchema that you wish to add a column to. 
+        /// If this value is not present, a new schema will be created.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ValueFromPipeline = true)]
+        [ValidateNotNull]
+        public TableSchema InputObject { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The table that you wish to add this schema to.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0)]
+        [ValidateNotNull]
+        public Table Table { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            Table.Schema = InputObject;
+            Table.ETag = null;
+            Table response;
+            var request = Service.Tables.Update(Table,
+                Table.TableReference.ProjectId,
+                Table.TableReference.DatasetId,
+                Table.TableReference.TableId);
+            try
+            {
+                response = request.Execute();
+                WriteObject(response);
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
+            {
+                WriteError(new ErrorRecord(ex,
+                    $"Conflict while updating '{Table.TableReference.DatasetId}'.",
+                    ErrorCategory.WriteError,
+                    Table));
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Forbidden)
+            {
+                WriteError(new ErrorRecord(ex,
+                    $"You do not have permission to modify '{Table.TableReference.DatasetId}'.",
+                    ErrorCategory.PermissionDenied,
+                    Table));
+            }
+        }
+    }
 }

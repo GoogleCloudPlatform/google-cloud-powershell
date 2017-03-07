@@ -47,20 +47,41 @@ Describe "New-BqSchema" {
         { $schema | New-BqSchema -Name "Title" -Type "STRING" -ErrorAction Stop } | Should Throw "This schema already contains a column with name"
     }
 
+    AfterAll {
+        $test_set | Remove-BqDataset -Force
+    }
+}
+
+Describe "Set-BqSchema" {
+
+    BeforeAll {
+        $r = Get-Random
+        $datasetName = "pshell_testing_$r"
+        $test_set = New-BqDataset $datasetName
+    }
+
     It "should add to Tables correctly"{
-        $schema = New-BqSchema -Name "Title" -Type "STRING"
         $table = $test_set | New-BqTable "my_table"
-        $table.ETag = $null;
-        #TODO(ahandley): Find a more elegant way of doing this.  Don't make users have to do this.
-        # Suspect the best way to do this is to make a Set-BqSchema cmdlet.  Going to have to investigate.
-        $table.Schema = $schema
-        $result = $table | Set-BqTable
+        $schema = New-BqSchema -Name "Title" -Type "STRING"
+        $schema | Set-BqSchema $table
+        $result = $table | Get-BqTable
         $result.Schema.Fields[0].Name | Should Be "Title"
     }
+
+    It "should not add a schema to a table that does not exist" {
+        $table = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Table
+        $table.TableReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.TableReference
+        $table.TableReference.ProjectId = $project
+        $table.TableReference.DatasetId = $datasetName
+        $table.TableReference.TableId = "not_gonna_happen_today"
+        $schema = New-BqSchema -Name "Title" -Type "STRING"
+        { $schema | Set-BqSchema $table } | Should Throw 404
+    } 
 
     AfterAll {
         $test_set | Remove-BqDataset -Force
     }
 }
+
 
 Reset-GCloudConfig $oldActiveConfig $configName
