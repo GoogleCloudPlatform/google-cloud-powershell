@@ -16,8 +16,8 @@ namespace Google.PowerShell.Container
     /// </para>
     /// <para type="description">
     /// Gets Google Container Clusters. If -Project parameter is not specified, the default project will be used.
-    /// If neither -Zone nor -ClusterName is used, the cmdlet will return every clusters in every zone in the project.
-    /// If -Zone is used without -ClusterName, the cmdlet will return every clusters in the specified zone.
+    /// If neither -Zone nor -ClusterName is used, the cmdlet will return every cluster in every zone in the project.
+    /// If -Zone is used without -ClusterName, the cmdlet will return every cluster in the specified zone.
     /// If -ClusterName is used without -Zone, the cmdlet will return the specified clusters in the default zone
     /// (set in Cloud SDK Config). If -Clustername is used with -Zone, the cmdlet will return the specified
     /// clusters in the specified zone.
@@ -37,7 +37,7 @@ namespace Google.PowerShell.Container
     /// <example>
     ///   <code>PS C:\> Get-GkeCluster -ClusterName "my-cluster", "my-cluster-2" -Zone "us-central1-a"</code>
     ///   <para>
-    ///   Gets the cluster "my-cluster", "my-cluster-2" in the zone "us-central1-a" of the default project.
+    ///   Gets the clusters "my-cluster", "my-cluster-2" in the zone "us-central1-a" of the default project.
     ///   </para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/container-engine/docs/clusters/)">
