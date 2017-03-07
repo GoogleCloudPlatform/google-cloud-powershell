@@ -35,16 +35,16 @@ Describe "New-BqSchema" {
     }
 
     It "should deny invalid types"{
-        { New-BqSchema -Name "Title" -Type "NotAType" -ErrorAction Stop} | Should Throw
+        { New-BqSchema -Name "Title" -Type "NotAType" -ErrorAction Stop } | Should Throw "Cannot convert value"
     }
 
     It "should deny invalid modes"{
-        { New-BqSchema -Name "Title" -Type "STRING" -Mode "NotAMode" -ErrorAction Stop} | Should Throw
+        { New-BqSchema -Name "Title" -Type "STRING" -Mode "NotAMode" -ErrorAction Stop } | Should Throw "Cannot convert value"
     }
 
     It "should complain about duplicated column names"{
         $schema = New-BqSchema -Name "Title" -Type "STRING"
-        { $schema | New-BqSchema -Name "Title" -Type "STRING" -ErrorAction Stop} | Should Throw
+        { $schema | New-BqSchema -Name "Title" -Type "STRING" -ErrorAction Stop } | Should Throw "This schema already contains a column with name"
     }
 
     It "should add to Tables correctly"{

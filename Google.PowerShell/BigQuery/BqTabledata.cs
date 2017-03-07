@@ -6,11 +6,31 @@ using Google.Apis.Bigquery.v2.Data;
 using Google.PowerShell.Common;
 using System;
 using System.Net;
+using System.Linq;
 using System.Management.Automation;
 using System.Collections.Generic;
 
 namespace Google.PowerShell.BigQuery
 {
+    /// <summary>
+    /// Possible types for each column in a TableSchema
+    /// </summary>
+    public enum ColumnType
+    {
+        STRING, BYTES, INTEGER, INT64,
+        FLOAT, FLOAT64, BOOLEAN, BOOL,
+        TIMESTAMP, DATE, TIME, DATETIME,
+        RECORD, STRUCT
+    }
+
+    /// <summary>
+    /// Possible types for each column in a TableSchema
+    /// </summary>
+    public enum ColumnMode
+    {
+        NULLABLE, REQUIRED, REPEATED
+    }
+
     /// <summary>
     /// <para type="synopsis">
     /// Instantiates a new BQ schema or adds a field to a pre-existing schema.
@@ -67,9 +87,7 @@ namespace Google.PowerShell.BigQuery
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true)]
-        [ValidateSet("STRING", "BYTES", "INTEGER", "INT64", "FLOAT", "FLOAT64", "BOOLEAN", "BOOL", 
-            "TIMESTAMP", "DATE", "TIME", "DATETIME", "RECORD", "STRUCT")]
-        public string Type { get; set; }
+        public ColumnType Type { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -86,8 +104,7 @@ namespace Google.PowerShell.BigQuery
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
-        [ValidateSet("NULLABLE", "REQUIRED", "REPEATED", IgnoreCase = true)]
-        public string Mode { get; set; }
+        public ColumnMode? Mode { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -108,24 +125,21 @@ namespace Google.PowerShell.BigQuery
 
             if (Mode == null)
             {
-                Mode = "NULLABLE";
+                Mode = ColumnMode.NULLABLE;
             }
 
-            foreach (TableFieldSchema t in InputObject.Fields)
+            if (InputObject.Fields.Any(field => Name.Equals(field.Name)))
             {
-                if (Name.Equals(t.Name))
-                {
-                    WriteError(new ErrorRecord(
-                        new Exception($"This schema already contains a column with name '{Name}'."),
-                        "Column Name Collision", ErrorCategory.InvalidArgument, Name));
-                }
+                ThrowTerminatingError(new ErrorRecord(
+                    new Exception($"This schema already contains a column with name '{Name}'."),
+                    "Column Name Collision", ErrorCategory.InvalidArgument, Name));
             }
 
             TableFieldSchema tfs = new TableFieldSchema();
             tfs.Name = Name;
-            tfs.Type = Type;
+            tfs.Type = Type.ToString();
             tfs.Description = (Description != null) ? Description : null;
-            tfs.Mode = (Mode != null) ? Mode : null;
+            tfs.Mode = Mode.ToString();
             tfs.Fields = (Fields != null) ? Fields.Fields : null;
 
             InputObject.Fields.Add(tfs);
