@@ -60,6 +60,10 @@
       <HintPath>..\packages\Google.Apis.Compute.v1.1.21.0.754\lib\net45\Google.Apis.Compute.v1.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Google.Apis.Container.v1, Version=1.21.0.662, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.Container.v1.1.21.0.662\lib\net45\Google.Apis.Container.v1.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Google.Apis.Core, Version=1.21.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
       <HintPath>..\packages\Google.Apis.Core.1.21.0\lib\net45\Google.Apis.Core.dll</HintPath>
       <Private>True</Private>
@@ -183,6 +187,8 @@
     <Compile Include="Compute\GoogleComputeOperationException.cs" />
     <Compile Include="Compute\GceFirewallProtocolCmdlet.cs" />
     <Compile Include="Compute\InstanceMetadataConverter.cs" />
+    <Compile Include="Container\GkeCmdlet.cs" />
+    <Compile Include="Container\GkeClusterCmdlets.cs" />
     <Compile Include="Dns\GcdCmdlet.cs" />
     <Compile Include="Dns\GcdChange.cs" />
     <Compile Include="Dns\GcdManagedZone.cs" />
