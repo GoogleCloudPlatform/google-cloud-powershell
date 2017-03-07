@@ -105,6 +105,9 @@ namespace Google.PowerShell.Container
             }
         }
 
+        /// <summary>
+        /// Returns clusters that have the names in clusters array in zone 'zone' in project 'project'.
+        /// </summary>
         private IEnumerable<Cluster> GetClustersByName(string project, string zone, string[] clusters)
         {
             foreach (var cluster in clusters)
@@ -131,6 +134,9 @@ namespace Google.PowerShell.Container
             }
         }
 
+        /// <summary>
+        /// Returns all clusters in zone 'zone' in project 'project'.
+        /// </summary>
         private IEnumerable<Cluster> GetClustersByZone(string project, string zone)
         {
             // This list request does not have page token so we can only send one.

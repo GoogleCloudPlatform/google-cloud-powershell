@@ -6,6 +6,9 @@ using Google.Apis.Container.v1;
 
 namespace Google.PowerShell.Container
 {
+    /// <summary>
+    /// Base class for Google Container Engine cmdlets.
+    /// </summary>
     public class GkeCmdlet : GCloudCmdlet
     {
         // Service for Google Container API.
