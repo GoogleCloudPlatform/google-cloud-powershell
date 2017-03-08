@@ -28,6 +28,8 @@ namespace Google.PowerShell.Common
         private const string UnknownCmdletName = "unknown-cmdlet";
 
         // Resource Service used for getting project number.
+        protected CloudResourceManagerService ResourceService => _resourceService.Value;
+
         private Lazy<CloudResourceManagerService> _resourceService =
             new Lazy<CloudResourceManagerService>(() => new CloudResourceManagerService(GetBaseClientServiceInitializer()));
 
@@ -333,7 +335,7 @@ namespace Google.PowerShell.Common
         /// </summary>
         protected string GetProjectNumber(string projectId)
         {
-            ProjectsResource.GetRequest getRequest = _resourceService.Value.Projects.Get(Project);
+            ProjectsResource.GetRequest getRequest = ResourceService.Projects.Get(Project);
             Project project = getRequest.Execute();
             return project.ProjectNumber.ToString();
         }
