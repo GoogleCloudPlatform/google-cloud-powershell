@@ -7,6 +7,7 @@ using Google.Apis.Container.v1.Data;
 using System.Management.Automation;
 using System.Collections.Generic;
 using System.Net;
+using System.Linq;
 
 namespace Google.PowerShell.Container
 {
@@ -151,12 +152,12 @@ namespace Google.PowerShell.Container
                 }
             }
             // The list of clusters returned may be missing these zones.
-            if (response.MissingZones != null)
+            if (response.MissingZones != null && response.MissingZones.Count != 0)
             {
-                foreach (string missingZone in response.MissingZones)
-                {
-                    WriteWarning(missingZone);
-                }
+                // Concatenate the zones and put single quote around them.
+                string joinedMissingZones =
+                    string.Join(", ", response.MissingZones.Select(missingZone => $"'{missingZone}'"));
+                WriteWarning($"The clusters returned may be missing the following zones: {joinedMissingZones}");
             }
         }
     }
