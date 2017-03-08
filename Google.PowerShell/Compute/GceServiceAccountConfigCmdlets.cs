@@ -16,15 +16,24 @@ namespace Google.PowerShell.ComputeEngine
     /// Creates a new ServiceAccount object. These objects are used by New-GceInstanceConfig and 
     /// Add-GceInstanceTemplate cmdlets to link to service accounts and define scopes. These scopes in turn let
     /// your instances access Google Cloud Platform resources.
+    /// If no service account email is specified, the cmdlet will use the default service account email:
+    /// https://cloud.google.com/compute/docs/access/service-accounts#compute_engine_default_service_account.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> New-GceServiceAccountConfig default -BigQuery -BigtableData Read</code>
+    ///   <code>
+    ///   PS C:\> New-GceServiceAccountConfig serviceaccount@gserviceaccount.com -BigQuery -BigtableData Read
+    ///   </code>
     ///   <para>
-    ///   Creates a scope on the default service account that can make BigQuery queries and read
-    ///   bigtable data.
+    ///   Creates a scope on the serviceaccount@gserviceaccount.com service account that can make BigQuery queries
+    ///   and read bigtable data.
     ///   </para>
     /// </example>
-    /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
+    /// <example>
+    ///   <code>PS C:\> New-GceServiceAccountConfig -BigQuery -BigtableData Read</code>
+    ///   <para>
+    ///   Creates a scope on the default service account that can make BigQuery queries and read bigtable data.
+    ///   </para>
+    /// </example>/// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/instances#resource)">
     /// [Instance resource definition]
     /// </para>
     /// </summary>
@@ -62,12 +71,22 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
+        /// The cmdlet will use the default service account from this project if no email is given.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public override string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
         /// The email of the service account to link to.
         /// </para>
         /// </summary>
-        [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.FromScopeUris)]
-        [Parameter(Position = 0, Mandatory = true, ValueFromPipeline = true,
+        [Parameter(Position = 0, Mandatory = false, ParameterSetName = ParameterSetNames.FromScopeUris)]
+        [Parameter(Position = 0, Mandatory = false, ValueFromPipeline = true,
             ParameterSetName = ParameterSetNames.FromFlags)]
+        [ValidateNotNullOrEmpty]
         public string Email { get; set; }
 
         /// <summary>
@@ -203,6 +222,11 @@ namespace Google.PowerShell.ComputeEngine
 
         protected override void ProcessRecord()
         {
+            if (Email == null)
+            {
+                string projectNumber = GetProjectNumber(Project);
+                Email = $"{projectNumber}-compute@developer.gserviceaccount.com";
+            }
             switch (ParameterSetName)
             {
                 case ParameterSetNames.FromScopeUris:
