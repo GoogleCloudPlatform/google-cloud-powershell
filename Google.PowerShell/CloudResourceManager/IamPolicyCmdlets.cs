@@ -185,26 +185,8 @@ namespace Google.PowerShell.CloudResourceManager
                 };
                 List<Attribute> attributeLists = new List<Attribute>() { paramAttribute };
 
-                if (Project != null)
-                {
-                    // If the cmdlet is not executing and the user is only using tab completion, the string project
-                    // will have double quotes at the start and end so we have to trim that.
-                    Project = Project.Trim('"');
-
-                    // If the project is a variable, then we have to extract out the variable name.
-                    if (Project.StartsWith("$"))
-                    {
-                        // Try to resolve the variable project, if unsuccessful, set it to an empty string.
-                        Project = ResolveVariable(Project, string.Empty).ToString();
-                    }
-                }
-
-                // If we cannot resolve the variable or the user has not entered parameter for the project yet,
-                // project will be null here.
-                if (string.IsNullOrWhiteSpace(Project))
-                {
-                    Project = CloudSdkSettings.GetSettingsValue(CloudSdkSettings.CommonProperties.Project);
-                }
+                // Try to resolve Project variable to a string, use default value from the SDK if we fail to do so.
+                Project = GetCloudSdkSettingValue(CloudSdkSettings.CommonProperties.Project, Project);
 
                 string[] roles = GetGrantableRoles(Project);
                 // If there are no roles, do not add validate set attribute to the parameter (hence, no tab completion).
