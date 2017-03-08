@@ -27,6 +27,12 @@ namespace Google.PowerShell.Common
         /// <summary>Placeholder for an unknown cmdlet name when reporting telemetry.</summary>
         private const string UnknownCmdletName = "unknown-cmdlet";
 
+        // Resource Service used for getting project number.
+        protected CloudResourceManagerService ResourceService => _resourceService.Value;
+
+        private Lazy<CloudResourceManagerService> _resourceService =
+            new Lazy<CloudResourceManagerService>(() => new CloudResourceManagerService(GetBaseClientServiceInitializer()));
+
         /// <summary>
         /// The project that is used by the cmdlet. This value will be used in reporting usage.
         /// The logic is in the Dispose function. We will map this project id to a project number.
@@ -292,6 +298,48 @@ namespace Google.PowerShell.Common
             return GetVariableValue(variable, defaultValue);
         }
 
+
+        /// <summary>
+        /// Given a settingName (e.g. Project) and a settingValue (e.g. "gcloud-testing" or $project),
+        /// this function will try to first resolve the settingValue to a string. If it fails to do so,
+        /// then the function will look into the Cloud SDK Settings to get the default value.
+        /// </summary>
+        protected string GetCloudSdkSettingValue(string settingName, string settingValue)
+        {
+            if (settingValue != null)
+            {
+                // If the cmdlet is not executing and the user is only using tab completion, the string parameterValue
+                // will have double quotes at the start and end so we have to trim that.
+                settingValue = settingValue.Trim('"');
+
+                // If the parameterValue is a variable, then we have to extract out the variable name.
+                if (settingValue.StartsWith("$"))
+                {
+                    // Try to resolve the variable parameterValue, if unsuccessful, set it to an empty string.
+                    settingValue = ResolveVariable(settingValue, string.Empty).ToString();
+                }
+            }
+
+            // If we cannot resolve the variable or the user has not entered parameter yet, parameterValue is null here.
+            // So we will get the value from Cloud SDK Settings.
+            if (string.IsNullOrWhiteSpace(settingValue))
+            {
+                settingValue = CloudSdkSettings.GetSettingsValue(settingName);
+            }
+
+            return settingValue;
+        }
+
+        /// <summary>
+        /// Returns a project number based on a project ID.
+        /// </summary>
+        protected string GetProjectNumber(string projectId)
+        {
+            ProjectsResource.GetRequest getRequest = ResourceService.Projects.Get(Project);
+            Project project = getRequest.Execute();
+            return project.ProjectNumber.ToString();
+        }
+
         public void Dispose()
         {
             string cmdletName = GetCmdletName();
@@ -314,10 +362,7 @@ namespace Google.PowerShell.Common
                     Project = CloudSdkSettings.GetDefaultProject();
                 }
 
-                var resourceService = new CloudResourceManagerService(GetBaseClientServiceInitializer());
-                ProjectsResource.GetRequest getRequest = resourceService.Projects.Get(Project);
-                Project project = getRequest.Execute();
-                projectNumber = project.ProjectNumber.ToString();
+                projectNumber = GetProjectNumber(Project);
             }
             catch { }
 
