@@ -13,6 +13,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Management.Automation;
 using System.Net;
+using System.Text.RegularExpressions;
 using ComputeService = Google.Apis.Compute.v1.ComputeService;
 
 namespace Google.PowerShell.Container
@@ -170,36 +171,64 @@ namespace Google.PowerShell.Container
 
     /// <summary>
     /// <para type="synopsis">
-    /// Gets Google Container Clusters.
+    /// Creates a Google Container Engine Node Config.
     /// </para>
     /// <para type="description">
-    /// Gets Google Container Clusters. If -Project parameter is not specified, the default project will be used.
-    /// If neither -Zone nor -ClusterName is used, the cmdlet will return every clusters in every zone in the project.
-    /// If -Zone is used without -ClusterName, the cmdlet will return every clusters in the specified zone.
-    /// If -ClusterName is used without -Zone, the cmdlet will return the specified clusters in the default zone
-    /// (set in Cloud SDK Config). If -Clustername is used with -Zone, the cmdlet will return the specified
-    /// clusters in the specified zone.
+    /// Creates a Google Container Engine Node Config. The node config is used to configure various properties
+    /// of a node in a container cluster so you can use the object returned by the cmdlet in New-GkeCluster
+    /// to create a container cluster. If -Project is not used, the cmdlet will use the default project.
+    /// If -Zone is not used, the cmdlet will use the default zone. -Project and -Zone parameters are only
+    /// used to provide tab-completion for the possible list of image and machine types applicable to the nodes.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Get-GkeCluster</code>
-    ///   <para>Lists all container clusters in the default project.</para>
+    ///   <code>PS C:\> New-GkeNodeConfig -ImageType CONTAINER_VM</code>
+    ///   <para>Creates a node config with image type CONTAINER_VM for each node.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-GkeCluster -Zone "us-central1-a" -Project "my-project"</code>
-    ///   <para>Lists all container clusters in zone us-central1-a for the project "my-project".</para>
-    /// </example>
-    /// <example>
-    ///   <code>PS C:\> Get-GkeCluster -ClusterName "my-cluster"</code>
-    ///   <para>Gets the cluster "my-cluster" in the default zone of the default project.</para>
-    /// </example>
-    /// <example>
-    ///   <code>PS C:\> Get-GkeCluster -ClusterName "my-cluster", "my-cluster-2" -Zone "us-central1-a"</code>
+    ///   <code>PS C:\> New-GkeNodeConfig -ImageType CONTAINER_VM -MachineType n1-standard-1</code>
     ///   <para>
-    ///   Gets the cluster "my-cluster", "my-cluster-2" in the zone "us-central1-a" of the default project.
+    ///   Creates a node config with image type CONTAINER_VM for each node and machine type n1-standard-1
+    ///   for each Google Compute Engine used to create the cluster.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> New-GkeNodeConfig -DiskSizeGb 20 -SsdCount 2</code>
+    ///   <para>
+    ///   Creates a node config with 20 Gb disk size and 2 SSDs for each node.</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> New-GkeNodeConfig -Metadata @{"key" = "value"} -Label @{"release" = "stable"}</code>
+    ///   <para>
+    ///   Creates a node config with metadata pair "key" = "value" and Kubernetes label "release" = "stable".
     ///   </para>
     /// </example>
-    /// <para type="link" uri="(https://cloud.google.com/container-engine/docs/clusters/)">
-    /// [Container Clusters]
+    /// <example>
+    ///   <code>
+    ///   PS C:\> $serviceAccount = New-GceServiceAccountConfig -BigTableAdmin Full `
+    ///                                                         -CloudLogging None `
+    ///                                                         -CloudMonitoring None `
+    ///                                                         -ServiceControl $false `
+    ///                                                         -ServiceManagement $false `
+    ///                                                         -Storage None
+    ///   PS C:\> New-GkeNodeConfig -ServiceAccount $serviceAccount
+    ///   </code>
+    ///   <para>
+    ///   Creates a node config that uses the default service account with scopes "bigtable.admin".
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> New-GkeNodeConfig -Preemptible</code>
+    ///   <para>
+    ///   Creates a node config where each node is created as preemptible VM instances.
+    ///   </para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/container-engine/reference/rest/v1/NodeConfig)">
+    /// [Node Configs]
+    /// </para>
+    /// <para type="link" uri="(https://kubernetes.io/docs/user-guide/labels/)">
+    /// [Kubernetes Labels]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/instances/preemptible)">
+    /// [Preemptible VM instances]
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GkeNodeConfig")]
@@ -208,6 +237,13 @@ namespace Google.PowerShell.Container
         // IAM Service used for getting roles that can be granted to a project.
         private Lazy<ComputeService> _computeService =
             new Lazy<ComputeService>(() => new ComputeService(GetBaseClientServiceInitializer()));
+
+        // Regex that is used to check metadata key.
+        private static readonly Regex s_metadataKeyRegex = new Regex("[a-zA-Z0-9-_]+");
+
+        // Reserved key word for metadata key.
+        private static readonly string[] s_reservedMetadataKey =
+            new string[] { "instance-template", "kube-env", "startup-script", "user-data" };
 
         /// <summary>
         /// <para type="description">
@@ -249,6 +285,7 @@ namespace Google.PowerShell.Container
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
+        [Alias("Metadata")]
         public Hashtable InstanceMetadata { get; set; }
 
         /// <summary>
@@ -267,7 +304,7 @@ namespace Google.PowerShell.Container
         /// </summary>
         [Parameter(Mandatory = false)]
         [ValidateRange(0, int.MaxValue)]
-        public int? SsdCount { get; set; }
+        public int? LocalSsdCount { get; set; }
 
         /// <para type="description">
         /// The list of instance tags applied to each nodes.
@@ -335,7 +372,7 @@ namespace Google.PowerShell.Container
                 RuntimeDefinedParameter imageTypeParam = GenerateImageTypeParameter(
                     parameterName: "ImageType",
                     helpMessage: "The image type to use for this node.",
-                    validSet: machineTypes);
+                    validSet: imageTypes);
                 _dynamicParameters.Add("ImageType", imageTypeParam);
             }
 
@@ -394,35 +431,6 @@ namespace Google.PowerShell.Container
             return s_imageTypesDictionary[key];
         }
 
-        /// <summary>
-        /// Returns the machine type that the user selected.
-        /// </summary>
-        private string SelectedMachineType
-        {
-            get
-            {
-                if (_dynamicParameters.ContainsKey("MachineType"))
-                {
-                    return _dynamicParameters["MachineType"].Value?.ToString().ToLower();
-                }
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Returns the image type that the user selected.
-        /// </summary>
-        private string SelectedImageType
-        {
-            get
-            {
-                if (_dynamicParameters.ContainsKey("ImageType"))
-                {
-                    return _dynamicParameters["ImageType"].Value?.ToString().ToLower();
-                }
-                return null;
-            }
-        }
 
         /// <summary>
         /// Returns all the possible machine types in a given zone in a given project.
@@ -459,22 +467,91 @@ namespace Google.PowerShell.Container
             return s_machineTypesDictionary[key];
         }
 
+        /// <summary>
+        /// Returns the machine type that the user selected.
+        /// </summary>
+        private string SelectedMachineType
+        {
+            get
+            {
+                if (_dynamicParameters.ContainsKey("MachineType"))
+                {
+                    return _dynamicParameters["MachineType"].Value?.ToString().ToLower();
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Returns the image type that the user selected.
+        /// </summary>
+        private string SelectedImageType
+        {
+            get
+            {
+                if (_dynamicParameters.ContainsKey("ImageType"))
+                {
+                    return _dynamicParameters["ImageType"].Value?.ToString().ToLower();
+                }
+                return null;
+            }
+        }
+
         protected override void ProcessRecord()
+        {
+            WriteObject(BuildNodeConfig());
+        }
+
+        private NodeConfig BuildNodeConfig()
         {
             var nodeConfig = new NodeConfig()
             {
                 DiskSizeGb = DiskSizeGb,
-                LocalSsdCount = SsdCount,
+                LocalSsdCount = LocalSsdCount,
                 Tags = Tags,
                 ServiceAccount = ServiceAccount?.Email,
                 OauthScopes = ServiceAccount?.Scopes,
                 Preemptible = Preemptible.ToBool(),
-                Metadata = InstanceMetadata != null ? ConvertToDictionary<string, string>(InstanceMetadata) : null,
-                Labels = Label != null ? ConvertToDictionary<string, string>(Label) : null,
                 MachineType = SelectedMachineType,
                 ImageType = SelectedImageType
             };
-            WriteObject(nodeConfig);
+
+            if (Label != null)
+            {
+                nodeConfig.Labels = ConvertToDictionary<string, string>(Label);
+            }
+
+            if (InstanceMetadata != null)
+            {
+                /// Metadata key/value pairs assigned to instances in the cluster.
+                /// Keys must conform to the regexp [a-zA-Z0-9-_]+ and not conflict with any other
+                /// metadata keys for the project or be one of the four reserved keys: "instance-template",
+                /// "kube-env", "startup-script" and "user-data".
+                Dictionary<string, string> metadataDict = ConvertToDictionary<string, string>(InstanceMetadata);
+                foreach (string key in metadataDict.Keys)
+                {
+                    if (!s_metadataKeyRegex.IsMatch(key))
+                    {
+                        ThrowTerminatingError(new ErrorRecord(
+                            new ArgumentException("Metadata key can only be alphanumeric, hyphen or underscore."),
+                            "InvalidMetadataKey",
+                            ErrorCategory.InvalidArgument,
+                            key));
+                    }
+
+                    if (s_reservedMetadataKey.Contains(key, StringComparer.OrdinalIgnoreCase))
+                    {
+                        ThrowTerminatingError(new ErrorRecord(
+                            new ArgumentException($"Metadata key '{key}' is a reserved keyword."),
+                            "InvalidMetadataKey",
+                            ErrorCategory.InvalidArgument,
+                            key));
+                    }
+                }
+                nodeConfig.Metadata = metadataDict;
+            }
+
+            return nodeConfig;
         }
     }
 }
