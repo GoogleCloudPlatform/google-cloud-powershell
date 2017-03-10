@@ -37,22 +37,21 @@ namespace Google.PowerShell.BigQuery
     /// Instantiates a new BQ schema or adds a field to a pre-existing schema.
     /// </para>
     /// <para type="description">
-    /// If no existing schema is passed in, this command will create a new schema with one column. 
-    /// If an existing schema is supplied, this command will add a new column to that schema. 
-    /// Required fields for each column are Name and Type. Possible values for Type include STRING, 
-    /// BYTES, INTEGER (also called INT64), FLOAT (also FLOAT64), BOOLEAN (also BOOL), TIMESTAMP, 
-    /// DATE, TIME, DATETIME, and RECORD (where RECORD indicates that the field contains a nested 
-    /// schema. Also called STRUCT). Possible values for Mode include NULLABLE, REQUIRED, and 
-    /// REPEATED. Case is ignored for both Type and Mode. This command returns the new or modified 
-    /// TableSchema object.
+    /// This command defines one column of a TableSchema. To create a multi-row schema, chain 
+    /// multiple instances of this command together on the pipeline. Required fields for each 
+    /// column are Name and Type. Possible values for Type include STRING, BYTES, INTEGER, 
+    /// FLOAT, BOOLEAN, TIMESTAMP, DATE, TIME, DATETIME, and RECORD (where RECORD indicates 
+    /// that the field contains a nested schema). Case is ignored for both Type and Mode. 
+    /// This command forwards all TableFieldSchemas that it is passed, and will add a new 
+    /// TableFieldSchema object to the pipeline.
     /// </para>
     /// <example>
     ///   <code>
-    /// PS C:\> $table = Get-BqDataset “book_data” | Get-BqTable "21st_century"
-    /// PS C:\> $schema = New-BqSchema -Name "Title" -Type "STRING" -Description "Book Title"
-    /// PS C:\> $schema = $schema | New-BqSchema -Name "Author" -Type "STRING" -Description "Book Author"
-    /// PS C:\> $table.Schema = $schema
-    /// PS C:\> $table | Set-BqTable
+    /// PS C:\> $table = $dataset_books | New-BqTable "book_info"
+    /// PS C:\> $result = New-BqSchema -Name "Author" -Type "STRING" | `
+    ///   New-BqSchema -Name "Copyright" -Type "STRING" | `
+    ///   New-BqSchema -Name "Title" -Type "STRING" | `
+    ///   Set-BqSchema $table
     ///   </code>
     ///   <para>This will create a new schema, assign it to a table, and then send the 
     ///   revised table to the server to be saved.</para>
@@ -147,14 +146,14 @@ namespace Google.PowerShell.BigQuery
     /// Attaches a TableSchema to a BQ Table.
     /// </para>
     /// <para type="description">
-    /// This command takes a Table and sets its schema to be the TableSchema object passed in. 
-    /// This command returns the modified Table object after updating the cloud resource.
+    /// This command takes a Table and sets its schema to be the aggregation of all TableFieldSchema 
+    /// objects passed in. If multiple columns are passed in with the same “Name” field, an error 
+    /// will be thrown. This command returns the modified Table object after updating the cloud resource.
     /// </para>
     /// <example>
     ///   <code>
     /// PS C:\> $table = Get-BqDataset “book_data” | Get-BqTable "21st_century"
-    /// PS C:\> $schema = New-BqSchema -Name “Title” -Type “STRING”
-    /// PS C:\> $schema | Set-BqSchema $table
+    /// PS C:\> $table = New-BqSchema -Name “Title” -Type “STRING” | Set-BqSchema $table
     ///   </code>
     ///   <para>This will create a new schema, assign it to a table, and then send the 
     ///   revised table to the server to be saved.</para>
