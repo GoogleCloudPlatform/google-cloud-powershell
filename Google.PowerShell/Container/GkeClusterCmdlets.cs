@@ -1,7 +1,6 @@
 ﻿// Copyright 2015-2017 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
-using Google.Apis.Compute.v1.Data;
 using Google.Apis.Container.v1;
 using Google.Apis.Container.v1.Data;
 using Google.PowerShell.Common;
@@ -13,7 +12,9 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Management.Automation;
 using System.Net;
+using System.Security;
 using System.Text.RegularExpressions;
+using System.Threading;
 using ComputeService = Google.Apis.Compute.v1.ComputeService;
 
 namespace Google.PowerShell.Container
@@ -248,7 +249,7 @@ namespace Google.PowerShell.Container
         public virtual int? LocalSsdCount { get; set; }
 
         /// <para type="description">
-        /// The list of instance tags applied to each nodes.
+        /// The list of instance tags applied to each node.
         /// Tags are used to identify valid sources or targets for network firewalls.
         /// </para>
         [Parameter(Mandatory = false)]
@@ -259,7 +260,7 @@ namespace Google.PowerShell.Container
         /// Use New-GceServiceAccountConfig to create the service account and appropriate scopes.
         /// </para>
         [Parameter(Mandatory = false)]
-        public virtual ServiceAccount ServiceAccount { get; set; }
+        public virtual Apis.Compute.v1.Data.ServiceAccount ServiceAccount { get; set; }
 
         /// <para type="description">
         /// If set, every node created will be a preemptible VM instance.
@@ -389,7 +390,7 @@ namespace Google.PowerShell.Container
                         _computeService.Value.MachineTypes.List(project, zone);
                     do
                     {
-                        MachineTypeList response = listRequest.Execute();
+                        Apis.Compute.v1.Data.MachineTypeList response = listRequest.Execute();
                         if (response.Items != null)
                         {
                             machineTypes.AddRange(response.Items.Select(machineType => machineType.Name));
@@ -578,6 +579,356 @@ namespace Google.PowerShell.Container
         protected override void ProcessRecord()
         {
             WriteObject(BuildNodeConfig());
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Creates a Google Container Cluster.
+    /// </para>
+    /// <para type="description">
+    /// Creates a Google Container Cluster. If -Project and/or -Zone are not used, the cmdlet will use
+    /// the default project and/or default zone. You can use New-GkeNodeConfig to create configuration
+    /// for nodes in the cluster and pass it in with -NodeConfig or you can simply use parameters provided
+    /// in this cmdlet.
+    /// </para>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Add-GkeCluster -NodeConfig $nodeConfig `
+    ///                          -ClusterName "my-cluster" `
+    ///                          -Network "my-network"
+    ///   </code>
+    ///   <para>
+    ///   Creates a cluster named "my-cluster" in the default zone of the default project using config
+    ///   $nodeConfig and network "my-network".</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Add-GkeCluster -MachineType "n1-standard-4" `
+    ///                          -ClusterName "my-cluster" `
+    ///                          -Description "My new cluster" `
+    ///                          -Subnetwork "my-subnetwork"
+    ///   </code>
+    ///   <para>
+    ///   Creates a cluster named "my-cluster" with description "my new cluster" in the default zone of
+    ///   the default project using machine type "n1-standard-4" for each Google Compute Engine VMs
+    ///   in the cluster. The cluster will use the subnetwork "my-subnetwork".
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Add-GkeCluster -ImageType "GCI" `
+    ///                          -ClusterName "my-cluster" `
+    ///                          -Zone "us-central1-a" `
+    ///                          -MasterCredential (Get-Credential) `
+    ///                          -DisableMonitoringService `
+    ///                          -AdditionalZone "us-central1-f"
+    ///   </code>
+    ///   <para>
+    ///   Creates a cluster named "my-cluster" in zone "us-central1-a" of the default project.
+    ///   Asides from "us-central1-a", the cluster's nodes will also be found at zone "us-central1-f".
+    ///   The cluster will not have Google Monitoring Service enabled to write metrics.
+    ///   The master node of the cluster will have credential supplied by (Get-Credential).
+    ///   Each node of the cluster will be of type GCI.
+    ///   </para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/container-engine/reference/rest/v1/NodeConfig)">
+    /// [Node Configs]
+    /// </para>
+    /// <para type="link" uri="(https://kubernetes.io/docs/user-guide/labels/)">
+    /// [Kubernetes Labels]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/instances/preemptible)">
+    /// [Preemptible VM instances]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Add, "GkeCluster")]
+    public class AddGkeCluster : GkeNodeConfigCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string ByNodeConfig = "ByNodeConfig";
+            public const string ByValues = "ByValues";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// Size of the disk attached to each node in the cluster, specified in GB.
+        /// The smallest allowed disk size is 10GB.
+        /// The default disk size is 100GB.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
+        [ValidateRange(10, int.MaxValue)]
+        public override int? DiskSizeGb { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Metadata key/value pairs assigned to instances in the cluster.
+        /// Keys must conform to the regexp [a-zA-Z0-9-_]+ and not conflict with any other
+        /// metadata keys for the project or be one of the four reserved keys: "instance-template",
+        /// "kube-env", "startup-script" and "user-data".
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
+        [Alias("Metadata")]
+        public override Hashtable InstanceMetadata { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The map of Kubernetes labels (key/value pairs) to be applied to each node in the cluster.
+        /// This is in addition to any default label(s) that Kubernetes may apply to the node.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
+        public override Hashtable Label { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The number of local SSD disks attached to each node in the cluster.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
+        [ValidateRange(0, int.MaxValue)]
+        public override int? LocalSsdCount { get; set; }
+
+        /// <para type="description">
+        /// The list of instance tags applied to each node in the cluster.
+        /// Tags are used to identify valid sources or targets for network firewalls.
+        /// </para>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
+        public override string[] Tags { get; set; }
+
+        /// <para type="description">
+        /// The Google Cloud Platform Service Account to be used by each node's VMs.
+        /// Use New-GceServiceAccountConfig to create the service account and appropriate scopes.
+        /// </para>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
+        public override Apis.Compute.v1.Data.ServiceAccount ServiceAccount { get; set; }
+
+        /// <para type="description">
+        /// If set, every node created in the cluster will be a preemptible VM instance.
+        /// </para>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
+        public override SwitchParameter Preemptible { get; set; }
+
+        /// <para type="description">
+        /// The name of the cluster.
+        /// Name has to start with a letter, end with a number or letter
+        /// and consists only of letters, numbers and hyphens.
+        /// </para>
+        [Parameter(Mandatory = true, Position = 0)]
+        [ValidatePattern("[a-zA-Z][a-zA-Z0-9-]*[a-zA-Z0-9]")]
+        public string ClusterName { get; set; }
+
+        /// <para type="description">
+        /// The description of the cluster.
+        /// </para>
+        [Parameter(Mandatory = false)]
+        [ValidateNotNullOrEmpty]
+        public string Description { get; set; }
+
+        /// <para type="description">
+        /// The number of nodes to create in the cluster.
+        /// </para>
+        [Parameter(Mandatory = false)]
+        [ValidateRange(0, int.MaxValue)]
+        public int? InitialNodeCount { get; set; }
+
+        /// <para type="description">
+        /// The credential to access the master endpoint.
+        /// </para>
+        [Parameter(Mandatory = false)]
+        [ValidateNotNull]
+        public PSCredential MasterCredential { get; set; }
+
+        /// <para type="description">
+        /// Stop the cluster from using Google Cloud Logging Service to write logs.
+        /// </para>
+        [Parameter(Mandatory = false)]
+        public SwitchParameter DisableLoggingService { get; set; }
+
+        /// <para type="description">
+        /// Stop the cluster from using Google Cloud Monitoring service to write metrics.
+        /// </para>
+        [Parameter(Mandatory = false)]
+        public SwitchParameter DisableMonitoringService { get; set; }
+
+        /// <para type="description">
+        /// Enables Kubernetes alpha features on the cluster. This includes alpha API groups
+        /// and features that may not be production ready in the kubernetes version of the master and nodes.
+        /// The cluster has no SLA for uptime and master/node upgrades are disabled.
+        /// Alpha enabled clusters are AUTOMATICALLY DELETED thirday days after creation.
+        /// </para>
+        [Parameter(Mandatory = false)]
+        public SwitchParameter EnableKubernetesAlpha { get; set; }
+
+        /// <para type="description">
+        /// Name of the Google Compute Engine network to which the cluster is connected.
+        /// If left unspecified, the default network will be used.
+        /// </para>
+        [Parameter(Mandatory = false)]
+        [ValidateNotNullOrEmpty]
+        public string Network { get; set; }
+
+        /// <para type="description">
+        /// The name of the Google Compute Engine subnetwork to which the cluster is connected.
+        /// </para>
+        [Parameter(Mandatory = false)]
+        [ValidateNotNullOrEmpty]
+        public string Subnetwork { get; set; }
+
+        /// <para type="description">
+        /// The IP address range of the container pods in this cluster, in CIDR notation.
+        /// </para>
+        [Parameter(Mandatory = false)]
+        [ValidateNotNullOrEmpty]
+        public string ClusterIpv4AddressRange { get; set; }
+
+        /// <para type="description">
+        /// The zones (in addition to the zone specified by -Zone parameter) in which
+        /// the cluster's nodes should be located.
+        /// </para>
+        [Parameter(Mandatory = false)]
+        [ValidateNotNullOrEmpty]
+        public string[] AdditionalZone { get; set; }
+
+        /// <para type="description">
+        /// Passed in a NodeConfig object containing configuration for the nodes in this cluster.
+        /// This object can be created with New-GkeNodeConfig cmdlet.
+        /// </para>
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByNodeConfig, ValueFromPipeline = true)]
+        public NodeConfig NodeConfig { get; set; }
+
+        private List<Operation> _containerZoneOperation = new List<Operation>();
+
+        /// <summary>
+        /// Add -MachineType and -ImageType parameter (they belong to "ByValues" parameter set).
+        /// </summary>
+        protected override void PopulateDynamicParameter(string project, string zone,
+            RuntimeDefinedParameterDictionary dynamicParamDict)
+        {
+            // Gets all the valid machine types of this zone and project combination.
+            string[] machineTypes = GetMachineTypes(Project, Zone);
+            RuntimeDefinedParameter machineTypeParam = GenerateRuntimeParameter(
+                parameterName: "MachineType",
+                helpMessage: "The Google Compute Engine machine type to use for node in this cluster.",
+                parameterSetName: ParameterSetNames.ByValues,
+                validSet: machineTypes);
+            dynamicParamDict.Add("MachineType", machineTypeParam);
+
+            // Gets all the valid image types of this zone and project combination.
+            string[] imageTypes = GetImageTypes(Project, Zone);
+            RuntimeDefinedParameter imageTypeParam = GenerateRuntimeParameter(
+                parameterName: "ImageType",
+                helpMessage: "The image type to use for node in this cluster.",
+                parameterSetName: ParameterSetNames.ByValues,
+                validSet: imageTypes);
+            dynamicParamDict.Add("ImageType", imageTypeParam);
+        }
+
+        protected override void ProcessRecord()
+        {
+            CreateClusterRequest requestBody = new CreateClusterRequest() { Cluster = BuildCluster() };
+            ProjectsResource.ZonesResource.ClustersResource.CreateRequest request =
+                Service.Projects.Zones.Clusters.Create(requestBody, Project, Zone);
+            Operation createOperation = request.Execute();
+            _containerZoneOperation.Add(createOperation);
+        }
+
+        protected override void EndProcessing()
+        {
+            foreach (Operation operation in _containerZoneOperation)
+            {
+                Operation currentOp = operation;
+                while (currentOp.Status != "DONE" && !Stopping)
+                {
+                    Thread.Sleep(500);
+                    ProjectsResource.ZonesResource.OperationsResource.GetRequest getRequest =
+                        Service.Projects.Zones.Operations.Get(Project, Zone, currentOp.Name);
+                    currentOp = getRequest.Execute();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Build a cluster object based on the parameter given.
+        /// </summary>
+        private Cluster BuildCluster()
+        {
+            if (ParameterSetName == ParameterSetNames.ByValues)
+            {
+                NodeConfig = BuildNodeConfig();
+            }
+
+            Cluster cluster = new Cluster()
+            {
+                Name = ClusterName,
+                Description = Description,
+                InitialNodeCount = InitialNodeCount ?? 1,
+                NodeConfig = NodeConfig,
+                EnableKubernetesAlpha = EnableKubernetesAlpha,
+                // If LoggingService field is not set, the cluster will default to logging.googleapis.com
+                LoggingService = DisableLoggingService ? "none" : null,
+                // If this field is not set, the cluster will default to monitoring.googleapis.com
+                MonitoringService = DisableMonitoringService ? "none" : null
+            };
+
+            if (EnableKubernetesAlpha)
+            {
+                WriteWarning("Cluster with Kubernetes alpha features has no SLA for uptime and master/node upgrades are disabled."
+                    + "Alpha enabled clusters are automatically deleted thirty days after creation.");
+            }
+
+            // Add all the locations of the cluster's nodes.
+            List<string> locations = new List<string> { Zone };
+            if (AdditionalZone != null)
+            {
+                locations.AddRange(AdditionalZone);
+            }
+            cluster.Locations = locations;
+
+            PopulateClusterNetwork(cluster);
+            PopulateClusterMasterCredential(cluster);
+
+            return cluster;
+        }
+
+        /// <summary>
+        /// Fill out username and password for master node based on MasterCredential.
+        /// </summary>
+        private void PopulateClusterMasterCredential(Cluster cluster)
+        {
+            if (MasterCredential != null)
+            {
+                NetworkCredential networkCred = MasterCredential.GetNetworkCredential();
+                var masterAuth = new MasterAuth()
+                {
+                    Username = networkCred.UserName,
+                    Password = networkCred.Password
+                };
+                cluster.MasterAuth = masterAuth;
+            }
+        }
+
+        /// <summary>
+        /// Fill out network, subnetwork and IPv4 address range for the cluster.
+        /// </summary>
+        private void PopulateClusterNetwork(Cluster cluster)
+        {
+            // It seems for this API, default works but not projects/us-central1-f/global/networks/default.
+            if (Network != null && Network.Contains("networks/"))
+            {
+                Network = GetUriPart("networks", Network);
+            }
+
+            if (Subnetwork != null && Subnetwork.Contains("subnetworks/"))
+            {
+                Subnetwork = GetUriPart("subnetworks", Subnetwork);
+            }
+            cluster.Network = Network;
+            cluster.Subnetwork = Subnetwork;
+            cluster.ClusterIpv4Cidr = ClusterIpv4AddressRange;
         }
     }
 }

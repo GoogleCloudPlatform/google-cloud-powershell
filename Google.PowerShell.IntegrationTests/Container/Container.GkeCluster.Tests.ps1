@@ -169,3 +169,21 @@ Describe "New-GkeNodeConfig" {
         gcloud container clusters delete $clusterThreeName -q 2>$null
     }
 }
+
+Describe "Add-GkeCluster" {
+    It "should work" {
+        $r = Get-Random
+        $clusterName = "gcp-new-gkecluster-$r"
+        $clusterDescription = "My cluster"
+        try {
+            $cluster = Add-GkeCluster -ClusterName $clusterName `
+                                      -ImageType gci `
+                                      -Description $clusterDescription `
+                                      -DisableLoggingService
+
+        }
+        finally {
+            gcloud container clusters delete $clusterName -q 2>$null
+        }
+    }
+}
