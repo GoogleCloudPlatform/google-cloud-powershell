@@ -171,19 +171,83 @@ Describe "New-GkeNodeConfig" {
 }
 
 Describe "Add-GkeCluster" {
-    It "should work" {
-        $r = Get-Random
-        $clusterName = "gcp-new-gkecluster-$r"
-        $clusterDescription = "My cluster"
-        try {
-            $cluster = Add-GkeCluster -ClusterName $clusterName `
-                                      -ImageType gci `
-                                      -Description $clusterDescription `
-                                      -DisableLoggingService
+    # NOTE: The cluster returned by Add-GkeCluster is actually from the API call to Get-GkeCluster
+    # so we actually don't have to check the property with Get-GkeCluster (we'll do it
+    # in the first test anyway).
+    $r = Get-Random
+    $clusterOneName = "gcp-new-gkecluster-$r"
+    $clusterOneDescription = "My cluster"
 
+    $clusterTwoName = "gcp-new-gkecluster-2-$r"
+    $clusterTwoZone = "us-west1-a"
+    $clusterTwoConfig = New-GkeNodeConfig -DiskSizeGb 20 `
+                                          -LocalSsdCount 3 `
+                                          -Label @{"Release" = "stable"} `
+                                          -MachineType n1-highcpu-4
+    $clusterThreeName = "gcp-new-gkecluster-3-$r"
+    $clusterThreeZone = "asia-east1-b"
+
+    # Create the cluster in parallel to reduce wait time.
+    $gcloudCmdletsPath = (Resolve-Path "$PSScriptRoot\..\GcloudCmdlets.ps1").Path
+
+    $clusterOneScriptBlock = {
+        param($cmdletPath, $clusterName, $clusterDescription)
+        . $cmdletPath;
+        Install-GCloudCmdlets | Out-Null;
+        Add-GkeCluster -ClusterName $clusterName -ImageType gci `
+                       -Description $clusterDescription -DisableLoggingService
+    }
+    $clusterOneJob = Start-Job -ScriptBlock $clusterOneScriptBlock `
+                               -ArgumentList @($gcloudCmdletsPath, $clusterOneName, $clusterOneDescription)
+
+    $clusterTwoScriptBlock = {
+        param($cmdletPath, $clusterName, $clusterZone, $nodeConfig)
+        . $cmdletPath;
+        Install-GCloudCmdlets | Out-Null;
+        Add-GkeCluster -ClusterName $clusterName `
+                       -Zone $clusterZone `
+                       -NodeConfig $nodeConfig `
+                       -DisableMonitoringService
+    }
+    $clusterTwoJob = Start-Job -ScriptBlock $clusterTwoScriptBlock `
+                               -ArgumentList @($gcloudCmdletsPath, $clusterTwoName,
+                                               $clusterTwoZone, $clusterTwoConfig)
+
+    It "should work" {
+        try {
+            $clusterFromAdd = Receive-Job -Job $clusterOneJob -Wait
+            $clusterFromGet = Get-GkeCluster -ClusterName $clusterOneName
+
+            foreach ($cluster in @($clusterFromAdd, $clusterFromGet)) {
+                $cluster.Status | Should Be RUNNING
+                $cluster.LoggingService | Should Be none
+                $cluster.NodeConfig.ImageType | Should Be gci
+                $cluster.Description | Should Be $clusterDescription
+                $cluster.Zone | Should Be $zone
+            }
         }
         finally {
-            gcloud container clusters delete $clusterName -q 2>$null
+            gcloud container clusters delete $clusterOneName -q 2>$null
+        }
+    }
+
+    It "should work with NodeConfig" {
+        try {
+            $clusterFromAdd = Receive-Job -Job $clusterTwoJob -Wait
+            $clusterFromGet = Get-GkeCluster -ClusterName $clusterTwoname
+
+            foreach ($cluster in @($clusterFromAdd, $clusterFromGet)) {
+                $cluster.Status | Should Be RUNNING
+                $cluster.MonitoringService | Should Be none
+                $cluster.NodeConfig.MachineType | Should Be n1-highcpu-4
+                $cluster.NodeConfig.Labels["Release"] | Should BeExactly "stable"
+                $cluster.NodeConfig.LocalSsdCount | Should Be 3
+                $cluster.NodeConfig.DiskSizeGb | Should Be 20
+                $cluster.Zone | Should Be $clusterTwoZone
+            }
+        }
+        finally {
+            gcloud container clusters delete $clusterTwoName -q 2>$null
         }
     }
 }

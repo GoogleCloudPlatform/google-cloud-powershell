@@ -800,8 +800,6 @@ namespace Google.PowerShell.Container
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByNodeConfig, ValueFromPipeline = true)]
         public NodeConfig NodeConfig { get; set; }
 
-        private List<Operation> _containerZoneOperation = new List<Operation>();
-
         /// <summary>
         /// Add -MachineType and -ImageType parameter (they belong to "ByValues" parameter set).
         /// </summary>
@@ -833,22 +831,36 @@ namespace Google.PowerShell.Container
             ProjectsResource.ZonesResource.ClustersResource.CreateRequest request =
                 Service.Projects.Zones.Clusters.Create(requestBody, Project, Zone);
             Operation createOperation = request.Execute();
-            _containerZoneOperation.Add(createOperation);
+            WaitForClusterCreation(createOperation);
         }
 
-        protected override void EndProcessing()
+        public Cluster WaitForClusterCreation(Operation operation)
         {
-            foreach (Operation operation in _containerZoneOperation)
+            int activityId = (new Random()).Next();
+            string activity = $"Creating cluster '{ClusterName}' in zone '{Zone}' of project '{Project}'.";
+            string status = "Creating cluster";
+            int percentage = 0;
+
+            while (operation.Status != "DONE")
             {
-                Operation currentOp = operation;
-                while (currentOp.Status != "DONE" && !Stopping)
-                {
-                    Thread.Sleep(500);
-                    ProjectsResource.ZonesResource.OperationsResource.GetRequest getRequest =
-                        Service.Projects.Zones.Operations.Get(Project, Zone, currentOp.Name);
-                    currentOp = getRequest.Execute();
-                }
+                Thread.Sleep(200);
+                var progressRecord = new ProgressRecord(activityId, activity, status);
+                percentage = (percentage + 1) % 100;
+                progressRecord.PercentComplete = percentage;
+                WriteProgress(progressRecord);
+                ProjectsResource.ZonesResource.OperationsResource.GetRequest getRequest =
+                    Service.Projects.Zones.Operations.Get(Project, Zone, operation.Name);
+                operation = getRequest.Execute();
             }
+
+            var progressCompleteRecord = new ProgressRecord(activityId, activity, status);
+            progressCompleteRecord.RecordType = ProgressRecordType.Completed;
+            progressCompleteRecord.PercentComplete = 100;
+            WriteProgress(progressCompleteRecord);
+
+            ProjectsResource.ZonesResource.ClustersResource.GetRequest getClusterRequest =
+                Service.Projects.Zones.Clusters.Get(Project, Zone, ClusterName);
+            return getClusterRequest.Execute();
         }
 
         /// <summary>
