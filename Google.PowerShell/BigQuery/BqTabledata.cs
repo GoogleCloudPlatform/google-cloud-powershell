@@ -1,7 +1,7 @@
 // Copyright 2015-2017 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
-using Google.Apis.Bigquery.v2;
+using Google.Cloud.BigQuery.V2;
 using Google.Apis.Bigquery.v2.Data;
 using Google.PowerShell.Common;
 using System;
@@ -9,6 +9,7 @@ using System.Net;
 using System.Linq;
 using System.Management.Automation;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Google.PowerShell.BigQuery
 {
@@ -65,12 +66,11 @@ namespace Google.PowerShell.BigQuery
     {
         /// <summary>
         /// <para type="description">
-        /// The existing TableSchema that you wish to add a column to. 
-        /// If this value is not present, a new schema will be created.
+        /// Holder parameter to allow cmdlet to forward TableFieldSchemas down the pipeline.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ValueFromPipeline = true)]
-        public TableSchema InputObject { get; set; }
+        public TableFieldSchema InputObject { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -95,6 +95,7 @@ namespace Google.PowerShell.BigQuery
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
+        [ValidateNotNull]
         public string Description { get; set; }
 
         /// <summary>
@@ -109,41 +110,35 @@ namespace Google.PowerShell.BigQuery
         /// <summary>
         /// <para type="description">
         /// Describes the optional nested schema fields if the type property is set to RECORD. Pass in 
-        /// another TableSchema object and this cmdlet will properly nest its fields in the new column.
+        /// an array of TableFieldSchema objects and it will be nested inside a single column.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
-        public TableSchema Fields { get; set; }
+        [ValidateNotNullOrEmpty]
+        public TableFieldSchema[] Fields { get; set; }
 
         protected override void ProcessRecord()
         {
-            if (InputObject == null)
+            if (InputObject != null)
             {
-                InputObject = new TableSchema();
-                InputObject.Fields = new List<TableFieldSchema>();
+                WriteObject(InputObject);
             }
+        }
 
+        protected override void EndProcessing()
+        {
             if (Mode == null)
             {
                 Mode = ColumnMode.NULLABLE;
             }
 
-            if (InputObject.Fields.Any(field => Name.Equals(field.Name)))
-            {
-                ThrowTerminatingError(new ErrorRecord(
-                    new Exception($"This schema already contains a column with name '{Name}'."),
-                    "Column Name Collision", ErrorCategory.InvalidArgument, Name));
-            }
-
             TableFieldSchema tfs = new TableFieldSchema();
             tfs.Name = Name;
             tfs.Type = Type.ToString();
-            tfs.Description = (Description != null) ? Description : null;
+            tfs.Description = Description;
             tfs.Mode = Mode.ToString();
-            tfs.Fields = (Fields != null) ? Fields.Fields : null;
-
-            InputObject.Fields.Add(tfs);
-            WriteObject(InputObject);
+            tfs.Fields = Fields;
+            WriteObject(tfs);
         }
     }
 
@@ -179,7 +174,7 @@ namespace Google.PowerShell.BigQuery
         /// </summary>
         [Parameter(Mandatory = true, ValueFromPipeline = true)]
         [ValidateNotNull]
-        public TableSchema InputObject { get; set; }
+        public TableFieldSchema InputObject { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -190,18 +185,34 @@ namespace Google.PowerShell.BigQuery
         [ValidateNotNull]
         public Table Table { get; set; }
 
+        List<TableFieldSchema> Columns = new List<TableFieldSchema>();
+
         protected override void ProcessRecord()
         {
-            Table.Schema = InputObject;
-            Table.ETag = null;
-            Table response;
+            if (Columns.Any(field => InputObject.Name.Equals(field.Name)))
+            {
+                // ATTENTION:  should this throw? (to notify users that data may have been lost)
+                // Or would it be sufficient to document only keeping the first one seen as 
+                // deterministic behavior for this method?
+                ThrowTerminatingError(new ErrorRecord(
+                    new Exception($"This schema already contains a column with name '{InputObject.Name}'."),
+                    "Column Name Collision", ErrorCategory.InvalidArgument, InputObject.Name));
+            }
+            Columns.Add(InputObject);
+        }
+
+        protected override void EndProcessing()
+        {
+            Table.Schema = new TableSchema();
+            Table.Schema.Fields = Columns;
+            Table.ETag = "";
             var request = Service.Tables.Update(Table,
                 Table.TableReference.ProjectId,
                 Table.TableReference.DatasetId,
                 Table.TableReference.TableId);
             try
             {
-                response = request.Execute();
+                Table response = request.Execute();
                 WriteObject(response);
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)

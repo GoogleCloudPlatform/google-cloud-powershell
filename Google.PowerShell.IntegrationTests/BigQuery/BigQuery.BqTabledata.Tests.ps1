@@ -9,29 +9,30 @@ Describe "New-BqSchema" {
         $test_set = New-BqDataset $datasetName
     }
 
-    It "should create new TableSchema objects"{
-        $schema = New-BqSchema -Name "Title" -Type "STRING"
-        $schema.Fields[0].Name | Should Be "Title"
-        $schema.Fields[0].Type | Should Be "STRING"
+    It "should create new TableFieldSchema objects"{
+        $field = New-BqSchema -Name "Title" -Type "STRING"
+        $field.Name | Should Be "Title"
+        $field.Type | Should Be "STRING"
     }
 
-    It "should add fields to existing TableSchema objects"{
-        $schema = New-BqSchema -Name "Title" -Type "STRING"
-        $schema = $schema | New-BqSchema -Name "Author" -Type "STRING"
-        $schema.Fields.Count | Should Be 2
+    It "should add fields to the pipeline when passed any number of fields"{
+        $field = New-BqSchema -Name "Title" -Type "STRING"
+        $field = $field | New-BqSchema -Name "Author" -Type "STRING"
+        $field = $field | New-BqSchema -Name "Copyright" -Type "STRING"
+        $field.Count | Should Be 3
     }
 
     It "should handle optional strings correctly"{
-        $schema = New-BqSchema -Name "Title" -Type "STRING" -Description "Test data table" -Mode "REQUIRED"
-        $schema.Fields[0].Description | Should Be "Test data table"
-        $schema.Fields[0].Mode | Should Be "REQUIRED"
+        $field = New-BqSchema -Name "Title" -Type "STRING" -Description "Test data table" -Mode "REQUIRED"
+        $field.Description | Should Be "Test data table"
+        $field.Mode | Should Be "REQUIRED"
     }
 
     It "should handle fields / nested structures"{
         $inner = New-BqSchema -Name "Title" -Type "STRING"
         $inner = $inner | New-BqSchema -Name "Author" -Type "STRING"
         $outer = New-BqSchema -Name "Nest" -Type "RECORD" -Fields $inner
-        $outer.Fields[0].Fields.Count | Should Be 2
+        $outer.Fields.Count | Should Be 2
     }
 
     It "should deny invalid types"{
@@ -40,11 +41,6 @@ Describe "New-BqSchema" {
 
     It "should deny invalid modes"{
         { New-BqSchema -Name "Title" -Type "STRING" -Mode "NotAMode" -ErrorAction Stop } | Should Throw "Cannot convert value"
-    }
-
-    It "should complain about duplicated column names"{
-        $schema = New-BqSchema -Name "Title" -Type "STRING"
-        { $schema | New-BqSchema -Name "Title" -Type "STRING" -ErrorAction Stop } | Should Throw "This schema already contains a column with name"
     }
 
     AfterAll {
@@ -60,12 +56,27 @@ Describe "Set-BqSchema" {
         $test_set = New-BqDataset $datasetName
     }
 
-    It "should add to Tables correctly"{
+    It "should add a single column schema to a Table"{
         $table = $test_set | New-BqTable "my_table"
-        $schema = New-BqSchema -Name "Title" -Type "STRING"
-        $schema | Set-BqSchema $table
-        $result = $table | Get-BqTable
+        $result = New-BqSchema -Name "Title" -Type "STRING" | Set-BqSchema $table
         $result.Schema.Fields[0].Name | Should Be "Title"
+    }
+
+    It "should add amultiple column schema to a Table"{
+        $table = $test_set | New-BqTable "double_table"
+        $result = New-BqSchema -Name "Author" -Type "STRING" | `
+                  New-BqSchema -Name "Copyright" -Type "STRING" | `
+                  New-BqSchema -Name "Title" -Type "STRING" | `
+                  Set-BqSchema $table
+        $result.Schema.Fields[0].Name | Should Be "Author"
+        $result.Schema.Fields[1].Name | Should Be "Copyright"
+        $result.Schema.Fields[2].Name | Should Be "Title"
+    }
+
+    It "should complain about duplicated column names"{
+        $table = $test_set | New-BqTable "another_table"
+        $schemas = New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Title" -Type "STRING"
+        { $schemas | Set-BqSchema $table -ErrorAction Stop } | Should Throw "This schema already contains a column with name"
     }
 
     It "should not add a schema to a table that does not exist" {
@@ -73,15 +84,13 @@ Describe "Set-BqSchema" {
         $table.TableReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.TableReference
         $table.TableReference.ProjectId = $project
         $table.TableReference.DatasetId = $datasetName
-        $table.TableReference.TableId = "not_gonna_happen_today"
-        $schema = New-BqSchema -Name "Title" -Type "STRING"
-        { $schema | Set-BqSchema $table } | Should Throw 404
+        $table.TableReference.TableId = "not_gonna_happen"
+        { New-BqSchema -Name "Title" -Type "STRING" | Set-BqSchema $table } | Should Throw 404
     } 
 
     AfterAll {
         $test_set | Remove-BqDataset -Force
     }
 }
-
 
 Reset-GCloudConfig $oldActiveConfig $configName
