@@ -69,7 +69,7 @@ namespace Google.PowerShell.BigQuery
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ValueFromPipeline = true)]
-        public TableFieldSchema InputObject { get; set; }
+        public TableFieldSchema PassThruObject { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -118,9 +118,9 @@ namespace Google.PowerShell.BigQuery
 
         protected override void ProcessRecord()
         {
-            if (InputObject != null)
+            if (PassThruObject != null)
             {
-                WriteObject(InputObject);
+                WriteObject(PassThruObject);
             }
         }
 
@@ -167,8 +167,8 @@ namespace Google.PowerShell.BigQuery
     {
         /// <summary>
         /// <para type="description">
-        /// The existing TableSchema that you wish to add a column to. 
-        /// If this value is not present, a new schema will be created.
+        /// Variable to aggregate the TableFieldSchemas from the pipeline.  Pipe one or 
+        /// TableFieldSchema object in using the New-BqSchema cmdlet.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ValueFromPipeline = true)]

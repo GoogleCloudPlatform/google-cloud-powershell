@@ -64,9 +64,9 @@ Describe "Set-BqSchema" {
 
     It "should add amultiple column schema to a Table"{
         $table = $test_set | New-BqTable "double_table"
-        $result = New-BqSchema -Name "Author" -Type "STRING" | `
-                  New-BqSchema -Name "Copyright" -Type "STRING" | `
-                  New-BqSchema -Name "Title" -Type "STRING" | `
+        $result = New-BqSchema -Name "Author" -Type "STRING" |
+                  New-BqSchema -Name "Copyright" -Type "STRING" |
+                  New-BqSchema -Name "Title" -Type "STRING" |
                   Set-BqSchema $table
         $result.Schema.Fields[0].Name | Should Be "Author"
         $result.Schema.Fields[1].Name | Should Be "Copyright"
