@@ -230,4 +230,192 @@ namespace Google.PowerShell.BigQuery
             }
         }
     }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Streams data from a file into BigQuery one record at a time without needing to run a load job.
+    /// </para>
+    /// <para type="description">
+    /// Streams data into BigQuery one record at a time without needing to run a load job. This cmdlet 
+    /// accepts CSV, JSON, and Avro files, and has a number of configuration parameters for each type. 
+    /// This cmdlet returns nothing if the insert completed successfully.
+    /// WriteMode Options:
+    /// - WriteAppend will add data on to the existing table.
+    /// - WriteTruncate will truncate the table before additional data is inserted.
+    /// - WriteIfEmpty will throw an error unless the table is empty.
+    /// </para>
+    /// <example>
+    ///   <code>
+    /// PS C:\> 
+    ///   </code>
+    ///   <para></para>
+    /// </example> 
+    /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/tables)">
+    /// [BigQuery Tables]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Set, "BqTabledata")]
+    public class SetBqTabledata : BqCmdlet
+    {
+        /// <summary>
+        /// Data format of the file being passed in.
+        /// </summary>
+        public enum DataFormats
+        {
+            AVRO, CSV, JSON
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// The table to insert the data.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ValueFromPipeline = true)]
+        [ValidateNotNull]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Table), Property = nameof(Table.TableReference))]
+        public TableReference InputObject { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The filname containing the data to insert.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0)]
+        public string Filename { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The format of the data file (Ex: CSV, JSON).
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 1)]
+        public DataFormats Type { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Write Disposition of the operation. Governs what happens to the data currently in the table.
+        /// If this parameter is not supplied, this defaults to WriteAppend
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public WriteDisposition WriteMode { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The number of malformed rows that the request will ignore before throwing an error. 
+        /// This value is zero if not specified.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public int MaxBadRecords { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// CSV ONLY: Allows insertion of rows with fields that are not in the schema, ignoring the extra fields.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public SwitchParameter AllowUnknownFields { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// CSV ONLY: Allows insertion of rows that are missing trailing optional columns.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public SwitchParameter AllowJaggedRows { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// CSV ONLY: Allows quoted data sections to contain newlines
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public SwitchParameter AllowQuotedNewlines { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// CSV ONLY: Separator between fields in the data.  Default value is comma (,).
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public string FieldDelimiter { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// CSV ONLY: Value used to quote data sections.  Default value is double-quote (").
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public string Quote { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// CSV ONLY: The number of rows to skip from the input file. (Usually used for headers.)
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public int SkipLeadingRows { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            // Get file input Stream and BQ Service.
+            Stream fileInput;
+            try
+            {
+                fileInput = new StreamReader(Filename).BaseStream;
+            }
+            catch (Exception ex)
+            {
+                WriteError(new ErrorRecord(ex,
+                    $"Error while reading file {Filename}.",
+                    ErrorCategory.ReadError, Filename));
+                return;
+            }
+            var projectReference = new ProjectReference();
+            projectReference.ProjectId = InputObject.ProjectId;
+            var Client = new BigQueryClientImpl(projectReference, Service);
+
+            try
+            {
+                switch (Type)
+                {
+                    case DataFormats.AVRO:
+                        UploadAvroOptions AvroOptions = new UploadAvroOptions();
+                        AvroOptions.WriteDisposition = WriteMode;
+                        AvroOptions.MaxBadRecords = MaxBadRecords;
+                        AvroOptions.AllowUnknownFields = AllowUnknownFields;
+                        Client.UploadAvro(InputObject, null, fileInput, AvroOptions);
+                        break;
+                    case DataFormats.JSON:
+                        UploadJsonOptions JsonOptions = new UploadJsonOptions();
+                        JsonOptions.WriteDisposition = WriteMode;
+                        JsonOptions.MaxBadRecords = MaxBadRecords;
+                        JsonOptions.AllowUnknownFields = AllowUnknownFields;
+                        Client.UploadJson(InputObject, null, fileInput, JsonOptions);
+                        break;
+                    case DataFormats.CSV:
+                        UploadCsvOptions CsvOptions = new UploadCsvOptions();
+                        CsvOptions.WriteDisposition = WriteMode;
+                        CsvOptions.MaxBadRecords = MaxBadRecords;
+                        CsvOptions.AllowJaggedRows = AllowJaggedRows;
+                        CsvOptions.AllowQuotedNewlines = AllowQuotedNewlines;
+                        CsvOptions.AllowTrailingColumns = AllowUnknownFields;
+                        CsvOptions.FieldDelimiter = FieldDelimiter;
+                        CsvOptions.Quote = Quote;
+                        CsvOptions.SkipLeadingRows = SkipLeadingRows;
+                        Client.UploadCsv(InputObject, null, fileInput, CsvOptions);
+                        break;
+                    default:
+                        throw UnknownParameterSetException;
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteError(new ErrorRecord(ex,
+                    $"Error while uploading file '{Filename}' to table '{InputObject.TableId}'.",
+                    ErrorCategory.WriteError, Filename));
+            }
+        }
+    }
 }
