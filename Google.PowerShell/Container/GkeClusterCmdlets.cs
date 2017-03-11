@@ -827,11 +827,22 @@ namespace Google.PowerShell.Container
 
         protected override void ProcessRecord()
         {
-            CreateClusterRequest requestBody = new CreateClusterRequest() { Cluster = BuildCluster() };
-            ProjectsResource.ZonesResource.ClustersResource.CreateRequest request =
-                Service.Projects.Zones.Clusters.Create(requestBody, Project, Zone);
-            Operation createOperation = request.Execute();
-            WaitForClusterCreation(createOperation);
+            try
+            {
+                CreateClusterRequest requestBody = new CreateClusterRequest() { Cluster = BuildCluster() };
+                ProjectsResource.ZonesResource.ClustersResource.CreateRequest request =
+                    Service.Projects.Zones.Clusters.Create(requestBody, Project, Zone);
+                Operation createOperation = request.Execute();
+                Cluster createdCluster = WaitForClusterCreation(createOperation);
+                WriteObject(createdCluster);
+            }
+            catch (GoogleApiException apiEx) when (apiEx.HttpStatusCode == HttpStatusCode.Conflict)
+            {
+                WriteResourceExistsError(
+                    exceptionMessage: $"Cluster '{ClusterName}' already exists in zone '{Zone}' of project '{Project}'",
+                    errorId: "ClusterAlreadyExists",
+                    targetObject: ClusterName);
+            }
         }
 
         public Cluster WaitForClusterCreation(Operation operation)
