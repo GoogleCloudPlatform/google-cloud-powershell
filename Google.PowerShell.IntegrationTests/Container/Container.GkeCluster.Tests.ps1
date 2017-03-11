@@ -201,7 +201,7 @@ Describe "Add-GkeCluster" {
                        -Description $clusterDescription -DisableLoggingService
     }
 
-    $clusterOneName = "gcp-new-gkecluster-$r"
+    $script:clusterOneName = "gcp-new-gkecluster-$r"
     $clusterOneDescription = "My cluster"
     $clusterOneJob = Start-Job -ScriptBlock $clusterOneScriptBlock `
                                -ArgumentList @($gcloudCmdletsPath, $clusterOneName, $clusterOneDescription)
@@ -226,7 +226,7 @@ Describe "Add-GkeCluster" {
                        -InitialNodeCount 4 -AdditionalZone $clusterAdditionalZone
     }
 
-    $clusterTwoName = "gcp-new-gkecluster-2-$r"
+    $script:clusterTwoName = "gcp-new-gkecluster-2-$r"
     $clusterTwoAdditionalZone = "us-central1-c"
     $clusterTwoJob = Start-Job -ScriptBlock $clusterTwoScriptBlock `
                                -ArgumentList @($gcloudCmdletsPath, $clusterTwoName, $network.Name,
@@ -244,7 +244,7 @@ Describe "Add-GkeCluster" {
                        -Zone $clusterZone
     }
 
-    $clusterThreeName = "gcp-new-gkecluster-3-$r"
+    $script:clusterThreeName = "gcp-new-gkecluster-3-$r"
     $clusterThreeZone = "europe-west1-b"
     $clusterThreeUsername = Get-Random
     $clusterThreePassword = Get-Random
@@ -295,7 +295,7 @@ Describe "Add-GkeCluster" {
 
     It "should work with -MasterCredential" {
         Wait-Job $clusterThreeJob | Remove-Job
-        $cluster = Get-GkeCluster -ClusterName $clusterThreeName
+        $cluster = Get-GkeCluster -ClusterName $clusterThreeName -Zone $clusterThreeZone
 
         $cluster.Status | Should Be RUNNING
         $cluster.Zone | Should Be $clusterThreeZone
@@ -327,7 +327,8 @@ Describe "Add-GkeCluster" {
         $jobTwo = Start-Job -ScriptBlock $clusterDeletionScriptBlock -ArgumentList $clusterTwoName
         $jobThree = Start-Job -ScriptBlock $clusterDeletionScriptBlock -ArgumentList $clusterThreeName
         $jobFour = Start-Job -ScriptBlock $clusterDeletionScriptBlock -ArgumentList $clusterFourName
-        gcloud compute networks delete $networkName 2>$null
         Wait-Job $jobOne, $jobTwo, $jobThree, $jobFour | Remove-Job
+        # The cluster has to be deleted before we can delete the network.
+        gcloud compute networks delete $networkName 2>$null
     }
 }
