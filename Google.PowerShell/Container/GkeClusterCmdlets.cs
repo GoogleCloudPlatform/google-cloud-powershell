@@ -845,6 +845,10 @@ namespace Google.PowerShell.Container
             }
         }
 
+        /// <summary>
+        /// Wait for the cluster creation operation to complete.
+        /// Use write progress to display the progress in the meantime.
+        /// </summary>
         public Cluster WaitForClusterCreation(Operation operation)
         {
             int activityId = (new Random()).Next();
