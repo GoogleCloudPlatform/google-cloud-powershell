@@ -20,6 +20,16 @@ using ComputeService = Google.Apis.Compute.v1.ComputeService;
 namespace Google.PowerShell.Container
 {
     /// <summary>
+    /// The status of the container operation.
+    /// </summary>
+    public enum ContainerOperationStatus
+    {
+        PENDING,
+        RUNNING,
+        DONE
+    }
+
+    /// <summary>
     /// <para type="synopsis">
     /// Gets Google Container Clusters.
     /// </para>
@@ -590,7 +600,7 @@ namespace Google.PowerShell.Container
     /// Creates a Google Container Cluster. If -Project and/or -Zone are not used, the cmdlet will use
     /// the default project and/or default zone. You can use New-GkeNodeConfig to create configuration
     /// for nodes in the cluster and pass it in with -NodeConfig or you can simply use parameters provided
-    /// in this cmdlet.
+    /// in this cmdlet. The default machine type used is "n1-standard-1".
     /// </para>
     /// <example>
     ///   <code>
@@ -692,17 +702,22 @@ namespace Google.PowerShell.Container
         [ValidateRange(0, int.MaxValue)]
         public override int? LocalSsdCount { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// The list of instance tags applied to each node in the cluster.
         /// Tags are used to identify valid sources or targets for network firewalls.
+        /// Each tag must complied with RFC1035.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
         public override string[] Tags { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// The Google Cloud Platform Service Account to be used by each node's VMs.
         /// Use New-GceServiceAccountConfig to create the service account and appropriate scopes.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
         public override Apis.Compute.v1.Data.ServiceAccount ServiceAccount { get; set; }
 
@@ -758,7 +773,7 @@ namespace Google.PowerShell.Container
         /// Enables Kubernetes alpha features on the cluster. This includes alpha API groups
         /// and features that may not be production ready in the kubernetes version of the master and nodes.
         /// The cluster has no SLA for uptime and master/node upgrades are disabled.
-        /// Alpha enabled clusters are AUTOMATICALLY DELETED thirday days after creation.
+        /// Alpha enabled clusters are AUTOMATICALLY DELETED thirty days after creation.
         /// </para>
         [Parameter(Mandatory = false)]
         public SwitchParameter EnableKubernetesAlpha { get; set; }
@@ -849,23 +864,27 @@ namespace Google.PowerShell.Container
         /// Wait for the cluster creation operation to complete.
         /// Use write progress to display the progress in the meantime.
         /// </summary>
-        public Cluster WaitForClusterCreation(Operation operation)
+        private Cluster WaitForClusterCreation(Operation operation)
         {
             int activityId = (new Random()).Next();
             string activity = $"Creating cluster '{ClusterName}' in zone '{Zone}' of project '{Project}'.";
             string status = "Creating cluster";
             int percentage = 0;
+            ContainerOperationStatus operationStatus = ContainerOperationStatus.RUNNING;
 
-            while (operation.Status != "DONE")
+            while (operationStatus != ContainerOperationStatus.DONE)
             {
                 Thread.Sleep(200);
                 var progressRecord = new ProgressRecord(activityId, activity, status);
+                // Since we don't know how long the operation will take, we will just make the progress
+                // bar loop through.
                 percentage = (percentage + 1) % 100;
                 progressRecord.PercentComplete = percentage;
                 WriteProgress(progressRecord);
                 ProjectsResource.ZonesResource.OperationsResource.GetRequest getRequest =
                     Service.Projects.Zones.Operations.Get(Project, Zone, operation.Name);
                 operation = getRequest.Execute();
+                Enum.TryParse(operation.Status, out operationStatus);
             }
 
             var progressCompleteRecord = new ProgressRecord(activityId, activity, status);
@@ -943,7 +962,8 @@ namespace Google.PowerShell.Container
         /// </summary>
         private void PopulateClusterNetwork(Cluster cluster)
         {
-            // It seems for this API, default works but not projects/us-central1-f/global/networks/default.
+            // It seems for this API, we have to specify the short name of the network and not the full name.
+            // For example "my-network" works but not projects/my-project/global/networks/my-network.
             if (Network != null && Network.Contains("networks/"))
             {
                 Network = GetUriPart("networks", Network);
