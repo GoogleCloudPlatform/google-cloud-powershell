@@ -222,6 +222,10 @@ Describe "Add-GkeCluster" {
     $r = Get-Random
 
     # Create the cluster in parallel to reduce wait time.
+    # Cluster 1, 2 and 3 creation will be started as separate jobs.
+    # This means that even if the time for creation is 6 minutes for each cluster,
+    # altogether, we just have to wait around 6 minutes for 3 of them to be created
+    # since they all start at the same time.
     $gcloudCmdletsPath = (Resolve-Path "$PSScriptRoot\..\GcloudCmdlets.ps1").Path
 
     # Cluster One creation.
