@@ -1,7 +1,14 @@
-﻿. $PSScriptRoot\..\GcloudCmdlets.ps1
+﻿#TODO(quoct): Replace gcloud command with PowerShell cmdlet once they are available.
+. $PSScriptRoot\..\GcloudCmdlets.ps1
 Install-GcloudCmdlets
 
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
+
+$script:clusterDeletionScriptBlock =
+{
+    param($clusterName)
+    gcloud container clusters delete $clusterName -q 2>$null
+}
 
 Describe "Get-GkeCluster" {
     $r = Get-Random
@@ -10,10 +17,25 @@ Describe "Get-GkeCluster" {
     $script:clusterThreeName = "get-gkecluster-three-$r"
     $additionalZone = "us-central1-a"
 
-    gcloud container clusters create $clusterOneName --num-nodes=1 2>$null
-    gcloud container clusters create $clusterTwoName --num-nodes=1 2>$null
-    gcloud container clusters create $clusterThreeName --zone $zone `
-            --additional-zones $additionalZone --num-nodes=1 2>$null
+    # Create Cluster in Parallel to save time.
+    $clusterCreationScriptBlock =
+    {
+        param($clusterName, $clusterZone, $clusterAdditionalZone)
+        if ($null -eq $clusterZone -and $null -eq $clusterAdditionalZone) {
+            gcloud container clusters create $clusterName --num-nodes=1 2>$null
+        }
+        else {
+            gcloud container clusters create $clusterName --zone $clusterZone `
+                    --additional-zones $clusterAdditionalZone --num-nodes=1 2>$null
+        }
+    }
+
+    $jobOne = Start-Job -ScriptBlock $clusterCreationScriptBlock -ArgumentList $clusterOneName
+    $jobTwo = Start-Job -ScriptBlock $clusterCreationScriptBlock -ArgumentList $clusterTwoName
+    $jobThree = Start-Job -ScriptBlock $clusterCreationScriptBlock `
+                          -ArgumentList @($clusterThreeName, $zone, $additionalZone)
+
+    Wait-Job $jobOne, $jobTwo, $jobThree | Remove-Job
 
     It "should work" {
         $clusters = Get-GkeCluster
@@ -73,9 +95,10 @@ Describe "Get-GkeCluster" {
     }
 
     AfterAll {
-        gcloud container clusters delete $clusterOneName -q 2>$null
-        gcloud container clusters delete $clusterTwoName -q 2>$null
-        gcloud container clusters delete $clusterThreeName -q 2>$null
+        $jobOne = Start-Job -ScriptBlock $clusterDeletionScriptBlock -ArgumentList $clusterOneName
+        $jobTwo = Start-Job -ScriptBlock $clusterDeletionScriptBlock -ArgumentList $clusterTwoName
+        $jobThree = Start-Job -ScriptBlock $clusterDeletionScriptBlock -ArgumentList $clusterThreeName
+        Wait-Job $jobOne, $jobTwo, $jobThree | Remove-Job
     }
 }
 
@@ -162,10 +185,174 @@ Describe "New-GkeNodeConfig" {
     It "should raise an error for wrong DiskSize" {
         { New-GkeNodeConfig -DiskSizeGb 3 } | Should Throw "less than the minimum allowed range of 10"
     }
+}
+
+# Given a network name, create a network name and extract
+# out a subnetwork that corresponds to region $region.
+function New-NetworkAndSubnetwork($networkName, $region) {
+    gcloud compute networks create $networkName 2>$null | Out-Null
+    $network = Get-GceNetwork $networkName
+    $subnet = $network.Subnetworks | Where-Object {$_.Contains($region)}
+    $subnet -match "subnetworks/([^/]*)" | Out-Null
+    return $Matches[1]
+}
+
+# Job for creating a cluster.
+$script:clusterCreationWithoutUsingNodeConfigScriptBlock = {
+    param($cmdletPath, $addGkeParameters)
+
+    # Create a credential if that is provided.
+    if ($null -ne $addGkeParameters["clusterUserName"]-and
+        $null -ne $addGkeParameters["clusterPassword"]) {
+        $password = ConvertTo-SecureString $addGkeParameters["clusterPassword"] -AsPlainText -Force
+        $credential = New-Object System.Management.Automation.PSCredential `
+                                ($addGkeParameters["clusterUserName"], $password)
+        $addGkeParameters["MasterCredential"] = $credential
+        $addGkeParameters.Remove("clusterUserName")
+        $addGkeParameters.Remove("clusterPassword")
+    }
+
+    . $cmdletPath
+    Install-GCloudCmdlets | Out-Null
+    $PSBoundParameters.Remove("cmdletPath")
+    Add-GkeCluster @addGkeParameters
+}
+
+Describe "Add-GkeCluster" {
+    $r = Get-Random
+
+    # Create the cluster in parallel to reduce wait time.
+    # Cluster 1, 2 and 3 creation will be started as separate jobs.
+    # This means that even if the time for creation is 6 minutes for each cluster,
+    # altogether, we just have to wait around 6 minutes for 3 of them to be created
+    # since they all start at the same time.
+    $gcloudCmdletsPath = (Resolve-Path "$PSScriptRoot\..\GcloudCmdlets.ps1").Path
+
+    # Cluster One creation.
+    $script:clusterOneName = "gcp-new-gkecluster-$r"
+    $clusterOneDescription = "My cluster"
+    $clusterOneParameter = @{"clusterName" = $clusterOneName;
+                             "description" = $clusterOneDescription;
+                             "DisableLoggingService" = $true }
+
+    # This cluster has name clusterOneName, description clusterOneDescription and no logging service.
+    $clusterOneJob = Start-Job -ScriptBlock $clusterCreationWithoutUsingNodeConfigScriptBlock `
+                               -ArgumentList @($gcloudCmdletsPath, $clusterOneParameter)
+
+    # Cluster Two creation.
+
+    # Create a network and extract out subnet that corresponds to region "us-central1".
+    $script:networkName = "test-network-$r"
+    $region = "us-central1"
+    $script:subnetName = New-NetworkAndSubnetwork $networkName $region
+
+    $script:clusterTwoName = "gcp-new-gkecluster-2-$r"
+    $clusterTwoAdditionalZone = "us-central1-c"
+    $clusterTwoMachineType = "n1-standard-4"
+    $clusterTwoParameter = @{"clusterName" = $clusterTwoName;
+                             "network" = $networkName;
+                             "subnetwork" = $subnetName;
+                             "additionalZone" = $clusterTwoAdditionalZone;
+                             "initialNodeCount" = 2;
+                             "machineType" = $clusterTwoMachineType }
+
+    $clusterTwoJob = Start-Job -ScriptBlock $clusterCreationWithoutUsingNodeConfigScriptBlock `
+                               -ArgumentList @($gcloudCmdletsPath, $clusterTwoParameter)
+
+    # Cluster Three creation.
+    $script:clusterThreeName = "gcp-new-gkecluster-3-$r"
+    $clusterThreeZone = "europe-west1-b"
+    $clusterThreeUsername = Get-Random
+    $clusterThreePassword = Get-Random
+    $clusterThreeParameter = @{"clusterName" = $clusterThreeName;
+                               "zone" = $clusterThreeZone;
+                               "clusterUsername" = $clusterThreeUsername;
+                               "clusterPassword" = $clusterThreePassword }
+
+    $clusterThreeJob = Start-Job -ScriptBlock $clusterCreationWithoutUsingNodeConfigScriptBlock `
+                               -ArgumentList @($gcloudCmdletsPath, $clusterThreeParameter)
+
+    # For cluster with node config, the script block is having trouble converting $nodeConfig object
+    # so we will just create it here (but the other clusters are being created in the background so that's ok.
+    $clusterFourName = "gcp-new-gkecluster-4-$r"
+    $clusterFourZone = "us-west1-a"
+    $clusterFourMachineType = "n1-highcpu-4"
+    $clusterFourServiceAccount = New-GceServiceAccountConfig -BigQuery
+    $clusterFourConfig = New-GkeNodeConfig -DiskSizeGb 20 `
+                                            -LocalSsdCount 3 `
+                                            -Label @{"Release" = "stable"} `
+                                            -ServiceAccount $clusterFourServiceAccount `
+                                            -MachineType $clusterFourMachineType
+
+    Add-GkeCluster -ClusterName $clusterFourName `
+                   -Zone $clusterFourZone `
+                   -NodeConfig $clusterFourConfig `
+                   -DisableMonitoringService
+
+    It "should work" {
+        Wait-Job $clusterOneJob | Remove-Job
+        $cluster = Get-GkeCluster -ClusterName $clusterOneName
+
+        $cluster.Status | Should Be RUNNING
+        $cluster.LoggingService | Should Be none
+        $cluster.NodeConfig.ImageType | Should Be gci
+        $cluster.Description | Should Be $clusterOneDescription
+        $cluster.Zone | Should Be $zone
+    }
+
+    It "should work with -Network, -Subnetwork and -AdditionalZone" {
+        Wait-Job $clusterTwoJob | Remove-Job
+        $cluster = Get-GkeCluster -ClusterName $clusterTwoName
+
+        $cluster.Status | Should Be RUNNING
+        $cluster.NodeConfig.MachineType | Should BeExactly $clusterTwoMachineType
+        $cluster.Zone | Should Be $zone
+        $cluster.Locations.Count | Should Be 2
+        $cluster.Locations -Contains $zone | Should Be $true
+        $cluster.Locations -Contains $clusterTwoAdditionalZone | Should Be $true
+        $cluster.Network | Should Be $networkName
+        $cluster.Subnetwork | Should Be $subnetName
+        $cluster.CurrentNodeCount -ge 2 | Should Be $true
+    }
+
+    It "should work with -MasterCredential" {
+        Wait-Job $clusterThreeJob | Remove-Job
+        $cluster = Get-GkeCluster -ClusterName $clusterThreeName -Zone $clusterThreeZone
+
+        $cluster.Status | Should Be RUNNING
+        $cluster.Zone | Should Be $clusterThreeZone
+        $cluster.MasterAuth.Username | Should BeExactly $clusterThreeUsername
+        $cluster.MasterAuth.Password | Should BeExactly $clusterThreePassword
+    }
+
+    It "should work with NodeConfig" {
+        $cluster = Get-GkeCluster -ClusterName $clusterFourName -Zone $clusterFourZone
+
+        $cluster.Status | Should Be RUNNING
+        $cluster.MonitoringService | Should Be none
+        $cluster.NodeConfig.MachineType | Should Be $clusterFourMachineType
+        $cluster.NodeConfig.Labels["Release"] | Should BeExactly "stable"
+        $cluster.NodeConfig.LocalSsdCount | Should Be 3
+        $cluster.NodeConfig.DiskSizeGb | Should Be 20
+        $cluster.Zone | Should Be $clusterFourZone
+        $cluster.NodeConfig.OauthScopes -contains "https://www.googleapis.com/auth/bigquery" |
+            Should Be $true
+    }
+
+    It "should throw error for trying to create existing cluster" {
+        { Add-GkeCluster -ClusterName $clusterOneName -ErrorAction Stop } |
+            Should Throw "already exists"
+    }
 
     AfterAll {
-        gcloud container clusters delete $clusterOneName -q 2>$null
-        gcloud container clusters delete $clusterTwoName -q 2>$null
-        gcloud container clusters delete $clusterThreeName -q 2>$null
+        $jobOne = Start-Job -ScriptBlock $clusterDeletionScriptBlock -ArgumentList $clusterOneName
+        $jobTwo = Start-Job -ScriptBlock $clusterDeletionScriptBlock -ArgumentList $clusterTwoName
+        $jobThree = Start-Job -ScriptBlock $clusterDeletionScriptBlock -ArgumentList $clusterThreeName
+        $jobFour = Start-Job -ScriptBlock $clusterDeletionScriptBlock -ArgumentList $clusterFourName
+        # Use receive job so we can see the output if there is any error.
+        Wait-Job $jobOne, $jobTwo, $jobThree, $jobFour | Receive-Job
+        Remove-Job $jobOne, $jobTwo, $jobThree, $jobFour
+        # The cluster has to be deleted before we can delete the network.
+        gcloud compute networks delete $networkName 2>$null
     }
 }
