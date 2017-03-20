@@ -429,7 +429,7 @@ Describe "Remove-GkeCluster" {
         . $cmdletPath
         Install-GCloudCmdlets | Out-Null
         Remove-GkeCluster $clusterName -Zone $clusterZone
-    } -ArgumentList @($gcloudCmdletsPath, $clusterThreeName, $clusterFourZone)
+    } -ArgumentList @($gcloudCmdletsPath, $clusterFourName, $clusterFourZone)
 
     It "should not remove cluster if -WhatIf is used" {
         Remove-GkeCluster -Name $clusterOneName -WhatIf
