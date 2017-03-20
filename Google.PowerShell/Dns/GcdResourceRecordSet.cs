@@ -71,31 +71,52 @@ namespace Google.PowerShell.Dns
         protected override void ProcessRecord()
         {
             base.ProcessRecord();
+            WriteObject(GetResourceRecordSet(Project, Zone, Filter), true);
+        }
 
+        /// <summary>
+        /// Returns all resource record sets in zone 'zone' in project 'project'.
+        /// Apply filters if neccessary.
+        /// </summary>
+        private IEnumerable<ResourceRecordSet> GetResourceRecordSet(string project, string zone, string[] filters)
+        {
             ResourceRecordSetsResource.ListRequest rrsetListRequest =
-                Service.ResourceRecordSets.List(Project, Zone);
-            ResourceRecordSetsListResponse rrsetListResponse = rrsetListRequest.Execute();
-            IList<ResourceRecordSet> rrsetList = rrsetListResponse.Rrsets;
-
-            if (!(Filter == null || Filter.Length == 0))
+                Service.ResourceRecordSets.List(project, zone);
+            do
             {
-                HashSet<string> TypeFilterHash = new HashSet<string>(Filter);
-                HashSet<ResourceRecordSet> rrsetHash = new HashSet<ResourceRecordSet>(rrsetList);
-
-                foreach (ResourceRecordSet rrset in rrsetList)
+                ResourceRecordSetsListResponse rrsetListResponse = rrsetListRequest.Execute();
+                IList<ResourceRecordSet> rrsetList = rrsetListResponse.Rrsets;
+                if (rrsetList != null)
                 {
-                    if (!TypeFilterHash.Contains(rrset.Type))
+                    if (filters != null && filters.Length != 0)
                     {
-                        rrsetHash.Remove(rrset);
+                        HashSet<string> TypeFilterHash = new HashSet<string>(filters);
+                        HashSet<ResourceRecordSet> rrsetHash = new HashSet<ResourceRecordSet>(rrsetList);
+
+                        foreach (ResourceRecordSet rrset in rrsetList)
+                        {
+                            if (!TypeFilterHash.Contains(rrset.Type))
+                            {
+                                rrsetHash.Remove(rrset);
+                            }
+                        }
+                        foreach (ResourceRecordSet record in rrsetHash)
+                        {
+                            yield return record;
+                        }
+                    }
+                    else
+                    {
+                        foreach (ResourceRecordSet record in rrsetList)
+                        {
+                            yield return record;
+                        }
                     }
                 }
 
-                WriteObject(rrsetHash, true);
+                rrsetListRequest.PageToken = rrsetListResponse.NextPageToken;
             }
-            else
-            {
-                WriteObject(rrsetList, true);
-            }
+            while (rrsetListRequest.PageToken != null);
         }
     }
 

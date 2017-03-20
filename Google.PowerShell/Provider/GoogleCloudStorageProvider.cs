@@ -1079,7 +1079,9 @@ namespace Google.PowerShell.CloudStorage
                     request.PageToken = buckets.NextPageToken;
                 } while (request.PageToken != null);
             }
-            catch (GoogleApiException e) when (e.HttpStatusCode == HttpStatusCode.Forbidden) { }
+            // Swallow any GoogleApiException when listing a bucket for projects, otherwise, if user has an
+            // erroneous project, this will stop the execution of Get-ChildItem for other projects.
+            catch (GoogleApiException) { }
         }
 
         private static IEnumerable<Project> ListAllProjects()
