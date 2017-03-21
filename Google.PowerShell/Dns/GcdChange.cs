@@ -78,11 +78,30 @@ namespace Google.PowerShell.Dns
             }
             else
             {
-                ChangesResource.ListRequest changeListRequest = Service.Changes.List(Project, Zone);
+                WriteObject(GetGcdChange(Project, Zone), true);
+            }
+        }
+
+        /// <summary>
+        /// Returns all GCD changes within a zone of a project.
+        /// </summary>
+        private IEnumerable<Change> GetGcdChange(string project, string zone)
+        {
+            ChangesResource.ListRequest changeListRequest = Service.Changes.List(project, zone);
+            do
+            {
                 ChangesListResponse changeListResponse = changeListRequest.Execute();
                 IList<Change> changeList = changeListResponse.Changes;
-                WriteObject(changeList, true);
+                if (changeListResponse.Changes != null)
+                {
+                    foreach (Change change in changeListResponse.Changes)
+                    {
+                        yield return change;
+                    }
+                }
+                changeListRequest.PageToken = changeListResponse.NextPageToken;
             }
+            while (changeListRequest.PageToken != null);
         }
     }
 
