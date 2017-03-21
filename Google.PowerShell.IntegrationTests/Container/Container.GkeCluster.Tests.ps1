@@ -6,9 +6,13 @@ $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 $script:clusterDeletionScriptBlock =
 {
-    param($clusterName)
-    gcloud container clusters delete $clusterName -q 2>$null
+    param($cmdletPath, $clusterName, $clusterZone)
+    . $cmdletPath
+    Install-GCloudCmdlets | Out-Null
+    Remove-GkeCluster $clusterName -Zone $clusterZone
 }
+
+$script:gcloudCmdletsPath = (Resolve-Path "$PSScriptRoot\..\GcloudCmdlets.ps1").Path
 
 Describe "Get-GkeCluster" {
     $r = Get-Random
@@ -95,9 +99,12 @@ Describe "Get-GkeCluster" {
     }
 
     AfterAll {
-        $jobOne = Start-Job -ScriptBlock $clusterDeletionScriptBlock -ArgumentList $clusterOneName
-        $jobTwo = Start-Job -ScriptBlock $clusterDeletionScriptBlock -ArgumentList $clusterTwoName
-        $jobThree = Start-Job -ScriptBlock $clusterDeletionScriptBlock -ArgumentList $clusterThreeName
+        $jobOne = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
+                            -ArgumentList @($gcloudCmdletsPath, $clusterOneName, $zone)
+        $jobTwo = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
+                            -ArgumentList @($gcloudCmdletsPath, $clusterTwoName, $zone)
+        $jobThree = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
+                              -ArgumentList @($gcloudCmdletsPath, $clusterThreeName, $zone)
         Wait-Job $jobOne, $jobTwo, $jobThree | Remove-Job
     }
 }
@@ -226,7 +233,6 @@ Describe "Add-GkeCluster" {
     # This means that even if the time for creation is 6 minutes for each cluster,
     # altogether, we just have to wait around 6 minutes for 3 of them to be created
     # since they all start at the same time.
-    $gcloudCmdletsPath = (Resolve-Path "$PSScriptRoot\..\GcloudCmdlets.ps1").Path
 
     # Cluster One creation.
     $script:clusterOneName = "gcp-new-gkecluster-$r"
@@ -261,7 +267,7 @@ Describe "Add-GkeCluster" {
 
     # Cluster Three creation.
     $script:clusterThreeName = "gcp-new-gkecluster-3-$r"
-    $clusterThreeZone = "europe-west1-b"
+    $script:clusterThreeZone = "europe-west1-b"
     $clusterThreeUsername = Get-Random
     $clusterThreePassword = Get-Random
     $clusterThreeParameter = @{"clusterName" = $clusterThreeName;
@@ -274,8 +280,8 @@ Describe "Add-GkeCluster" {
 
     # For cluster with node config, the script block is having trouble converting $nodeConfig object
     # so we will just create it here (but the other clusters are being created in the background so that's ok.
-    $clusterFourName = "gcp-new-gkecluster-4-$r"
-    $clusterFourZone = "us-west1-a"
+    $script:clusterFourName = "gcp-new-gkecluster-4-$r"
+    $script:clusterFourZone = "us-west1-a"
     $clusterFourMachineType = "n1-highcpu-4"
     $clusterFourServiceAccount = New-GceServiceAccountConfig -BigQuery
     $clusterFourConfig = New-GkeNodeConfig -DiskSizeGb 20 `
@@ -345,14 +351,122 @@ Describe "Add-GkeCluster" {
     }
 
     AfterAll {
-        $jobOne = Start-Job -ScriptBlock $clusterDeletionScriptBlock -ArgumentList $clusterOneName
-        $jobTwo = Start-Job -ScriptBlock $clusterDeletionScriptBlock -ArgumentList $clusterTwoName
-        $jobThree = Start-Job -ScriptBlock $clusterDeletionScriptBlock -ArgumentList $clusterThreeName
-        $jobFour = Start-Job -ScriptBlock $clusterDeletionScriptBlock -ArgumentList $clusterFourName
+        $jobOne = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
+                            -ArgumentList @($gcloudCmdletsPath, $clusterOneName, $zone)
+        $jobTwo = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
+                            -ArgumentList @($gcloudCmdletsPath, $clusterTwoName, $zone)
+        $jobThree = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
+                              -ArgumentList @($gcloudCmdletsPath, $clusterThreeName, $clusterThreeZone)
+        $jobFour = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
+                             -ArgumentList @($gcloudCmdletsPath, $clusterFourName, $clusterFourZone)
         # Use receive job so we can see the output if there is any error.
         Wait-Job $jobOne, $jobTwo, $jobThree, $jobFour | Receive-Job
         Remove-Job $jobOne, $jobTwo, $jobThree, $jobFour
         # The cluster has to be deleted before we can delete the network.
         gcloud compute networks delete $networkName 2>$null
+    }
+}
+
+Describe "Remove-GkeCluster" {
+    # Check that a cluster is running.
+    function Check-Cluster($clusterName, $clusterZone) {
+        $cluster = Get-GkeCluster -ClusterName $clusterName -Zone $clusterZone
+        return $cluster.Status -eq "Running"
+    }
+
+    $r = Get-Random
+
+    # Create the cluster in parallel.
+    # Cluster One creation.
+    $clusterOneName = "gcp-remove-gkecluster-$r"
+
+    $clusterTwoName = "gcp-remove-gkecluster-2-$r"
+    $clusterTwoZone = "us-west1-b"
+
+    $clusterThreeName = "gcp-remove-gkecluster-3-$r"
+    $clusterThreeZone = "europe-west1-c"
+
+    $clusterFourName = "gcp-remove-gkecluster-4-$r"
+    $clusterFourZone = "asia-east1-a"
+
+    $clusterOneParameter = @{"clusterName" = $clusterOneName}
+    $clusterTwoParameter = @{"clusterName" = $clusterTwoName; "zone" = $clusterTwoZone}
+    $clusterThreeParameter = @{"clusterName" = $clusterThreeName; "zone" = $clusterThreeZone}
+    $clusterFourParameter = @{"clusterName" = $clusterFourName; "zone" = $clusterFourZone}
+
+    # Start creating the cluster.
+    $clusterOneJob = Start-Job -ScriptBlock $clusterCreationWithoutUsingNodeConfigScriptBlock `
+                               -ArgumentList @($gcloudCmdletsPath, $clusterOneParameter)
+    $clusterTwoJob = Start-Job -ScriptBlock $clusterCreationWithoutUsingNodeConfigScriptBlock `
+                               -ArgumentList @($gcloudCmdletsPath, $clusterTwoParameter)
+    $clusterThreeJob = Start-Job -ScriptBlock $clusterCreationWithoutUsingNodeConfigScriptBlock `
+                               -ArgumentList @($gcloudCmdletsPath, $clusterThreeParameter)
+    $clusterFourJob = Start-Job -ScriptBlock $clusterCreationWithoutUsingNodeConfigScriptBlock `
+                               -ArgumentList @($gcloudCmdletsPath, $clusterFourParameter)
+
+    Wait-Job $clusterOneJob, $clusterTwoJob, $clusterThreeJob, $clusterFourJob | Remove-Job
+
+    # Check that all the clusters are really created.
+    Check-Cluster $clusterOneName $zone
+    Check-Cluster $clusterTwoName $clusterTwoZone
+    Check-Cluster $clusterThreeName $clusterThreeZone
+    Check-Cluster $clusterFourName $clusterFourZone
+
+    # Running jobs to remove these 3 clusters in parallel to minimize test run time.
+    $removeClusterByPipelineJob = Start-Job -ScriptBlock {
+        param($cmdletPath, $clusterName, $clusterZone)
+        # For this cluster, we remove by pipeline.
+        . $cmdletPath
+        Install-GCloudCmdlets | Out-Null
+        Get-GkeCluster -ClusterName $clusterName -Zone $clusterZone | Remove-GkeCluster
+    } -ArgumentList @($gcloudCmdletsPath, $clusterTwoName, $clusterTwoZone)
+
+    $removeClusterByObjectJob = Start-Job -ScriptBlock {
+        param($cmdletPath, $clusterName, $clusterZone)
+        # For this cluster, we remove by object.
+        . $cmdletPath
+        Install-GCloudCmdlets | Out-Null
+        $cluster = Get-GkeCluster -ClusterName $clusterName -Zone $clusterZone
+        Remove-GkeCluster $cluster
+    } -ArgumentList @($gcloudCmdletsPath, $clusterThreeName, $clusterThreeZone)
+
+    $removeClusterWithZoneJob = Start-Job -ScriptBlock {
+        param($cmdletPath, $clusterName, $clusterZone)
+        # For this cluster, we used -Zone in the removal.
+        . $cmdletPath
+        Install-GCloudCmdlets | Out-Null
+        Remove-GkeCluster $clusterName -Zone $clusterZone
+    } -ArgumentList @($gcloudCmdletsPath, $clusterFourName, $clusterFourZone)
+
+    It "should not remove cluster if -WhatIf is used" {
+        Remove-GkeCluster -Name $clusterOneName -WhatIf
+        Check-Cluster $clusterOneName $zone | Should Be $true
+    }
+
+    It "should remove cluster by name" {
+        Remove-GkeCluster -Name $clusterOneName
+        { Get-GkeCluster $clusterOneName -ErrorAction Stop } | Should Throw "cannot be found"
+    }
+
+    It "should remove cluster by pipeline" {
+        Wait-Job $removeClusterByPipelineJob | Remove-Job
+        { Get-GkeCluster $clusterTwoName -Zone $clusterTwoZone -ErrorAction Stop } |
+            Should Throw "cannot be found"
+    }
+
+    It "should remove cluster by cluster object" {
+        Wait-Job $removeClusterByObjectJob | Remove-Job
+        { Get-GkeCluster $clusterThreeName -Zone $clusterThreeZone -ErrorAction Stop } |
+            Should Throw "cannot be found"
+    }
+
+    It "should remove cluster by -Zone" {
+        Wait-Job $removeClusterWithZoneJob | Remove-Job
+        { Get-GkeCluster $clusterFourName -Zone $clusterFourZone -ErrorAction Stop } |
+            Should Throw "cannot be found"
+    }
+
+    It "should throw error for non-existent cluster" {
+        { Remove-GkeCluster "non-existent-cluster-in-project" -ErrorAction Stop } | Should Throw "cannot be found"
     }
 }

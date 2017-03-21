@@ -20,16 +20,6 @@ using ComputeService = Google.Apis.Compute.v1.ComputeService;
 namespace Google.PowerShell.Container
 {
     /// <summary>
-    /// The status of the container operation.
-    /// </summary>
-    public enum ContainerOperationStatus
-    {
-        PENDING,
-        RUNNING,
-        DONE
-    }
-
-    /// <summary>
     /// <para type="synopsis">
     /// Gets Google Container Clusters.
     /// </para>
@@ -610,7 +600,8 @@ namespace Google.PowerShell.Container
     ///   </code>
     ///   <para>
     ///   Creates a cluster named "my-cluster" in the default zone of the default project using config
-    ///   $nodeConfig and network "my-network".</para>
+    ///   $nodeConfig and network "my-network".
+    ///   </para>
     /// </example>
     /// <example>
     ///   <code>
@@ -866,32 +857,11 @@ namespace Google.PowerShell.Container
         /// </summary>
         private Cluster WaitForClusterCreation(Operation operation)
         {
-            int activityId = (new Random()).Next();
             string activity = $"Creating cluster '{ClusterName}' in zone '{Zone}' of project '{Project}'.";
             string status = "Creating cluster";
-            int percentage = 0;
-            ContainerOperationStatus operationStatus = ContainerOperationStatus.RUNNING;
+            WaitForClusterOperation(operation, Project, Zone, activity, status);
 
-            while (operationStatus != ContainerOperationStatus.DONE)
-            {
-                Thread.Sleep(200);
-                var progressRecord = new ProgressRecord(activityId, activity, status);
-                // Since we don't know how long the operation will take, we will just make the progress
-                // bar loop through.
-                percentage = (percentage + 1) % 100;
-                progressRecord.PercentComplete = percentage;
-                WriteProgress(progressRecord);
-                ProjectsResource.ZonesResource.OperationsResource.GetRequest getRequest =
-                    Service.Projects.Zones.Operations.Get(Project, Zone, operation.Name);
-                operation = getRequest.Execute();
-                Enum.TryParse(operation.Status, out operationStatus);
-            }
-
-            var progressCompleteRecord = new ProgressRecord(activityId, activity, status);
-            progressCompleteRecord.RecordType = ProgressRecordType.Completed;
-            progressCompleteRecord.PercentComplete = 100;
-            WriteProgress(progressCompleteRecord);
-
+            // Returns the cluster after it is created.
             ProjectsResource.ZonesResource.ClustersResource.GetRequest getClusterRequest =
                 Service.Projects.Zones.Clusters.Get(Project, Zone, ClusterName);
             return getClusterRequest.Execute();
@@ -976,6 +946,131 @@ namespace Google.PowerShell.Container
             cluster.Network = Network;
             cluster.Subnetwork = Subnetwork;
             cluster.ClusterIpv4Cidr = ClusterIpv4AddressRange;
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Removes a Google Container Cluster.
+    /// </para>
+    /// <para type="description">
+    /// Removes a Google Container Cluster. You can either pass in a cluster object (from Get-GkeCluster cmdlet)
+    /// or use -Cluster, -Project and -Zone parameters (if -Project and/or -Zone parameters are not used,
+    /// the cmdlet will use the default project and/or default zone).
+    /// </para>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Remove-GkeCluster -ClusterName "my-cluster" `
+    ///                             -Zone "us-west1-b"
+    ///   </code>
+    ///   <para>Removes the cluster "my-cluster" in the zone "us-west1-b" of the default project.</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> $cluster = Get-GkeCluster -ClusterName "my-cluster"
+    ///   PS C:\> Remove-GkeCluster -InputObject $cluster
+    ///   </code>
+    ///   <para>
+    ///   Removes the cluster "my-cluster" by using the cluster object returned from Get-GkeCluster.
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Get-GkeCluster -Zone "us-west1-b" | Remove-GkeCluster
+    ///   </code>
+    ///   <para>
+    ///   Removes all clusters in zone "us-west1-b" of the default project by pipelining.
+    ///   </para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/container-engine/docs/clusters/)">
+    /// [Container Clusters]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Remove, "GkeCluster", SupportsShouldProcess = true)]
+    public class RemoveGkeCluster : GkeCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string ByName = "ByName";
+            public const string ByObject = "ByObject";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// The project that the container clusters belong to.
+        /// This parameter defaults to the project in the Cloud SDK config.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByName)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public override string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The zone that the container clusters belong to.
+        /// This parameter defaults to the project in the Cloud SDK config.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByName)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
+        public string Zone { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the container cluster to be removed.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByName)]
+        [Alias("Name")]
+        public string ClusterName { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The cluster object to be removed.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByObject,
+            ValueFromPipeline = true)]
+        public Cluster InputObject { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            if (ParameterSetName == ParameterSetNames.ByObject)
+            {
+                Zone = InputObject.Zone;
+                ClusterName = InputObject.Name;
+                Project = GetProjectNameFromUri(InputObject.SelfLink);
+            }
+
+            ProjectsResource.ZonesResource.ClustersResource.DeleteRequest getRequest =
+                Service.Projects.Zones.Clusters.Delete(Project, Zone, ClusterName);
+            if (ShouldProcess($"Cluster '{ClusterName}' in zone '{Zone}' of project '{Project}'.",
+                "Removing GKE Cluster"))
+            {
+                try
+                {
+                    Operation deleteOperation = getRequest.Execute();
+                    WaitForClusterDeletion(deleteOperation);
+                }
+                catch (GoogleApiException apiEx) when (apiEx.HttpStatusCode == HttpStatusCode.NotFound)
+                {
+                    WriteResourceMissingError(
+                        $"Cluster '{ClusterName}' in zone '{Zone}' of project '{Project}' cannot be found.",
+                        "ClusterNotFound",
+                        ClusterName);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Wait for the cluster deletion operation to complete.
+        /// Use write progress to display the progress in the meantime.
+        /// </summary>
+        private void WaitForClusterDeletion(Operation operation)
+        {
+            string activity = $"Deleting cluster '{ClusterName}' in zone '{Zone}' of project '{Project}'.";
+            string status = "Deleting cluster";
+            WaitForClusterOperation(operation, Project, Zone, activity, status);
         }
     }
 }
