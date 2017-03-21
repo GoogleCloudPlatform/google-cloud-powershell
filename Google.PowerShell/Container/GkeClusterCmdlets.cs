@@ -12,9 +12,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Management.Automation;
 using System.Net;
-using System.Security;
 using System.Text.RegularExpressions;
-using System.Threading;
 using ComputeService = Google.Apis.Compute.v1.ComputeService;
 
 namespace Google.PowerShell.Container
@@ -131,7 +129,7 @@ namespace Google.PowerShell.Container
                 catch (GoogleApiException apiEx) when (apiEx.HttpStatusCode == HttpStatusCode.NotFound)
                 {
                     WriteResourceMissingError(
-                        exceptionMessage: $"Cluster '{cluster}' cannot be found in zone '{zone}' of project '{Project}'",
+                        exceptionMessage: $"Cluster '{cluster}' cannot be found in zone '{zone}' of project '{Project}'.",
                         errorId: "ClusterNotFound",
                         targetObject: cluster);
                 }
@@ -554,7 +552,7 @@ namespace Google.PowerShell.Container
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.New, "GkeNodeConfig")]
-    public class NewGkeNodeConfig : GkeNodeConfigCmdlet
+    public class NewGkeNodeConfigCmdlet : GkeNodeConfigCmdlet
     {
         protected override void PopulateDynamicParameter(string project, string zone,
             RuntimeDefinedParameterDictionary dynamicParamDict)
@@ -644,7 +642,7 @@ namespace Google.PowerShell.Container
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GkeCluster")]
-    public class AddGkeCluster : GkeNodeConfigCmdlet
+    public class AddGkeClusterCmdlet : GkeNodeConfigCmdlet
     {
         private class ParameterSetNames
         {
@@ -987,7 +985,7 @@ namespace Google.PowerShell.Container
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GkeCluster", SupportsShouldProcess = true)]
-    public class RemoveGkeCluster : GkeCmdlet
+    public class RemoveGkeClusterCmdlet : GkeCmdlet
     {
         private class ParameterSetNames
         {
