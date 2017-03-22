@@ -42,6 +42,7 @@ namespace Google.PowerShell.BigQuery
     /// column are Name and Type. Possible values for Type include STRING, BYTES, INTEGER, 
     /// FLOAT, BOOLEAN, TIMESTAMP, DATE, TIME, DATETIME, and RECORD (where RECORD indicates 
     /// that the field contains a nested schema). Case is ignored for both Type and Mode. 
+    /// Possible values for the Mode field include REQUIRED, REPEATED, and the default NULLABLE. 
     /// This command forwards all TableFieldSchemas that it is passed, and will add a new 
     /// TableFieldSchema object to the pipeline.
     /// </para>
@@ -246,16 +247,16 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <example>
     ///   <code>
-    /// PS C:\> 
+    /// PS C:\> Write-Host "Halp  - Put Text Here"
     ///   </code>
     ///   <para></para>
     /// </example> 
-    /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/tables)">
-    /// [BigQuery Tables]
+    /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/tabledata)">
+    /// [BigQuery Tabledata]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Set, "BqTabledata")]
-    public class SetBqTabledata : BqCmdlet
+    [Cmdlet(VerbsCommon.Add, "BqTabledata")]
+    public class AddBqTabledata : BqCmdlet
     {
         /// <summary>
         /// Data format of the file being passed in.
@@ -359,7 +360,6 @@ namespace Google.PowerShell.BigQuery
 
         protected override void ProcessRecord()
         {
-            // Get file input Stream and BQ Service.
             Stream fileInput;
             try
             {
@@ -375,6 +375,7 @@ namespace Google.PowerShell.BigQuery
             var projectReference = new ProjectReference();
             projectReference.ProjectId = InputObject.ProjectId;
             var Client = new BigQueryClientImpl(projectReference, Service);
+            BigQueryJob bqj = null;
 
             try
             {
@@ -385,14 +386,14 @@ namespace Google.PowerShell.BigQuery
                         AvroOptions.WriteDisposition = WriteMode;
                         AvroOptions.MaxBadRecords = MaxBadRecords;
                         AvroOptions.AllowUnknownFields = AllowUnknownFields;
-                        Client.UploadAvro(InputObject, null, fileInput, AvroOptions);
+                        bqj = Client.UploadAvro(InputObject, null, fileInput, AvroOptions);
                         break;
                     case DataFormats.JSON:
                         UploadJsonOptions JsonOptions = new UploadJsonOptions();
                         JsonOptions.WriteDisposition = WriteMode;
                         JsonOptions.MaxBadRecords = MaxBadRecords;
                         JsonOptions.AllowUnknownFields = AllowUnknownFields;
-                        Client.UploadJson(InputObject, null, fileInput, JsonOptions);
+                        bqj = Client.UploadJson(InputObject, null, fileInput, JsonOptions);
                         break;
                     case DataFormats.CSV:
                         UploadCsvOptions CsvOptions = new UploadCsvOptions();
@@ -404,11 +405,13 @@ namespace Google.PowerShell.BigQuery
                         CsvOptions.FieldDelimiter = FieldDelimiter;
                         CsvOptions.Quote = Quote;
                         CsvOptions.SkipLeadingRows = SkipLeadingRows;
-                        Client.UploadCsv(InputObject, null, fileInput, CsvOptions);
+                        bqj = Client.UploadCsv(InputObject, null, fileInput, CsvOptions);
                         break;
                     default:
                         throw UnknownParameterSetException;
                 }
+
+                bqj.PollUntilCompleted().ThrowOnAnyError();
             }
             catch (Exception ex)
             {
