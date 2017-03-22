@@ -457,10 +457,10 @@ namespace Google.PowerShell.Container
 
             if (InstanceMetadata != null)
             {
-                /// Metadata key/value pairs assigned to instances in the cluster.
-                /// Keys must conform to the regexp [a-zA-Z0-9-_]+ and not conflict with any other
-                /// metadata keys for the project or be one of the four reserved keys: "instance-template",
-                /// "kube-env", "startup-script" and "user-data".
+                // Metadata key/value pairs assigned to instances in the cluster.
+                // Keys must conform to the regexp [a-zA-Z0-9-_]+ and not conflict with any other
+                // metadata keys for the project or be one of the four reserved keys: "instance-template",
+                // "kube-env", "startup-script" and "user-data".
                 Dictionary<string, string> metadataDict = ConvertToDictionary<string, string>(InstanceMetadata);
                 foreach (string key in metadataDict.Keys)
                 {
@@ -486,6 +486,54 @@ namespace Google.PowerShell.Container
             }
 
             return nodeConfig;
+        }
+
+        /// <summary>
+        /// Helper function to build a NodePool object.
+        /// </summary>
+        protected NodePool BuildNodePool(string name, NodeConfig config, int? initialNodeCount, bool autoUpgrade,
+            bool autoScaling, int? minimumNodesToScaleTo, int? maximumNodesToScaleTo)
+        {
+            var nodePool = new NodePool()
+            {
+                Name = name,
+                InitialNodeCount = initialNodeCount ?? 1,
+                Config = config
+            };
+
+            if (autoScaling)
+            {
+                var scaling = new NodePoolAutoscaling() { Enabled = true };
+                if (maximumNodesToScaleTo == null)
+                {
+                    throw new PSArgumentException(
+                        "When using -EnableAutoScaling, please specify the maximum number of nodes that the node pool "
+                        + "can scale up to with -MaximumNodesToScaleTo (make sure you have enough quota).");
+                }
+
+                if (minimumNodesToScaleTo == null)
+                {
+                    minimumNodesToScaleTo = 1;
+                }
+
+                if (scaling.MaxNodeCount < minimumNodesToScaleTo)
+                {
+                    throw new PSArgumentException(
+                        "Maximum node count in a node pool has to be greater or equal to the minimum count.");
+                }
+
+                scaling.MaxNodeCount = maximumNodesToScaleTo;
+                scaling.MinNodeCount = minimumNodesToScaleTo;
+                nodePool.Autoscaling = scaling;
+            }
+
+            if (autoUpgrade)
+            {
+                var nodeManagement = new NodeManagement() { AutoUpgrade = true };
+                nodePool.Management = nodeManagement;
+            }
+
+            return nodePool;
         }
     }
 
@@ -586,9 +634,14 @@ namespace Google.PowerShell.Container
     /// </para>
     /// <para type="description">
     /// Creates a Google Container Cluster. If -Project and/or -Zone are not used, the cmdlet will use
-    /// the default project and/or default zone. You can use New-GkeNodeConfig to create configuration
-    /// for nodes in the cluster and pass it in with -NodeConfig or you can simply use parameters provided
-    /// in this cmdlet. The default machine type used is "n1-standard-1".
+    /// the default project and/or default zone. There are 3 ways to create a cluster.
+    /// You can pass in a NodeConfig object (created using New-GkeNodeConfig) and the cmdlet will create
+    /// a cluster whose node pools will have their configurations set from the NodeConfig object.
+    /// Instead of passing in a NodeConfig object, you can also use the parameters provided in this cmdlet
+    /// and a NodeConfig object will be automatically created and used in the cluster creation (same as above).
+    /// In both cases above, you can specify how many node pools the cluster will have with -NumberOfNodePools.
+    /// Lastly, you can also create a cluster by passing in an array of NodePool objects and a cluster with
+    /// node pools similar to that array will be created.
     /// </para>
     /// <example>
     ///   <code>
@@ -606,12 +659,17 @@ namespace Google.PowerShell.Container
     ///   PS C:\> Add-GkeCluster -MachineType "n1-standard-4" `
     ///                          -ClusterName "my-cluster" `
     ///                          -Description "My new cluster" `
-    ///                          -Subnetwork "my-subnetwork"
+    ///                          -Subnetwork "my-subnetwork" `
+    ///                          -EnableAutoUpgrade `
+    ///                          -EnableAutoScaling `
+    ///                          -MaximumNodesToScaleTo 2
     ///   </code>
     ///   <para>
     ///   Creates a cluster named "my-cluster" with description "my new cluster" in the default zone of
     ///   the default project using machine type "n1-standard-4" for each Google Compute Engine VMs
     ///   in the cluster. The cluster will use the subnetwork "my-subnetwork".
+    ///   The cluster's nodes will have autoupgrade enabled.
+    ///   The cluster will also autoscale its node pool to a maximum of 2 nodes.
     ///   </para>
     /// </example>
     /// <example>
@@ -621,14 +679,29 @@ namespace Google.PowerShell.Container
     ///                          -Zone "us-central1-a" `
     ///                          -MasterCredential (Get-Credential) `
     ///                          -DisableMonitoringService `
-    ///                          -AdditionalZone "us-central1-f"
+    ///                          -AdditionalZone "us-central1-f" `
+    ///                          -NumberOfNodePools 2 `
+    ///                          -DisableHttpLoadBalancing
     ///   </code>
     ///   <para>
     ///   Creates a cluster named "my-cluster" in zone "us-central1-a" of the default project.
     ///   Asides from "us-central1-a", the cluster's nodes will also be found at zone "us-central1-f".
     ///   The cluster will not have Google Monitoring Service enabled to write metrics.
     ///   The master node of the cluster will have credential supplied by (Get-Credential).
-    ///   Each node of the cluster will be of type GCI.
+    ///   Each node of the cluster will be of type GCI. The cluster will not have HTTP load balancing.
+    ///   The cluster created will have 2 node pools with the same node config.
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> $nodePools = Get-GkeNodePool -Cluster "my-cluster"
+    ///   PS C:\> Add-GkeCluster -ClusterName "my-cluster-2" `
+    ///                          -NodePool $nodePools `
+    ///                          -DisableHorizontalPodAutoscaling
+    ///   </code>
+    ///   <para>
+    ///   Creates cluster "my-cluster-2" using the node pools from "my-cluster".
+    ///   The cluster will have horizontal pod autoscaling disabled.
     ///   </para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/container-engine/reference/rest/v1/NodeConfig)">
@@ -640,6 +713,9 @@ namespace Google.PowerShell.Container
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/instances/preemptible)">
     /// [Preemptible VM instances]
     /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/container-engine/docs/node-pools)">
+    /// [Node Pools]
+    /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GkeCluster")]
     public class AddGkeClusterCmdlet : GkeNodeConfigCmdlet
@@ -647,7 +723,8 @@ namespace Google.PowerShell.Container
         private class ParameterSetNames
         {
             public const string ByNodeConfig = "ByNodeConfig";
-            public const string ByValues = "ByValues";
+            public const string ByNodePool = "ByNodePool";
+            public const string ByNodeConfigValues = "ByNodeConfigValues";
         }
 
         /// <summary>
@@ -657,7 +734,7 @@ namespace Google.PowerShell.Container
         /// The default disk size is 100GB.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
         [ValidateRange(10, int.MaxValue)]
         public override int? DiskSizeGb { get; set; }
 
@@ -669,7 +746,7 @@ namespace Google.PowerShell.Container
         /// "kube-env", "startup-script" and "user-data".
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
         [Alias("Metadata")]
         public override Hashtable InstanceMetadata { get; set; }
 
@@ -679,7 +756,7 @@ namespace Google.PowerShell.Container
         /// This is in addition to any default label(s) that Kubernetes may apply to the node.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
         public override Hashtable Label { get; set; }
 
         /// <summary>
@@ -687,7 +764,7 @@ namespace Google.PowerShell.Container
         /// The number of local SSD disks attached to each node in the cluster.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
         [ValidateRange(0, int.MaxValue)]
         public override int? LocalSsdCount { get; set; }
 
@@ -698,7 +775,7 @@ namespace Google.PowerShell.Container
         /// Each tag must complied with RFC1035.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
         public override string[] Tags { get; set; }
 
         /// <summary>
@@ -707,13 +784,13 @@ namespace Google.PowerShell.Container
         /// Use New-GceServiceAccountConfig to create the service account and appropriate scopes.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
         public override Apis.Compute.v1.Data.ServiceAccount ServiceAccount { get; set; }
 
         /// <para type="description">
         /// If set, every node created in the cluster will be a preemptible VM instance.
         /// </para>
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
         public override SwitchParameter Preemptible { get; set; }
 
         /// <para type="description">
@@ -758,6 +835,12 @@ namespace Google.PowerShell.Container
         [Parameter(Mandatory = false)]
         public SwitchParameter DisableMonitoringService { get; set; }
 
+        [Parameter(Mandatory = false)]
+        public SwitchParameter DisableHttpLoadBalancing { get; set; }
+
+        [Parameter(Mandatory = false)]
+        public SwitchParameter DisableHorizontalPodAutoscaling { get; set; }
+
         /// <para type="description">
         /// Enables Kubernetes alpha features on the cluster. This includes alpha API groups
         /// and features that may not be production ready in the kubernetes version of the master and nodes.
@@ -766,6 +849,36 @@ namespace Google.PowerShell.Container
         /// </para>
         [Parameter(Mandatory = false)]
         public SwitchParameter EnableKubernetesAlpha { get; set; }
+
+        /// <para type="description">
+        /// If set, nodes in the cluster will be automatically upgraded.
+        /// </para>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfig)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
+        public SwitchParameter EnableAutoUpgrade { get; set; }
+
+        /// <para type="description">
+        /// If set, the cluster autoscaler will adjust the size of each node pool to the cluster usage.
+        /// </para>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfig)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
+        public SwitchParameter EnableAutoScaling { get; set; }
+
+        /// <para type="description">
+        /// Used with -EnableAutoScaling switch to set the minimum number of nodes in the node pool
+        /// while autoscaling. Default to 1.
+        /// </para>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfig)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
+        public int? MininumNodesToScaleTo { get; set; }
+
+        /// <para type="description">
+        /// Used with -EnableAutoScaling switch to set the maximum number of nodes in the node pool
+        /// while autoscaling (there has to be enough quota to scale up the cluster).
+        /// </para>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfig)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
+        public int? MaximumNodesToScaleTo { get; set; }
 
         /// <para type="description">
         /// Name of the Google Compute Engine network to which the cluster is connected.
@@ -804,8 +917,22 @@ namespace Google.PowerShell.Container
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByNodeConfig, ValueFromPipeline = true)]
         public NodeConfig NodeConfig { get; set; }
 
+        /// <para type="description">
+        /// The number of node pools that the cluster will have. All the node pools will have the same config.
+        /// </para>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfig)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
+        public int? NumberOfNodePools { get; set; }
+
+        /// <para type="description">
+        /// The node pools associated with this cluster.
+        /// </para>
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByNodePool, ValueFromPipeline = true)]
+        [ValidateNotNullOrEmpty]
+        public NodePool[] NodePool { get; set; }
+
         /// <summary>
-        /// Add -MachineType and -ImageType parameter (they belong to "ByValues" parameter set).
+        /// Add -MachineType and -ImageType parameter (they belong to "ByNodeConfigValues" parameter set).
         /// </summary>
         protected override void PopulateDynamicParameter(string project, string zone,
             RuntimeDefinedParameterDictionary dynamicParamDict)
@@ -815,7 +942,7 @@ namespace Google.PowerShell.Container
             RuntimeDefinedParameter machineTypeParam = GenerateRuntimeParameter(
                 parameterName: "MachineType",
                 helpMessage: "The Google Compute Engine machine type to use for node in this cluster.",
-                parameterSetName: ParameterSetNames.ByValues,
+                parameterSetName: ParameterSetNames.ByNodeConfigValues,
                 validSet: machineTypes);
             dynamicParamDict.Add("MachineType", machineTypeParam);
 
@@ -824,7 +951,7 @@ namespace Google.PowerShell.Container
             RuntimeDefinedParameter imageTypeParam = GenerateRuntimeParameter(
                 parameterName: "ImageType",
                 helpMessage: "The image type to use for node in this cluster.",
-                parameterSetName: ParameterSetNames.ByValues,
+                parameterSetName: ParameterSetNames.ByNodeConfigValues,
                 validSet: imageTypes);
             dynamicParamDict.Add("ImageType", imageTypeParam);
         }
@@ -870,23 +997,30 @@ namespace Google.PowerShell.Container
         /// </summary>
         private Cluster BuildCluster()
         {
-            if (ParameterSetName == ParameterSetNames.ByValues)
+            // Build the node config from parameters if user does not supply a NodeConfig object.
+            if (ParameterSetName == ParameterSetNames.ByNodeConfigValues)
             {
                 NodeConfig = BuildNodeConfig();
+            }
+
+            // Build the node pool from the node config if user does not supply a NodePool object.
+            if (ParameterSetName != ParameterSetNames.ByNodePool)
+            {
+                NodePool = BuildNodePools(NodeConfig).ToArray();
             }
 
             Cluster cluster = new Cluster()
             {
                 Name = ClusterName,
                 Description = Description,
-                InitialNodeCount = InitialNodeCount ?? 1,
-                NodeConfig = NodeConfig,
                 EnableKubernetesAlpha = EnableKubernetesAlpha,
                 // If LoggingService field is not set, the cluster will default to logging.googleapis.com
                 LoggingService = DisableLoggingService ? "none" : null,
                 // If this field is not set, the cluster will default to monitoring.googleapis.com
                 MonitoringService = DisableMonitoringService ? "none" : null
             };
+            SetAddonsConfig(cluster, DisableHorizontalPodAutoscaling, DisableHttpLoadBalancing);
+            cluster.NodePools = NodePool;
 
             if (EnableKubernetesAlpha)
             {
@@ -906,6 +1040,56 @@ namespace Google.PowerShell.Container
             PopulateClusterMasterCredential(cluster);
 
             return cluster;
+        }
+
+        /// <summary>
+        /// Set AddonsConfig of cluster if user wants to disable horizontal pod autoscaling or HTTP load balancing.
+        /// </summary>
+        private void SetAddonsConfig(Cluster cluster, bool disablePodAutoscaling, bool disableLoadBalancing)
+        {
+            if (disablePodAutoscaling || disableLoadBalancing)
+            {
+                var addons = new AddonsConfig();
+                if (disableLoadBalancing)
+                {
+                    addons.HttpLoadBalancing = new HttpLoadBalancing() { Disabled = true };
+                }
+
+                if (disablePodAutoscaling)
+                {
+                    addons.HorizontalPodAutoscaling = new HorizontalPodAutoscaling { Disabled = true };
+                }
+
+                cluster.AddonsConfig = addons;
+            }
+        }
+
+        /// <summary>
+        /// Create a node pool based on either the NodeConfig object passed in or ByNodeConfigValues parameters.
+        /// </summary>
+        private IEnumerable<NodePool> BuildNodePools(NodeConfig nodeConfig)
+        {
+            string[] nodePoolNames = null;
+
+            if (NumberOfNodePools == null || NumberOfNodePools <= 1)
+            {
+                // By default, if there is 1 NodePool, GKE creates a NodePool with the name "default-pool".
+                nodePoolNames = new string[] { "default-pool" };
+            }
+            else
+            {
+                nodePoolNames = new string[NumberOfNodePools.Value];
+                for (int i = 0; i < nodePoolNames.Length; i += 1)
+                {
+                    nodePoolNames[i] = $"default-pool-{i}";
+                }
+            }
+
+            foreach (string nodePoolName in nodePoolNames)
+            {
+                yield return BuildNodePool(nodePoolName, nodeConfig, InitialNodeCount, EnableAutoUpgrade,
+                    EnableAutoScaling, MininumNodesToScaleTo, MaximumNodesToScaleTo);
+            }
         }
 
         /// <summary>
