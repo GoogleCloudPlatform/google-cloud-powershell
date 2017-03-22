@@ -68,6 +68,7 @@
     <None Include="Compute2\Compute.GceTargetProxy.Tests.ps1" />
     <None Include="Compute2\Compute.GceUrlMap.Tests.ps1" />
     <None Include="Container\Container.GkeCluster.Tests.ps1" />
+    <None Include="Container\Container.GkeNodePool.Tests.ps1" />
     <None Include="Dns\Dns.GcdChange.Tests.ps1" />
     <None Include="Dns\Dns.GcdManagedZone.Tests.ps1" />
     <None Include="Dns\Dns.GcdQuota.Tests.ps1" />
