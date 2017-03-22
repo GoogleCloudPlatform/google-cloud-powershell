@@ -247,9 +247,21 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <example>
     ///   <code>
-    /// PS C:\> Write-Host "Halp  - Put Text Here"
+    /// PS C:\> $filename = "C:\data.json"
+    /// PS C:\> $table = New-BqTable -DatasetId "db_name" "tab_name"
+    /// PS C:\> $table | Add-BqTabledata $filename JSON
     ///   </code>
-    ///   <para></para>
+    ///   <para>This code will ingest a newline-delimited JSON file from the location $filename on local 
+    ///   disk to db_name:tab_name in BigQuery.</para>
+    ///   <code>
+    /// PS C:\> $filename = "C:\data.csv"
+    /// PS C:\> $table = New-BqTable -DatasetId "db_name" "tab_name"
+    /// PS C:\> $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1 `
+    ///     -MaxBadRecords 4 -AllowUnknownFields
+    ///   </code>
+    ///   <para>This code will take a CSV file and upload it to a BQ table.  It will ignore up to 4 bad 
+    ///   rows before throwing an error, and it will keep rows that have fields that aren't in the 
+    ///   table's schema.</para>
     /// </example> 
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/tabledata)">
     /// [BigQuery Tabledata]
