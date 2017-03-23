@@ -91,7 +91,7 @@ namespace Google.PowerShell.BigQuery
         /// The Table object to get a reference for.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ByObject)]
+        [Parameter(Mandatory = true, ValueFromPipeline = true, Position = 0, ParameterSetName = ParameterSetNames.ByObject)]
         public Table InputObject { get; set; }
 
         protected override void ProcessRecord()

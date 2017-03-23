@@ -93,4 +93,127 @@ Describe "Set-BqSchema" {
     }
 }
 
+Describe "Add-BqTabledata" {
+
+    BeforeAll {
+        $r = Get-Random
+        $datasetName = "pshell_testing_$r"
+        $test_set = New-BqDataset $datasetName
+        # Input file path setup.
+        $folder = Get-Location
+        $folder = $folder.ToString()
+        $filename_csv = "$folder\classics.csv"
+        $filename_json = "$folder\classics.json"
+        $filename_avro = "$folder\classics.avro"
+        # These files have 3 rows with missing fields and 3 rows with extra fields.
+        $filename_broken_csv = "$folder\classics_broken.csv"
+        $filename_broken_json = "$folder\classics_broken.json"
+        # This file has a missing field and some of the AVRO formatting has been deleted.
+        $filename_broken_avro = "$folder\classics_broken.avro"
+        # This file has jagged rows and quoted newlines
+        $filename_extra_csv = "$folder\classics_jagged.csv"
+    }
+
+    BeforeEach {
+        $r = Get-Random
+        $table = New-BqTable -Dataset $test_Set "table_$r"
+        $table = New-BqSchema -Name "Title" -Type "STRING" |
+                 New-BqSchema -Name "Author" -Type "STRING" |
+                 New-BqSchema -Name "Year" -Type "INTEGER" |
+                 Set-BqSchema $table
+    }
+
+    It "should properly consume a well formed CSV file" {
+        $table | Add-BqTabledata $filename_csv CSV -SkipLeadingRows 1
+        $table = Get-BqTable $table
+        $table.NumRows | Should Be 10
+    }
+
+    It "should properly consume a well formed JSON file" {
+        $table | Add-BqTabledata $filename_json JSON
+        $table = Get-BqTable $table
+        $table.NumRows | Should Be 10
+    }
+
+    It "should properly consume a well formed AVRO file" {
+        $table | Add-BqTabledata $filename_avro AVRO
+        $table = Get-BqTable $table
+        $table.NumRows | Should Be 10
+    }
+
+    It "should properly reject an invalid CSV file" {
+        { $table | Add-BqTabledata $filename_broken_csv CSV -SkipLeadingRows 1 -ErrorAction Stop } | Should Throw "contained errors"
+    }
+
+    It "should properly reject an invalid JSON file" {
+        { $table | Add-BqTabledata $filename_broken_json JSON -ErrorAction Stop } | Should Throw "contained errors"
+    }
+
+    It "should properly reject an invalid AVRO file" {
+        { $table | Add-BqTabledata $filename_broken_avro AVRO -ErrorAction Stop } | Should Throw "contained errors"
+    }
+
+    #TODO(ahandley): Test all CSV options
+
+    It "should handle less than perfect CSV files" {
+        $table | Add-BqTabledata $filename_broken_csv CSV -SkipLeadingRows 1 -MaxBadRecords 4 `
+                -AllowUnknownFields -ErrorAction SilentlyContinue
+        $table = Get-BqTable $table
+        $table.NumRows | Should Be 7
+    }
+
+    It "should handle write disposition WriteAppend" {
+        $table | Add-BqTabledata $filename_csv CSV -SkipLeadingRows 1 
+        $table = Get-BqTable $table
+        $table.NumRows | Should Be 10
+        $table | Add-BqTabledata $filename_csv CSV -SkipLeadingRows 1 -WriteMode WriteAppend
+        $table = Get-BqTable $table
+        $table.NumRows | Should Be 20
+    }
+
+    It "should handle write disposition WriteIfEmpty on an empty table" {
+        $table | Add-BqTabledata $filename_csv CSV -SkipLeadingRows 1 -WriteMode WriteIfEmpty
+        $table = Get-BqTable $table
+        $table.NumRows | Should Be 10
+    }
+
+    It "should handle write disposition WriteIfEmpty on a non-empty table" {
+        $table | Add-BqTabledata $filename_broken_csv CSV -SkipLeadingRows 1 -MaxBadRecords 4 `
+                -AllowUnknownFields -ErrorAction SilentlyContinue
+        $table = Get-BqTable $table
+        $table.NumRows | Should Be 7
+        { $table | Add-BqTabledata $filename_csv CSV -SkipLeadingRows 1 `
+            -WriteMode WriteIfEmpty -ErrorAction Stop } | Should Throw "404"
+    }
+
+    It "should handle write disposition WriteTruncate" {
+        $table | Add-BqTabledata $filename_csv CSV -SkipLeadingRows 1
+        $table = Get-BqTable $table
+        $table.NumRows | Should Be 10
+        $table | Add-BqTabledata $filename_broken_csv CSV -SkipLeadingRows 1 -MaxBadRecords 4 `
+                -AllowUnknownFields -WriteMode WriteTruncate -ErrorAction SilentlyContinue
+        $table = Get-BqTable $table
+        $table.NumRows | Should Be 7
+    }
+
+    It "should allow jagged rows and quoted newlines" {
+        $table | Add-BqTabledata $filename_extra_csv CSV -SkipLeadingRows 1 -AllowJaggedRows -AllowQuotedNewLines
+        $table = Get-BqTable $table
+        $table.NumRows | Should Be 10
+    }
+
+    #TODO(ahandley): Test all JSON options
+
+    It "should handle less than perfect JSON files" {
+        $table | Add-BqTabledata $filename_broken_JSON JSON -MaxBadRecords 4 `
+                -AllowUnknownFields -ErrorAction SilentlyContinue
+        $table = Get-BqTable $table
+        $table.NumRows | Should Be 9
+    }
+
+    AfterAll {
+        $test_set | Remove-BqDataset -Force
+    }
+}
+
 Reset-GCloudConfig $oldActiveConfig $configName
