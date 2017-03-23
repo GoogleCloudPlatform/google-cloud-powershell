@@ -495,19 +495,17 @@ namespace Google.PowerShell.Container
         /// <summary>
         /// Helper function to build a NodePool object.
         /// InitialNodeCount will default to 1.
-        /// If AutoScaling is true, MaximumNodesToScaleTo has to be specified.
         /// MaximumNodesToScaleTo has to be greater than MinimumNodesToScaleTo, which defaults to 1.
         /// </summary>
         /// <param name="name"></param>
         /// <param name="config"></param>
         /// <param name="initialNodeCount"></param>
         /// <param name="autoUpgrade"></param>
-        /// <param name="autoScaling"></param>
         /// <param name="minimumNodesToScaleTo"></param>
         /// <param name="maximumNodesToScaleTo"></param>
         /// <returns></returns>
         protected NodePool BuildNodePool(string name, NodeConfig config, int? initialNodeCount, bool autoUpgrade,
-            bool autoScaling, int? minimumNodesToScaleTo, int? maximumNodesToScaleTo)
+            int? minimumNodesToScaleTo, int? maximumNodesToScaleTo)
         {
             var nodePool = new NodePool()
             {
@@ -516,15 +514,9 @@ namespace Google.PowerShell.Container
                 Config = config
             };
 
-            if (autoScaling)
+            if (maximumNodesToScaleTo != null)
             {
                 var scaling = new NodePoolAutoscaling() { Enabled = true };
-                if (maximumNodesToScaleTo == null)
-                {
-                    throw new PSArgumentException(
-                        "When using -EnableAutoScaling, please specify the maximum number of nodes that the node pool "
-                        + "can scale up to with -MaximumNodesToScaleTo (make sure you have enough quota).");
-                }
 
                 if (minimumNodesToScaleTo == null)
                 {
@@ -683,7 +675,6 @@ namespace Google.PowerShell.Container
     ///                          -Description "My new cluster" `
     ///                          -Subnetwork "my-subnetwork" `
     ///                          -EnableAutoUpgrade `
-    ///                          -EnableAutoScaling `
     ///                          -MaximumNodesToScaleTo 2
     ///   </code>
     ///   <para>
@@ -910,32 +901,23 @@ namespace Google.PowerShell.Container
 
         /// <summary>
         /// <para type="description">
-        /// If set, the cluster autoscaler will adjust the size of each node pool to the cluster usage.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfig)]
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
-        public SwitchParameter EnableAutoScaling { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// Used with -EnableAutoScaling switch to set the minimum number of nodes in the node pool
-        /// while autoscaling. Defaults to 1.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfig)]
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
-        public int? MininumNodesToScaleTo { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// Used with -EnableAutoScaling switch to set the maximum number of nodes in the node pool
-        /// while autoscaling (there has to be enough quota to scale up the cluster).
+        /// If set, the cluster will have autoscaling enabled and this number will represent
+        /// the minimum number of nodes in the node pool that the cluster can scale to.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfig)]
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
         public int? MaximumNodesToScaleTo { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// If set, the cluster will have autoscaling enabled and this number will represent
+        /// the maximum number of nodes in the node pool that the cluster can scale to.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfig)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
+        public int? MininumNodesToScaleTo { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -1161,7 +1143,7 @@ namespace Google.PowerShell.Container
             foreach (string nodePoolName in nodePoolNames)
             {
                 yield return BuildNodePool(nodePoolName, nodeConfig, InitialNodeCount, EnableAutoUpgrade,
-                    EnableAutoScaling, MininumNodesToScaleTo, MaximumNodesToScaleTo);
+                    MininumNodesToScaleTo, MaximumNodesToScaleTo);
             }
         }
 

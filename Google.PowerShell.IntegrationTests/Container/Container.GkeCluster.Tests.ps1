@@ -277,7 +277,6 @@ Describe "Add-GkeCluster" {
                                "zone" = $clusterThreeZone;
                                "clusterUsername" = $clusterThreeUsername;
                                "clusterPassword" = $clusterThreePassword;
-                               "enableAutoScaling" = $true;
                                "maximumNodesToScaleTo" = 2;
                                "NumberOfNodePools" = 2 }
 
@@ -332,7 +331,7 @@ Describe "Add-GkeCluster" {
         $cluster.CurrentNodeCount -ge 2 | Should Be $true
     }
 
-    It "should work with -MasterCredential and -EnableAutoScaling" {
+    It "should work with -MasterCredential and -MaximumNodesToScale" {
         Wait-Job $clusterThreeJob | Remove-Job
         $cluster = Get-GkeCluster -ClusterName $clusterThreeName -Zone $clusterThreeZone
 
