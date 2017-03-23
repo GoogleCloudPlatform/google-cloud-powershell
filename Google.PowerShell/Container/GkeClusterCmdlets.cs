@@ -253,16 +253,20 @@ namespace Google.PowerShell.Container
         [Parameter(Mandatory = false)]
         public virtual string[] Tags { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// The Google Cloud Platform Service Account to be used by the node VMs.
         /// Use New-GceServiceAccountConfig to create the service account and appropriate scopes.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = false)]
         public virtual Apis.Compute.v1.Data.ServiceAccount ServiceAccount { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// If set, every node created will be a preemptible VM instance.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = false)]
         public virtual SwitchParameter Preemptible { get; set; }
 
@@ -490,7 +494,18 @@ namespace Google.PowerShell.Container
 
         /// <summary>
         /// Helper function to build a NodePool object.
+        /// InitialNodeCount will default to 1.
+        /// If AutoScaling is true, MaximumNodesToScaleTo has to be specified.
+        /// MaximumNodesToScaleTo has to be greater than MinimumNodesToScaleTo, which defaults to 1.
         /// </summary>
+        /// <param name="name"></param>
+        /// <param name="config"></param>
+        /// <param name="initialNodeCount"></param>
+        /// <param name="autoUpgrade"></param>
+        /// <param name="autoScaling"></param>
+        /// <param name="minimumNodesToScaleTo"></param>
+        /// <param name="maximumNodesToScaleTo"></param>
+        /// <returns></returns>
         protected NodePool BuildNodePool(string name, NodeConfig config, int? initialNodeCount, bool autoUpgrade,
             bool autoScaling, int? minimumNodesToScaleTo, int? maximumNodesToScaleTo)
         {
@@ -516,10 +531,17 @@ namespace Google.PowerShell.Container
                     minimumNodesToScaleTo = 1;
                 }
 
-                if (scaling.MaxNodeCount < minimumNodesToScaleTo)
+                if (maximumNodesToScaleTo < minimumNodesToScaleTo)
                 {
                     throw new PSArgumentException(
                         "Maximum node count in a node pool has to be greater or equal to the minimum count.");
+                }
+
+                // No need to check maximum nodes since we know for sure at this point it will be greater or equal to this.
+                if (minimumNodesToScaleTo <= 0)
+                {
+                    throw new PSArgumentException(
+                        "Both -MaximumNodesToScaleTo and -MinimumNodesToScaleTo has to be greater than 0.");
                 }
 
                 scaling.MaxNodeCount = maximumNodesToScaleTo;
@@ -787,146 +809,195 @@ namespace Google.PowerShell.Container
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
         public override Apis.Compute.v1.Data.ServiceAccount ServiceAccount { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// If set, every node created in the cluster will be a preemptible VM instance.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
         public override SwitchParameter Preemptible { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// The name of the cluster.
         /// Name has to start with a letter, end with a number or letter
         /// and consists only of letters, numbers and hyphens.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = true, Position = 0)]
         [ValidatePattern("[a-zA-Z][a-zA-Z0-9-]*[a-zA-Z0-9]")]
         public string ClusterName { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// The description of the cluster.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = false)]
         [ValidateNotNullOrEmpty]
         public string Description { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// The number of nodes to create in the cluster.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = false)]
         [ValidateRange(0, int.MaxValue)]
         public int? InitialNodeCount { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// The credential to access the master endpoint.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = false)]
         [ValidateNotNull]
         public PSCredential MasterCredential { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// Stop the cluster from using Google Cloud Logging Service to write logs.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = false)]
         public SwitchParameter DisableLoggingService { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// Stop the cluster from using Google Cloud Monitoring service to write metrics.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = false)]
         public SwitchParameter DisableMonitoringService { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// Removes HTTP load balancing controller addon.
+        /// </para>
+        /// </summary>
         [Parameter(Mandatory = false)]
         public SwitchParameter DisableHttpLoadBalancing { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// Removes horizontal pod autoscaling feature, which increases or decreases the nmber of replica
+        /// pods a replication controller has based on the resource usage of the existing pods.
+        /// </para>
+        /// </summary>
         [Parameter(Mandatory = false)]
         public SwitchParameter DisableHorizontalPodAutoscaling { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// Enables Kubernetes alpha features on the cluster. This includes alpha API groups
         /// and features that may not be production ready in the kubernetes version of the master and nodes.
         /// The cluster has no SLA for uptime and master/node upgrades are disabled.
         /// Alpha enabled clusters are AUTOMATICALLY DELETED thirty days after creation.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = false)]
         public SwitchParameter EnableKubernetesAlpha { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// If set, nodes in the cluster will be automatically upgraded.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfig)]
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
         public SwitchParameter EnableAutoUpgrade { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// If set, the cluster autoscaler will adjust the size of each node pool to the cluster usage.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfig)]
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
         public SwitchParameter EnableAutoScaling { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// Used with -EnableAutoScaling switch to set the minimum number of nodes in the node pool
-        /// while autoscaling. Default to 1.
+        /// while autoscaling. Defaults to 1.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfig)]
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
         public int? MininumNodesToScaleTo { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// Used with -EnableAutoScaling switch to set the maximum number of nodes in the node pool
         /// while autoscaling (there has to be enough quota to scale up the cluster).
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfig)]
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
         public int? MaximumNodesToScaleTo { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// Name of the Google Compute Engine network to which the cluster is connected.
         /// If left unspecified, the default network will be used.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = false)]
         [ValidateNotNullOrEmpty]
         public string Network { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// The name of the Google Compute Engine subnetwork to which the cluster is connected.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = false)]
         [ValidateNotNullOrEmpty]
         public string Subnetwork { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// The IP address range of the container pods in this cluster, in CIDR notation.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = false)]
         [ValidateNotNullOrEmpty]
         public string ClusterIpv4AddressRange { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// The zones (in addition to the zone specified by -Zone parameter) in which
         /// the cluster's nodes should be located.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = false)]
         [ValidateNotNullOrEmpty]
         public string[] AdditionalZone { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// Passed in a NodeConfig object containing configuration for the nodes in this cluster.
         /// This object can be created with New-GkeNodeConfig cmdlet.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByNodeConfig, ValueFromPipeline = true)]
         public NodeConfig NodeConfig { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// The number of node pools that the cluster will have. All the node pools will have the same config.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfig)]
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
         public int? NumberOfNodePools { get; set; }
 
+        /// <summary>
         /// <para type="description">
         /// The node pools associated with this cluster.
         /// </para>
+        /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByNodePool, ValueFromPipeline = true)]
         [ValidateNotNullOrEmpty]
         public NodePool[] NodePool { get; set; }
@@ -1073,7 +1144,9 @@ namespace Google.PowerShell.Container
 
             if (NumberOfNodePools == null || NumberOfNodePools <= 1)
             {
-                // By default, if there is 1 NodePool, GKE creates a NodePool with the name "default-pool".
+                // By default, if we do not use a NodePool object in the API, GKE will create
+                // a NodePool with the name "default-pool" so we try to mimick that behavior.
+                // API errors will be raised if NodePool object passed in does not have a name.
                 nodePoolNames = new string[] { "default-pool" };
             }
             else

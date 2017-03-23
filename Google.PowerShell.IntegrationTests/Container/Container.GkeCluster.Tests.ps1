@@ -341,9 +341,11 @@ Describe "Add-GkeCluster" {
         $cluster.MasterAuth.Username | Should BeExactly $clusterThreeUsername
         $cluster.MasterAuth.Password | Should BeExactly $clusterThreePassword
         $cluster.NodePools.Count | Should Be 2
-        $cluster.NodePools[0].Autoscaling.Enabled | Should Be $true
-        $cluster.NodePools[0].Autoscaling.MaxNodeCount | Should Be 2
-        $cluster.NodePools[0].Autoscaling.MinNodeCount | Should Be 1
+        foreach ($nodePool in $cluster.NodePools) {
+            $nodePool.Autoscaling.Enabled | Should Be $true
+            $nodePool.Autoscaling.MaxNodeCount | Should Be 2
+            $nodePool.Autoscaling.MinNodeCount | Should Be 1
+        }
         # Cluster should have 2 nodes since it has 2 node pools and each has 1.
         $cluster.CurrentNodeCount -ge 2 | Should Be $true
     }
@@ -401,7 +403,7 @@ Describe "Add-GkeCluster" {
         Wait-Job $jobOne, $jobTwo, $jobThree, $jobFour, $jobFive | Receive-Job
         Remove-Job $jobOne, $jobTwo, $jobThree, $jobFour, $jobFive
         # The cluster has to be deleted before we can delete the network.
-        gcloud compute networks delete $networkName 2>$null
+        gcloud compute networks delete $networkName -q 2>$null
     }
 }
 
@@ -508,3 +510,5 @@ Describe "Remove-GkeCluster" {
         { Remove-GkeCluster "non-existent-cluster-in-project" -ErrorAction Stop } | Should Throw "cannot be found"
     }
 }
+
+Reset-GCloudConfig $oldActiveConfig $configName
