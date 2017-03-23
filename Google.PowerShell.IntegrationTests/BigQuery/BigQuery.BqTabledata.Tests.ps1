@@ -110,6 +110,8 @@ Describe "Add-BqTabledata" {
         $filename_broken_json = "$folder\classics_broken.json"
         # This file has a missing field and some of the AVRO formatting has been deleted.
         $filename_broken_avro = "$folder\classics_broken.avro"
+        # This file has jagged rows and quoted newlines
+        $filename_extra_csv = "$folder\classics_jagged.csv"
     }
 
     BeforeEach {
@@ -169,7 +171,13 @@ Describe "Add-BqTabledata" {
         $table.NumRows | Should Be 20
     }
 
-    It "should handle write disposition WriteIfEmpty" {
+    It "should handle write disposition WriteIfEmpty on an empty table" {
+        $table | Add-BqTabledata $filename_csv CSV -SkipLeadingRows 1 -WriteMode WriteIfEmpty
+        $table = Get-BqTable $table
+        $table.NumRows | Should Be 10
+    }
+
+    It "should handle write disposition WriteIfEmpty on a non-empty table" {
         $table | Add-BqTabledata $filename_broken_csv CSV -SkipLeadingRows 1 -MaxBadRecords 4 `
                 -AllowUnknownFields -ErrorAction SilentlyContinue
         $table = Get-BqTable $table
@@ -186,6 +194,12 @@ Describe "Add-BqTabledata" {
                 -AllowUnknownFields -WriteMode WriteTruncate -ErrorAction SilentlyContinue
         $table = Get-BqTable $table
         $table.NumRows | Should Be 7
+    }
+
+    It "should allow jagged rows and quoted newlines" {
+        $table | Add-BqTabledata $filename_extra_csv CSV -SkipLeadingRows 1 -AllowJaggedRows -AllowQuotedNewLines
+        $table = Get-BqTable $table
+        $table.NumRows | Should Be 10
     }
 
     #TODO(ahandley): Test all JSON options

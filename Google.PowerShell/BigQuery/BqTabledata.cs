@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0.
 
 using Google.Cloud.BigQuery.V2;
+using Google.Apis.Bigquery.v2;
 using Google.Apis.Bigquery.v2.Data;
 using Google.PowerShell.Common;
 using System;
@@ -372,58 +373,55 @@ namespace Google.PowerShell.BigQuery
 
         protected override void ProcessRecord()
         {
-            Stream fileInput;
+            var Client = BigQueryClient.Create(InputObject.ProjectId);
+
             try
             {
-                fileInput = new StreamReader(Filename).BaseStream;
+                using (Stream fileInput = File.OpenRead(Filename))
+                {
+                    BigQueryJob bqj;
+
+                    switch (Type)
+                    {
+                        case DataFormats.AVRO:
+                            UploadAvroOptions AvroOptions = new UploadAvroOptions();
+                            AvroOptions.WriteDisposition = WriteMode;
+                            AvroOptions.MaxBadRecords = MaxBadRecords;
+                            AvroOptions.AllowUnknownFields = AllowUnknownFields;
+                            bqj = Client.UploadAvro(InputObject, null, fileInput, AvroOptions);
+                            break;
+                        case DataFormats.JSON:
+                            UploadJsonOptions JsonOptions = new UploadJsonOptions();
+                            JsonOptions.WriteDisposition = WriteMode;
+                            JsonOptions.MaxBadRecords = MaxBadRecords;
+                            JsonOptions.AllowUnknownFields = AllowUnknownFields;
+                            bqj = Client.UploadJson(InputObject, null, fileInput, JsonOptions);
+                            break;
+                        case DataFormats.CSV:
+                            UploadCsvOptions CsvOptions = new UploadCsvOptions();
+                            CsvOptions.WriteDisposition = WriteMode;
+                            CsvOptions.MaxBadRecords = MaxBadRecords;
+                            CsvOptions.AllowJaggedRows = AllowJaggedRows;
+                            CsvOptions.AllowQuotedNewlines = AllowQuotedNewlines;
+                            CsvOptions.AllowTrailingColumns = AllowUnknownFields;
+                            CsvOptions.FieldDelimiter = FieldDelimiter;
+                            CsvOptions.Quote = Quote;
+                            CsvOptions.SkipLeadingRows = SkipLeadingRows;
+                            bqj = Client.UploadCsv(InputObject, null, fileInput, CsvOptions);
+                            break;
+                        default:
+                            throw UnknownParameterSetException;
+                    }
+
+                    bqj.PollUntilCompleted().ThrowOnAnyError();
+                }
             }
-            catch (Exception ex)
+            catch (IOException ex)
             {
                 WriteError(new ErrorRecord(ex,
-                    $"Error while reading file {Filename}.",
+                    $"Error while reading file '{Filename}'.",
                     ErrorCategory.ReadError, Filename));
                 return;
-            }
-            var projectReference = new ProjectReference();
-            projectReference.ProjectId = InputObject.ProjectId;
-            var Client = new BigQueryClientImpl(projectReference, Service);
-            BigQueryJob bqj = null;
-
-            try
-            {
-                switch (Type)
-                {
-                    case DataFormats.AVRO:
-                        UploadAvroOptions AvroOptions = new UploadAvroOptions();
-                        AvroOptions.WriteDisposition = WriteMode;
-                        AvroOptions.MaxBadRecords = MaxBadRecords;
-                        AvroOptions.AllowUnknownFields = AllowUnknownFields;
-                        bqj = Client.UploadAvro(InputObject, null, fileInput, AvroOptions);
-                        break;
-                    case DataFormats.JSON:
-                        UploadJsonOptions JsonOptions = new UploadJsonOptions();
-                        JsonOptions.WriteDisposition = WriteMode;
-                        JsonOptions.MaxBadRecords = MaxBadRecords;
-                        JsonOptions.AllowUnknownFields = AllowUnknownFields;
-                        bqj = Client.UploadJson(InputObject, null, fileInput, JsonOptions);
-                        break;
-                    case DataFormats.CSV:
-                        UploadCsvOptions CsvOptions = new UploadCsvOptions();
-                        CsvOptions.WriteDisposition = WriteMode;
-                        CsvOptions.MaxBadRecords = MaxBadRecords;
-                        CsvOptions.AllowJaggedRows = AllowJaggedRows;
-                        CsvOptions.AllowQuotedNewlines = AllowQuotedNewlines;
-                        CsvOptions.AllowTrailingColumns = AllowUnknownFields;
-                        CsvOptions.FieldDelimiter = FieldDelimiter;
-                        CsvOptions.Quote = Quote;
-                        CsvOptions.SkipLeadingRows = SkipLeadingRows;
-                        bqj = Client.UploadCsv(InputObject, null, fileInput, CsvOptions);
-                        break;
-                    default:
-                        throw UnknownParameterSetException;
-                }
-
-                bqj.PollUntilCompleted().ThrowOnAnyError();
             }
             catch (Exception ex)
             {
