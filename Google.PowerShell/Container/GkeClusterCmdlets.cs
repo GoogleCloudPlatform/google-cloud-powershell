@@ -497,12 +497,14 @@ namespace Google.PowerShell.Container
         /// InitialNodeCount will default to 1.
         /// MaximumNodesToScaleTo has to be greater than MinimumNodesToScaleTo, which defaults to 1.
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="config"></param>
-        /// <param name="initialNodeCount"></param>
-        /// <param name="autoUpgrade"></param>
-        /// <param name="minimumNodesToScaleTo"></param>
-        /// <param name="maximumNodesToScaleTo"></param>
+        /// <param name="name">The name of the node pool.</param>
+        /// <param name="config">The config of the node pool.</param>
+        /// <param name="initialNodeCount">The number of nodes created in the pool initially.</param>
+        /// <param name="autoUpgrade">If true, nodes will have auto-upgrade enabled.</param>
+        /// <param name="minimumNodesToScaleTo">The maximum number of nodes to scale to.</param>
+        /// <param name="maximumNodesToScaleTo">
+        /// The minimum number of nodes to scale to. Defaults to 1.
+        /// </param>
         /// <returns></returns>
         protected NodePool BuildNodePool(string name, NodeConfig config, int? initialNodeCount, bool autoUpgrade,
             int? minimumNodesToScaleTo, int? maximumNodesToScaleTo)
