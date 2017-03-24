@@ -162,5 +162,52 @@
         </TableRowEntries>
       </TableControl>
     </View>
+    <View>
+      <Name>BigQuery Data Row</Name>
+      <ViewSelectedBy>
+        <TypeName>Google.Cloud.BigQuery.V2.BigQueryRow</TypeName>
+      </ViewSelectedBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem>
+                <Label>BigQueryRow</Label>
+                <ScriptBlock>
+                  ForEach ($field in $_.RawRow.F) {
+                    $outstr = $outstr + $field.V.ToString() + ", "
+                  }
+                  $outstr.Substring(0,$outstr.Length-2)
+                </ScriptBlock>
+              </ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+    <View>
+      <Name>BigQuery TableSchema</Name>
+      <ViewSelectedBy>
+        <TypeName>Google.Apis.Bigquery.v2.Data.TableSchema</TypeName>
+      </ViewSelectedBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem>
+                <Label>Schema</Label>
+                <ScriptBlock>
+                  $outstr = ""
+                  ForEach ($field in $_.Fields) {
+                    $outstr = $outstr + $field.Name + ", "
+                  }
+                  $outstr.Substring(0,$outstr.Length-2)
+                </ScriptBlock>
+              </ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
   </ViewDefinitions>
 </Configuration>
