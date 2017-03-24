@@ -7,6 +7,7 @@ while($child -eq $null) {
 
 . $child.FullName
 Install-GcloudCmdlets
+$project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Describe "New-GceServiceAccountConfig" {
     $email = "email@address.tld"
@@ -183,3 +184,5 @@ Describe "New-GceServiceAccountConfig" {
         ($account.Scopes -match "scopeuri2").Count | Should Be 1
     }
 }
+
+Reset-GCloudConfig $oldActiveConfig $configName
