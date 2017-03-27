@@ -447,7 +447,7 @@ namespace Google.PowerShell.BigQuery
     /// PS C:\> $table = get-bqtable -DatasetID "book_data" "classics"
     /// PS C:\> $list = $table | get-bqtabledata
     ///   </code>
-    ///   <para>Fetches all of the rows in book_data:classics and exports them to $list</para>
+    ///   <para>Fetches all of the rows in book_data:classics and exports them to $list.</para>
     ///   <code>
     /// PS C:\> $list = $table | Get-BqTabledata -PageSize 100
     ///   </code>
@@ -496,6 +496,7 @@ namespace Google.PowerShell.BigQuery
                 }
 
                 WriteObject(response, true);
+                //TODO(ahandley): Find better formatting for BigQueryRow objects
             }
             catch (Exception ex)
             {
