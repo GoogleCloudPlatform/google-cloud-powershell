@@ -490,10 +490,12 @@ namespace Google.PowerShell.BigQuery
                 var response = Client.ListRows(InputObject, null,
                 new ListRowsOptions() { PageSize = PageSize });
 
-                foreach (var row in response)
+                if (response == null)
                 {
-                    WriteObject(row);
+                    throw new Exception("Response came back empty (null).");
                 }
+
+                WriteObject(response, true);
             }
             catch (Exception ex)
             {

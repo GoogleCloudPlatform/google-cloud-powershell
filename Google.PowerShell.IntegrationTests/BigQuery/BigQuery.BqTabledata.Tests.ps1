@@ -240,6 +240,9 @@ Describe "Get-BqTabledata" {
     It "should return an entire table of 10 rows" {
         $list = $table | Get-BqTabledata 
         $list.Count | Should Be 10
+        $list[0]["Author"] | Should Be "Jane Austin"
+        $list[2]["Title"] | Should Be "War and Peas"
+        $list[5]["Year"] | Should Be "1851"
     }
 
     It "should paging correctly" {
