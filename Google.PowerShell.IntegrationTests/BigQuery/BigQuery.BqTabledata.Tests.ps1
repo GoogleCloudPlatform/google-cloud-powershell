@@ -216,4 +216,52 @@ Describe "Add-BqTabledata" {
     }
 }
 
+Describe "Get-BqTabledata" {
+
+    BeforeAll {
+        $r = Get-Random
+        $datasetName = "pshell_testing_$r"
+        $test_set = New-BqDataset $datasetName
+        # Input file path setup.
+        $folder = Get-Location
+        $folder = $folder.ToString()
+        $filename = "$folder\classics.csv"
+        $filename_big = "$folder\classics_large.csv"
+        # Small Table Setup.
+        $table = New-BqTable -Dataset $test_Set "table_$r"
+        $table = New-BqSchema -Name "Title" -Type "STRING" |
+                 New-BqSchema -Name "Author" -Type "STRING" |
+                 New-BqSchema -Name "Year" -Type "INTEGER" |
+                 Set-BqSchema $table
+        $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1
+        $table = Get-BqTable $table
+    }
+
+    It "should return an entire table of 10 rows" {
+        $list = $table | Get-BqTabledata 
+        $list.Count | Should Be 10
+        $list[0]["Author"] | Should Be "Jane Austin"
+        $list[2]["Title"] | Should Be "War and Peas"
+        $list[5]["Year"] | Should Be "1851"
+    }
+
+    It "should handle paging correctly" {
+        # Default page size = 100,000.
+        $bigtable = New-BqTable -Dataset $test_Set "table_big_$r"
+        $bigtable = New-BqSchema -Name "Title" -Type "STRING" |
+                 New-BqSchema -Name "Author" -Type "STRING" |
+                 New-BqSchema -Name "Year" -Type "INTEGER" |
+                 Set-BqSchema $bigtable
+        $bigtable | Add-BqTabledata $filename_big CSV -SkipLeadingRows 1
+        $bigtable = Get-BqTable $bigtable
+
+        $list = $bigtable | Get-BqTabledata
+        $list.Count | Should Be 100100
+    }
+
+    AfterAll {
+        $test_set | Remove-BqDataset -Force
+    }
+}
+
 Reset-GCloudConfig $oldActiveConfig $configName
