@@ -87,6 +87,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="BigQuery\BigQuery.BqJob.Tests.ps1" />
     <None Include="BigQuery\BigQuery.BqTable.Tests.ps1" />
     <None Include="BigQuery\BigQuery.BqDataset.Tests.ps1" />
     <None Include="BigQuery\BigQuery.BqTabledata.Tests.ps1" />
