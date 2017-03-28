@@ -245,12 +245,7 @@ Describe "Get-BqTabledata" {
         $list[5]["Year"] | Should Be "1851"
     }
 
-    It "should paging correctly" {
-        $list = $table | Get-BqTabledata -PageSize 3
-        $list.Count | Should Be 10
-    }
-
-    It "should handle paging correctly with the default page size" {
+    It "should handle paging correctly" {
         # Default page size = 100,000.
         $bigtable = New-BqTable -Dataset $test_Set "table_big_$r"
         $bigtable = New-BqSchema -Name "Title" -Type "STRING" |

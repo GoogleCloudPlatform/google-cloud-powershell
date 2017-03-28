@@ -438,8 +438,7 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <para type="description">
     /// Retrieves table data from a specified set of rows. Requires the READER dataset role.  
-    /// You can specify how many results to return per page.  This will affect how fast the 
-    /// data is returned.  Rows are returned as Google.Cloud.BigQuery.V2.BigQueryRow objects.
+    /// Rows are returned as Google.Cloud.BigQuery.V2.BigQueryRow objects.
     /// Data can be extracted by indexing by column name (ex: (string) row["title"]; ).
     /// </para>
     /// <example>
@@ -448,12 +447,6 @@ namespace Google.PowerShell.BigQuery
     /// PS C:\> $list = $table | get-bqtabledata
     ///   </code>
     ///   <para>Fetches all of the rows in book_data:classics and exports them to $list.</para>
-    ///   <code>
-    /// PS C:\> $list = $table | Get-BqTabledata -PageSize 100
-    ///   </code>
-    ///   <para>This does the same as above, but fetches them in batches of 100.  This means 
-    ///   if the table is larger, the results will arrive faster, but will take more time 
-    ///   overall due to additional calls to the server.</para>
     /// </example> 
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/tabledata)">
     /// [BigQuery Tabledata]
@@ -472,15 +465,6 @@ namespace Google.PowerShell.BigQuery
         [PropertyByTypeTransformation(TypeToTransform = typeof(Table), Property = nameof(Table.TableReference))]
         public TableReference InputObject { get; set; }
 
-        /// <summary>
-        /// <para type="description">
-        /// The number of results returned per call to the server. If there are more results
-        /// than the initial page, they will be fetched lazily with subsequent pages. 
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = false)]
-        public int? PageSize { get; set; }
-
         protected override void ProcessRecord()
         {
             var Client = BigQueryClient.Create(InputObject.ProjectId);
@@ -488,7 +472,7 @@ namespace Google.PowerShell.BigQuery
             try
             {
                 var response = Client.ListRows(InputObject, null,
-                new ListRowsOptions() { PageSize = PageSize });
+                new ListRowsOptions());
 
                 if (response == null)
                 {
