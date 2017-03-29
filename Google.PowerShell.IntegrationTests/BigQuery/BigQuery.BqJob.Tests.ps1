@@ -22,6 +22,8 @@ Describe "Get-BqJob" {
         $jobs.Count | Should BeGreaterThan 1
     }
 
+    #TODO(ahandley): When Start- and Stop-BqJob are written, add in tests for AllUsers and State
+
     It "should get specific job via pipeline" {
         $jobs = Get-BqJob
         $job = $jobs[0] 

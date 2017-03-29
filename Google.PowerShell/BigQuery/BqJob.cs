@@ -8,6 +8,7 @@ using System;
 using System.Net;
 using System.Management.Automation;
 using Google.Cloud.BigQuery.V2;
+using System.Collections.Generic;
 
 namespace Google.PowerShell.BigQuery
 {
@@ -56,82 +57,85 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// The ID of the Job to get a reference for.
+        /// The ID of the Job to get a reference for. Can be passed as a string parameter or
+        /// as a Job object through the pipeline. Other types accepted are JobsData and JobReference.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, Position = 0)]
-        [ValidatePattern("[a-zA-Z0-9_]")]
-        public string JobId { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The Job object to get an updated reference for.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = false, ValueFromPipeline = true)]
+        [Parameter(Mandatory = false, Position = 0, ValueFromPipeline = true)]
         [PropertyByTypeTransformation(TypeToTransform = typeof(JobList.JobsData),
             Property = nameof(JobList.JobsData.JobReference))]
         [PropertyByTypeTransformation(TypeToTransform = typeof(Apis.Bigquery.v2.Data.Job),
             Property = nameof(Apis.Bigquery.v2.Data.Job.JobReference))]
-        public JobReference InputObject { get; set; }
+        [PropertyByTypeTransformation(TypeToTransform = typeof(JobReference),
+            Property = nameof(JobReference.JobId))]
+        [ValidateNotNullOrEmpty]
+        public string JobId { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Filter jobs returned by state.  Options are 'Done', 'Pending', and 'Running'.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public JobsResource.ListRequest.StateFilterEnum State { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Forces the cmdlet to display jobs owned by all users in the project.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public SwitchParameter AllUsers { get; set; }
 
         protected override void ProcessRecord()
         {
-            if (JobId == null && InputObject == null)
+            if (JobId == null)
             {
-                DoListRequest(Service.Jobs.List(Project));
+                WriteObject(DoListRequest(), true);
             }
             else
             {
-                if (JobId == null)
-                {
-                    JobId = InputObject.JobId;
-                }
-                DoGetRequest(Service.Jobs.Get(Project, JobId));
+                DoGetRequest();
             }
         }
 
         /// <summary>
         /// Executes a List Jobs request and writes returned objects or errors.
         /// </summary>
-        /// <param name="request">Pre-built request ready to be executed</param>
-        public void DoListRequest(JobsResource.ListRequest request)
+        public IEnumerable<JobList.JobsData> DoListRequest()
         {
-            try
+            var request = Service.Jobs.List(Project);
+            request.StateFilter = State;
+            request.AllUsers = AllUsers;
+            do
             {
-                do
+                JobList response = request.Execute();
+                if (response == null)
                 {
-                    JobList response = request.Execute();
-                    if (response == null)
-                    {
-                        WriteError(new ErrorRecord(
-                            new Exception("The List query returned null instead of a well formed list."),
-                            "Null List Returned", ErrorCategory.ReadError, Project));
-                    }
-                    if (response.Jobs != null)
-                    {
-                        WriteObject(response.Jobs, true);
-                    }
-                    request.PageToken = response.NextPageToken;
+                    ThrowTerminatingError(new ErrorRecord(
+                        new Exception("The List query returned null instead of a well formed list."),
+                        "Null List Returned", ErrorCategory.ReadError, Project));
                 }
-                while (!Stopping && request.PageToken != null);
+                if (response.Jobs != null)
+                {
+                    foreach (var job in response.Jobs)
+                    {
+                        yield return job;
+                    }
+                }
+                request.PageToken = response.NextPageToken;
             }
-            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Forbidden)
-            {
-                ThrowTerminatingError(new ErrorRecord(ex,
-                    $"Error {ex.HttpStatusCode}: Permission denied to read jobs from '{Project}'.",
-                    ErrorCategory.PermissionDenied, JobId));
-            }
+            while (!Stopping && request.PageToken != null);
         }
 
         /// <summary>
         /// Executes a Get Jobs request and writes the returned Job or error.
         /// </summary>
-        /// <param name="request">Pre-built request ready to be executed</param>
-        public void DoGetRequest(JobsResource.GetRequest request)
+        public void DoGetRequest()
         {
             try
             {
+                var request = Service.Jobs.Get(Project, JobId);
                 var response = request.Execute();
                 WriteObject(response);
             }
@@ -139,6 +143,12 @@ namespace Google.PowerShell.BigQuery
             {
                 ThrowTerminatingError(new ErrorRecord(ex,
                     $"Error {ex.HttpStatusCode}: Job '{JobId}' not found in '{Project}'.",
+                    ErrorCategory.ObjectNotFound, JobId));
+            }
+            catch (Exception ex)
+            {
+                ThrowTerminatingError(new ErrorRecord(ex,
+                    $"Error while attempting to perform Get request.",
                     ErrorCategory.ObjectNotFound, JobId));
             }
         }
