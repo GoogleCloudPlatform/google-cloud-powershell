@@ -7,6 +7,7 @@ using Google.PowerShell.Common;
 using System;
 using System.Net;
 using System.Management.Automation;
+using Google.Cloud.BigQuery.V2;
 
 namespace Google.PowerShell.BigQuery
 {
@@ -15,19 +16,18 @@ namespace Google.PowerShell.BigQuery
     /// Lists all jobs that you started in the specified project or returns information about a specific job.
     /// </para>
     /// <para type="description">
-    /// If no Job is specified though ID parameter or object via pipeline, this cmdlet lists all jobs that 
-    /// you started in the specified project. If a Job is specified, it will return a descriptor object 
-    /// for that job. Listing requires Can View or Is Owner project roles. Viewing information about a 
-    /// specific job requires that you’re the one who ran the job, or that you have the Is Owner project 
-    /// role. Job information is stored for a six month period after its creation.
+    /// If no Job is specified through the JobId parameter or object via pipeline, a list of all jobs in the 
+    /// specified project will be returned. If a Job is specified, it will return a descriptor object for 
+    /// that job. Listing requires ‘Viewer’ or ‘Owner’ roles. Viewing information about a specific job 
+    /// requires the ‘Owner’ role. Job information is stored for six months after its creation.
     /// </para>
     /// <example>
     ///   <code>PS C:\> Get-BqJob</code>
-    ///   <para>This will list all past or present jobs from the default project.</para>
+    ///   <para>Lists all past or present jobs from the default project.</para>
     /// </example>
     /// <example>
     ///   <code>PS C:\> Get-BqJob -ProjectId "my_project"</code>
-    ///   <para>This will list all past or present jobs from the specified project, "my_project".</para>
+    ///   <para>Lists list all past or present jobs from the specified project, "my_project".</para>
     /// </example>
     /// <example>
     ///   <code>PS C:\> $job = Get-BqJob "job_p6focacVVo29rJ4_yvn8Aabi2wQ"</code>
@@ -91,26 +91,43 @@ namespace Google.PowerShell.BigQuery
             }
         }
 
+        /// <summary>
+        /// Executes a List Jobs request and writes returned objects or errors.
+        /// </summary>
+        /// <param name="request">Pre-built request ready to be executed</param>
         public void DoListRequest(JobsResource.ListRequest request)
         {
-            do
+            try
             {
-                JobList response = request.Execute();
-                if (response == null)
+                do
                 {
-                    WriteError(new ErrorRecord(
-                        new Exception("The List query returned null instead of a well formed list."),
-                        "Null List Returned", ErrorCategory.ReadError, Project));
+                    JobList response = request.Execute();
+                    if (response == null)
+                    {
+                        WriteError(new ErrorRecord(
+                            new Exception("The List query returned null instead of a well formed list."),
+                            "Null List Returned", ErrorCategory.ReadError, Project));
+                    }
+                    if (response.Jobs != null)
+                    {
+                        WriteObject(response.Jobs, true);
+                    }
+                    request.PageToken = response.NextPageToken;
                 }
-                if (response.Jobs != null)
-                {
-                    WriteObject(response.Jobs, true);
-                }
-                request.PageToken = response.NextPageToken;
+                while (!Stopping && request.PageToken != null);
             }
-            while (!Stopping && request.PageToken != null);
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Forbidden)
+            {
+                ThrowTerminatingError(new ErrorRecord(ex,
+                    $"Error {ex.HttpStatusCode}: Permission denied to read jobs from '{Project}'.",
+                    ErrorCategory.PermissionDenied, JobId));
+            }
         }
 
+        /// <summary>
+        /// Executes a Get Jobs request and writes the returned Job or error.
+        /// </summary>
+        /// <param name="request">Pre-built request ready to be executed</param>
         public void DoGetRequest(JobsResource.GetRequest request)
         {
             try
@@ -120,10 +137,9 @@ namespace Google.PowerShell.BigQuery
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
             {
-                WriteError(new ErrorRecord(ex,
+                ThrowTerminatingError(new ErrorRecord(ex,
                     $"Error {ex.HttpStatusCode}: Job '{JobId}' not found in '{Project}'.",
-                    ErrorCategory.ObjectNotFound,
-                    JobId));
+                    ErrorCategory.ObjectNotFound, JobId));
             }
         }
     }

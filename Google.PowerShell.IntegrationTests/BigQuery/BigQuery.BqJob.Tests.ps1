@@ -14,11 +14,12 @@ Describe "Get-BqJob" {
         New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
             New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $table | 
             Add-BqTabledata $filename CSV -SkipLeadingRows 1
+        $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1
     }
 
     It "should list jobs from the past 6 months" {
         $jobs = Get-BqJob
-        $jobs.Count | Should BeGreaterThan 0
+        $jobs.Count | Should BeGreaterThan 1
     }
 
     It "should get specific job via pipeline" {
@@ -44,7 +45,7 @@ Describe "Get-BqJob" {
     }
 
     It "should handle projects that the user does not have permissions for" {
-        { Get-BqJob -Project $accessErrProject -ErrorAction Stop } | Should Throw 400
+        { Get-BqJob -Project $accessErrProject -ErrorAction Stop } | Should Throw "400"
     }
 
     AfterAll {
