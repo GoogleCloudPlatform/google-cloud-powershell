@@ -161,6 +161,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BigQuery\BqCmdlet.cs" />
+    <Compile Include="BigQuery\BqJob.cs" />
     <Compile Include="BigQuery\BqTable.cs" />
     <Compile Include="BigQuery\BqDataset.cs" />
     <Compile Include="BigQuery\BqTabledata.cs" />
