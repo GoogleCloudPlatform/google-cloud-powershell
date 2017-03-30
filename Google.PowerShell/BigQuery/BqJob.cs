@@ -42,9 +42,16 @@ namespace Google.PowerShell.BigQuery
     /// [BigQuery Jobs]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Get, "BqJob")]
+    [Cmdlet(VerbsCommon.Get, "BqJob", DefaultParameterSetName = ParameterSetNames.List)]
     public class GetBqJob : BqCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string List = "List";
+            public const string GetString = "GetString";
+            public const string GetObject = "GetObject";
+        }
+
         /// <summary>
         /// <para type="description">
         /// The project to look for jobs in. If not set via PowerShell parameter processing, it will
@@ -61,22 +68,30 @@ namespace Google.PowerShell.BigQuery
         /// as a Job object through the pipeline. Other types accepted are JobsData and JobReference.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, Position = 0, ValueFromPipeline = true)]
+        [Parameter(Mandatory = false, Position = 0, ParameterSetName = ParameterSetNames.GetString)]
+        [ValidateNotNullOrEmpty]
+        public string JobId { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// JobReference to get an updated Job object for. Other types accepted are Job and JobsData.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, Position = 0, ValueFromPipeline = true, 
+            ParameterSetName = ParameterSetNames.GetObject)]
         [PropertyByTypeTransformation(TypeToTransform = typeof(JobList.JobsData),
             Property = nameof(JobList.JobsData.JobReference))]
         [PropertyByTypeTransformation(TypeToTransform = typeof(Apis.Bigquery.v2.Data.Job),
             Property = nameof(Apis.Bigquery.v2.Data.Job.JobReference))]
-        [PropertyByTypeTransformation(TypeToTransform = typeof(JobReference),
-            Property = nameof(JobReference.JobId))]
         [ValidateNotNullOrEmpty]
-        public string JobId { get; set; }
+        public JobReference InputObject { get; set; }
 
         /// <summary>
         /// <para type="description">
         /// Filter jobs returned by state.  Options are 'Done', 'Pending', and 'Running'.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.List)]
         public JobsResource.ListRequest.StateFilterEnum State { get; set; }
 
         /// <summary>
@@ -84,18 +99,27 @@ namespace Google.PowerShell.BigQuery
         /// Forces the cmdlet to display jobs owned by all users in the project.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.List)]
         public SwitchParameter AllUsers { get; set; }
 
         protected override void ProcessRecord()
         {
-            if (JobId == null)
+            switch (ParameterSetName)
             {
-                WriteObject(DoListRequest(), true);
-            }
-            else
-            {
-                DoGetRequest();
+                
+                case ParameterSetNames.List:
+                    WriteObject(DoListRequest(), true);
+                    break;
+                case ParameterSetNames.GetString:
+                    DoGetRequest();
+                    break;
+                case ParameterSetNames.GetObject:
+                    JobId = InputObject.JobId;
+                    Project = InputObject.ProjectId;
+                    DoGetRequest();
+                    break;
+                default:
+                    throw UnknownParameterSetException;
             }
         }
 

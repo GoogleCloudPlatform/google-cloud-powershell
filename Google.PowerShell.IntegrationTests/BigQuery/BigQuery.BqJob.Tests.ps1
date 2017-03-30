@@ -23,6 +23,7 @@ Describe "Get-BqJob" {
     }
 
     #TODO(ahandley): When Start- and Stop-BqJob are written, add in tests for AllUsers and State
+    #TODO(ahandley): When Start- is ready, add test with alternate project via jobReference
 
     It "should get specific job via pipeline" {
         $jobs = Get-BqJob
@@ -31,10 +32,17 @@ Describe "Get-BqJob" {
         $return.JobReference.JobId | Should Be $job.JobReference.JobId
     }
 
-    It "should get specific job via parameter" {
+    It "should get specific job via string parameter" {
         $jobs = Get-BqJob
         $job = $jobs[0] 
-        $return = Get-BqJob -JobId $job.JobReference.JobId
+        $return = Get-BqJob $job.JobReference.JobId
+        $return.JobReference.JobId | Should Be $job.JobReference.JobId
+    }
+
+    It "should get specific job via object parameter" {
+        $jobs = Get-BqJob
+        $job = $jobs[0] 
+        $return = Get-BqJob $job
         $return.JobReference.JobId | Should Be $job.JobReference.JobId
     }
 
