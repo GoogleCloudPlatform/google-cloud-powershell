@@ -178,5 +178,257 @@ namespace Google.PowerShell.BigQuery
         }
     }
 
-    
+    /// <summary>
+    /// <para type="synopsis">
+    /// Starts a new, asynchronous BigQuery Job. Currently, the only supported type is Query.
+    /// </para>
+    /// <para type="description">
+    /// Starts a new asynchronous job. This call requires the ‘Viewer’ role. The Type parameter 
+    /// can be -Query, -Copy, -Load, or -Extract.  Each of these job types has its own set of 
+    /// type-specific parameters to define what the job does.  Job types all share a set of 
+    /// parameters that define job attributes such as start time and handle statistics such 
+    /// as rows and raw amounts of data processed. 
+    /// Use -PollUntilComplete to have the cmdlet treat the job as a blocking operation.  
+    /// It will poll until the job has finished, and then it will return a job reference.
+    /// </para>
+    /// <example>
+    ///   <code>
+    /// PS C:\> $job = Start-BqJob -Query "select * from book_data.classics where Year > 1900"
+    ///   </code>
+    ///   <para>Queries the classics table and returns a Job object so that results can be viewed.</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    /// PS C:\> $job = Start-BqJob -Query "select * from classics where Year > 1900" `
+    /// -DefaultDataset $dataset -DestinationTable $table
+    ///   </code>
+    ///   <para>Queries with a default dataset and using a permanent table as the destination for results.</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs)">
+    /// [BigQuery Jobs]
+    /// </para>
+    /// </summary>
+    [Cmdlet("Start", "BqJob")]
+    public class StartBqJob : BqCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string DoQuery = "DoQuery";
+            public const string DoCopy = "DoCopy";
+            public const string DoLoad = "DoLoad";
+            public const string DoExtract = "DoExtract";
+        }
+
+        // All-Type Parameters.
+
+        /// <summary>
+        /// <para type="description">
+        /// The project to look for jobs in. If not set via PowerShell parameter processing, it will
+        /// default to the Cloud SDK's default project.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public override string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Turns the async call into a synchronous call by polling until the job is complete before 
+        /// returning. Can also be accessed by '-Synch'.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [Alias("Synch")]
+        public SwitchParameter PollUntilComplete { get; set; }
+
+        // Query Parameters.
+        //TODO(ahandley): Billing params for Queries.
+
+        /// <summary>
+        /// <para type="description">
+        /// Selects job type Query.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.DoQuery)]
+        public SwitchParameter Query { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// A query string, following the BigQuery query syntax, of the query to execute.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.DoQuery)]
+        [ValidateNotNullOrEmpty]
+        public string QueryString { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Causes BigQuery to not run the job. Instead, if the query is valid, BigQuery returns 
+        /// statistics about the job such as how many bytes would be processed. If the query is 
+        /// invalid, an error returns. //This feature is not currently available.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoQuery)]
+        public SwitchParameter DryRun { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Specifies BigQuery's legacy SQL dialect for this query.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoQuery)]
+        public SwitchParameter UseLegacySql { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// A dataset to use for any unqualified table names in the query.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoQuery)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Dataset),
+            Property = nameof(Dataset.DatasetReference))]
+        [Alias("Dataset")]
+        public DatasetReference DefaultDataset { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The destination table to write the results into. If this is not specified, the 
+        /// results will be stored in a temporary table.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoQuery)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Table),
+            Property = nameof(Table.TableReference))]
+        [Alias("Table", "Dest")]
+        public TableReference DestinationTable { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Priority of the query.  Can be 'Batch' or 'Interactive'.
+        /// </para>
+        /// </summary>
+        public QueryPriority Priority { get; set; }
+
+        // Copy Parameters.
+
+        /// <summary>
+        /// <para type="description">
+        /// Selects job type Copy.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.DoCopy)]
+        public SwitchParameter Copy { get; set; }
+
+        // Load Parameters.
+
+        /// <summary>
+        /// <para type="description">
+        /// Selects job type Load.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.DoLoad)]
+        public SwitchParameter Load { get; set; }
+
+        // Extract Parameters.
+
+        /// <summary>
+        /// <para type="description">
+        /// Selects job type Extract.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.DoExtract)]
+        public SwitchParameter Extract { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            var Client = BigQueryClient.Create(Project);
+
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.DoQuery:
+                    DoQuery(Client);
+                    break;
+                case ParameterSetNames.DoCopy:
+                    DoCopy(Client);
+                    break;
+                case ParameterSetNames.DoLoad:
+                    DoLoad(Client);
+                    break;
+                case ParameterSetNames.DoExtract:
+                    DoExtract(Client);
+                    break;
+                default:
+                    ThrowTerminatingError(new ErrorRecord(
+                        new Exception("You must select a valid BQ Job type."),
+                        "Type Not Found", ErrorCategory.ObjectNotFound, this));
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Query Job main processing function.
+        /// </summary>
+        /// <param name="client">BigQuery client instance to send requests with</param>
+        public void DoQuery(BigQueryClient client)
+        {
+            try
+            {
+                var options = new CreateQueryJobOptions();
+                options.UseLegacySql = UseLegacySql;
+                options.Priority = Priority;
+                options.DestinationTable = DestinationTable;
+                options.DefaultDataset = DefaultDataset;
+                //TODO(ahandley): DryRun option when veneer support is added
+                if (DryRun)
+                {
+                    throw new NotImplementedException(
+                        "DryRun is not yet supported by this cmdlet.  Support will be added soon!");
+                }
+
+                BigQueryJob bqr = client.CreateQueryJob(QueryString, options);
+
+                if (PollUntilComplete)
+                {
+                    bqr.PollUntilCompleted();
+                }
+
+                WriteObject(bqr.Resource);
+            }
+            catch (Exception ex)
+            {
+                ThrowTerminatingError(new ErrorRecord(ex, "Query rejected",
+                    ErrorCategory.InvalidOperation, this));
+            }
+        }
+
+        /// <summary>
+        /// Copy Job main processing function.
+        /// </summary>
+        /// <param name="client">BigQuery client instance to send requests with</param>
+        public void DoCopy(BigQueryClient client)
+        {
+            throw new NotImplementedException(
+                "Copy jobs are not implemented yet.  Use the *-BqTabledata cmdlets instead.");
+        }
+
+        /// <summary>
+        /// Load Job main processing function.
+        /// </summary>
+        /// <param name="client">BigQuery client instance to send requests with</param>
+        public void DoLoad(BigQueryClient client)
+        {
+            throw new NotImplementedException(
+                "Load jobs are not implemented yet.  Use Set-BqTabledata instead.");
+        }
+
+        /// <summary>
+        /// Extract Job main processing function.
+        /// </summary>
+        /// <param name="client">BigQuery client instance to send requests with</param>
+        public void DoExtract(BigQueryClient client)
+        {
+            throw new NotImplementedException(
+                "Extract jobs are not implemented yet.  Use Get-BqTabledata instead.");
+        }
+    }
 }
