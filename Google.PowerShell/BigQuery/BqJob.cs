@@ -333,7 +333,6 @@ namespace Google.PowerShell.BigQuery
 
         protected override void ProcessRecord()
         {
-            var Client = BigQueryClient.Create(Project);
             Apis.Bigquery.v2.Data.Job result;
 
             switch (ParameterSetName)
