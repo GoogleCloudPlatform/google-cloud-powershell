@@ -189,7 +189,9 @@ namespace Google.PowerShell.BigQuery
     /// parameters that define job attributes such as start time and handle statistics such 
     /// as rows and raw amounts of data processed. 
     /// Use -PollUntilComplete to have the cmdlet treat the job as a blocking operation.  
-    /// It will poll until the job has finished, and then it will return a job reference.
+    /// It will poll until the job has finished, and then it will return a job reference. 
+    /// Tables referenced in queries should be fully qualified, but to use any that are not, 
+    /// the DefaultDataset parameter must be used to specify where to find them.
     /// </para>
     /// <example>
     ///   <code>
@@ -271,7 +273,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// A dataset to use for any unqualified table names in the query.
+        /// The dataset to use for any unqualified table names in QueryString.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoQuery)]
@@ -332,34 +334,38 @@ namespace Google.PowerShell.BigQuery
         protected override void ProcessRecord()
         {
             var Client = BigQueryClient.Create(Project);
+            Apis.Bigquery.v2.Data.Job result;
 
             switch (ParameterSetName)
             {
                 case ParameterSetNames.DoQuery:
-                    DoQuery(Client);
+                    result = DoQuery(Client);
                     break;
                 case ParameterSetNames.DoCopy:
-                    DoCopy(Client);
+                    result = DoCopy(Client);
                     break;
                 case ParameterSetNames.DoLoad:
-                    DoLoad(Client);
+                    result = DoLoad(Client);
                     break;
                 case ParameterSetNames.DoExtract:
-                    DoExtract(Client);
+                    result = DoExtract(Client);
                     break;
                 default:
                     ThrowTerminatingError(new ErrorRecord(
                         new Exception("You must select a valid BQ Job type."),
                         "Type Not Found", ErrorCategory.ObjectNotFound, this));
+                    result = null;
                     break;
             }
+
+            WriteObject(result);
         }
 
         /// <summary>
         /// Query Job main processing function.
         /// </summary>
         /// <param name="client">BigQuery client instance to send requests with</param>
-        public void DoQuery(BigQueryClient client)
+        public Apis.Bigquery.v2.Data.Job DoQuery(BigQueryClient client)
         {
             if (ShouldProcess($"\n\nProject: {Project}\nQuery: {QueryString}\n\n"))
             {
@@ -378,7 +384,7 @@ namespace Google.PowerShell.BigQuery
                         bqr.PollUntilCompleted();
                     }
 
-                    WriteObject(bqr.Resource);
+                    return bqr.Resource;
                 }
                 catch (Exception ex)
                 {
@@ -386,13 +392,14 @@ namespace Google.PowerShell.BigQuery
                         ErrorCategory.InvalidOperation, this));
                 }
             }
+            return null;
         }
 
         /// <summary>
         /// Copy Job main processing function.
         /// </summary>
         /// <param name="client">BigQuery client instance to send requests with</param>
-        public void DoCopy(BigQueryClient client)
+        public Apis.Bigquery.v2.Data.Job DoCopy(BigQueryClient client)
         {
             throw new NotImplementedException(
                 "Copy jobs are not implemented yet.  Use the *-BqTabledata cmdlets instead.");
@@ -402,7 +409,7 @@ namespace Google.PowerShell.BigQuery
         /// Load Job main processing function.
         /// </summary>
         /// <param name="client">BigQuery client instance to send requests with</param>
-        public void DoLoad(BigQueryClient client)
+        public Apis.Bigquery.v2.Data.Job DoLoad(BigQueryClient client)
         {
             throw new NotImplementedException(
                 "Load jobs are not implemented yet.  Use Set-BqTabledata instead.");
@@ -412,10 +419,11 @@ namespace Google.PowerShell.BigQuery
         /// Extract Job main processing function.
         /// </summary>
         /// <param name="client">BigQuery client instance to send requests with</param>
-        public void DoExtract(BigQueryClient client)
+        public Apis.Bigquery.v2.Data.Job DoExtract(BigQueryClient client)
         {
             throw new NotImplementedException(
                 "Extract jobs are not implemented yet.  Use Get-BqTabledata instead.");
         }
     }
+
 }
