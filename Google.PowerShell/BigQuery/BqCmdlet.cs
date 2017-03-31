@@ -21,7 +21,6 @@ namespace Google.PowerShell.BigQuery
 
         public BqCmdlet()
         {
-            //Service = new BigqueryService(GetBaseClientServiceInitializer());
             _service = new Lazy<BigqueryService>(() => new BigqueryService(GetBaseClientServiceInitializer()));
             _client = new Lazy<BigQueryClient>(() => BigQueryClient.Create(Project));
         }

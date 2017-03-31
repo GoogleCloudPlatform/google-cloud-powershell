@@ -338,16 +338,16 @@ namespace Google.PowerShell.BigQuery
             switch (ParameterSetName)
             {
                 case ParameterSetNames.DoQuery:
-                    result = DoQuery(Client);
+                    result = DoQuery();
                     break;
                 case ParameterSetNames.DoCopy:
-                    result = DoCopy(Client);
+                    result = DoCopy();
                     break;
                 case ParameterSetNames.DoLoad:
-                    result = DoLoad(Client);
+                    result = DoLoad();
                     break;
                 case ParameterSetNames.DoExtract:
-                    result = DoExtract(Client);
+                    result = DoExtract();
                     break;
                 default:
                     ThrowTerminatingError(new ErrorRecord(
@@ -363,8 +363,7 @@ namespace Google.PowerShell.BigQuery
         /// <summary>
         /// Query Job main processing function.
         /// </summary>
-        /// <param name="client">BigQuery client instance to send requests with</param>
-        public Apis.Bigquery.v2.Data.Job DoQuery(BigQueryClient client)
+        public Apis.Bigquery.v2.Data.Job DoQuery()
         {
             if (ShouldProcess($"\n\nProject: {Project}\nQuery: {QueryString}\n\n"))
             {
@@ -376,7 +375,7 @@ namespace Google.PowerShell.BigQuery
                     options.DestinationTable = DestinationTable;
                     options.DefaultDataset = DefaultDataset;
 
-                    BigQueryJob bqr = client.CreateQueryJob(QueryString, options);
+                    BigQueryJob bqr = Client.CreateQueryJob(QueryString, options);
 
                     if (PollUntilComplete)
                     {
@@ -397,8 +396,7 @@ namespace Google.PowerShell.BigQuery
         /// <summary>
         /// Copy Job main processing function.
         /// </summary>
-        /// <param name="client">BigQuery client instance to send requests with</param>
-        public Apis.Bigquery.v2.Data.Job DoCopy(BigQueryClient client)
+        public Apis.Bigquery.v2.Data.Job DoCopy()
         {
             throw new NotImplementedException(
                 "Copy jobs are not implemented yet.  Use the *-BqTabledata cmdlets instead.");
@@ -407,8 +405,7 @@ namespace Google.PowerShell.BigQuery
         /// <summary>
         /// Load Job main processing function.
         /// </summary>
-        /// <param name="client">BigQuery client instance to send requests with</param>
-        public Apis.Bigquery.v2.Data.Job DoLoad(BigQueryClient client)
+        public Apis.Bigquery.v2.Data.Job DoLoad()
         {
             throw new NotImplementedException(
                 "Load jobs are not implemented yet.  Use Set-BqTabledata instead.");
@@ -417,8 +414,7 @@ namespace Google.PowerShell.BigQuery
         /// <summary>
         /// Extract Job main processing function.
         /// </summary>
-        /// <param name="client">BigQuery client instance to send requests with</param>
-        public Apis.Bigquery.v2.Data.Job DoExtract(BigQueryClient client)
+        public Apis.Bigquery.v2.Data.Job DoExtract()
         {
             throw new NotImplementedException(
                 "Extract jobs are not implemented yet.  Use Get-BqTabledata instead.");
