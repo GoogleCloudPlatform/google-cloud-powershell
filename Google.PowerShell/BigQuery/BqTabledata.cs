@@ -373,8 +373,7 @@ namespace Google.PowerShell.BigQuery
 
         protected override void ProcessRecord()
         {
-            var Client = BigQueryClient.Create(InputObject.ProjectId);
-
+            Project = InputObject.ProjectId;
             try
             {
                 using (Stream fileInput = File.OpenRead(Filename))
@@ -467,8 +466,7 @@ namespace Google.PowerShell.BigQuery
 
         protected override void ProcessRecord()
         {
-            var Client = BigQueryClient.Create(InputObject.ProjectId);
-            
+            Project = InputObject.ProjectId;
             try
             {
                 var response = Client.ListRows(InputObject, null,
@@ -480,7 +478,6 @@ namespace Google.PowerShell.BigQuery
                 }
 
                 WriteObject(response, true);
-                //TODO(ahandley): Find better formatting for BigQueryRow objects
             }
             catch (Exception ex)
             {
