@@ -77,7 +77,7 @@ namespace Google.PowerShell.BigQuery
         /// JobReference to get an updated Job object for. Other types accepted are Job and JobsData.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, Position = 0, ValueFromPipeline = true, 
+        [Parameter(Mandatory = false, Position = 0, ValueFromPipeline = true,
             ParameterSetName = ParameterSetNames.GetObject)]
         [PropertyByTypeTransformation(TypeToTransform = typeof(JobList.JobsData),
             Property = nameof(JobList.JobsData.JobReference))]
@@ -106,7 +106,7 @@ namespace Google.PowerShell.BigQuery
         {
             switch (ParameterSetName)
             {
-                
+
                 case ParameterSetNames.List:
                     WriteObject(DoListRequest(), true);
                     break;
@@ -208,7 +208,7 @@ namespace Google.PowerShell.BigQuery
     /// [BigQuery Jobs]
     /// </para>
     /// </summary>
-    [Cmdlet("Start", "BqJob")]
+    [Cmdlet("Start", "BqJob", SupportsShouldProcess = true)]
     public class StartBqJob : BqCmdlet
     {
         private class ParameterSetNames
@@ -223,7 +223,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// The project to look for jobs in. If not set via PowerShell parameter processing, it will
+        /// The project to run jobs in. If not set via PowerShell parameter processing, it will
         /// default to the Cloud SDK's default project.
         /// </para>
         /// </summary>
@@ -234,11 +234,11 @@ namespace Google.PowerShell.BigQuery
         /// <summary>
         /// <para type="description">
         /// Turns the async call into a synchronous call by polling until the job is complete before 
-        /// returning. Can also be accessed by '-Synch'.
+        /// returning. Can also be accessed by '-Synchronous'.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
-        [Alias("Synch")]
+        [Alias("Synchronous")]
         public SwitchParameter PollUntilComplete { get; set; }
 
         // Query Parameters.
@@ -260,16 +260,6 @@ namespace Google.PowerShell.BigQuery
         [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.DoQuery)]
         [ValidateNotNullOrEmpty]
         public string QueryString { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// Causes BigQuery to not run the job. Instead, if the query is valid, BigQuery returns 
-        /// statistics about the job such as how many bytes would be processed. If the query is 
-        /// invalid, an error returns. //This feature is not currently available.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoQuery)]
-        public SwitchParameter DryRun { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -371,33 +361,30 @@ namespace Google.PowerShell.BigQuery
         /// <param name="client">BigQuery client instance to send requests with</param>
         public void DoQuery(BigQueryClient client)
         {
-            try
+            if (ShouldProcess($"\n\nProject: {Project}\nQuery: {QueryString}\n\n"))
             {
-                var options = new CreateQueryJobOptions();
-                options.UseLegacySql = UseLegacySql;
-                options.Priority = Priority;
-                options.DestinationTable = DestinationTable;
-                options.DefaultDataset = DefaultDataset;
-                //TODO(ahandley): DryRun option when veneer support is added
-                if (DryRun)
+                try
                 {
-                    throw new NotImplementedException(
-                        "DryRun is not yet supported by this cmdlet.  Support will be added soon!");
+                    var options = new CreateQueryJobOptions();
+                    options.UseLegacySql = UseLegacySql;
+                    options.Priority = Priority;
+                    options.DestinationTable = DestinationTable;
+                    options.DefaultDataset = DefaultDataset;
+
+                    BigQueryJob bqr = client.CreateQueryJob(QueryString, options);
+
+                    if (PollUntilComplete)
+                    {
+                        bqr.PollUntilCompleted();
+                    }
+
+                    WriteObject(bqr.Resource);
                 }
-
-                BigQueryJob bqr = client.CreateQueryJob(QueryString, options);
-
-                if (PollUntilComplete)
+                catch (Exception ex)
                 {
-                    bqr.PollUntilCompleted();
+                    ThrowTerminatingError(new ErrorRecord(ex, "Query rejected",
+                        ErrorCategory.InvalidOperation, this));
                 }
-
-                WriteObject(bqr.Resource);
-            }
-            catch (Exception ex)
-            {
-                ThrowTerminatingError(new ErrorRecord(ex, "Query rejected",
-                    ErrorCategory.InvalidOperation, this));
             }
         }
 

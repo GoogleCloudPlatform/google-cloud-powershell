@@ -87,7 +87,7 @@ Describe "BqJob-Query" {
     It "should query out of a pre-loaded table" {
         $alt_tab = New-BqTable -Dataset $test_Set "table_res_$r"
         $job = Start-BqJob -Query "select * from $datasetName.table_$r where Year > 1900" `
-            -DefaultDataset $test_set -DestinationTable $alt_tab -PollUntilComplete
+                           -DefaultDataset $test_set -DestinationTable $alt_tab -PollUntilComplete
         $job = $job | Get-BqJob
         $alt_tab = $alt_tab | Get-BqTable
         $job.Status.State | Should Be "DONE"
@@ -99,6 +99,11 @@ Describe "BqJob-Query" {
     It "should use legacy SQL when asked" {
         $job = Start-BqJob -Query "select * from $datasetName.table_$r where Year > 1900" -UseLegacySql
         $job.Configuration.Query.UseLegacySql | Should Be True
+        #TODO(ahandley): Add in checking the data once receive is done.
+    }
+
+    It "should properly halt when -WhatIf is passed" {
+        Start-BqJob -Query "select * from $datasetName.table_$r where Year > 1900" -WhatIf | Should Be $null
     }
 
     # Note - Priority cannot be tested, as the server does not output the Job.Configuration.Query.Priority property.
