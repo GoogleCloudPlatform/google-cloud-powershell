@@ -472,22 +472,27 @@ namespace Google.PowerShell.BigQuery
 
         protected override void ProcessRecord()
         {
+            //Set Project for the lazy instantiation of a BQ Client object
             Project = InputObject.ProjectId;
+
             var options = new GetQueryResultsOptions();
             options.Timeout = new TimeSpan(0, 0, (Timeout < 10) ? 10 : Timeout);
             BigQueryResults result;
-            ulong rowsRead = 0;
 
-            do
+            try
             {
-                options.StartIndex = rowsRead;
                 result = Client.GetQueryResults(InputObject, options);
                 foreach (BigQueryRow row in result.GetRows())
                 {
                     WriteObject(row);
-                    rowsRead++;
                 }
-            } while (rowsRead < result.TotalRows);
+            }
+            catch (Exception ex)
+            {
+                ThrowTerminatingError(new ErrorRecord(ex, "Failed to receive results.",
+                        ErrorCategory.InvalidOperation, this));
+            }
         }
     }
+
 }
