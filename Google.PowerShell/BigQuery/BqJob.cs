@@ -482,10 +482,7 @@ namespace Google.PowerShell.BigQuery
             try
             {
                 result = Client.GetQueryResults(InputObject, options);
-                foreach (BigQueryRow row in result.GetRows())
-                {
-                    WriteObject(row);
-                }
+                WriteObject(result.GetRows(), true);
             }
             catch (Exception ex)
             {
