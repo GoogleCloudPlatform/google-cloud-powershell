@@ -135,4 +135,33 @@ Describe "BqJob-Query" {
     }
 }
 
+Describe "Stop-BqJob" {
+
+    BeforeAll {
+        $r = Get-Random
+        $datasetName = "pshell_testing_$r"
+        $test_set = New-BqDataset $datasetName
+        $folder = Get-Location
+        $folder = $folder.ToString()
+        $filename = "$folder\classics_large.csv"
+        $table = New-BqTable -Dataset $test_Set "table_$r"
+        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
+            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $table | 
+            Add-BqTabledata $filename CSV -SkipLeadingRows 1
+    }
+
+    It "should query out of a pre-loaded table" {
+        $job = Start-BqJob -Query "select * from book_data.classics where Year > 1900"
+        $res = $job | Stop-Bqjob
+        $can = $res | Get-BqJob
+        $can.Status.State | Should Be "DONE"
+    }
+
+    #TODO(ahandley): Add a few more test cases with different types of jobs that may run longer than a single query
+
+    AfterAll {
+        $test_set | Remove-BqDataset -Force
+    }
+}
+
 Reset-GCloudConfig $oldActiveConfig $configName

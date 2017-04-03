@@ -472,7 +472,7 @@ namespace Google.PowerShell.BigQuery
 
         protected override void ProcessRecord()
         {
-            //Set Project for the lazy instantiation of a BQ Client object
+            // Set Project for the lazy instantiation of a BQ Client object.
             Project = InputObject.ProjectId;
 
             var options = new GetQueryResultsOptions() {
@@ -496,5 +496,67 @@ namespace Google.PowerShell.BigQuery
         }
     }
 
-    
+    /// <summary>
+    /// <para type="synopsis">
+    /// Requests that a running BQ Job be canceled.
+    /// </para>
+    /// <para type="description">
+    /// Requests that a job be canceled. This call will return immediately, and the client 
+    /// will need to poll for job status to see if the cancel completed successfully. 
+    /// Canceled jobs may still incur costs. This cmdlet returns a Job object if successful.
+    /// </para>
+    /// <example>
+    ///   <code>
+    /// PS C:\> $job = Start-BqJob -Query "select * from book_data.classics"
+    /// PS C:\> $job = $job | Stop-BqJob | Get-BqJob
+    /// PS C:\> $job.Status.State
+    ///   </code>
+    ///   <para>This will send a request to stop $job as soon as possible. The third line
+    ///   should output "DONE", but there is a chance that the user will have to continue to
+    ///   poll for status with Get-BqJob.</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs)">
+    /// [BigQuery Jobs]
+    /// </para>
+    /// </summary>
+    [Cmdlet("Stop", "BqJob")]
+    public class StopBqJob : BqCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// JobReference to get results from. Other types accepted are Job and JobsData.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, Position = 0, ValueFromPipeline = true)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(JobList.JobsData),
+            Property = nameof(JobList.JobsData.JobReference))]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Apis.Bigquery.v2.Data.Job),
+            Property = nameof(Apis.Bigquery.v2.Data.Job.JobReference))]
+        [ValidateNotNull]
+        public JobReference InputObject { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            // Set Project for the lazy instantiation of a BQ Client object.
+            Project = InputObject.ProjectId;
+
+            try
+            {
+                // No options currently available, but class was added for future possibilities.
+                BigQueryJob result = Client.CancelJob(InputObject, new CancelJobOptions());
+                
+                if (result == null)
+                {
+                    throw new Exception("Server response came back as null.");
+                }
+
+                WriteObject(result.Resource);
+            }
+            catch (Exception ex)
+            {
+                ThrowTerminatingError(new ErrorRecord(ex, "Failed to cancel job.",
+                        ErrorCategory.InvalidOperation, this));
+            }
+        }
+    }
 }
