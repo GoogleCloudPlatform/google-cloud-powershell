@@ -474,14 +474,19 @@ namespace Google.PowerShell.BigQuery
         {
             //Set Project for the lazy instantiation of a BQ Client object
             Project = InputObject.ProjectId;
-
-            var options = new GetQueryResultsOptions();
-            options.Timeout = new TimeSpan(0, 0, (Timeout < 10) ? 10 : Timeout);
             BigQueryResults result;
+
+            var options = new GetQueryResultsOptions() {
+                Timeout = new TimeSpan(0, 0, (Timeout < 10) ? 10 : Timeout)
+            };
 
             try
             {
                 result = Client.GetQueryResults(InputObject, options);
+                if (result == null)
+                {
+                    throw new Exception("Server response came back as null.");
+                }
                 WriteObject(result.GetRows(), true);
             }
             catch (Exception ex)

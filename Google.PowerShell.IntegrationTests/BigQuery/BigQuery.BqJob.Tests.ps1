@@ -87,7 +87,7 @@ Describe "BqJob-Query" {
         $results[1]["Year"] | Should Be 1967
     }
 
-    It "should query out of a pre-loaded table" {
+    It "should query out of a pre-loaded table with more options than ever before!" {
         $alt_tab = New-BqTable -Dataset $test_Set "table_res_$r"
         $job = Start-BqJob -Query "select * from $datasetName.table_$r where Year > 1900" `
                            -DefaultDataset $test_set -DestinationTable $alt_tab -PollUntilComplete
@@ -109,12 +109,15 @@ Describe "BqJob-Query" {
     }
 
     It "should handle Timeouts" {
-        $job = Start-BqJob -Query "select * from $datasetName.table_$r where Year > 1900" -UseLegacySql
-        $job.Configuration.Query.UseLegacySql | Should Be True
-        $results = Receive-BqJob $job -Timeout 1000
+        $job = Start-BqJob -Query "select * from $datasetName.table_$r where Year > 1900"
+        $results = $job | Receive-BqJob -Timeout 1000
         $results.Count | Should Be 2
-        $results[0]["Year"] | Should Be 1967
-        $results[1]["Author"] | Should Be "Orson Scott Card"
+    }
+
+    It "should go end to end with a synch command" {
+        $results = Start-BqJob -Query "select * from $datasetName.table_$r where Year > 1900" -Synchronous |
+            Receive-BqJob
+        $results.Count | Should Be 2
     }
 
     It "should properly halt when -WhatIf is passed" {
