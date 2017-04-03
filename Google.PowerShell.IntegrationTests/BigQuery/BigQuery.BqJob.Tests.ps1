@@ -81,7 +81,10 @@ Describe "BqJob-Query" {
     It "should query out of a pre-loaded table" {
         $job = Start-BqJob -Query "select * from $datasetName.table_$r where Year > 1900"
         $job | Should Not Be $null
-        #TODO(ahandley): Add in checking the data once receive is done.
+        $results = $job | Receive-BqJob
+        $results.Count | Should Be 2
+        $results[0]["Author"] | Should Be "Orson Scott Card"
+        $results[1]["Year"] | Should Be 1967
     }
 
     It "should query out of a pre-loaded table" {
@@ -99,7 +102,19 @@ Describe "BqJob-Query" {
     It "should use legacy SQL when asked" {
         $job = Start-BqJob -Query "select * from $datasetName.table_$r where Year > 1900" -UseLegacySql
         $job.Configuration.Query.UseLegacySql | Should Be True
-        #TODO(ahandley): Add in checking the data once receive is done.
+        $results = Receive-BqJob $job
+        $results.Count | Should Be 2
+        $results[0]["Year"] | Should Be 1967
+        $results[1]["Author"] | Should Be "Orson Scott Card"
+    }
+
+    It "should handle Timeouts" {
+        $job = Start-BqJob -Query "select * from $datasetName.table_$r where Year > 1900" -UseLegacySql
+        $job.Configuration.Query.UseLegacySql | Should Be True
+        $results = Receive-BqJob $job -Timeout 1000
+        $results.Count | Should Be 2
+        $results[0]["Year"] | Should Be 1967
+        $results[1]["Author"] | Should Be "Orson Scott Card"
     }
 
     It "should properly halt when -WhatIf is passed" {
