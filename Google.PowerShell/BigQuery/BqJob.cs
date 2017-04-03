@@ -187,7 +187,9 @@ namespace Google.PowerShell.BigQuery
     /// can be -Query, -Copy, -Load, or -Extract.  Each of these job types has its own set of 
     /// type-specific parameters to define what the job does.  Job types all share a set of 
     /// parameters that define job attributes such as start time and handle statistics such 
-    /// as rows and raw amounts of data processed. 
+    /// as rows and raw amounts of data processed. This cmdlet supports ShouldProcess, and as 
+    /// such, has the -WhatIf parameter to show the projected results of the cmdlet without 
+    /// actually changing any server resources.
     /// Use -PollUntilComplete to have the cmdlet treat the job as a blocking operation.  
     /// It will poll until the job has finished, and then it will return a job reference. 
     /// Tables referenced in queries should be fully qualified, but to use any that are not, 
@@ -421,4 +423,78 @@ namespace Google.PowerShell.BigQuery
         }
     }
 
+    /// <summary>
+    /// <para type="synopsis">
+    /// Returns the result of a completed BQ Job.
+    /// </para>
+    /// <para type="description">
+    /// Returns the result of a completed BQ Job. Requires the ‘Reader’ dataset role. You can specify 
+    /// how long the call should wait for the query to be completed, if it is not already finished. 
+    /// This is done with the -Timeout parameter. An integer number of seconds is taken, and the 
+    /// default is 10. This cmdlet returns BigQueryRow objects.
+    /// </para>
+    /// <example>
+    ///   <code>
+    /// PS C:\> $job = Start-BqJob -Query "select * from book_data.classics"
+    /// PS C:\> $job | Receive-BqJob -Timeout 60
+    ///   </code>
+    ///   <para>This will run a query in the book_data.classics table and will wait up to 60 seconds 
+    ///   for its completion.  When it finishes, it will print a number of BigQueryRow objects to 
+    ///   the terminal.</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs)">
+    /// [BigQuery Jobs]
+    /// </para>
+    /// </summary>
+    [Cmdlet("Receive", "BqJob")]
+    public class ReceiveBqJob : BqCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// JobReference to get results from. Other types accepted are Job and JobsData.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, Position = 0, ValueFromPipeline = true)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(JobList.JobsData),
+            Property = nameof(JobList.JobsData.JobReference))]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Apis.Bigquery.v2.Data.Job),
+            Property = nameof(Apis.Bigquery.v2.Data.Job.JobReference))]
+        [ValidateNotNull]
+        public JobReference InputObject { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Max time, in seconds, to wait for the job to complete before failing (Default: 10).
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public int Timeout { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            //Set Project for the lazy instantiation of a BQ Client object
+            Project = InputObject.ProjectId;
+
+            var options = new GetQueryResultsOptions() {
+                Timeout = new TimeSpan(0, 0, (Timeout < 10) ? 10 : Timeout)
+            };
+
+            try
+            {
+                BigQueryResults result = Client.GetQueryResults(InputObject, options);
+                if (result == null)
+                {
+                    throw new Exception("Server response came back as null.");
+                }
+                WriteObject(result.GetRows(), true);
+            }
+            catch (Exception ex)
+            {
+                ThrowTerminatingError(new ErrorRecord(ex, "Failed to receive results.",
+                        ErrorCategory.InvalidOperation, this));
+            }
+        }
+    }
+
+    
 }
