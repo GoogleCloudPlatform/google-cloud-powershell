@@ -509,10 +509,9 @@ namespace Google.PowerShell.BigQuery
     ///   <code>
     /// PS C:\> $job = Start-BqJob -Query "SELECT * FROM book_data.classics"
     /// PS C:\> $job = $job | Stop-BqJob | Get-BqJob
-    /// PS C:\> $job.Status.State
     ///   </code>
-    ///   <para>This will send a request to stop $job as soon as possible. The third line
-    ///   should output "DONE", but there is a chance that the user will have to continue to
+    ///   <para>This will send a request to stop $job as soon as possible. $job.Status.State 
+    ///   should now be "DONE", but there is a chance that the user will have to continue to
     ///   poll for status with Get-BqJob.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs)">

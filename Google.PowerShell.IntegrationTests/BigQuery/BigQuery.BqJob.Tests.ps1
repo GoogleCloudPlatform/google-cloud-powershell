@@ -152,9 +152,16 @@ Describe "Stop-BqJob" {
 
     It "should stop a query job" {
         $job = Start-BqJob -Query "select * from book_data.classics where Year > 1900"
-        $res = $job | Stop-Bqjob
-        $can = $res | Get-BqJob
-        $can.Status.State | Should Be "DONE"
+        $res = $job | Stop-Bqjob| Get-BqJob
+        $res.Status.State | Should Be "DONE"
+    }
+
+    It "should handle jobs that are already done" {
+        $job = Start-BqJob -Query "select * from book_data.classics" -Synchronous
+        $job = $job | Get-BqJob
+        $job.Status.State | Should Be "DONE"
+        $res = $job | Stop-Bqjob | Get-BqJob
+        $res.Status.State | Should Be "DONE"
     }
 
     #TODO(ahandley): Add a few more test cases with different types of jobs that may run longer than a single query
