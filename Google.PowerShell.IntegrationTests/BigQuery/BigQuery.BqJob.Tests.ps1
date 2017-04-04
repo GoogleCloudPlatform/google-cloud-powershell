@@ -78,7 +78,7 @@ Describe "BqJob-Query" {
             Add-BqTabledata $filename CSV -SkipLeadingRows 1
     }
 
-    It "should query out of a pre-loaded table" {
+    It "should query a pre-loaded table" {
         $job = Start-BqJob -Query "select * from $datasetName.table_$r where Year > 1900"
         $job | Should Not Be $null
         $results = $job | Receive-BqJob
@@ -87,7 +87,7 @@ Describe "BqJob-Query" {
         $results[1]["Year"] | Should Be 1967
     }
 
-    It "should query out of a pre-loaded table with more options than ever before!" {
+    It "should query a pre-loaded table with more options than ever before!" {
         $alt_tab = New-BqTable -Dataset $test_Set "table_res_$r"
         $job = Start-BqJob -Query "select * from $datasetName.table_$r where Year > 1900" `
                            -DefaultDataset $test_set -DestinationTable $alt_tab -PollUntilComplete
@@ -150,7 +150,7 @@ Describe "Stop-BqJob" {
             Add-BqTabledata $filename CSV -SkipLeadingRows 1
     }
 
-    It "should query out of a pre-loaded table" {
+    It "should stop a query job" {
         $job = Start-BqJob -Query "select * from book_data.classics where Year > 1900"
         $res = $job | Stop-Bqjob
         $can = $res | Get-BqJob

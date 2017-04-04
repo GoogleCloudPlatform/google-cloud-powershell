@@ -498,16 +498,16 @@ namespace Google.PowerShell.BigQuery
 
     /// <summary>
     /// <para type="synopsis">
-    /// Requests that a running BQ Job be canceled.
+    /// Requests that a running BigQuery Job be canceled.
     /// </para>
     /// <para type="description">
     /// Requests that a job be canceled. This call will return immediately, and the client 
-    /// will need to poll for job status to see if the cancel completed successfully. 
-    /// Canceled jobs may still incur costs. This cmdlet returns a Job object if successful.
+    /// is responible for polling for job status. Canceled jobs may still incur costs. 
+    /// This cmdlet returns a Job object if successful.
     /// </para>
     /// <example>
     ///   <code>
-    /// PS C:\> $job = Start-BqJob -Query "select * from book_data.classics"
+    /// PS C:\> $job = Start-BqJob -Query "SELECT * FROM book_data.classics"
     /// PS C:\> $job = $job | Stop-BqJob | Get-BqJob
     /// PS C:\> $job.Status.State
     ///   </code>
