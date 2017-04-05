@@ -78,7 +78,7 @@ Describe "BqJob-Query" {
             Add-BqTabledata $filename CSV -SkipLeadingRows 1
     }
 
-    It "should query out of a pre-loaded table" {
+    It "should query a pre-loaded table" {
         $job = Start-BqJob -Query "select * from $datasetName.table_$r where Year > 1900"
         $job | Should Not Be $null
         $results = $job | Receive-BqJob
@@ -87,7 +87,7 @@ Describe "BqJob-Query" {
         $results[1]["Year"] | Should Be 1967
     }
 
-    It "should query out of a pre-loaded table with more options than ever before!" {
+    It "should query a pre-loaded table with more options than ever before!" {
         $alt_tab = New-BqTable -Dataset $test_Set "table_res_$r"
         $job = Start-BqJob -Query "select * from $datasetName.table_$r where Year > 1900" `
                            -DefaultDataset $test_set -DestinationTable $alt_tab -PollUntilComplete
@@ -129,6 +129,42 @@ Describe "BqJob-Query" {
     It "should handle projects that the user does not have permissions for" {
         { Start-BqJob -Query "select * from $datasetName.table_$r" -Project $accessErrProject } | Should Throw "400"
     }
+
+    AfterAll {
+        $test_set | Remove-BqDataset -Force
+    }
+}
+
+Describe "Stop-BqJob" {
+
+    BeforeAll {
+        $r = Get-Random
+        $datasetName = "pshell_testing_$r"
+        $test_set = New-BqDataset $datasetName
+        $folder = Get-Location
+        $folder = $folder.ToString()
+        $filename = "$folder\classics_large.csv"
+        $table = New-BqTable -Dataset $test_Set "table_$r"
+        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
+            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $table | 
+            Add-BqTabledata $filename CSV -SkipLeadingRows 1
+    }
+
+    It "should stop a query job" {
+        $job = Start-BqJob -Query "select * from book_data.classics where Year > 1900"
+        $res = $job | Stop-Bqjob| Get-BqJob
+        $res.Status.State | Should Be "DONE"
+    }
+
+    It "should handle jobs that are already done" {
+        $job = Start-BqJob -Query "select * from book_data.classics" -Synchronous
+        $job = $job | Get-BqJob
+        $job.Status.State | Should Be "DONE"
+        $res = $job | Stop-Bqjob | Get-BqJob
+        $res.Status.State | Should Be "DONE"
+    }
+
+    #TODO(ahandley): Add a few more test cases with different types of jobs that may run longer than a single query
 
     AfterAll {
         $test_set | Remove-BqDataset -Force
