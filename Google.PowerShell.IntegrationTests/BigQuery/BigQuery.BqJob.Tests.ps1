@@ -90,7 +90,7 @@ Describe "BqJob-Query" {
     It "should query a pre-loaded table with more options than ever before!" {
         $alt_tab = New-BqTable -Dataset $test_Set "table_res_$r"
         $job = Start-BqJob -Query "select * from $datasetName.table_$r where Year > 1900" `
-                           -DefaultDataset $test_set -DestinationTable $alt_tab -PollUntilComplete
+                           -DefaultDataset $test_set -Destination $alt_tab -PollUntilComplete
         $job = $job | Get-BqJob
         $alt_tab = $alt_tab | Get-BqTable
         $job.Status.State | Should Be "DONE"
