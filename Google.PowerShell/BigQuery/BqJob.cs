@@ -208,6 +208,12 @@ namespace Google.PowerShell.BigQuery
     ///   </code>
     ///   <para>Queries with a default dataset and using a permanent table as the destination for results.</para>
     /// </example>
+    /// <example>
+    ///   <code>
+    /// PS C:\> $source_table | Start-BqJob -Copy $dest_table -PollUntilComplete
+    ///   </code>
+    ///   <para>Copies the contents of the source as long as the source and destination schemas match.</para>
+    /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs)">
     /// [BigQuery Jobs]
     /// </para>
@@ -234,6 +240,19 @@ namespace Google.PowerShell.BigQuery
         [Parameter(Mandatory = false)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public override string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The destination table to write to.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.DoCopy)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoQuery)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Table),
+            Property = nameof(Table.TableReference))]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(TableList.TablesData),
+            Property = nameof(TableList.TablesData.TableReference))]
+        public TableReference Destination { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -281,20 +300,9 @@ namespace Google.PowerShell.BigQuery
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoQuery)]
         [PropertyByTypeTransformation(TypeToTransform = typeof(Dataset),
             Property = nameof(Dataset.DatasetReference))]
-        [Alias("Dataset")]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(DatasetList.DatasetsData),
+            Property = nameof(DatasetList.DatasetsData.DatasetReference))]
         public DatasetReference DefaultDataset { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The destination table to write the results into. If this is not specified, the 
-        /// results will be stored in a temporary table.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoQuery)]
-        [PropertyByTypeTransformation(TypeToTransform = typeof(Table),
-            Property = nameof(Table.TableReference))]
-        [Alias("Table", "Dest")]
-        public TableReference DestinationTable { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -312,6 +320,28 @@ namespace Google.PowerShell.BigQuery
         /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.DoCopy)]
         public SwitchParameter Copy { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The source table to copy from.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.DoCopy)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Table),
+            Property = nameof(Table.TableReference))]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(TableList.TablesData),
+            Property = nameof(TableList.TablesData.TableReference))]
+        [ValidateNotNull]
+        public TableReference Source { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Write Disposition of the operation. Handles what happens if the destination table 
+        /// already exists. If this parameter is not supplied, this defaults to WriteEmpty.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoCopy)]
+        public WriteDisposition? WriteMode { get; set; } = WriteDisposition.WriteIfEmpty;
 
         // Load Parameters.
 
@@ -359,6 +389,28 @@ namespace Google.PowerShell.BigQuery
                     break;
             }
 
+            // Stop in case of -WhatIf.
+            if (result == null) { return; }
+
+            // Check if the user is requesting a synchronous operation.
+            if (PollUntilComplete)
+            {
+                // CODE TO TEST WITH LOAD AND EXTRACT.  REMOVE BEFORE RELEASE.
+                //BigQueryJob bqj = Client.GetJob(result.JobReference);
+                //bqj.PollQueryUntilCompleted();
+                //result = bqj.Resource;
+                result = PollForCompletion(result);
+                result = Client.GetJob(result.JobReference).Resource;
+            }
+
+            // Check for error conditions befor writing result.
+            if (result.Status.ErrorResult != null)
+            {
+                var e = new Exception($"Reason: {result.Status.ErrorResult.Reason}, " +
+                    $"Message: {result.Status.ErrorResult.Message}");
+                ThrowTerminatingError(new ErrorRecord(e, "Job Error", ErrorCategory.OperationStopped, result));
+            }
+
             WriteObject(result);
         }
 
@@ -371,19 +423,15 @@ namespace Google.PowerShell.BigQuery
             {
                 try
                 {
-                    var options = new CreateQueryJobOptions();
-                    options.UseLegacySql = UseLegacySql;
-                    options.Priority = Priority;
-                    options.DestinationTable = DestinationTable;
-                    options.DefaultDataset = DefaultDataset;
+                    var options = new CreateQueryJobOptions()
+                    {
+                        UseLegacySql = UseLegacySql,
+                        Priority = Priority,
+                        DestinationTable = Destination,
+                        DefaultDataset = DefaultDataset
+                    };
 
                     BigQueryJob bqr = Client.CreateQueryJob(QueryString, options);
-
-                    if (PollUntilComplete)
-                    {
-                        bqr.PollUntilCompleted();
-                    }
-
                     return bqr.Resource;
                 }
                 catch (Exception ex)
@@ -396,16 +444,43 @@ namespace Google.PowerShell.BigQuery
         }
 
         /// <summary>
-        /// Copy Job main processing function.
+        /// Copy Job main processing function.  
+        /// *This is written using Apis.BigQuery.v2 becuase Cloud.BigQuery did not 
+        /// support Copy opertations at the time of writing.
         /// </summary>
         public Apis.Bigquery.v2.Data.Job DoCopy()
         {
-            throw new NotImplementedException(
-                "Copy jobs are not implemented yet.  Use the *-BqTabledata cmdlets instead.");
+            if (ShouldProcess($"\n\nCopying table(s) to {Destination.TableId}\n\n"))
+            {
+                try
+                {
+                    var copyjob = new Apis.Bigquery.v2.Data.Job()
+                    {
+                        Configuration = new JobConfiguration()
+                        {
+                            Copy = new JobConfigurationTableCopy()
+                            {
+                                DestinationTable = Destination,
+                                SourceTable = Source,
+                                WriteDisposition = WriteMode.ToString()
+                            }
+                        }
+                    };
+                    return Service.Jobs.Insert(copyjob, Project).Execute();
+                }
+                catch (Exception ex)
+                {
+                    ThrowTerminatingError(new ErrorRecord(ex, "Copy Failed",
+                        ErrorCategory.InvalidOperation, this));
+                }
+            }
+            return null;
         }
 
         /// <summary>
         /// Load Job main processing function.
+        /// *This is written using Apis.BigQuery.v2 becuase Cloud.BigQuery did not 
+        /// support Load opertations at the time of writing.
         /// </summary>
         public Apis.Bigquery.v2.Data.Job DoLoad()
         {
@@ -415,11 +490,38 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// Extract Job main processing function.
+        /// *This is written using Apis.BigQuery.v2 becuase Cloud.BigQuery did not 
+        /// support Extract opertations at the time of writing.
         /// </summary>
         public Apis.Bigquery.v2.Data.Job DoExtract()
         {
             throw new NotImplementedException(
                 "Extract jobs are not implemented yet.  Use Get-BqTabledata instead.");
+        }
+
+        /// <summary>
+        /// This function waits for a job to reach the "DONE" status and then returns.
+        /// </summary>
+        /// <param name="job">Job to poll for completion.</param>
+        public Apis.Bigquery.v2.Data.Job PollForCompletion(Apis.Bigquery.v2.Data.Job job)
+        {
+            while (!job.Status.State.Equals("DONE"))
+            {
+                // Poll every 100 ms, or 10 times/sec.
+                System.Threading.Thread.Sleep(100);
+                try
+                {
+                    job = Service.Jobs.Get(job.JobReference.ProjectId, job.JobReference.JobId).Execute();
+                }
+                catch (Exception ex)
+                {
+                    ThrowTerminatingError(new ErrorRecord(ex,
+                        "Polling for status was interrupted.",
+                        ErrorCategory.InvalidOperation, this));
+                    return null;
+                }
+            }
+            return job;
         }
     }
 

@@ -90,7 +90,7 @@ Describe "BqJob-Query" {
     It "should query a pre-loaded table with more options than ever before!" {
         $alt_tab = New-BqTable -Dataset $test_Set "table_res_$r"
         $job = Start-BqJob -Query "select * from $datasetName.table_$r where Year > 1900" `
-                           -DefaultDataset $test_set -DestinationTable $alt_tab -PollUntilComplete
+                           -DefaultDataset $test_set -Destination $alt_tab -PollUntilComplete
         $job = $job | Get-BqJob
         $alt_tab = $alt_tab | Get-BqTable
         $job.Status.State | Should Be "DONE"
@@ -135,6 +135,84 @@ Describe "BqJob-Query" {
     }
 }
 
+Describe "BqJob-Copy" {
+
+    BeforeAll {
+        $r = Get-Random
+        $datasetName = "pshell_testing_$r"
+        $test_set = New-BqDataset $datasetName
+        $folder = Get-Location
+        $folder = $folder.ToString()
+        $filename = "$folder\classics.csv"
+        $filename_other = "$folder\otherschema.csv"
+
+        $table = New-BqTable -Dataset $test_Set "table_$r"
+        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
+            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $table | 
+            Add-BqTabledata $filename CSV -SkipLeadingRows 1
+
+        $table_other = New-BqTable -Dataset $test_Set "table_other_$r"
+        New-BqSchema -Name "Position" -Type "INTEGER" | New-BqSchema -Name "Number" -Type "INTEGER" |
+            New-BqSchema -Name "Average" -Type "FLOAT" | Set-BqSchema $table_other | 
+            Add-BqTabledata $filename_other CSV -SkipLeadingRows 1
+    }
+
+    It "should copy a table with the same schema" {
+        $r = Get-Random     
+        $target = New-BqTable -Dataset $test_Set "table_$r"
+        $table | Start-BqJob -Copy $target -PollUntilComplete
+        $target = $target | Get-BqTable
+        $target.NumRows | Should Be 10
+    }
+
+    It "should handle writemodes correctly" {
+        $r = Get-Random     
+        $target = New-BqTable -Dataset $test_Set "table_$r"
+        $table | Start-BqJob -Copy $target -WriteMode WriteIfEmpty -PollUntilComplete
+        $target = $target | Get-BqTable
+        $target.NumRows | Should Be 10
+        $table | Start-BqJob -Copy $target -WriteMode WriteAppend -PollUntilComplete
+        $target = $target | Get-BqTable
+        $target.NumRows | Should Be 20
+        $table | Start-BqJob -Copy $target -WriteMode WriteTruncate -PollUntilComplete
+        $target = $target | Get-BqTable
+        $target.NumRows | Should Be 10
+        { $table | Start-BqJob -Copy $target -WriteMode WriteIfEmpty -PollUntilComplete } | Should Throw "Already Exists"
+    }
+    
+    It "should throw an error when trying to mix schemas" {
+        { $table_other | Start-BqJob -Copy $table -WriteMode WriteAppend } | Should Throw "Provided Schema does not match"
+    }
+
+    It "should throw an error when the table already exists" {
+        { $table | Start-BqJob -Copy $table } | Should Throw "Already Exists"
+    }
+
+    It "should throw when told to copy an empty table" {
+        $r = Get-Random     
+        $empty = New-BqTable -Dataset $test_Set "table_$r"
+        { $empty | Start-BqJob -Copy $table } | Should Throw "Cannot read a table without a schema"
+    }
+
+    It "should make a new table if the target does not exist" {
+        $ref = New-Object -TypeName Google.Apis.Bigquery.v2.Data.TableReference
+        $ref.ProjectId = $project
+        $ref.DatasetId = $datasetName
+        $ref.TableId = "random_table_name"
+        $table_other | Start-BqJob -Copy $ref -PollUntilComplete
+        $target = $ref | Get-BqTable
+        $target.NumRows | Should Be 15
+    }
+
+    It "should properly halt when -WhatIf is passed" {
+        $table | Start-BqJob -Copy $table_other -WhatIf | Should Be $null
+    }
+
+    AfterAll {
+        $test_set | Remove-BqDataset -Force
+    }
+}
+
 Describe "Stop-BqJob" {
 
     BeforeAll {
@@ -152,7 +230,7 @@ Describe "Stop-BqJob" {
 
     It "should stop a query job" {
         $job = Start-BqJob -Query "select * from book_data.classics where Year > 1900"
-        $res = $job | Stop-Bqjob| Get-BqJob
+        $res = $job | Stop-Bqjob | Get-BqJob
         $res.Status.State | Should Be "DONE"
     }
 

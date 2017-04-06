@@ -92,7 +92,11 @@ namespace Google.PowerShell.BigQuery
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ValueFromPipeline = true, Position = 0, ParameterSetName = ParameterSetNames.ByObject)]
-        public Table InputObject { get; set; }
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Table),
+            Property = nameof(Apis.Bigquery.v2.Data.Table.TableReference))]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(TableList.TablesData),
+            Property = nameof(TableList.TablesData.TableReference))]
+        public TableReference InputObject { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -102,9 +106,9 @@ namespace Google.PowerShell.BigQuery
                 case ParameterSetNames.ByValue:
                     break;
                 case ParameterSetNames.ByObject:
-                    Project = InputObject.TableReference.ProjectId;
-                    DatasetId = InputObject.TableReference.DatasetId;
-                    Table = InputObject.TableReference.TableId;
+                    Project = InputObject.ProjectId;
+                    DatasetId = InputObject.DatasetId;
+                    Table = InputObject.TableId;
                     break;
                 case ParameterSetNames.ByDatasetObject:
                     Project = Dataset.ProjectId;
