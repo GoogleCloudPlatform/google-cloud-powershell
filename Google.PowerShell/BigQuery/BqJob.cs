@@ -180,7 +180,7 @@ namespace Google.PowerShell.BigQuery
 
     /// <summary>
     /// <para type="synopsis">
-    /// Starts a new, asynchronous BigQuery Job. Currently, the only supported type is Query.
+    /// Starts a new, asynchronous BigQuery Job.
     /// </para>
     /// <para type="description">
     /// Starts a new asynchronous job. This call requires the ‘Viewer’ role. The Type parameter 
@@ -214,6 +214,18 @@ namespace Google.PowerShell.BigQuery
     ///   </code>
     ///   <para>Copies the contents of the source as long as the source and destination schemas match.</para>
     /// </example>
+    /// <example>
+    ///   <code>
+    /// PS C:\> $job = $table | Start-BqJob -Load CSV "$gcspath/basic.csv" -SkipLeadingRows 1 -Synchronous
+    ///   </code>
+    ///   <para>Loads in a table from the CSV file at the Cloud Storage path supplied.</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    /// PS C:\> $job = $table | Start-BqJob -Extract CSV "$gcspath/basic.csv" -Synchronous
+    ///   </code>
+    ///   <para>Exports the given table to a .csv file in Cloud Storage.</para>
+    /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs)">
     /// [BigQuery Jobs]
     /// </para>
@@ -240,19 +252,6 @@ namespace Google.PowerShell.BigQuery
         [Parameter(Mandatory = false)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public override string Project { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The destination table to write to.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.DoCopy)]
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoQuery)]
-        [PropertyByTypeTransformation(TypeToTransform = typeof(Table),
-            Property = nameof(Table.TableReference))]
-        [PropertyByTypeTransformation(TypeToTransform = typeof(TableList.TablesData),
-            Property = nameof(TableList.TablesData.TableReference))]
-        public TableReference Destination { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -309,6 +308,7 @@ namespace Google.PowerShell.BigQuery
         /// Priority of the query.  Can be 'Batch' or 'Interactive'.
         /// </para>
         /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoQuery)]
         public QueryPriority Priority { get; set; }
 
         // Copy Parameters.
@@ -327,6 +327,7 @@ namespace Google.PowerShell.BigQuery
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.DoCopy)]
+        [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.DoExtract)]
         [PropertyByTypeTransformation(TypeToTransform = typeof(Table),
             Property = nameof(Table.TableReference))]
         [PropertyByTypeTransformation(TypeToTransform = typeof(TableList.TablesData),
@@ -336,12 +337,27 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
+        /// The destination table to write to.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.DoCopy)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoQuery)]
+        [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.DoLoad)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Table),
+            Property = nameof(Table.TableReference))]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(TableList.TablesData),
+            Property = nameof(TableList.TablesData.TableReference))]
+        public TableReference Destination { get; set; }
+
+        /// <summary>
+        /// <para type="description">
         /// Write Disposition of the operation. Handles what happens if the destination table 
         /// already exists. If this parameter is not supplied, this defaults to WriteEmpty.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoCopy)]
-        public WriteDisposition? WriteMode { get; set; } = WriteDisposition.WriteIfEmpty;
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
+        public WriteDisposition? WriteMode { get; set; }
 
         // Load Parameters.
 
@@ -353,6 +369,90 @@ namespace Google.PowerShell.BigQuery
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.DoLoad)]
         public SwitchParameter Load { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The format to input/output (CSV, JSON, AVRO).
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.DoLoad)]
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.DoExtract)]
+        public DataFormats Type { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// A list of fully-qualified Google Cloud Storage URIs where data should be imported from.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.DoLoad)]
+        [ValidateNotNullOrEmpty]
+        public string[] SourceUris { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The character encoding of the data. The supported values are UTF-8 (default) or ISO-8859-1.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
+        public string Encoding { get; set; } = "UTF-8";
+
+        /// <summary>
+        /// <para type="description">
+        /// Delimiter to use between fields in the exported data. Default value is comma (,).
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoExtract)]
+        public string FieldDelimiter { get; set; } = ",";
+
+        /// <summary>
+        /// <para type="description">
+        /// The value that is used to quote data sections in a CSV file. Default value is double-quote (").
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
+        public string Quote { get; set; } = "\"";
+
+        /// <summary>
+        /// <para type="description">
+        /// The number of malformed rows that the request will ignore before throwing an error. 
+        /// This value is zero if not specified.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
+        public int MaxBadRecords { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The number of rows to skip from the input file. (Usually used for headers.)
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
+        public int SkipLeadingRows { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Allows insertion of rows with fields that are not in the schema, ignoring the extra fields.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
+        public SwitchParameter AllowUnknownFields { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Allows insertion of rows that are missing trailing optional columns.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
+        public SwitchParameter AllowJaggedRows { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Allows quoted data sections to contain newlines
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
+        public SwitchParameter AllowQuotedNewlines { get; set; }
+
         // Extract Parameters.
 
         /// <summary>
@@ -362,6 +462,33 @@ namespace Google.PowerShell.BigQuery
         /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.DoExtract)]
         public SwitchParameter Extract { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// A list of fully-qualified Google Cloud Storage URIs where the extracted table should be written.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.DoExtract)]
+        [ValidateNotNullOrEmpty]
+        public string[] DestinationUris { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Instructs the server to output with GZIP compression.  Otherwise, no compression is used.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoExtract)]
+        public SwitchParameter Compress { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Disables printing of a header row in the results.  Otherwise, a header will be printed.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoExtract)]
+        public SwitchParameter NoHeader { get; set; }
+
+        // End Parameters.
 
         protected override void ProcessRecord()
         {
@@ -395,10 +522,6 @@ namespace Google.PowerShell.BigQuery
             // Check if the user is requesting a synchronous operation.
             if (PollUntilComplete)
             {
-                // CODE TO TEST WITH LOAD AND EXTRACT.  REMOVE BEFORE RELEASE.
-                //BigQueryJob bqj = Client.GetJob(result.JobReference);
-                //bqj.PollQueryUntilCompleted();
-                //result = bqj.Resource;
                 result = PollForCompletion(result);
                 result = Client.GetJob(result.JobReference).Resource;
             }
@@ -450,7 +573,7 @@ namespace Google.PowerShell.BigQuery
         /// </summary>
         public Apis.Bigquery.v2.Data.Job DoCopy()
         {
-            if (ShouldProcess($"\n\nCopying table(s) to {Destination.TableId}\n\n"))
+            if (ShouldProcess($"Copying {Source.TableId} to {Destination.TableId}"))
             {
                 try
                 {
@@ -462,7 +585,7 @@ namespace Google.PowerShell.BigQuery
                             {
                                 DestinationTable = Destination,
                                 SourceTable = Source,
-                                WriteDisposition = WriteMode.ToString()
+                                WriteDisposition = (WriteMode == null) ? WriteDisposition.WriteIfEmpty.ToString() : WriteMode.ToString()
                             }
                         }
                     };
@@ -484,8 +607,41 @@ namespace Google.PowerShell.BigQuery
         /// </summary>
         public Apis.Bigquery.v2.Data.Job DoLoad()
         {
-            throw new NotImplementedException(
-                "Load jobs are not implemented yet.  Use Set-BqTabledata instead.");
+            if (ShouldProcess($"{Destination.TableId} (LOAD)"))
+            {
+                try
+                {
+                    var loadjob = new Apis.Bigquery.v2.Data.Job()
+                    {
+                        Configuration = new JobConfiguration()
+                        {
+                            Load = new JobConfigurationLoad()
+                            {
+                                DestinationTable = Destination,
+                                SourceFormat = (Type == DataFormats.JSON) ? "NEWLINE_DELIMITED_JSON" : Type.ToString(),
+                                SourceUris = SourceUris,
+                                Encoding = Encoding,
+                                FieldDelimiter = FieldDelimiter,
+                                Quote = Quote,
+                                MaxBadRecords = MaxBadRecords,
+                                SkipLeadingRows = SkipLeadingRows,
+                                IgnoreUnknownValues = AllowUnknownFields,
+                                AllowJaggedRows = AllowJaggedRows,
+                                AllowQuotedNewlines = AllowQuotedNewlines,
+                                WriteDisposition = WriteMode.ToString()
+                            }
+                        }
+                    };
+                    //deal with source format
+                    return Service.Jobs.Insert(loadjob, Project).Execute();
+                }
+                catch (Exception ex)
+                {
+                    ThrowTerminatingError(new ErrorRecord(ex, "Load Failed",
+                        ErrorCategory.InvalidOperation, this));
+                }
+            }
+            return null;
         }
 
         /// <summary>
@@ -495,8 +651,34 @@ namespace Google.PowerShell.BigQuery
         /// </summary>
         public Apis.Bigquery.v2.Data.Job DoExtract()
         {
-            throw new NotImplementedException(
-                "Extract jobs are not implemented yet.  Use Get-BqTabledata instead.");
+            if (ShouldProcess($"{Source.TableId} (EXTRACT)"))
+            {
+                try
+                {
+                    var extractjob = new Apis.Bigquery.v2.Data.Job()
+                    {
+                        Configuration = new JobConfiguration()
+                        {
+                            Extract = new JobConfigurationExtract()
+                            {
+                                SourceTable = Source,
+                                DestinationUris = DestinationUris,
+                                DestinationFormat = (Type == DataFormats.JSON) ? "NEWLINE_DELIMITED_JSON" : Type.ToString(),
+                                Compression = (Compress) ? "GZIP" : "NONE",
+                                PrintHeader = !NoHeader,
+                                FieldDelimiter = FieldDelimiter
+                            }
+                        }
+                    };
+                    return Service.Jobs.Insert(extractjob, Project).Execute();
+                }
+                catch (Exception ex)
+                {
+                    ThrowTerminatingError(new ErrorRecord(ex, "Extract Failed",
+                        ErrorCategory.InvalidOperation, this));
+                }
+            }
+            return null;
         }
 
         /// <summary>
@@ -507,8 +689,8 @@ namespace Google.PowerShell.BigQuery
         {
             while (!job.Status.State.Equals("DONE"))
             {
-                // Poll every 100 ms, or 10 times/sec.
-                System.Threading.Thread.Sleep(100);
+                // Poll every 250 ms, or 4 times/sec.
+                System.Threading.Thread.Sleep(250);
                 try
                 {
                     job = Service.Jobs.Get(job.JobReference.ProjectId, job.JobReference.JobId).Execute();

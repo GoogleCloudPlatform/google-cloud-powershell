@@ -25,4 +25,12 @@ namespace Google.PowerShell.BigQuery
             _client = new Lazy<BigQueryClient>(() => BigQueryClient.Create(Project));
         }
     }
+
+    /// <summary>
+    /// Data formats for input and output
+    /// </summary>
+    public enum DataFormats
+    {
+        AVRO, CSV, JSON, DATASTORE_BACKUP
+    }
 }
