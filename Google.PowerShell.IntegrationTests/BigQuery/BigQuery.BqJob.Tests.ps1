@@ -213,7 +213,7 @@ Describe "BqJob-Copy" {
     }
 }
 
-Describe "BqJob-EL" {
+Describe "BqJob-Extract-Load" {
 
     BeforeAll {
         $r = Get-Random
