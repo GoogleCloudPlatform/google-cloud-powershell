@@ -250,6 +250,24 @@ Describe "BqJob-Extract-Load" {
         $job.Configuration.Load.WriteDisposition.ToString() | Should Be "WRITE_APPEND"
     }
 
+    It "should default Load parameters correctly" {
+        $alt_tab = $test_set | New-BqTable "param_test_$r"
+        $table | Start-BqJob -Extract CSV "$gcspath/param.csv" -Synchronous
+        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
+            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $alt_tab
+        $job = $alt_tab | Start-BqJob -Load CSV "$gcspath/param.csv"
+        $job.Configuration.Load.AllowJaggedRows | Should Be $false
+        $job.Configuration.Load.AllowQuotedNewlines | Should Be $false
+        $job.Configuration.Load.Encoding | Should Be "UTF-8"
+        $job.Configuration.Load.FieldDelimiter | Should Be ","
+        $job.Configuration.Load.IgnoreUnknownValues | Should Be $false
+        $job.Configuration.Load.MaxBadRecords | Should Be 0
+        $job.Configuration.Load.Quote | Should Be """"
+        $job.Configuration.Load.SkipLeadingRows | Should Be 0
+        $job.Configuration.Load.SourceFormat.ToString() | Should Be "CSV"
+        $job.Configuration.Load.WriteDisposition | Should Be $null
+    }
+
     It "should set Extract parameters correctly" {
         $job = $table | Start-BqJob -Extract CSV "$gcspath/otherparam.csv" -Compress -FieldDelimiter "|" -NoHeader
         $job.Configuration.Extract.Compression | Should Be $true
@@ -257,6 +275,15 @@ Describe "BqJob-Extract-Load" {
         $job.Configuration.Extract.DestinationUri | Should Be "$gcspath/otherparam.csv"
         $job.Configuration.Extract.FieldDelimiter | Should Be "|"
         $job.Configuration.Extract.PrintHeader | Should Be $false
+    }
+
+    It "should default Extract parameters correctly" {
+        $job = $table | Start-BqJob -Extract CSV "$gcspath/otherparam.csv"
+        $job.Configuration.Extract.Compression | Should Be "NONE"
+        $job.Configuration.Extract.DestinationFormat.ToString() | Should Be "CSV"
+        $job.Configuration.Extract.DestinationUri | Should Be "$gcspath/otherparam.csv"
+        $job.Configuration.Extract.FieldDelimiter | Should Be ","
+        $job.Configuration.Extract.PrintHeader | Should Be $true
     }
 
     It "should Extract/Load a basic CSV" {
