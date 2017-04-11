@@ -15,10 +15,10 @@ namespace Google.PowerShell.BigQuery
     /// Lists all tables in the specified dataset or finds a specific table by name.
     /// </para>
     /// <para type="description">
-    /// If no table is specified, lists all tables in the specified dataset (Requires the READER 
+    /// If no table is specified, lists all tables in the specified dataset (Requires the "READER" 
     /// dataset role). If a table is specified, it will return the table resource. Note that 
     /// this is not the actual data from the table. If no Project is specified, the default 
-    /// project will be used. Dataset can be specified by the -DatasetId parameter or by 
+    /// project will be used. Dataset can be specified by the "-DatasetId" parameter or by 
     /// passing in a Dataset object.  This cmdlet returns a single Table if a table ID is 
     /// specified, and any number of TableList.TablesData objects otherwise.
     /// </para>
@@ -171,7 +171,7 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <para type="description">
     /// Updates information in an existing table. Pass in the updated Table object via the 
-    /// pipeline or the -InputObject parameter. This cmdlet returns the updated Table object.
+    /// pipeline or the "-InputObject" parameter. This cmdlet returns the updated Table object.
     /// </para>
     /// <example>
     ///   <code>
@@ -232,9 +232,9 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <para type="description">
     /// Creates a new empty table in the specified dataset. A Table can be supplied by object 
-    /// via the pipeline or the -InputObject parameter, or it can be instantiated by value 
+    /// via the pipeline or the "-InputObject" parameter, or it can be instantiated by value 
     /// with the flags below. The Dataset ID can be specified by passing in a string to 
-    /// -DatasetId, or you can pass a Dataset or DatasetReference to the -Dataset parameter. 
+    /// "-DatasetId", or you can pass a Dataset or DatasetReference to the "-Dataset" parameter. 
     /// If no Project is specified, the default project will be used. This cmdlet returns 
     /// a Table object.
     /// </para>
@@ -246,7 +246,9 @@ namespace Google.PowerShell.BigQuery
     ///                     -Expiration (60*60*24*30)
     ///   </code>
     ///   <para>This makes a new Table called "new_tab" with a lifetime of 30 days.</para>
-    ///   <code>PS C:\> Get-BqDataset "my_data" | New-BqTable “new_tab”</code>
+    ///   <code>
+    /// PS C:\> Get-BqDataset "my_data" | New-BqTable “new_tab”
+    ///   </code>
     ///   <para>This shows how the pipeline can be used to specify Dataset and Project.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/tables)">
@@ -301,7 +303,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// The TableId must be unique within the Dataset and match the pattern [a-zA-Z0-9_]+.
+        /// The TableId must be unique within the Dataset and match the pattern "[a-zA-Z0-9_]+".
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.ByValue)]
@@ -393,8 +395,6 @@ namespace Google.PowerShell.BigQuery
                     new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                     ).TotalMilliseconds);
                 newTable.ExpirationTime = (Expiration * 1000) + currentMillis;
-                // Note: The code below is a more elegant solution, but is not supported by the current version
-                //newTable.ExpirationTime = new DateTimeOffset(DateTime.Now).ToUnixTimeMilliseconds();
             }
             return Service.Tables.Insert(newTable, Project, DatasetId);
         }
@@ -406,12 +406,12 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <para type="description">
     /// Deletes the specified table from the dataset. The table to be deleted can be passed 
-    /// in via the pipeline or with the -InputObject parameter. If the table contains data, 
+    /// in via the pipeline or with the "-InputObject" parameter. If the table contains data, 
     /// this operation will prompt the user for confirmation before any deletions are performed. 
-    /// To delete a non-empty table automatically, use the -Force parameter. If no Project is 
+    /// To delete a non-empty table automatically, use the "-Force" parameter. If no Project is 
     /// specified, the default project will be used. This cmdlet returns a Table object. 
-    /// This cmdlet supports the ShouldProcess function, so it has the corresponding -WhatIf 
-    /// and -Confirm flags.
+    /// This cmdlet supports the ShouldProcess function, so it has the corresponding "-WhatIf" 
+    /// and "-Confirm" flags.
     /// </para>
     /// <example>
     ///   <code>
@@ -422,7 +422,9 @@ namespace Google.PowerShell.BigQuery
     ///   if it is not. All data in "my_table" will be deleted if the user accepts.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Remove-BqTable -DatasetId "my_dataset" -Table "my_table" -Force</code>
+    ///   <code>
+    /// PS C:\> Remove-BqTable -DatasetId "my_dataset" -Table "my_table" -Force
+    ///   </code>
     ///   <para>This will remove "my_table" and all of its data.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/tables)">

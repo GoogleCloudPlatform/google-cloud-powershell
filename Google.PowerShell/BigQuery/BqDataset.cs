@@ -18,23 +18,23 @@ namespace Google.PowerShell.BigQuery
     /// <para type="description">
     /// If a Dataset is specified, it will return an object describing that dataset. If no Dataset is 
     /// specified, this cmdlet lists all datasets in the specified project to which you have been granted the 
-    /// READER dataset role. The -IncludeHidden flag will include hidden datasets in the search results. The -Filter 
-    /// flag allows you to filter results by label. The syntax to filter is "labels.name[:value]". Multiple filters 
-    /// can be ANDed together by connecting with a space. See the link below for more information.
-    /// If no Project is specified, the default project will be used. This cmdlet returns any number of 
-    /// DatasetList.DatasetData objects if no Dataset was specified, or a Dataset otherwise.
+    /// "READER" dataset role. The "-IncludeHidden" flag will include hidden datasets in the search results. 
+    /// The "-Filter" flag allows you to filter results by label. The syntax to filter is "labels.name[:value]". 
+    /// Multiple filters can be ANDed together by connecting with a space. See the link below for more 
+    /// information. If no Project is specified, the default project will be used. This cmdlet returns any 
+    /// number of DatasetList.DatasetData objects if no Dataset was specified, or a Dataset otherwise.
     /// </para>
     /// <example>
     ///   <code>
     /// PS C:\> Get-BqDataset "my-dataset"
     ///   </code>
-    ///   <para>This returns a Dataset object from the default project of the dataset with id <code>my-dataset</code>.</para>
+    ///   <para>This returns a Dataset object from the default project of the dataset with id "my-dataset".</para>
     /// </example>
     /// <example>
     ///   <code>
     /// PS C:\> Get-BqDataset -Project my-project
     ///   </code>
-    ///   <para>This lists all of the non-hidden datasets in the Cloud project <code>my-project</code>.</para>
+    ///   <para>This lists all of the non-hidden datasets in the Cloud project "my-project".</para>
     /// </example>
     /// <example>
     ///   <code>
@@ -47,7 +47,7 @@ namespace Google.PowerShell.BigQuery
     /// PS C:\> Get-BqDataset -IncludeHidden -Filter "labels.department:shipping"
     ///   </code>
     ///   <para>This lists all of the datasets in the default Cloud project for your account that have 
-    ///   the <code>department</code> key with a value <code>shipping</code>.</para>
+    ///   the key "department" with the value "shipping".</para>
     /// </example>
     /// <example>
     ///   <code>
@@ -200,8 +200,7 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <para type="description">
     /// Updates information describing an existing BigQuery dataset. The projet and dataset specified 
-    /// by <code>Dataset</code>'s <code>DatasetReference</code> will be used. This cmdlet returns a 
-    /// Dataset object.
+    /// by the DatasetReference of "-Dataset" will be used. This cmdlet returns a Dataset object.
     /// </para>
     /// <example>
     ///   <code>
@@ -279,23 +278,23 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <para type="description">
     /// Creates a new, empty dataset in the specified project. A Dataset can be supplied by object via the 
-    /// pipeline or the -Dataset parameter, or it can be instantiated by value with the flags below. 
+    /// pipeline or the "-Dataset" parameter, or it can be instantiated by value with the flags below. 
     /// If no Project is specified, the default project will be used. This cmdlet returns a Dataset object.
     /// </para>
     /// <example>
     ///   <code>
-    /// PS C:\> $dataset | New-BqDataset
+    /// PS C:\> $premade_dataset | New-BqDataset
     ///   </code>
     ///   <para>This takes a Dataset object from the pipeline and inserts it into the Cloud project "my-project".</para>
     /// </example>
     /// <example>
     ///   <code>
-    /// PS C:\> New-BqDataset "test_data_id" 
+    /// PS C:\> New-BqDataset "test_data_id" `
     ///                       -Name "Testdata" `
-    ///                       -Description "Some interesting data!" 
+    ///                       -Description "Some interesting data!" `
     ///                       -Expiration 86400000
     ///   </code>
-    ///   <para>This builds a new dataset with the supplied datasetId, name, description, and an Expiration of 1 day.</para>
+    ///   <para>This builds a new dataset with the supplied datasetId, name, description, and an expiration of 1 day.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets)">
     /// [BigQuery Datasets]
@@ -330,7 +329,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// The DatasetId must be unique within the project and match the pattern [a-zA-Z0-9_]+.
+        /// "DatasetId" must be unique within the project and match the pattern "[a-zA-Z0-9_]+".
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.ByValues)]
@@ -412,13 +411,13 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <para type="description">
     /// Deletes the specified dataset. This command takes a Dataset object as input, typically off the 
-    /// pipeline or through the -Dataset parameter. You can also specify a projectId:datasetId 
-    /// combination through the -Project and -DatasetId flags. The dataset must be empty to be deleted. 
-    /// Use the -Force flag if the dataset is not empty to confirm deletion of all tables in the dataset. 
+    /// pipeline or through the "-Dataset" parameter. You can also specify a projectId:datasetId 
+    /// combination through the "-Project" and "-DatasetId" flags. The dataset must be empty to be deleted. 
+    /// Use the "-Force" flag if the dataset is not empty to confirm deletion of all tables in the dataset. 
     /// Once this operation is complete, you may create a new dataset with the same name. If no Project 
     /// is specified, the default project will be used. If the deletion runs without error, this cmdlet 
     /// has no output. This cmdlet supports the ShouldProcess function, so it has the corresponding 
-    /// -WhatIf and -Confirm flags.
+    /// "-WhatIf" and "-Confirm" flags.
     /// </para>
     /// <example>
     ///   <code>

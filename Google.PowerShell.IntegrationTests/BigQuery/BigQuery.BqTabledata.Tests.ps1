@@ -16,9 +16,9 @@ Describe "New-BqSchema" {
     }
 
     It "should add fields to the pipeline when passed any number of fields"{
-        $field = New-BqSchema -Name "Title" -Type "STRING"
-        $field = $field | New-BqSchema -Name "Author" -Type "STRING"
-        $field = $field | New-BqSchema -Name "Copyright" -Type "STRING"
+        $field = New-BqSchema "Title" "STRING"
+        $field = $field | New-BqSchema "Author" "STRING"
+        $field = $field | New-BqSchema "Copyright" "STRING"
         $field.Count | Should Be 3
     }
 

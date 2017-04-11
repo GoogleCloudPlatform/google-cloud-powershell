@@ -19,24 +19,32 @@ namespace Google.PowerShell.BigQuery
     /// <para type="description">
     /// If no Job is specified through the JobId parameter or object via pipeline, a list of all jobs in the 
     /// specified project will be returned. If a Job is specified, it will return a descriptor object for 
-    /// that job. Listing requires ‘Viewer’ or ‘Owner’ roles. Viewing information about a specific job 
-    /// requires the ‘Owner’ role. Job information is stored for six months after its creation.
+    /// that job. Listing requires "Viewer" or "Owner" roles. Viewing information about a specific job 
+    /// requires the "Owner" role. Job information is stored for six months after its creation.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Get-BqJob</code>
+    ///   <code>
+    /// PS C:\> Get-BqJob
+    ///   </code>
     ///   <para>Lists all past or present jobs from the default project.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-BqJob -ProjectId "my_project"</code>
+    ///   <code>
+    /// PS C:\> Get-BqJob -ProjectId "my_project"
+    ///   </code>
     ///   <para>Lists list all past or present jobs from the specified project, "my_project".</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> $job = Get-BqJob "job_p6focacVVo29rJ4_yvn8Aabi2wQ"</code>
+    ///   <code>
+    /// PS C:\> $job = Get-BqJob "job_p6focacVVo29rJ4_yvn8Aabi2wQ"
+    ///   </code>
     ///   <para>This returns a descriptor object for the specified job in the default project.</para>
     /// </example> 
     /// <example>
-    ///   <code>PS C:\> $job = $job | Get-BqJob</code>
-    ///   <para>This will update the local descriptor <code>$job</code> with the most recent server state.</para>
+    ///   <code>
+    /// PS C:\> $job = $job | Get-BqJob
+    ///   </code>
+    ///   <para>This will update the local descriptor "$job" with the most recent server state.</para>
     /// </example> 
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs)">
     /// [BigQuery Jobs]
@@ -88,7 +96,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// Filter jobs returned by state.  Options are 'Done', 'Pending', and 'Running'.
+        /// Filter jobs returned by state.  Options are "DONE", "PENDING", and "RUNNING"
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.List)]
@@ -183,14 +191,14 @@ namespace Google.PowerShell.BigQuery
     /// Starts a new, asynchronous BigQuery Job.
     /// </para>
     /// <para type="description">
-    /// Starts a new asynchronous job. This call requires the ‘Viewer’ role. The Type parameter 
-    /// can be -Query, -Copy, -Load, or -Extract.  Each of these job types has its own set of 
+    /// Starts a new asynchronous job. This call requires the "Viewer" role. The Type parameter 
+    /// can be "-Query", "-Copy", "-Load", or "-Extract".  Each of these job types has its own set of 
     /// type-specific parameters to define what the job does.  Job types all share a set of 
     /// parameters that define job attributes such as start time and handle statistics such 
-    /// as rows and raw amounts of data processed. This cmdlet supports ShouldProcess, and as 
-    /// such, has the -WhatIf parameter to show the projected results of the cmdlet without 
+    /// as rows and raw amounts of data processed. This cmdlet supports "ShouldProcess()", and as 
+    /// such, has the "-WhatIf" parameter to show the projected results of the cmdlet without 
     /// actually changing any server resources. 
-    /// Use -PollUntilComplete to have the cmdlet treat the job as a blocking operation.  
+    /// Use "-PollUntilComplete" to have the cmdlet treat the job as a blocking operation.  
     /// It will poll until the job has finished, and then it will return a job reference. 
     /// Tables referenced in queries should be fully qualified, but to use any that are not, 
     /// the DefaultDataset parameter must be used to specify where to find them.
@@ -223,7 +231,7 @@ namespace Google.PowerShell.BigQuery
     /// PS C:\> $table | Get-BqTable -DatasetId "books" "classics"
     /// PS C:\> $job = $table | Start-BqJob -Load CSV "$gcspath/basic.csv" -SkipLeadingRows 1 -Synchronous
     ///   </code>
-    ///   <para>Loads in a table from 'basic.csv' in the GCS bucket 'ps_test'.</para>
+    ///   <para>Loads in a table from "basic.csv" in the GCS bucket "ps_test".</para>
     /// </example>
     /// <example>
     ///   <code>
@@ -251,8 +259,6 @@ namespace Google.PowerShell.BigQuery
             public const string DoExtract = "DoExtract";
         }
 
-        // All-Type Parameters.
-
         /// <summary>
         /// <para type="description">
         /// The project to run jobs in. If not set via PowerShell parameter processing, it will
@@ -266,7 +272,7 @@ namespace Google.PowerShell.BigQuery
         /// <summary>
         /// <para type="description">
         /// Turns the async call into a synchronous call by polling until the job is complete before 
-        /// returning. Can also be accessed by '-Synchronous'.
+        /// returning. Can also be accessed by "-Synchronous".
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
@@ -315,7 +321,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// Priority of the query.  Can be 'Batch' or 'Interactive'.
+        /// Priority of the query.  Can be "Batch" or "Interactive".
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoQuery)]
@@ -399,7 +405,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// The character encoding of the data. The supported values are UTF-8 (default) or ISO-8859-1.
+        /// The character encoding of the data. The supported values are "UTF-8" (default) or "ISO-8859-1".
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
@@ -525,7 +531,7 @@ namespace Google.PowerShell.BigQuery
                 result = Client.GetJob(result.JobReference).Resource;
             }
 
-            // Check for error conditions befor writing result.
+            // Check for error conditions before writing result.
             if (result.Status.ErrorResult != null)
             {
                 var e = new Exception($"Reason: {result.Status.ErrorResult.Reason}, " +
@@ -744,9 +750,9 @@ namespace Google.PowerShell.BigQuery
     /// Returns the result of a completed BQ Job.
     /// </para>
     /// <para type="description">
-    /// Returns the result of a completed BQ Job. Requires the ‘Reader’ dataset role. You can specify 
+    /// Returns the result of a completed BQ Job. Requires the "Reader" dataset role. You can specify 
     /// how long the call should wait for the query to be completed, if it is not already finished. 
-    /// This is done with the -Timeout parameter. An integer number of seconds is taken, and the 
+    /// This is done with the "-Timeout" parameter. An integer number of seconds is taken, and the 
     /// default is 10. This cmdlet returns BigQueryRow objects.
     /// </para>
     /// <example>
@@ -826,7 +832,7 @@ namespace Google.PowerShell.BigQuery
     /// PS C:\> $job = Start-BqJob -Query "SELECT * FROM book_data.classics"
     /// PS C:\> $job = $job | Stop-BqJob
     ///   </code>
-    ///   <para>This will send a request to stop $job as soon as possible. $job.Status.State 
+    ///   <para>This will send a request to stop $job as soon as possible. "$job.Status.State" 
     ///   should now be "DONE", but there is a chance that the user will have to continue to
     ///   poll for status with Get-BqJob.</para>
     /// </example>

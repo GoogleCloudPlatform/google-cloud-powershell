@@ -11,9 +11,8 @@ Describe "Get-BqJob" {
         $folder = $folder.ToString()
         $filename = "$folder\classics.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
-        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
-            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $table | 
-            Add-BqTabledata $filename CSV -SkipLeadingRows 1
+        New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
+            Set-BqSchema $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1
         $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1
     }
 
@@ -24,6 +23,7 @@ Describe "Get-BqJob" {
 
     #TODO(ahandley): When Start- and Stop-BqJob are written, add in tests for AllUsers and State
     #TODO(ahandley): When Start- is ready, add test with alternate project via jobReference
+    #TODO(ahandley): Add test for the State filter (all caps vs pascal case)
 
     It "should get specific job via pipeline" {
         $jobs = Get-BqJob
@@ -73,9 +73,8 @@ Describe "BqJob-Query" {
         $folder = $folder.ToString()
         $filename = "$folder\classics.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
-        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
-            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $table | 
-            Add-BqTabledata $filename CSV -SkipLeadingRows 1
+        New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
+            Set-BqSchema $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1
     }
 
     It "should query a pre-loaded table" {
@@ -147,14 +146,12 @@ Describe "BqJob-Copy" {
         $filename_other = "$folder\otherschema.csv"
 
         $table = New-BqTable -Dataset $test_Set "table_$r"
-        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
-            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $table | 
-            Add-BqTabledata $filename CSV -SkipLeadingRows 1
+        New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
+            Set-BqSchema $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1
 
         $table_other = New-BqTable -Dataset $test_Set "table_other_$r"
-        New-BqSchema -Name "Position" -Type "INTEGER" | New-BqSchema -Name "Number" -Type "INTEGER" |
-            New-BqSchema -Name "Average" -Type "FLOAT" | Set-BqSchema $table_other | 
-            Add-BqTabledata $filename_other CSV -SkipLeadingRows 1
+        New-BqSchema "Position" "INTEGER" | New-BqSchema "Number" "INTEGER" | New-BqSchema "Average" "FLOAT" | 
+            Set-BqSchema $table_other | Add-BqTabledata $filename_other CSV -SkipLeadingRows 1
     }
 
     It "should copy a table with the same schema" {
@@ -223,9 +220,8 @@ Describe "BqJob-Extract-Load" {
         $folder = $folder.ToString()
         $filename = "$folder\classics.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
-        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
-            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $table | 
-            Add-BqTabledata $filename CSV -SkipLeadingRows 1
+        New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
+            Set-BqSchema $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1
         $bucket = New-GcsBucket "ps_test_$r"
         $gcspath = "gs://ps_test_$r"
     }
@@ -233,8 +229,8 @@ Describe "BqJob-Extract-Load" {
     It "should set Load parameters correctly" {
         $alt_tab = $test_set | New-BqTable "param_test_$r"
         $table | Start-BqJob -Extract CSV "$gcspath/param.csv" -Synchronous
-        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
-            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $alt_tab
+        New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | 
+            New-BqSchema "Year" "INTEGER" | Set-BqSchema $alt_tab
         $job = $alt_tab | Start-BqJob -Load CSV "$gcspath/param.csv" -WriteMode WriteAppend `
             -Encoding "ISO-8859-1" -FieldDelimiter "|" -Quote "'" `
             -SkipLeadingRows 2 -AllowUnknownfields -AllowJaggedRows -AllowQuotedNewlines
@@ -252,8 +248,8 @@ Describe "BqJob-Extract-Load" {
     It "should default Load parameters correctly" {
         $alt_tab = $test_set | New-BqTable "param_test_default_$r"
         $table | Start-BqJob -Extract CSV "$gcspath/param.csv" -Synchronous
-        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
-            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $alt_tab
+        New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" |
+            New-BqSchema "Year" "INTEGER" | Set-BqSchema $alt_tab
         $job = $alt_tab | Start-BqJob -Load CSV "$gcspath/param.csv"
         $job.Configuration.Load.AllowJaggedRows | Should Be $false
         $job.Configuration.Load.AllowQuotedNewlines | Should Be $false
@@ -293,8 +289,8 @@ Describe "BqJob-Extract-Load" {
         $file | Should Not Be $null
 
         $alt_tab = $test_set | New-BqTable "basic_test_$r"
-        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
-            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $alt_tab
+        New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" |
+            New-BqSchema "Year" "INTEGER" | Set-BqSchema $alt_tab
         $boj = $alt_tab | Start-BqJob -Load CSV "$gcspath/basic.csv" -SkipLeadingRows 1 -Synchronous
         $boj.Status.State | Should Be "DONE"
 
@@ -311,8 +307,8 @@ Describe "BqJob-Extract-Load" {
         $file | Should Not Be $null
 
         $alt_tab = $test_set | New-BqTable "complex_test_$r"
-        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
-            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $alt_tab
+        New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" |
+            New-BqSchema "Year" "INTEGER" | Set-BqSchema $alt_tab
         $boj = $alt_tab | Start-BqJob -Load CSV "$gcspath/complex.csv" -FieldDelimiter "|" -Synchronous
         $boj.Status.State | Should Be "DONE"
 
@@ -324,8 +320,8 @@ Describe "BqJob-Extract-Load" {
         $table | Start-BqJob -Extract CSV "$gcspath/write.csv" -Synchronous
         $file = Get-GcsObject "ps_test_$r" "write.csv"
         $alt_tab = $test_set | New-BqTable "writemode_test_$r"
-        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
-            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $alt_tab
+        New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" |
+            New-BqSchema "Year" "INTEGER" | Set-BqSchema $alt_tab
 
         $alt_tab | Start-BqJob -Load CSV "$gcspath/write.csv" -SkipLeadingRows 1 `
             -WriteMode WriteIfEmpty -Synchronous
@@ -367,9 +363,8 @@ Describe "Stop-BqJob" {
         $folder = $folder.ToString()
         $filename = "$folder\classics_large.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
-        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
-            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $table | 
-            Add-BqTabledata $filename CSV -SkipLeadingRows 1
+        New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
+            Set-BqSchema $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1
         $bucket = New-GcsBucket "ps_test_$r"
         $gcspath = "gs://ps_test_$r"
     }
