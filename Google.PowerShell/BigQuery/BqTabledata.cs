@@ -217,14 +217,14 @@ namespace Google.PowerShell.BigQuery
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
             {
-                WriteError(new ErrorRecord(ex,
+                ThrowTerminatingError(new ErrorRecord(ex,
                     $"Conflict while updating '{Table.TableReference.DatasetId}'.",
                     ErrorCategory.WriteError,
                     Table));
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Forbidden)
             {
-                WriteError(new ErrorRecord(ex,
+                ThrowTerminatingError(new ErrorRecord(ex,
                     $"You do not have permission to modify '{Table.TableReference.DatasetId}'.",
                     ErrorCategory.PermissionDenied,
                     Table));
@@ -257,11 +257,11 @@ namespace Google.PowerShell.BigQuery
     /// PS C:\> $filename = "C:\data.csv"
     /// PS C:\> $table = New-BqTable -DatasetId "db_name" "tab_name"
     /// PS C:\> $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1 `
-    ///     -MaxBadRecords 4 -AllowUnknownFields
+    ///     -AllowJaggedRows -AllowUnknownFields
     ///   </code>
-    ///   <para>This code will take a CSV file and upload it to a BQ table.  It will ignore up to 4 bad 
-    ///   rows before throwing an error, and it will keep rows that have fields that aren't in the 
-    ///   table's schema.</para>
+    ///   <para>This code will take a CSV file and upload it to a BQ table.  It will set missing fields 
+    ///   from the CSV to null, and it will keep rows that have fields that aren't in the table's schema.
+    ///   </para>
     /// </example> 
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/tabledata)">
     /// [BigQuery Tabledata]
@@ -304,15 +304,6 @@ namespace Google.PowerShell.BigQuery
         /// </summary>
         [Parameter(Mandatory = false)]
         public WriteDisposition WriteMode { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The number of malformed rows that the request will ignore before throwing an error. 
-        /// This value is zero if not specified.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = false)]
-        public int MaxBadRecords { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -376,21 +367,18 @@ namespace Google.PowerShell.BigQuery
                         case DataFormats.AVRO:
                             UploadAvroOptions AvroOptions = new UploadAvroOptions();
                             AvroOptions.WriteDisposition = WriteMode;
-                            AvroOptions.MaxBadRecords = MaxBadRecords;
                             AvroOptions.AllowUnknownFields = AllowUnknownFields;
                             bqj = Client.UploadAvro(InputObject, null, fileInput, AvroOptions);
                             break;
                         case DataFormats.JSON:
                             UploadJsonOptions JsonOptions = new UploadJsonOptions();
                             JsonOptions.WriteDisposition = WriteMode;
-                            JsonOptions.MaxBadRecords = MaxBadRecords;
                             JsonOptions.AllowUnknownFields = AllowUnknownFields;
                             bqj = Client.UploadJson(InputObject, null, fileInput, JsonOptions);
                             break;
                         case DataFormats.CSV:
                             UploadCsvOptions CsvOptions = new UploadCsvOptions();
                             CsvOptions.WriteDisposition = WriteMode;
-                            CsvOptions.MaxBadRecords = MaxBadRecords;
                             CsvOptions.AllowJaggedRows = AllowJaggedRows;
                             CsvOptions.AllowQuotedNewlines = AllowQuotedNewlines;
                             CsvOptions.AllowTrailingColumns = AllowUnknownFields;
@@ -408,14 +396,14 @@ namespace Google.PowerShell.BigQuery
             }
             catch (IOException ex)
             {
-                WriteError(new ErrorRecord(ex,
+                ThrowTerminatingError(new ErrorRecord(ex,
                     $"Error while reading file '{Filename}'.",
                     ErrorCategory.ReadError, Filename));
                 return;
             }
             catch (Exception ex)
             {
-                WriteError(new ErrorRecord(ex,
+                ThrowTerminatingError(new ErrorRecord(ex,
                     $"Error while uploading file '{Filename}' to table '{InputObject.TableId}'.",
                     ErrorCategory.WriteError, Filename));
             }
@@ -472,7 +460,7 @@ namespace Google.PowerShell.BigQuery
             }
             catch (Exception ex)
             {
-                WriteError(new ErrorRecord(ex,
+                ThrowTerminatingError(new ErrorRecord(ex,
                     $"Error while exporting rows from table '{InputObject.TableId}'.",
                     ErrorCategory.ReadError, InputObject));
             }

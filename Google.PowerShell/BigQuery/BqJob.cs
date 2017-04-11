@@ -424,15 +424,6 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// The number of malformed rows that the request will ignore before throwing an error. 
-        /// The default value is zero.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
-        public int MaxBadRecords { get; set; }
-
-        /// <summary>
-        /// <para type="description">
         /// The number of rows to skip from the input file. (Usually used for headers.)
         /// </para>
         /// </summary>
@@ -646,7 +637,6 @@ namespace Google.PowerShell.BigQuery
                                 Encoding = Encoding,
                                 FieldDelimiter = FieldDelimiter,
                                 Quote = Quote,
-                                MaxBadRecords = MaxBadRecords,
                                 SkipLeadingRows = SkipLeadingRows,
                                 IgnoreUnknownValues = AllowUnknownFields,
                                 AllowJaggedRows = AllowJaggedRows,

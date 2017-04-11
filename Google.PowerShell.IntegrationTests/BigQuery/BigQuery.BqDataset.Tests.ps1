@@ -58,11 +58,11 @@ Describe "Get-BqDataset" {
     }
 
     It "should handle when a dataset does not exist" {
-        { Get-BqDataset "test_id_5" -ErrorAction Stop } | Should Throw 404
+        { Get-BqDataset "test_id_5" } | Should Throw 404
     }
 
     It "should handle projects that do not exist" {
-        { Get-BqDataset -Project $nonExistProject "test_id_5" -ErrorAction Stop } | Should Throw 404
+        { Get-BqDataset -Project $nonExistProject "test_id_5" } | Should Throw 404
     }
 
     It "should handle projects that the user does not have permissions for" {
@@ -98,7 +98,7 @@ Describe "Set-BqDataset" {
             $data.Description = "A new description!"
             $data.DefaultTableExpirationMs = $threeDayMs
 
-            $data = Set-BqDataset -InputObject $data
+            $data = Set-BqDataset $data
             $data | Should Not BeNullOrEmpty
             $data.FriendlyName | Should Be "Some Test Data"
             $data.Description | Should Be "A new description!"
@@ -113,7 +113,7 @@ Describe "Set-BqDataset" {
             New-BqDataset "test_dataset_id3" -Name "Testdata" -Description "Some interesting data!" -Expiration $oneDaySec
             $data = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Dataset
             $data.DatasetReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.DatasetReference
-            { Set-BqDataset -InputObject $data } | Should Throw "is missing"
+            { Set-BqDataset $data } | Should Throw "is missing"
         } finally {
             Get-BqDataset "test_dataset_id3" | Remove-BqDataset
         }
@@ -124,12 +124,10 @@ Describe "Set-BqDataset" {
         $data.DatasetReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.DatasetReference
         $data.DatasetReference.DatasetId = "test_dataset_id4"
         $data.DatasetReference.ProjectId = $project
-        { Set-BqDataset -InputObject $data } | Should Throw 404
+        { Set-BqDataset $data } | Should Throw 404
     } 
 
     #TODO(ahandley): Find reason behind occasional (25%) 412 Precondition error (If-Match - header).
-    
-    #TODO(ahandley): Add in tests for updating Access field when cmdlet support has been built.
 
 }
 
@@ -191,7 +189,7 @@ Describe "New-BqDataset" {
             $data.DatasetReference.ProjectId = $project
             $data.FriendlyName = "PipeTest"
             $data.Description = "Some cool data coming hot off the pipeline!"
-            $newdata = New-BqDataset -InputObject $data
+            $newdata = New-BqDataset -Dataset $data
             $newdata | Should Not BeNullOrEmpty
             $newdata.DatasetReference.DatasetId | Should Be "test_data_id3"
             $newdata.FriendlyName | Should Be "PipeTest"
@@ -219,7 +217,7 @@ Describe "New-BqDataset" {
             $data2.DatasetReference.DatasetId = "test_data_id6"
             $data2.DatasetReference.ProjectId = $project
             $data | New-BqDataset
-            { $data2 | New-BqDataset -ErrorAction Stop} | Should Throw 409
+            { $data2 | New-BqDataset } | Should Throw 409
         } finally {
             Get-BqDataset "test_data_id6" | Remove-BqDataset
         }
@@ -264,7 +262,7 @@ Describe "Remove-BqDataset" {
             New-BqDataset "test_set_1"
         } finally {
             Get-BqDataset "test_set_1" | Remove-BqDataset
-            { Get-BqDataset "test_set_1" -ErrorAction Stop } | Should Throw 404
+            { Get-BqDataset "test_set_1" } | Should Throw 404
         }
     }
 
@@ -273,8 +271,8 @@ Describe "Remove-BqDataset" {
             New-BqDataset "test_set_2"
             $a = Get-BqDataset "test_set_2" 
         } finally {
-            Remove-BqDataset -InputObject $a
-            { Get-BqDataset "test_set_2" -ErrorAction Stop } | Should Throw 404
+            Remove-BqDataset $a
+            { Get-BqDataset "test_set_2" } | Should Throw 404
         }
     }
 
@@ -282,18 +280,18 @@ Describe "Remove-BqDataset" {
         try {
             New-BqDataset -Project $project "test_set_explicit"
         } finally {
-            Remove-BqDataset -Project $project -Dataset "test_set_explicit"
-            { Get-BqDataset "test_set_explicit" -ErrorAction Stop } | Should Throw 404
+            Remove-BqDataset "test_set_explicit" -Project $project
+            { Get-BqDataset "test_set_explicit" } | Should Throw 404
         }
     }
 
     It "should delete a nonempty dataset as long as -Force is specified" {
         try {
-            New-BqDataset -Project $project "test_set_force"
-            New-BqTable -Project $project -DatasetId "test_set_force" -Table "force_test_table"
+            New-BqDataset "test_set_force"
+            New-BqTable "force_test_table" -DatasetId "test_set_force"
         } finally {
-            Remove-BqDataset -Project $project -Dataset "test_set_force" -Force
-            { Get-BqDataset "test_set_force" -ErrorAction Stop } | Should Throw 404
+            Remove-BqDataset "test_set_force" -Force
+            { Get-BqDataset "test_set_force" } | Should Throw 404
         }
     }
 
@@ -302,19 +300,19 @@ Describe "Remove-BqDataset" {
         $data.DatasetReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.DatasetReference
         $data.DatasetReference.DatasetId = "test_set_not_on_server"
         $data.DatasetReference.ProjectId = $project
-        { Remove-BqDataset -InputObject $data } | Should Throw 404
+        { Remove-BqDataset $data } | Should Throw 404
     }
 
     It "should handle projects that do not exist" {
-        { Remove-BqDataset -Project $nonExistProject -Dataset $nonExistDataset } | Should Throw 404
+        { Remove-BqDataset -Project $nonExistProject $nonExistDataset } | Should Throw 404
     }
 
     It "should handle project:dataset combinations that do not exist" {
-        { Remove-BqDataset -Project $project -Dataset $nonExistDataset } | Should Throw 404
+        { Remove-BqDataset -Project $project $nonExistDataset } | Should Throw 404
     }
 
     It "should handle projects that the user does not have permissions for" {
-        { Remove-BqDataset -Project $accessErrProject -Dataset $nonExistDataset } | Should Throw 400
+        { Remove-BqDataset -Project $accessErrProject $nonExistDataset } | Should Throw 400
     }
 }
 

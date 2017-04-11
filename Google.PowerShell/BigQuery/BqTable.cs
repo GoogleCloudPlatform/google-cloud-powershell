@@ -135,7 +135,7 @@ namespace Google.PowerShell.BigQuery
                 TableList response = request.Execute();
                 if (response == null)
                 {
-                    WriteError(new ErrorRecord(
+                    ThrowTerminatingError(new ErrorRecord(
                         new Exception("The List query returned null instead of a well formed list."),
                         "Null List Returned", ErrorCategory.ReadError, Dataset));
                 }
@@ -157,7 +157,7 @@ namespace Google.PowerShell.BigQuery
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
             {
-                WriteError(new ErrorRecord(ex,
+                ThrowTerminatingError(new ErrorRecord(ex,
                     $"Error {ex.HttpStatusCode}: Table '{Table}' not found in '{Dataset}'.",
                     ErrorCategory.ObjectNotFound,
                     Table));
@@ -194,7 +194,7 @@ namespace Google.PowerShell.BigQuery
         /// The updated Table object.  Must have the same tableId as an existing table in the dataset.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, ValueFromPipeline = true)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true)]
         public Table InputObject { get; set; }
 
         protected override void ProcessRecord()
@@ -211,14 +211,14 @@ namespace Google.PowerShell.BigQuery
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
             {
-                WriteError(new ErrorRecord(ex,
+                ThrowTerminatingError(new ErrorRecord(ex,
                     $"Conflict while updating '{InputObject.TableReference.DatasetId}'.",
                     ErrorCategory.WriteError,
                     InputObject));
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Forbidden)
             {
-                WriteError(new ErrorRecord(ex,
+                ThrowTerminatingError(new ErrorRecord(ex,
                     $"You do not have permission to modify '{InputObject.TableReference.DatasetId}'.",
                     ErrorCategory.PermissionDenied,
                     InputObject));
@@ -369,7 +369,7 @@ namespace Google.PowerShell.BigQuery
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
             {
-                WriteError(new ErrorRecord(ex,
+                ThrowTerminatingError(new ErrorRecord(ex,
                     $"A table with the name '{TableId}' already exists in '{Project}:{DatasetId}'.",
                     ErrorCategory.InvalidArgument,
                     TableId));
@@ -459,7 +459,7 @@ namespace Google.PowerShell.BigQuery
         /// </summary>
         [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByValue)]
         [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByDatasetObject)]
-        public string Table { get; set; }
+        public string TableId { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -487,12 +487,12 @@ namespace Google.PowerShell.BigQuery
         /// Also takes TableReference and TableList.TablesData objects.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ByObject)]
+        [Parameter(Mandatory = true, ValueFromPipeline = true, Position = 0, ParameterSetName = ParameterSetNames.ByObject)]
         [PropertyByTypeTransformation(TypeToTransform = typeof(TableList.TablesData),
             Property = nameof(TableList.TablesData.TableReference))]
         [PropertyByTypeTransformation(TypeToTransform = typeof(Table),
             Property = nameof(Apis.Bigquery.v2.Data.Table.TableReference))]
-        public TableReference InputObject { get; set; }
+        public TableReference Table { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -510,9 +510,9 @@ namespace Google.PowerShell.BigQuery
                     // No processing needed for ByValue parameter sets.
                     break;
                 case ParameterSetNames.ByObject:
-                    Project = InputObject.ProjectId;
-                    DatasetId = InputObject.DatasetId;
-                    Table = InputObject.TableId;
+                    Project = Table.ProjectId;
+                    DatasetId = Table.DatasetId;
+                    TableId = Table.TableId;
                     break;
                 case ParameterSetNames.ByDatasetObject:
                     Project = Dataset.ProjectId;
@@ -526,12 +526,12 @@ namespace Google.PowerShell.BigQuery
             {
                 if (ShouldDelete())
                 {
-                    Service.Tables.Delete(Project, DatasetId, Table).Execute();
+                    Service.Tables.Delete(Project, DatasetId, TableId).Execute();
                 }
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
             {
-                WriteError(new ErrorRecord(ex,
+                ThrowTerminatingError(new ErrorRecord(ex,
                     $"Error {ex.HttpStatusCode}: '{Table}' not found in '{Dataset}'.",
                     ErrorCategory.ObjectNotFound, Table));
             }
@@ -539,7 +539,7 @@ namespace Google.PowerShell.BigQuery
 
         private bool ShouldDelete()
         {
-            if (!ShouldProcess(Table) || noToAll)
+            if (!ShouldProcess(TableId) || noToAll)
             {
                 return false;
             }
@@ -550,10 +550,10 @@ namespace Google.PowerShell.BigQuery
             else
             {
                 var tableResponse = new TablesResource.GetRequest(
-                    Service, Project, DatasetId, Table).Execute();
+                    Service, Project, DatasetId, TableId).Execute();
 
                 return (tableResponse.NumRows == 0) || ShouldContinue(
-                    GetConfirmationMessage(Table, tableResponse.NumRows),
+                    GetConfirmationMessage(TableId, tableResponse.NumRows),
                     "Confirm Deletion", ref yesToAll, ref noToAll);
             }
         }
