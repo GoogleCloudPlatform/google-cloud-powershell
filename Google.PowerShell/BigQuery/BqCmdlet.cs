@@ -24,5 +24,22 @@ namespace Google.PowerShell.BigQuery
             _service = new Lazy<BigqueryService>(() => new BigqueryService(GetBaseClientServiceInitializer()));
             _client = new Lazy<BigQueryClient>(() => BigQueryClient.Create(Project));
         }
+
+        // String value of DataFormats.JSON that is taken by the rest API.
+        public static string JSON_TEXT = "NEWLINE_DELIMITED_JSON";
+        public static string COMPRESSION_GZIP = "GZIP";
+        public static string COMPRESSION_NONE = "NONE";
+        public static string STATUS_DONE = "DONE";
+    }
+
+    /// <summary>
+    /// Data formats for input and output
+    /// </summary>
+    public enum DataFormats
+    {
+        AVRO,               // Apache AVRO file format (avro.apache.org)
+        CSV,                // Comma Separated Value file
+        JSON,               // Newline-delimited JSON (ndjson.org)
+        DATASTORE_BACKUP    // Cloud Datastore backup files
     }
 }

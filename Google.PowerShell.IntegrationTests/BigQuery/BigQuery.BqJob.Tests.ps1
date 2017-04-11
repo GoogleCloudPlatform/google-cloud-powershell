@@ -213,6 +213,152 @@ Describe "BqJob-Copy" {
     }
 }
 
+Describe "BqJob-Extract-Load" {
+
+    BeforeAll {
+        $r = Get-Random
+        $datasetName = "pshell_testing_$r"
+        $test_set = New-BqDataset $datasetName
+        $folder = Get-Location
+        $folder = $folder.ToString()
+        $filename = "$folder\classics.csv"
+        $table = New-BqTable -Dataset $test_Set "table_$r"
+        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
+            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $table | 
+            Add-BqTabledata $filename CSV -SkipLeadingRows 1
+        $bucket = New-GcsBucket "ps_test_$r"
+        $gcspath = "gs://ps_test_$r"
+    }
+
+    It "should set Load parameters correctly" {
+        $alt_tab = $test_set | New-BqTable "param_test_$r"
+        $table | Start-BqJob -Extract CSV "$gcspath/param.csv" -Synchronous
+        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
+            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $alt_tab
+        $job = $alt_tab | Start-BqJob -Load CSV "$gcspath/param.csv" -WriteMode WriteAppend `
+            -Encoding "ISO-8859-1" -FieldDelimiter "|" -Quote "'" -MaxBadRecords 3 `
+            -SkipLeadingRows 2 -AllowUnknownfields -AllowJaggedRows -AllowQuotedNewlines
+        $job.Configuration.Load.AllowJaggedRows | Should Be $true
+        $job.Configuration.Load.AllowQuotedNewlines | Should Be $true
+        $job.Configuration.Load.Encoding | Should Be "ISO-8859-1"
+        $job.Configuration.Load.FieldDelimiter | Should Be "|"
+        $job.Configuration.Load.IgnoreUnknownValues | Should Be $true
+        $job.Configuration.Load.MaxBadRecords | Should Be 3
+        $job.Configuration.Load.Quote | Should Be "'"
+        $job.Configuration.Load.SkipLeadingRows | Should Be 2
+        $job.Configuration.Load.SourceFormat.ToString() | Should Be "CSV"
+        $job.Configuration.Load.WriteDisposition.ToString() | Should Be "WRITE_APPEND"
+    }
+
+    It "should default Load parameters correctly" {
+        $alt_tab = $test_set | New-BqTable "param_test_$r"
+        $table | Start-BqJob -Extract CSV "$gcspath/param.csv" -Synchronous
+        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
+            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $alt_tab
+        $job = $alt_tab | Start-BqJob -Load CSV "$gcspath/param.csv"
+        $job.Configuration.Load.AllowJaggedRows | Should Be $false
+        $job.Configuration.Load.AllowQuotedNewlines | Should Be $false
+        $job.Configuration.Load.Encoding | Should Be "UTF-8"
+        $job.Configuration.Load.FieldDelimiter | Should Be ","
+        $job.Configuration.Load.IgnoreUnknownValues | Should Be $false
+        $job.Configuration.Load.MaxBadRecords | Should Be 0
+        $job.Configuration.Load.Quote | Should Be """"
+        $job.Configuration.Load.SkipLeadingRows | Should Be 0
+        $job.Configuration.Load.SourceFormat.ToString() | Should Be "CSV"
+        $job.Configuration.Load.WriteDisposition | Should Be $null
+    }
+
+    It "should set Extract parameters correctly" {
+        $job = $table | Start-BqJob -Extract CSV "$gcspath/otherparam.csv" -Compress -FieldDelimiter "|" -NoHeader
+        $job.Configuration.Extract.Compression | Should Be $true
+        $job.Configuration.Extract.DestinationFormat.ToString() | Should Be "CSV"
+        $job.Configuration.Extract.DestinationUri | Should Be "$gcspath/otherparam.csv"
+        $job.Configuration.Extract.FieldDelimiter | Should Be "|"
+        $job.Configuration.Extract.PrintHeader | Should Be $false
+    }
+
+    It "should default Extract parameters correctly" {
+        $job = $table | Start-BqJob -Extract CSV "$gcspath/otherparam.csv"
+        $job.Configuration.Extract.Compression | Should Be "NONE"
+        $job.Configuration.Extract.DestinationFormat.ToString() | Should Be "CSV"
+        $job.Configuration.Extract.DestinationUri | Should Be "$gcspath/otherparam.csv"
+        $job.Configuration.Extract.FieldDelimiter | Should Be ","
+        $job.Configuration.Extract.PrintHeader | Should Be $true
+    }
+
+    It "should Extract/Load a basic CSV" {
+        $job = $table | Start-BqJob -Extract CSV "$gcspath/basic.csv" -Synchronous
+        $job.Status.State | Should Be "DONE"
+        $job.Status.ErrorResult | Should Be $null
+
+        $file = Get-GcsObject "ps_test_$r" "basic.csv"
+        $file | Should Not Be $null
+
+        $alt_tab = $test_set | New-BqTable "basic_test_$r"
+        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
+            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $alt_tab
+        $boj = $alt_tab | Start-BqJob -Load CSV "$gcspath/basic.csv" -SkipLeadingRows 1 -Synchronous
+        $boj.Status.State | Should Be "DONE"
+
+        $alt_tab = $alt_tab | Get-BqTable
+        $alt_tab.NumRows | Should Be 10
+    }
+
+    It "should Extract/Load a more complex CSV request" {
+        $job = $table | Start-BqJob -Extract CSV "$gcspath/complex.csv" -FieldDelimiter "|" -NoHeader -Synchronous
+        $job.Status.State | Should Be "DONE"
+        $job.Status.ErrorResult | Should Be $null
+
+        $file = Get-GcsObject "ps_test_$r" "basic.csv"
+        $file | Should Not Be $null
+
+        $alt_tab = $test_set | New-BqTable "complex_test_$r"
+        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
+            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $alt_tab
+        $boj = $alt_tab | Start-BqJob -Load CSV "$gcspath/complex.csv" -FieldDelimiter "|" -Synchronous
+        $boj.Status.State | Should Be "DONE"
+
+        $alt_tab = $alt_tab | Get-BqTable
+        $alt_tab.NumRows | Should Be 10
+    }
+
+    It "should handle WriteMode correctly" {
+        $table | Start-BqJob -Extract CSV "$gcspath/write.csv" -Synchronous
+        $file = Get-GcsObject "ps_test_$r" "write.csv"
+        $alt_tab = $test_set | New-BqTable "writemode_test_$r"
+        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
+            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $alt_tab
+
+        $alt_tab | Start-BqJob -Load CSV "$gcspath/write.csv" -SkipLeadingRows 1 `
+            -WriteMode WriteIfEmpty -Synchronous
+        $alt_tab = $alt_tab | Get-BqTable
+        $alt_tab.NumRows | Should Be 10
+
+        $alt_tab | Start-BqJob -Load CSV "$gcspath/write.csv" -SkipLeadingRows 1 `
+            -WriteMode WriteAppend -Synchronous
+        $alt_tab = $alt_tab | Get-BqTable
+        $alt_tab.NumRows | Should Be 20
+
+        $alt_tab | Start-BqJob -Load CSV "$gcspath/write.csv" -SkipLeadingRows 1 `
+            -WriteMode WriteTruncate -Synchronous
+        $alt_tab = $alt_tab | Get-BqTable
+        $alt_tab.NumRows | Should Be 10
+    }
+
+    It "Load should properly halt when -WhatIf is passed" {
+        $table | Start-BqJob -Load AVRO "$gcspath/whatif.json" -WhatIf | Should Be $null
+    }
+
+    It "Extract should properly halt when -WhatIf is passed" {
+        $table | Start-BqJob -Extract JSON "$gcspath/whatif.json" -WhatIf | Should Be $null
+    }
+
+    AfterAll {
+        $test_set | Remove-BqDataset -Force
+        $bucket.Name | Remove-GcsBucket -Force
+    }
+}
+
 Describe "Stop-BqJob" {
 
     BeforeAll {

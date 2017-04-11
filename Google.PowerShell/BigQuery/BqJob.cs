@@ -36,7 +36,7 @@ namespace Google.PowerShell.BigQuery
     /// </example> 
     /// <example>
     ///   <code>PS C:\> $job = $job | Get-BqJob</code>
-    ///   <para>This will update the local descriptor $job with the most recent server state.</para>
+    ///   <para>This will update the local descriptor <code>$job</code> with the most recent server state.</para>
     /// </example> 
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs)">
     /// [BigQuery Jobs]
@@ -180,7 +180,7 @@ namespace Google.PowerShell.BigQuery
 
     /// <summary>
     /// <para type="synopsis">
-    /// Starts a new, asynchronous BigQuery Job. Currently, the only supported type is Query.
+    /// Starts a new, asynchronous BigQuery Job.
     /// </para>
     /// <para type="description">
     /// Starts a new asynchronous job. This call requires the ‘Viewer’ role. The Type parameter 
@@ -189,7 +189,7 @@ namespace Google.PowerShell.BigQuery
     /// parameters that define job attributes such as start time and handle statistics such 
     /// as rows and raw amounts of data processed. This cmdlet supports ShouldProcess, and as 
     /// such, has the -WhatIf parameter to show the projected results of the cmdlet without 
-    /// actually changing any server resources.
+    /// actually changing any server resources. 
     /// Use -PollUntilComplete to have the cmdlet treat the job as a blocking operation.  
     /// It will poll until the job has finished, and then it will return a job reference. 
     /// Tables referenced in queries should be fully qualified, but to use any that are not, 
@@ -210,12 +210,34 @@ namespace Google.PowerShell.BigQuery
     /// </example>
     /// <example>
     ///   <code>
-    /// PS C:\> $source_table | Start-BqJob -Copy $dest_table -PollUntilComplete
+    /// PS C:\> $source_table | Get-BqTable -DatasetId "books" "classics"
+    /// PS C:\> $dest_table | Get-BqTable -DatasetId "books" "suggestions"
+    /// PS C:\> $source_table | Start-BqJob -Copy $dest_table -WriteMode WriteAppend -PollUntilComplete
     ///   </code>
-    ///   <para>Copies the contents of the source as long as the source and destination schemas match.</para>
+    ///   <para>Copies the contents of the source to the end of the destination table as long as the 
+    ///   source and destination schemas match.</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    /// PS C:\> $gcspath = "gs://ps_test"
+    /// PS C:\> $table | Get-BqTable -DatasetId "books" "classics"
+    /// PS C:\> $job = $table | Start-BqJob -Load CSV "$gcspath/basic.csv" -SkipLeadingRows 1 -Synchronous
+    ///   </code>
+    ///   <para>Loads in a table from 'basic.csv' in the GCS bucket 'ps_test'.</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    /// PS C:\> $gcspath = "gs://ps_test"
+    /// PS C:\> $table | Get-BqTable -DatasetId "books" "classics"
+    /// PS C:\> $job = $table | Start-BqJob -Extract CSV "$gcspath/basic.csv" -Synchronous
+    ///   </code>
+    ///   <para>Exports the given table to a .csv file in Cloud Storage.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs)">
     /// [BigQuery Jobs]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/storage/)">
+    /// [Google Cloud Storage]
     /// </para>
     /// </summary>
     [Cmdlet("Start", "BqJob", SupportsShouldProcess = true)]
@@ -240,19 +262,6 @@ namespace Google.PowerShell.BigQuery
         [Parameter(Mandatory = false)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public override string Project { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The destination table to write to.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.DoCopy)]
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoQuery)]
-        [PropertyByTypeTransformation(TypeToTransform = typeof(Table),
-            Property = nameof(Table.TableReference))]
-        [PropertyByTypeTransformation(TypeToTransform = typeof(TableList.TablesData),
-            Property = nameof(TableList.TablesData.TableReference))]
-        public TableReference Destination { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -309,6 +318,7 @@ namespace Google.PowerShell.BigQuery
         /// Priority of the query.  Can be 'Batch' or 'Interactive'.
         /// </para>
         /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoQuery)]
         public QueryPriority Priority { get; set; }
 
         // Copy Parameters.
@@ -327,6 +337,7 @@ namespace Google.PowerShell.BigQuery
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.DoCopy)]
+        [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.DoExtract)]
         [PropertyByTypeTransformation(TypeToTransform = typeof(Table),
             Property = nameof(Table.TableReference))]
         [PropertyByTypeTransformation(TypeToTransform = typeof(TableList.TablesData),
@@ -336,12 +347,27 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
+        /// The destination table to write to.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.DoCopy)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoQuery)]
+        [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.DoLoad)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Table),
+            Property = nameof(Table.TableReference))]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(TableList.TablesData),
+            Property = nameof(TableList.TablesData.TableReference))]
+        public TableReference Destination { get; set; }
+
+        /// <summary>
+        /// <para type="description">
         /// Write Disposition of the operation. Handles what happens if the destination table 
         /// already exists. If this parameter is not supplied, this defaults to WriteEmpty.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoCopy)]
-        public WriteDisposition? WriteMode { get; set; } = WriteDisposition.WriteIfEmpty;
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
+        public WriteDisposition? WriteMode { get; set; }
 
         // Load Parameters.
 
@@ -353,6 +379,90 @@ namespace Google.PowerShell.BigQuery
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.DoLoad)]
         public SwitchParameter Load { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The format to input/output (CSV, JSON, AVRO, DATASTORE_BACKUP).
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.DoLoad)]
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.DoExtract)]
+        public DataFormats Type { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// A list of fully-qualified Google Cloud Storage URIs where data should be imported from.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.DoLoad)]
+        [ValidateNotNullOrEmpty]
+        public string[] SourceUris { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The character encoding of the data. The supported values are UTF-8 (default) or ISO-8859-1.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
+        public string Encoding { get; set; } = "UTF-8";
+
+        /// <summary>
+        /// <para type="description">
+        /// Delimiter to use between fields in the exported data. Default value is comma (,).
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoExtract)]
+        public string FieldDelimiter { get; set; } = ",";
+
+        /// <summary>
+        /// <para type="description">
+        /// The value that is used to quote data sections in a CSV file. Default value is double-quote (").
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
+        public string Quote { get; set; } = "\"";
+
+        /// <summary>
+        /// <para type="description">
+        /// The number of malformed rows that the request will ignore before throwing an error. 
+        /// The default value is zero.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
+        public int MaxBadRecords { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The number of rows to skip from the input file. (Usually used for headers.)
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
+        public int SkipLeadingRows { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Allows insertion of rows with fields that are not in the schema, ignoring the extra fields.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
+        public SwitchParameter AllowUnknownFields { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Allows insertion of rows that are missing trailing optional columns.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
+        public SwitchParameter AllowJaggedRows { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Allows quoted data sections to contain newlines
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
+        public SwitchParameter AllowQuotedNewlines { get; set; }
+
         // Extract Parameters.
 
         /// <summary>
@@ -362,6 +472,31 @@ namespace Google.PowerShell.BigQuery
         /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.DoExtract)]
         public SwitchParameter Extract { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// A list of fully-qualified Google Cloud Storage URIs where the extracted table should be written.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.DoExtract)]
+        [ValidateNotNullOrEmpty]
+        public string[] DestinationUris { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Instructs the server to output with GZIP compression.  Otherwise, no compression is used.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoExtract)]
+        public SwitchParameter Compress { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Disables printing of a header row in the results.  Otherwise, a header will be printed.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoExtract)]
+        public SwitchParameter NoHeader { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -395,10 +530,6 @@ namespace Google.PowerShell.BigQuery
             // Check if the user is requesting a synchronous operation.
             if (PollUntilComplete)
             {
-                // CODE TO TEST WITH LOAD AND EXTRACT.  REMOVE BEFORE RELEASE.
-                //BigQueryJob bqj = Client.GetJob(result.JobReference);
-                //bqj.PollQueryUntilCompleted();
-                //result = bqj.Resource;
                 result = PollForCompletion(result);
                 result = Client.GetJob(result.JobReference).Resource;
             }
@@ -423,7 +554,7 @@ namespace Google.PowerShell.BigQuery
             {
                 try
                 {
-                    var options = new CreateQueryJobOptions()
+                    var options = new CreateQueryJobOptions
                     {
                         UseLegacySql = UseLegacySql,
                         Priority = Priority,
@@ -434,9 +565,14 @@ namespace Google.PowerShell.BigQuery
                     BigQueryJob bqr = Client.CreateQueryJob(QueryString, options);
                     return bqr.Resource;
                 }
-                catch (Exception ex)
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Forbidden)
                 {
-                    ThrowTerminatingError(new ErrorRecord(ex, "Query rejected",
+                    ThrowTerminatingError(new ErrorRecord(ex, "Query rejected: Access denied",
+                        ErrorCategory.InvalidOperation, this));
+                }
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+                {
+                    ThrowTerminatingError(new ErrorRecord(ex, "Query rejected: Resource not found",
                         ErrorCategory.InvalidOperation, this));
                 }
             }
@@ -450,27 +586,37 @@ namespace Google.PowerShell.BigQuery
         /// </summary>
         public Apis.Bigquery.v2.Data.Job DoCopy()
         {
-            if (ShouldProcess($"\n\nCopying table(s) to {Destination.TableId}\n\n"))
+            if (ShouldProcess($"Copying {Source.TableId} to {Destination.TableId}"))
             {
                 try
                 {
-                    var copyjob = new Apis.Bigquery.v2.Data.Job()
+                    var copyjob = new Apis.Bigquery.v2.Data.Job
                     {
-                        Configuration = new JobConfiguration()
+                        Configuration = new JobConfiguration
                         {
-                            Copy = new JobConfigurationTableCopy()
+                            Copy = new JobConfigurationTableCopy
                             {
                                 DestinationTable = Destination,
                                 SourceTable = Source,
-                                WriteDisposition = WriteMode.ToString()
+                                WriteDisposition = WriteMode?.ToString() ?? WriteDisposition.WriteIfEmpty.ToString()
                             }
                         }
                     };
                     return Service.Jobs.Insert(copyjob, Project).Execute();
                 }
-                catch (Exception ex)
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Forbidden)
                 {
-                    ThrowTerminatingError(new ErrorRecord(ex, "Copy Failed",
+                    ThrowTerminatingError(new ErrorRecord(ex, "Copy failed: Access denied",
+                        ErrorCategory.InvalidOperation, this));
+                }
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+                {
+                    ThrowTerminatingError(new ErrorRecord(ex, "Copy failed: Resource not found",
+                        ErrorCategory.InvalidOperation, this));
+                }
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
+                {
+                    ThrowTerminatingError(new ErrorRecord(ex, "Copy failed: Duplicate resource",
                         ErrorCategory.InvalidOperation, this));
                 }
             }
@@ -484,8 +630,50 @@ namespace Google.PowerShell.BigQuery
         /// </summary>
         public Apis.Bigquery.v2.Data.Job DoLoad()
         {
-            throw new NotImplementedException(
-                "Load jobs are not implemented yet.  Use Set-BqTabledata instead.");
+            if (ShouldProcess($"{Destination.TableId} (LOAD)"))
+            {
+                try
+                {
+                    var loadjob = new Apis.Bigquery.v2.Data.Job
+                    {
+                        Configuration = new JobConfiguration
+                        {
+                            Load = new JobConfigurationLoad
+                            {
+                                DestinationTable = Destination,
+                                SourceFormat = (Type == DataFormats.JSON) ? JSON_TEXT : Type.ToString(),
+                                SourceUris = SourceUris,
+                                Encoding = Encoding,
+                                FieldDelimiter = FieldDelimiter,
+                                Quote = Quote,
+                                MaxBadRecords = MaxBadRecords,
+                                SkipLeadingRows = SkipLeadingRows,
+                                IgnoreUnknownValues = AllowUnknownFields,
+                                AllowJaggedRows = AllowJaggedRows,
+                                AllowQuotedNewlines = AllowQuotedNewlines,
+                                WriteDisposition = WriteMode.ToString()
+                            }
+                        }
+                    };
+                    return Service.Jobs.Insert(loadjob, Project).Execute();
+                }
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Forbidden)
+                {
+                    ThrowTerminatingError(new ErrorRecord(ex, "Load failed: Access denied",
+                        ErrorCategory.InvalidOperation, this));
+                }
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+                {
+                    ThrowTerminatingError(new ErrorRecord(ex, "Load failed: Resource not found",
+                        ErrorCategory.InvalidOperation, this));
+                }
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
+                {
+                    ThrowTerminatingError(new ErrorRecord(ex, "Load failed: Duplicate resource",
+                        ErrorCategory.InvalidOperation, this));
+                }
+            }
+            return null;
         }
 
         /// <summary>
@@ -495,8 +683,44 @@ namespace Google.PowerShell.BigQuery
         /// </summary>
         public Apis.Bigquery.v2.Data.Job DoExtract()
         {
-            throw new NotImplementedException(
-                "Extract jobs are not implemented yet.  Use Get-BqTabledata instead.");
+            if (ShouldProcess($"{Source.TableId} (EXTRACT)"))
+            {
+                try
+                {
+                    var extractjob = new Apis.Bigquery.v2.Data.Job
+                    {
+                        Configuration = new JobConfiguration
+                        { 
+                            Extract = new JobConfigurationExtract
+                            {
+                                SourceTable = Source,
+                                DestinationUris = DestinationUris,
+                                DestinationFormat = (Type == DataFormats.JSON) ? JSON_TEXT : Type.ToString(),
+                                Compression = (Compress) ? COMPRESSION_GZIP : COMPRESSION_NONE,
+                                PrintHeader = !NoHeader,
+                                FieldDelimiter = FieldDelimiter
+                            }
+                        }
+                    };
+                    return Service.Jobs.Insert(extractjob, Project).Execute();
+                }
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Forbidden)
+                {
+                    ThrowTerminatingError(new ErrorRecord(ex, "Extract failed: Access denied",
+                        ErrorCategory.InvalidOperation, this));
+                }
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+                {
+                    ThrowTerminatingError(new ErrorRecord(ex, "Extract failed: Resource not found",
+                        ErrorCategory.InvalidOperation, this));
+                }
+                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
+                {
+                    ThrowTerminatingError(new ErrorRecord(ex, "Extract failed: Duplicate resource",
+                        ErrorCategory.InvalidOperation, this));
+                }
+            }
+            return null;
         }
 
         /// <summary>
@@ -505,10 +729,10 @@ namespace Google.PowerShell.BigQuery
         /// <param name="job">Job to poll for completion.</param>
         public Apis.Bigquery.v2.Data.Job PollForCompletion(Apis.Bigquery.v2.Data.Job job)
         {
-            while (!job.Status.State.Equals("DONE"))
+            while (!job.Status.State.Equals(STATUS_DONE))
             {
-                // Poll every 100 ms, or 10 times/sec.
-                System.Threading.Thread.Sleep(100);
+                // Poll every 250 ms, or 4 times/sec.
+                System.Threading.Thread.Sleep(250);
                 try
                 {
                     job = Service.Jobs.Get(job.JobReference.ProjectId, job.JobReference.JobId).Execute();
@@ -577,7 +801,7 @@ namespace Google.PowerShell.BigQuery
             // Set Project for the lazy instantiation of a BQ Client object.
             Project = InputObject.ProjectId;
 
-            var options = new GetQueryResultsOptions() {
+            var options = new GetQueryResultsOptions {
                 Timeout = new TimeSpan(0, 0, (Timeout < 10) ? 10 : Timeout)
             };
 
@@ -610,7 +834,7 @@ namespace Google.PowerShell.BigQuery
     /// <example>
     ///   <code>
     /// PS C:\> $job = Start-BqJob -Query "SELECT * FROM book_data.classics"
-    /// PS C:\> $job = $job | Stop-BqJob | Get-BqJob
+    /// PS C:\> $job = $job | Stop-BqJob
     ///   </code>
     ///   <para>This will send a request to stop $job as soon as possible. $job.Status.State 
     ///   should now be "DONE", but there is a chance that the user will have to continue to

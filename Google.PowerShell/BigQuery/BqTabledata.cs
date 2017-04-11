@@ -2,7 +2,6 @@
 // Licensed under the Apache License Version 2.0.
 
 using Google.Cloud.BigQuery.V2;
-using Google.Apis.Bigquery.v2;
 using Google.Apis.Bigquery.v2.Data;
 using Google.PowerShell.Common;
 using System;
@@ -271,14 +270,6 @@ namespace Google.PowerShell.BigQuery
     [Cmdlet(VerbsCommon.Add, "BqTabledata")]
     public class AddBqTabledata : BqCmdlet
     {
-        /// <summary>
-        /// Data format of the file being passed in.
-        /// </summary>
-        public enum DataFormats
-        {
-            AVRO, CSV, JSON
-        }
-
         /// <summary>
         /// <para type="description">
         /// The table to insert the data.
