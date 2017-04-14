@@ -16,33 +16,43 @@ namespace Google.PowerShell.BigQuery
     /// Lists BigQuery datasets in a specific Cloud project.
     /// </para>
     /// <para type="description">
-    /// If a DatasetId is specified, it will return an object describing that dataset. If no DatasetId is 
+    /// If a Dataset is specified, it will return an object describing that dataset. If no Dataset is 
     /// specified, this cmdlet lists all datasets in the specified project to which you have been granted the 
-    /// READER dataset role. The -IncludeHidden flag will include hidden datasets in the search results. The -Filter 
-    /// flag allows you to filter results by label. The syntax to filter is "labels.name[:value]". Multiple filters 
-    /// can be ANDed together by connecting with a space. See the link below for more information.
-    /// If no Project is specified, the default project will be used. This cmdlet returns any number of 
-    /// DatasetList.DatasetData objects if no DatasetId was specified, or a Dataset otherwise.
+    /// "READER" dataset role. The "-IncludeHidden" flag will include hidden datasets in the search results. 
+    /// The "-Filter" flag allows you to filter results by label. The syntax to filter is "labels.name[:value]". 
+    /// Multiple filters can be ANDed together by connecting with a space. See the link below for more 
+    /// information. If no Project is specified, the default project will be used. This cmdlet returns any 
+    /// number of DatasetList.DatasetData objects if no Dataset was specified, or a Dataset otherwise.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Get-BqDataset "my-dataset"</code>
-    ///   <para>This returns a Dataset object from the default project of the dataset with id <code>my-dataset</code>.</para>
+    ///   <code>
+    /// PS C:\> Get-BqDataset "my-dataset"
+    ///   </code>
+    ///   <para>This returns a Dataset object from the default project of the dataset with id "my-dataset".</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-BqDataset -Project my-project</code>
-    ///   <para>This lists all of the non-hidden datasets in the Cloud project <code>my-project</code>.</para>
+    ///   <code>
+    /// PS C:\> Get-BqDataset -Project my-project
+    ///   </code>
+    ///   <para>This lists all of the non-hidden datasets in the Cloud project "my-project".</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-BqDataset -IncludeHidden</code>
+    ///   <code>
+    /// PS C:\> Get-BqDataset -IncludeHidden
+    ///   </code>
     ///   <para>This lists all of the datasets in the default Cloud project for your account.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-BqDataset -IncludeHidden -Filter "labels.department:shipping"</code>
+    ///   <code>
+    /// PS C:\> Get-BqDataset -IncludeHidden -Filter "labels.department:shipping"
+    ///   </code>
     ///   <para>This lists all of the datasets in the default Cloud project for your account that have 
-    ///   the <code>department</code> key with a value <code>shipping</code>.</para>
+    ///   the key "department" with the value "shipping".</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-BqDataset -IncludeHidden -Filter "labels.department:shipping labels.location:usa"</code>
+    ///   <code>
+    /// PS C:\> Get-BqDataset -IncludeHidden -Filter "labels.department:shipping labels.location:usa"
+    ///   </code>
     ///   <para>This is an example of ANDing multiple filters.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets)">
@@ -98,11 +108,11 @@ namespace Google.PowerShell.BigQuery
         /// </summary>
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, 
             ParameterSetName = ParameterSetNames.GetWithString)]
-        public string Dataset { get; set; }
+        public string DatasetId { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// DatasetRefrence object used to pass in Project and Dataset values.
+        /// DatasetRefrence object to get an updated Dataset object for.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, 
@@ -111,7 +121,7 @@ namespace Google.PowerShell.BigQuery
             Property = nameof(DatasetList.DatasetsData.DatasetReference))]
         [PropertyByTypeTransformation(TypeToTransform = typeof(Dataset), 
             Property = nameof(Apis.Bigquery.v2.Data.Dataset.DatasetReference))]
-        public DatasetReference DatasetRef { get; set; }
+        public DatasetReference Dataset { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -122,14 +132,14 @@ namespace Google.PowerShell.BigQuery
                     WriteObject(datasets, true);
                     break;
                 case ParameterSetNames.GetWithString:
-                    var dataset = DoGetRequest(Project, Dataset);
+                    var dataset = DoGetRequest(Project, DatasetId);
                     if (dataset != null)
                     {
                         WriteObject(dataset);
                     }
                     break;
                 case ParameterSetNames.GetWithRef:
-                    var datasetDR = DoGetRequest(DatasetRef.ProjectId, DatasetRef.DatasetId);
+                    var datasetDR = DoGetRequest(Dataset.ProjectId, Dataset.DatasetId);
                     if (datasetDR != null)
                     {
                         WriteObject(datasetDR);
@@ -150,7 +160,7 @@ namespace Google.PowerShell.BigQuery
                 DatasetList response = lRequest.Execute();
                 if (response == null)
                 {
-                    WriteError(new ErrorRecord(
+                    ThrowTerminatingError(new ErrorRecord(
                         new Exception("List request to server responded with null."),
                         "List request returned null", ErrorCategory.InvalidArgument, project));
                 }
@@ -175,7 +185,7 @@ namespace Google.PowerShell.BigQuery
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
             {
-                WriteError(new ErrorRecord(ex,
+                ThrowTerminatingError(new ErrorRecord(ex,
                     $"Error 404: Dataset '{dataset}' not found in '{project}'.",
                     ErrorCategory.ObjectNotFound,
                     dataset));
@@ -190,7 +200,7 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <para type="description">
     /// Updates information describing an existing BigQuery dataset. The projet and dataset specified 
-    /// in the dataset's DatasetReference will be used. This cmdlet returns a Dataset object.
+    /// by the DatasetReference of "-Dataset" will be used. This cmdlet returns a Dataset object.
     /// </para>
     /// <example>
     ///   <code>
@@ -205,7 +215,7 @@ namespace Google.PowerShell.BigQuery
     /// PS C:\> $updatedSet = Get-BqDataset "my_dataset"
     /// PS C:\> $updatedSet.DefaultTableExpirationMs = 60 * 60 * 24 * 7
     /// PS C:\> $updatedSet.Description = "A set of tables that last for exactly one week."
-    /// PS C:\> Set-BqDataset -InputObject $updatedSet
+    /// PS C:\> Set-BqDataset -Dataset $updatedSet
     ///   </code>
     ///   <para>This will update the values stored for my_dataset and shows how to pass it in as a parameter.</para>
     /// </example>
@@ -231,15 +241,15 @@ namespace Google.PowerShell.BigQuery
         /// dataset in the project specified.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, ValueFromPipeline = true)]
-        public Dataset InputObject { get; set; }
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true)]
+        public Dataset Dataset { get; set; }
 
         protected override void ProcessRecord()
         {
             Dataset response;
-            var request = Service.Datasets.Update(InputObject,
-                InputObject.DatasetReference.ProjectId, 
-                InputObject.DatasetReference.DatasetId);
+            var request = Service.Datasets.Update(Dataset,
+                Dataset.DatasetReference.ProjectId,
+                Dataset.DatasetReference.DatasetId);
             try
             {
                 response = request.Execute();
@@ -247,17 +257,17 @@ namespace Google.PowerShell.BigQuery
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
             {
-                WriteError(new ErrorRecord(ex,
-                    $"Conflict while updating '{InputObject.DatasetReference.DatasetId}'.",
+                ThrowTerminatingError(new ErrorRecord(ex,
+                    $"Conflict while updating '{Dataset.DatasetReference.DatasetId}'.",
                     ErrorCategory.WriteError,
-                    InputObject));
+                    Dataset));
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Forbidden)
             {
-                WriteError(new ErrorRecord(ex,
-                    $"You do not have permission to modify '{InputObject.DatasetReference.DatasetId}'.",
+                ThrowTerminatingError(new ErrorRecord(ex,
+                    $"You do not have permission to modify '{Dataset.DatasetReference.DatasetId}'.",
                     ErrorCategory.PermissionDenied,
-                    InputObject));
+                    Dataset));
             }
         }
     }
@@ -268,21 +278,23 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <para type="description">
     /// Creates a new, empty dataset in the specified project. A Dataset can be supplied by object via the 
-    /// pipeline or the -InputObject parameter, or it can be instantiated by value with the flags below. 
+    /// pipeline or the "-Dataset" parameter, or it can be instantiated by value with the flags below. 
     /// If no Project is specified, the default project will be used. This cmdlet returns a Dataset object.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> $dataset | New-BqDataset</code>
+    ///   <code>
+    /// PS C:\> $premade_dataset | New-BqDataset
+    ///   </code>
     ///   <para>This takes a Dataset object from the pipeline and inserts it into the Cloud project "my-project".</para>
     /// </example>
     /// <example>
     ///   <code>
-    /// PS C:\> New-BqDataset "test_data_id" 
+    /// PS C:\> New-BqDataset "test_data_id" `
     ///                       -Name "Testdata" `
-    ///                       -Description "Some interesting data!" 
+    ///                       -Description "Some interesting data!" `
     ///                       -Expiration 86400000
     ///   </code>
-    ///   <para>This builds a new dataset with the supplied datasetId, name, description, and an Expiration of 1 day.</para>
+    ///   <para>This builds a new dataset with the supplied datasetId, name, description, and an expiration of 1 day.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets)">
     /// [BigQuery Datasets]
@@ -313,11 +325,11 @@ namespace Google.PowerShell.BigQuery
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ByObject)]
-        public Dataset InputObject { get; set; }
+        public Dataset Dataset { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// The DatasetId must be unique within the project and match the pattern [a-zA-Z0-9_]+.
+        /// "DatasetId" must be unique within the project and match the pattern "[a-zA-Z0-9_]+".
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.ByValues)]
@@ -357,8 +369,8 @@ namespace Google.PowerShell.BigQuery
             switch (ParameterSetName)
             {
                 case ParameterSetNames.ByObject:
-                    newData = InputObject;
-                    Project = InputObject.DatasetReference.ProjectId;
+                    newData = Dataset;
+                    Project = Dataset.DatasetReference.ProjectId;
                     break;
                 case ParameterSetNames.ByValues:
                     newData = new Dataset();
@@ -385,7 +397,7 @@ namespace Google.PowerShell.BigQuery
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
             {
-                WriteError(new ErrorRecord(ex,  
+                ThrowTerminatingError(new ErrorRecord(ex,  
                     $"A dataset with the name '{DatasetId}' already exists in project '{Project}'.",
                     ErrorCategory.InvalidArgument, 
                     newData));
@@ -399,20 +411,25 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <para type="description">
     /// Deletes the specified dataset. This command takes a Dataset object as input, typically off the 
-    /// pipeline or through the -InputObject parameter. You can also specify a projectId:datasetId 
-    /// combination through the -Project and -Dataset flags. The dataset must be empty to be deleted. 
-    /// Use the -Force flag if the dataset is not empty to confirm deletion of all tables in the dataset. 
+    /// pipeline or through the "-Dataset" parameter. You can also specify a projectId:datasetId 
+    /// combination through the "-Project" and "-DatasetId" flags. The dataset must be empty to be deleted. 
+    /// Use the "-Force" flag if the dataset is not empty to confirm deletion of all tables in the dataset. 
     /// Once this operation is complete, you may create a new dataset with the same name. If no Project 
     /// is specified, the default project will be used. If the deletion runs without error, this cmdlet 
     /// has no output. This cmdlet supports the ShouldProcess function, so it has the corresponding 
-    /// -WhatIf and -Confirm flags.
+    /// "-WhatIf" and "-Confirm" flags.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Get-BqDataset "my-values" | Remove-BqDataset </code>
+    ///   <code>
+    /// PS C:\> Get-BqDataset "my-values" | Remove-BqDataset
+    ///   </code>
     ///   <para>This deletes "my-values" only if it is empty.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-BqDataset "test-values" | Remove-BqDataset -Force</code>
+    ///   <code>
+    /// PS C:\> $set = Get-BqDataset "test-values"
+    /// PS C:\> Remove-BqDataset $set -Force
+    ///   </code>
     ///   <para>This deletes "test-values" and all of its contents.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets)">
@@ -446,20 +463,20 @@ namespace Google.PowerShell.BigQuery
         /// DatasetId to delete.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByValues)]
-        public string Dataset { get; set; }
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByValues)]
+        public string DatasetId { get; set; }
 
         /// <summary>
         /// <para type="description">
         /// Dataset to delete. Takes Dataset, DatasetsData, and DatasetReference Objects.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ByObject)]
+        [Parameter(Mandatory = true, ValueFromPipeline = true, Position = 0, ParameterSetName = ParameterSetNames.ByObject)]
         [PropertyByTypeTransformation(TypeToTransform = typeof(DatasetList.DatasetsData),
             Property = nameof(DatasetList.DatasetsData.DatasetReference))]
         [PropertyByTypeTransformation(TypeToTransform = typeof(Dataset),
             Property = nameof(Apis.Bigquery.v2.Data.Dataset.DatasetReference))]
-        public DatasetReference InputObject { get; set; }
+        public DatasetReference Dataset { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -476,18 +493,18 @@ namespace Google.PowerShell.BigQuery
             switch (ParameterSetName)
             {
                 case ParameterSetNames.ByObject:
-                    Project = InputObject.ProjectId;
-                    Dataset = InputObject.DatasetId;
-                    request = Service.Datasets.Delete(Project, Dataset);
+                    Project = Dataset.ProjectId;
+                    DatasetId = Dataset.DatasetId;
+                    request = Service.Datasets.Delete(Project, DatasetId);
                     break;
                 case ParameterSetNames.ByValues:
-                    request = Service.Datasets.Delete(Project, Dataset);
+                    request = Service.Datasets.Delete(Project, DatasetId);
                     break;
                 default:
                     throw UnknownParameterSetException;
             }
             String response = "Dataset Removal Stopped.";
-            if (ShouldProcess(Dataset))
+            if (ShouldProcess(DatasetId))
             {
                 try
                 {
@@ -499,14 +516,14 @@ namespace Google.PowerShell.BigQuery
                     else
                     {
                         TablesResource.ListRequest checkTables =
-                            new TablesResource.ListRequest(Service, Project, Dataset);
+                            new TablesResource.ListRequest(Service, Project, DatasetId);
                         var tableResponse = checkTables.Execute();
                         if (tableResponse.TotalItems == 0)
                         {
                             response = request.Execute();
                         }
                         else if (ShouldContinue(
-                            GetConfirmationMessage(Dataset, tableResponse.TotalItems),
+                            GetConfirmationMessage(DatasetId, tableResponse.TotalItems),
                             "Confirm Deletion"))
                         {
                             request.DeleteContents = true;
@@ -517,10 +534,10 @@ namespace Google.PowerShell.BigQuery
                 }
                 catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Forbidden)
                 {
-                    WriteError(new ErrorRecord(ex, 
-                        $"You do not have permission to delete '{Dataset}'.",
+                    ThrowTerminatingError(new ErrorRecord(ex, 
+                        $"You do not have permission to delete '{DatasetId}'.",
                         ErrorCategory.PermissionDenied, 
-                        Dataset));
+                        DatasetId));
                 } 
             }
         }

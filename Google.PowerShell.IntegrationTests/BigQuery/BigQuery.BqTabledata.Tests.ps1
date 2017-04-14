@@ -16,9 +16,9 @@ Describe "New-BqSchema" {
     }
 
     It "should add fields to the pipeline when passed any number of fields"{
-        $field = New-BqSchema -Name "Title" -Type "STRING"
-        $field = $field | New-BqSchema -Name "Author" -Type "STRING"
-        $field = $field | New-BqSchema -Name "Copyright" -Type "STRING"
+        $field = New-BqSchema "Title" "STRING"
+        $field = $field | New-BqSchema "Author" "STRING"
+        $field = $field | New-BqSchema "Copyright" "STRING"
         $field.Count | Should Be 3
     }
 
@@ -36,11 +36,11 @@ Describe "New-BqSchema" {
     }
 
     It "should deny invalid types"{
-        { New-BqSchema -Name "Title" -Type "NotAType" -ErrorAction Stop } | Should Throw "Cannot convert value"
+        { New-BqSchema -Name "Title" -Type "NotAType" } | Should Throw "Cannot convert value"
     }
 
     It "should deny invalid modes"{
-        { New-BqSchema -Name "Title" -Type "STRING" -Mode "NotAMode" -ErrorAction Stop } | Should Throw "Cannot convert value"
+        { New-BqSchema -Name "Title" -Type "STRING" -Mode "NotAMode" } | Should Throw "Cannot convert value"
     }
 
     AfterAll {
@@ -76,7 +76,7 @@ Describe "Set-BqSchema" {
     It "should complain about duplicated column names"{
         $table = $test_set | New-BqTable "another_table"
         $schemas = New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Title" -Type "STRING"
-        { $schemas | Set-BqSchema $table -ErrorAction Stop } | Should Throw "This schema already contains a column with name"
+        { $schemas | Set-BqSchema $table } | Should Throw "This schema already contains a column with name"
     }
 
     It "should not add a schema to a table that does not exist" {
@@ -142,24 +142,23 @@ Describe "Add-BqTabledata" {
     }
 
     It "should properly reject an invalid CSV file" {
-        { $table | Add-BqTabledata $filename_broken_csv CSV -SkipLeadingRows 1 -ErrorAction Stop } | Should Throw "contained errors"
+        { $table | Add-BqTabledata $filename_broken_csv CSV -SkipLeadingRows 1 } | Should Throw "contained errors"
     }
 
     It "should properly reject an invalid JSON file" {
-        { $table | Add-BqTabledata $filename_broken_json JSON -ErrorAction Stop } | Should Throw "contained errors"
+        { $table | Add-BqTabledata $filename_broken_json JSON } | Should Throw "contained errors"
     }
 
     It "should properly reject an invalid AVRO file" {
-        { $table | Add-BqTabledata $filename_broken_avro AVRO -ErrorAction Stop } | Should Throw "contained errors"
+        { $table | Add-BqTabledata $filename_broken_avro AVRO } | Should Throw "contained errors"
     }
 
     #TODO(ahandley): Test all CSV options
 
     It "should handle less than perfect CSV files" {
-        $table | Add-BqTabledata $filename_broken_csv CSV -SkipLeadingRows 1 -MaxBadRecords 4 `
-                -AllowUnknownFields -ErrorAction SilentlyContinue
+        $table | Add-BqTabledata $filename_broken_csv CSV -SkipLeadingRows 1 -AllowJaggedRows -AllowUnknownFields
         $table = Get-BqTable $table
-        $table.NumRows | Should Be 7
+        $table.NumRows | Should Be 10
     }
 
     It "should handle write disposition WriteAppend" {
@@ -178,22 +177,21 @@ Describe "Add-BqTabledata" {
     }
 
     It "should handle write disposition WriteIfEmpty on a non-empty table" {
-        $table | Add-BqTabledata $filename_broken_csv CSV -SkipLeadingRows 1 -MaxBadRecords 4 `
-                -AllowUnknownFields -ErrorAction SilentlyContinue
+        $table | Add-BqTabledata $filename_broken_csv CSV -SkipLeadingRows 1 -AllowJaggedRows -AllowUnknownFields 
         $table = Get-BqTable $table
-        $table.NumRows | Should Be 7
+        $table.NumRows | Should Be 10
         { $table | Add-BqTabledata $filename_csv CSV -SkipLeadingRows 1 `
-            -WriteMode WriteIfEmpty -ErrorAction Stop } | Should Throw "404"
+            -WriteMode WriteIfEmpty } | Should Throw "404"
     }
 
     It "should handle write disposition WriteTruncate" {
         $table | Add-BqTabledata $filename_csv CSV -SkipLeadingRows 1
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
-        $table | Add-BqTabledata $filename_broken_csv CSV -SkipLeadingRows 1 -MaxBadRecords 4 `
-                -AllowUnknownFields -WriteMode WriteTruncate -ErrorAction SilentlyContinue
+        $table | Add-BqTabledata $filename_broken_csv CSV -SkipLeadingRows 1 -AllowJaggedRows `
+                -AllowUnknownFields -WriteMode WriteTruncate
         $table = Get-BqTable $table
-        $table.NumRows | Should Be 7
+        $table.NumRows | Should Be 10
     }
 
     It "should allow jagged rows and quoted newlines" {
@@ -205,10 +203,9 @@ Describe "Add-BqTabledata" {
     #TODO(ahandley): Test all JSON options
 
     It "should handle less than perfect JSON files" {
-        $table | Add-BqTabledata $filename_broken_JSON JSON -MaxBadRecords 4 `
-                -AllowUnknownFields -ErrorAction SilentlyContinue
+        $table | Add-BqTabledata $filename_broken_JSON JSON -AllowUnknownFields
         $table = Get-BqTable $table
-        $table.NumRows | Should Be 9
+        $table.NumRows | Should Be 10
     }
 
     AfterAll {

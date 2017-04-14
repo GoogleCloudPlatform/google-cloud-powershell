@@ -47,15 +47,15 @@ Describe "Get-BqTable" {
     }
 
     It "should throw when the table is not found"{
-        { Get-BqTable -DatasetId $datasetName $nonExistTable -ErrorAction Stop} | Should Throw "404"
+        { Get-BqTable $nonExistTable -DatasetId $datasetName } | Should Throw "404"
     }
 
     It "should throw when the dataset is not found"{
-        { Get-BqTable -DatasetId $nonExistDataset } | Should Throw "404"
+        { Get-BqTable $nonExistTable -DatasetId $nonExistDataset } | Should Throw "404"
     }
 
     It "should throw when the project is not found"{
-        { Get-BqTable -project $nonExistProject -DatasetId $datasetName} | Should Throw "404"
+        { Get-BqTable $nonExistTable -DatasetId $datasetName -project $nonExistProject } | Should Throw "404"
     }
 
     AfterAll {
@@ -73,28 +73,28 @@ Describe "Set-BqTable" {
 
     It "should update trivial metadata fields via pipeline" {
         try {
-            New-BqTable -Dataset $test_set "pipe_table" -Name "test" -Description "my table"
-            $table = Get-BqTable -Dataset $test_set "pipe_table"
+            New-BqTable "pipe_table" -Dataset $test_set -Name "test" -Description "my table"
+            $table = Get-BqTable "pipe_table" -Dataset $test_set
             $table.FriendlyName = "Some Test Data"
             $table.Description = "A new description!"
             $table | Set-BqTable
 
-            $table = Get-BqTable -Dataset $test_set "pipe_table"
+            $table = Get-BqTable "pipe_table" -Dataset $test_set
             $table | Should Not BeNullOrEmpty
             $table.FriendlyName | Should Be "Some Test Data"
             $table.Description | Should Be "A new description!"
         } finally {
-            Remove-BqTable -Dataset $test_set "pipe_table"
+            Remove-BqTable "pipe_table" -Dataset $test_set
         }
     }
 
     It "should update trivial metadata fields via parameter" {
         try {
-            New-BqTable -DatasetId $datasetName "param_table" -Name "test" -Description "my table"
+            New-BqTable "param_table" -DatasetId $datasetName -Name "test" -Description "my table"
             $table = Get-BqTable -DatasetId $datasetName "param_table"
             $table.FriendlyName = "Some Test Data"
             $table.Description = "A new description!"
-            Set-BqTable -InputObject $table
+            Set-BqTable $table
 
             $table = Get-BqTable -DatasetId $datasetName "param_table"
             $table | Should Not BeNullOrEmpty
@@ -107,10 +107,10 @@ Describe "Set-BqTable" {
 
     It "should not overwrite resources if a set request is malformed" {
         try {
-            New-BqTable -DatasetId $datasetName "tab_overwrite" -Name "Testdata" -Description "Some interesting data!"
+            New-BqTable "tab_overwrite" -DatasetId $datasetName -Name "Testdata" -Description "Some interesting data!"
             $table = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Table
             $table.TableReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.TableReference
-            { Set-BqTable -InputObject $table } | Should Throw "is missing"
+            { Set-BqTable $table } | Should Throw "is missing"
         } finally {
             Remove-BqTable -Dataset $test_set "tab_overwrite"
         }
@@ -122,7 +122,7 @@ Describe "Set-BqTable" {
         $table.TableReference.ProjectId = $project
         $table.TableReference.DatasetId = $datasetName
         $table.TableReference.TableId = "not_gonna_happen_today"
-        { Set-BqTable -InputObject $table } | Should Throw 404
+        { Set-BqTable $table } | Should Throw 404
     } 
 
     AfterAll {
@@ -139,9 +139,8 @@ Describe "New-BqTable" {
     }
 
     It "should take strings, name, description, and time to make a table"{
-        $table = New-BqTable -Project $test_set.DatasetReference.ProjectId `
-            -DatasetId $test_set.DatasetReference.DatasetId "my_table_str" `
-            -Name "CSV" -Description "Some Comma Separated Values"
+        $table = New-BqTable "my_table_str" -Project $test_set.DatasetReference.ProjectId `
+            -DatasetId $test_set.DatasetReference.DatasetId -Name "CSV" -Description "Some Comma Separated Values"
         $table.TableReference.TableId | Should Be "my_table_str"
         $table.TableReference.DatasetId | Should Be $test_set.DatasetReference.DatasetId
         $table.TableReference.ProjectId | Should Be $test_set.DatasetReference.ProjectId
@@ -150,7 +149,7 @@ Describe "New-BqTable" {
     }
 
     It "should take a Dataset, name, description, and time to make a table"{
-        $table = New-BqTable -Dataset $test_set "my_table_ds" -Name "CSV" `
+        $table = New-BqTable "my_table_ds" -Dataset $test_set -Name "CSV" `
             -Description "Some Comma Separated Values"
         $table.TableReference.TableId | Should Be "my_table_ds"
         $table.TableReference.DatasetId | Should Be $test_set.DatasetReference.DatasetId
@@ -160,7 +159,7 @@ Describe "New-BqTable" {
     }
 
     It "should take a DatasetReference name, description, and time to make a table"{
-        $table = New-BqTable -Dataset $test_set.DatasetReference "my_table_dr" `
+        $table = New-BqTable "my_table_dr" -Dataset $test_set.DatasetReference `
             -Name "CSV" -Description "Some Comma Separated Values"
         $table.TableReference.TableId | Should Be "my_table_dr"
         $table.TableReference.DatasetId | Should Be $test_set.DatasetReference.DatasetId
@@ -210,7 +209,7 @@ Describe "New-BqTable" {
 
     It "should throw when there is already a table with the same ID"{
         New-BqTable "my_table_repeat" -DatasetId $datasetName 
-        { New-BqTable "my_table_repeat" -DatasetId $datasetName -ErrorAction Stop } | Should Throw "409"
+        { New-BqTable "my_table_repeat" -DatasetId $datasetName } | Should Throw "409"
     }
 
     It "should throw when the dataset is not found"{
@@ -218,7 +217,7 @@ Describe "New-BqTable" {
     }
 
     It "should throw when the project is not found"{
-        { New-BqTable -DatasetId $datasetName "my_table_p404" -project $nonExistProject} | Should Throw "404"
+        { New-BqTable "my_table_p404" -DatasetId $datasetName -project $nonExistProject} | Should Throw "404"
     }
 
     AfterAll {
@@ -235,30 +234,30 @@ Describe "Remove-BqTable" {
     }
 
     It "should not delete the table if -WhatIf is specified" {
-        $table = New-BqTable -Dataset $test_set -Table "table_if"
+        $table = New-BqTable "table_if" -Dataset $test_set 
         $table | Remove-BqTable -WhatIf
-        $remainder = Get-BqTable -Dataset $test_set "table_if"
+        $remainder = Get-BqTable "table_if" -Dataset $test_set 
         $remainder.TableReference.TableId | Should Be "table_if"
-        Get-BqTable -Dataset $test_set "table_if" | Remove-BqTable
+        Get-BqTable "table_if" -Dataset $test_set | Remove-BqTable
     }
     
     It "should delete an empty table from the pipeline with no -Force" {
-        New-BqTable -Dataset $test_set -Table "table_empty_pipe"
-        Get-BqTable -Dataset $test_set "table_empty_pipe" | Remove-BqTable
-        { Get-BqTable -Dataset $test_set "table_empty_pipe" -ErrorAction Stop } | Should Throw 404
+        New-BqTable "table_empty_pipe" -Dataset $test_set
+        Get-BqTable "table_empty_pipe" -Dataset $test_set | Remove-BqTable
+        { Get-BqTable "table_empty_pipe" -Dataset $test_set } | Should Throw 404
     }
 
     It "should delete an empty table from an argument with no -Force" {
-        New-BqTable -Dataset $test_set "table_empty_arg"
-        $table = Get-BqTable -Dataset $test_set "table_empty_arg" 
-        Remove-BqTable -InputObject $table
-        { Get-BqTable -Dataset $test_set "table_empty_arg" -ErrorAction Stop } | Should Throw 404
+        New-BqTable "table_empty_arg" -Dataset $test_set 
+        $table = Get-BqTable "table_empty_arg" -Dataset $test_set 
+        Remove-BqTable $table
+        { Get-BqTable "table_empty_arg" -Dataset $test_set } | Should Throw 404
     }
 
     It "should delete a table by value with explicit project" {
-        New-BqTable -Project $project -DatasetId $datasetName -Table "table_explicit"
-        Remove-BqTable -Project $project -DatasetId $datasetName -Table "table_explicit"
-        { Get-BqTable -Dataset $test_set "table_explicit" -ErrorAction Stop } | Should Throw 404
+        New-BqTable "table_explicit" -Project $project -DatasetId $datasetName
+        Remove-BqTable "table_explicit" -Project $project -DatasetId $datasetName
+        { Get-BqTable "table_explicit" -Dataset $test_set } | Should Throw 404
     }
 
     #TODO(ahandley): It "should delete a nonempty table as long as -Force is specified" #needs set-tabledata
@@ -269,22 +268,19 @@ Describe "Remove-BqTable" {
         $table.TableReference.DatasetId = $test_set
         $table.TableReference.ProjectId = $project
         $table.TableReference.TableId = "table_not_actually_there_for_some_reason"
-        { Remove-BqTable -InputObject $table -ErrorAction Stop } | Should Throw 404
+        { Remove-BqTable $table } | Should Throw 404
     }
 
     It "should handle projects that do not exist" {
-        { Remove-BqTable -Project $nonExistProject -DatasetId $nonExistDataset `
-            -Table "table" -ErrorAction Stop } | Should Throw 404
+        { Remove-BqTable "table" -Project $nonExistProject -DatasetId $nonExistDataset } | Should Throw 404
     }
 
     It "should handle project:dataset combinations that do not exist" {
-        { Remove-BqTable -Project $project -DatasetId $nonExistDataset `
-            -Table "table" -ErrorAction Stop } | Should Throw 404
+        { Remove-BqTable "table" -Project $project -DatasetId $nonExistDataset } | Should Throw 404
     }
 
     It "should handle projects that the user does not have permissions for" {
-        { Remove-BqTable -Project $accessErrProject -DatasetId $nonExistDataset `
-            -Table "table" -ErrorAction Stop } | Should Throw 400
+        { Remove-BqTable "table" -Project $accessErrProject -DatasetId $nonExistDataset } | Should Throw 400
     }
 
     AfterAll {

@@ -39,16 +39,17 @@ namespace Google.PowerShell.BigQuery
     /// <para type="description">
     /// This command defines one column of a TableSchema. To create a multi-row schema, chain 
     /// multiple instances of this command together on the pipeline. Required fields for each 
-    /// column are Name and Type. Possible values for Type include STRING, BYTES, INTEGER, 
-    /// FLOAT, BOOLEAN, TIMESTAMP, DATE, TIME, DATETIME, and RECORD (where RECORD indicates 
-    /// that the field contains a nested schema). Case is ignored for both Type and Mode. 
-    /// Possible values for the Mode field include REQUIRED, REPEATED, and the default NULLABLE. 
+    /// column are Name and Type. Possible values for Type include "STRING", "BYTES", "INTEGER", 
+    /// "FLOAT", "BOOLEAN", "TIMESTAMP", "DATE", "TIME", "DATETIME", and "RECORD" (where "RECORD" 
+    /// indicates that the field contains a nested schema). Case is ignored for both Type and Mode. 
+    /// Possible values for the Mode field include "REQUIRED", "REPEATED", and the default "NULLABLE". 
     /// This command forwards all TableFieldSchemas that it is passed, and will add a new 
     /// TableFieldSchema object to the pipeline.
     /// </para>
     /// <example>
     ///   <code>
-    /// PS C:\> $table = $dataset_books | New-BqTable "book_info"
+    /// PS C:\> $dataset = New-BqDataset "books"
+    /// PS C:\> $table = $dataset | New-BqTable "book_info"
     /// PS C:\> $result = New-BqSchema -Name "Author" -Type "STRING" | `
     ///   New-BqSchema -Name "Copyright" -Type "STRING" | `
     ///   New-BqSchema -Name "Title" -Type "STRING" | `
@@ -77,16 +78,17 @@ namespace Google.PowerShell.BigQuery
         /// The name of the column to be added. The name must be unique among columns in each schema.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true)]
+        [Parameter(Mandatory = true, Position = 0)]
         public string Name { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// The type of the column to be added. Possible values include STRING, BYTES, INTEGER (INT64), 
-        /// FLOAT (FLOAT64), BOOLEAN (BOOL), TIMESTAMP, DATE, TIME, DATETIME, and RECORD (STRUCT).
+        /// The type of the column to be added. Possible values include "STRING", "BYTES", "INTEGER" 
+        /// (INT64), "FLOAT" (FLOAT64), "BOOLEAN" (BOOL), "TIMESTAMP", "DATE", "TIME", "DATETIME", 
+        /// and "RECORD" (STRUCT).
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true)]
+        [Parameter(Mandatory = true, Position = 1)]
         public ColumnType Type { get; set; }
 
         /// <summary>
@@ -94,22 +96,22 @@ namespace Google.PowerShell.BigQuery
         /// An optional description for this column.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false)]
+        [Parameter(Mandatory = false, Position = 2)]
         [ValidateNotNull]
         public string Description { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// The mode of the column to be added. Possible values include NULLABLE, REQUIRED, and REPEATED.
-        /// The default value is NULLABLE.
+        /// The mode of the column to be added. Possible values include "NULLABLE", "REQUIRED", and 
+        /// "REPEATED". The default value is "NULLABLE".
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false)]
+        [Parameter(Mandatory = false, Position = 3)]
         public ColumnMode? Mode { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// Describes the optional nested schema fields if the type property is set to RECORD. Pass in 
+        /// Describes the optional nested schema fields if the type property is set to "RECORD". Pass in 
         /// an array of TableFieldSchema objects and it will be nested inside a single column.
         /// </para>
         /// </summary>
@@ -148,7 +150,7 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <para type="description">
     /// This command takes a Table and sets its schema to be the aggregation of all TableFieldSchema 
-    /// objects passed in. If multiple columns are passed in with the same “Name” field, an error 
+    /// objects passed in. If multiple columns are passed in with the same "-Name" field, an error 
     /// will be thrown. This command returns the modified Table object after updating the cloud resource.
     /// </para>
     /// <example>
@@ -191,9 +193,6 @@ namespace Google.PowerShell.BigQuery
         {
             if (Columns.Any(field => InputObject.Name.Equals(field.Name)))
             {
-                // ATTENTION:  should this throw? (to notify users that data may have been lost)
-                // Or would it be sufficient to document only keeping the first one seen as 
-                // deterministic behavior for this method?
                 ThrowTerminatingError(new ErrorRecord(
                     new Exception($"This schema already contains a column with name '{InputObject.Name}'."),
                     "Column Name Collision", ErrorCategory.InvalidArgument, InputObject.Name));
@@ -217,14 +216,14 @@ namespace Google.PowerShell.BigQuery
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
             {
-                WriteError(new ErrorRecord(ex,
+                ThrowTerminatingError(new ErrorRecord(ex,
                     $"Conflict while updating '{Table.TableReference.DatasetId}'.",
                     ErrorCategory.WriteError,
                     Table));
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Forbidden)
             {
-                WriteError(new ErrorRecord(ex,
+                ThrowTerminatingError(new ErrorRecord(ex,
                     $"You do not have permission to modify '{Table.TableReference.DatasetId}'.",
                     ErrorCategory.PermissionDenied,
                     Table));
@@ -241,9 +240,9 @@ namespace Google.PowerShell.BigQuery
     /// accepts CSV, JSON, and Avro files, and has a number of configuration parameters for each type. 
     /// This cmdlet returns nothing if the insert completed successfully.
     /// WriteMode Options:
-    /// - WriteAppend will add data on to the existing table.
-    /// - WriteTruncate will truncate the table before additional data is inserted.
-    /// - WriteIfEmpty will throw an error unless the table is empty.
+    /// - "WriteAppend" will add data on to the existing table.
+    /// - "WriteTruncate" will truncate the table before additional data is inserted.
+    /// - "WriteIfEmpty" will throw an error unless the table is empty.
     /// </para>
     /// <example>
     ///   <code>
@@ -251,17 +250,16 @@ namespace Google.PowerShell.BigQuery
     /// PS C:\> $table = New-BqTable -DatasetId "db_name" "tab_name"
     /// PS C:\> $table | Add-BqTabledata $filename JSON
     ///   </code>
-    ///   <para>This code will ingest a newline-delimited JSON file from the location $filename on local 
+    ///   <para>This code will ingest a newline-delimited JSON file from the location "$filename" on local 
     ///   disk to db_name:tab_name in BigQuery.</para>
     ///   <code>
     /// PS C:\> $filename = "C:\data.csv"
     /// PS C:\> $table = New-BqTable -DatasetId "db_name" "tab_name"
-    /// PS C:\> $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1 `
-    ///     -MaxBadRecords 4 -AllowUnknownFields
+    /// PS C:\> $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1 -AllowJaggedRows -AllowUnknownFields
     ///   </code>
-    ///   <para>This code will take a CSV file and upload it to a BQ table.  It will ignore up to 4 bad 
-    ///   rows before throwing an error, and it will keep rows that have fields that aren't in the 
-    ///   table's schema.</para>
+    ///   <para>This code will take a CSV file and upload it to a BQ table.  It will set missing fields 
+    ///   from the CSV to null, and it will keep rows that have fields that aren't in the table's schema.
+    ///   </para>
     /// </example> 
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/tabledata)">
     /// [BigQuery Tabledata]
@@ -290,7 +288,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// The format of the data file (Ex: CSV, JSON).
+        /// The format of the data file (CSV | JSON | AVRO).
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 1)]
@@ -299,20 +297,11 @@ namespace Google.PowerShell.BigQuery
         /// <summary>
         /// <para type="description">
         /// Write Disposition of the operation. Governs what happens to the data currently in the table.
-        /// If this parameter is not supplied, this defaults to WriteAppend
+        /// If this parameter is not supplied, this defaults to "WriteAppend".
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
         public WriteDisposition WriteMode { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// The number of malformed rows that the request will ignore before throwing an error. 
-        /// This value is zero if not specified.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = false)]
-        public int MaxBadRecords { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -376,21 +365,18 @@ namespace Google.PowerShell.BigQuery
                         case DataFormats.AVRO:
                             UploadAvroOptions AvroOptions = new UploadAvroOptions();
                             AvroOptions.WriteDisposition = WriteMode;
-                            AvroOptions.MaxBadRecords = MaxBadRecords;
                             AvroOptions.AllowUnknownFields = AllowUnknownFields;
                             bqj = Client.UploadAvro(InputObject, null, fileInput, AvroOptions);
                             break;
                         case DataFormats.JSON:
                             UploadJsonOptions JsonOptions = new UploadJsonOptions();
                             JsonOptions.WriteDisposition = WriteMode;
-                            JsonOptions.MaxBadRecords = MaxBadRecords;
                             JsonOptions.AllowUnknownFields = AllowUnknownFields;
                             bqj = Client.UploadJson(InputObject, null, fileInput, JsonOptions);
                             break;
                         case DataFormats.CSV:
                             UploadCsvOptions CsvOptions = new UploadCsvOptions();
                             CsvOptions.WriteDisposition = WriteMode;
-                            CsvOptions.MaxBadRecords = MaxBadRecords;
                             CsvOptions.AllowJaggedRows = AllowJaggedRows;
                             CsvOptions.AllowQuotedNewlines = AllowQuotedNewlines;
                             CsvOptions.AllowTrailingColumns = AllowUnknownFields;
@@ -408,14 +394,14 @@ namespace Google.PowerShell.BigQuery
             }
             catch (IOException ex)
             {
-                WriteError(new ErrorRecord(ex,
+                ThrowTerminatingError(new ErrorRecord(ex,
                     $"Error while reading file '{Filename}'.",
                     ErrorCategory.ReadError, Filename));
                 return;
             }
             catch (Exception ex)
             {
-                WriteError(new ErrorRecord(ex,
+                ThrowTerminatingError(new ErrorRecord(ex,
                     $"Error while uploading file '{Filename}' to table '{InputObject.TableId}'.",
                     ErrorCategory.WriteError, Filename));
             }
@@ -427,7 +413,7 @@ namespace Google.PowerShell.BigQuery
     /// Retrieves table data from a specified set of rows.
     /// </para>
     /// <para type="description">
-    /// Retrieves table data from a specified set of rows. Requires the READER dataset role.  
+    /// Retrieves table data from a specified set of rows. Requires the "READER" dataset role.  
     /// Rows are returned as Google.Cloud.BigQuery.V2.BigQueryRow objects.
     /// Data can be extracted by indexing by column name (ex: (string) row["title"]; ).
     /// </para>
@@ -436,7 +422,7 @@ namespace Google.PowerShell.BigQuery
     /// PS C:\> $table = get-bqtable -DatasetID "book_data" "classics"
     /// PS C:\> $list = $table | get-bqtabledata
     ///   </code>
-    ///   <para>Fetches all of the rows in book_data:classics and exports them to $list.</para>
+    ///   <para>Fetches all of the rows in book_data:classics and exports them to "$list".</para>
     /// </example> 
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/tabledata)">
     /// [BigQuery Tabledata]
@@ -472,7 +458,7 @@ namespace Google.PowerShell.BigQuery
             }
             catch (Exception ex)
             {
-                WriteError(new ErrorRecord(ex,
+                ThrowTerminatingError(new ErrorRecord(ex,
                     $"Error while exporting rows from table '{InputObject.TableId}'.",
                     ErrorCategory.ReadError, InputObject));
             }

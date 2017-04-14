@@ -11,9 +11,8 @@ Describe "Get-BqJob" {
         $folder = $folder.ToString()
         $filename = "$folder\classics.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
-        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
-            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $table | 
-            Add-BqTabledata $filename CSV -SkipLeadingRows 1
+        New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
+            Set-BqSchema $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1
         $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1
     }
 
@@ -24,6 +23,7 @@ Describe "Get-BqJob" {
 
     #TODO(ahandley): When Start- and Stop-BqJob are written, add in tests for AllUsers and State
     #TODO(ahandley): When Start- is ready, add test with alternate project via jobReference
+    #TODO(ahandley): Add test for the State filter (all caps vs pascal case)
 
     It "should get specific job via pipeline" {
         $jobs = Get-BqJob
@@ -47,15 +47,15 @@ Describe "Get-BqJob" {
     }
 
     It "should throw when the job is not found"{
-        { Get-BqJob $nonExistJob -ErrorAction Stop } | Should Throw "404"
+        { Get-BqJob $nonExistJob } | Should Throw "404"
     }
 
     It "should throw when the project is not found"{
-        { Get-BqJob -project $nonExistProject -ErrorAction Stop } | Should Throw "404"
+        { Get-BqJob -project $nonExistProject } | Should Throw "404"
     }
 
     It "should handle projects that the user does not have permissions for" {
-        { Get-BqJob -Project $accessErrProject -ErrorAction Stop } | Should Throw "400"
+        { Get-BqJob -Project $accessErrProject } | Should Throw "400"
     }
 
     AfterAll {
@@ -73,9 +73,8 @@ Describe "BqJob-Query" {
         $folder = $folder.ToString()
         $filename = "$folder\classics.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
-        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
-            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $table | 
-            Add-BqTabledata $filename CSV -SkipLeadingRows 1
+        New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
+            Set-BqSchema $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1
     }
 
     It "should query a pre-loaded table" {
@@ -147,14 +146,12 @@ Describe "BqJob-Copy" {
         $filename_other = "$folder\otherschema.csv"
 
         $table = New-BqTable -Dataset $test_Set "table_$r"
-        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
-            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $table | 
-            Add-BqTabledata $filename CSV -SkipLeadingRows 1
+        New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
+            Set-BqSchema $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1
 
         $table_other = New-BqTable -Dataset $test_Set "table_other_$r"
-        New-BqSchema -Name "Position" -Type "INTEGER" | New-BqSchema -Name "Number" -Type "INTEGER" |
-            New-BqSchema -Name "Average" -Type "FLOAT" | Set-BqSchema $table_other | 
-            Add-BqTabledata $filename_other CSV -SkipLeadingRows 1
+        New-BqSchema "Position" "INTEGER" | New-BqSchema "Number" "INTEGER" | New-BqSchema "Average" "FLOAT" | 
+            Set-BqSchema $table_other | Add-BqTabledata $filename_other CSV -SkipLeadingRows 1
     }
 
     It "should copy a table with the same schema" {
@@ -223,9 +220,8 @@ Describe "BqJob-Extract-Load" {
         $folder = $folder.ToString()
         $filename = "$folder\classics.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
-        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
-            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $table | 
-            Add-BqTabledata $filename CSV -SkipLeadingRows 1
+        New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
+            Set-BqSchema $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1
         $bucket = New-GcsBucket "ps_test_$r"
         $gcspath = "gs://ps_test_$r"
     }
@@ -233,17 +229,16 @@ Describe "BqJob-Extract-Load" {
     It "should set Load parameters correctly" {
         $alt_tab = $test_set | New-BqTable "param_test_$r"
         $table | Start-BqJob -Extract CSV "$gcspath/param.csv" -Synchronous
-        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
-            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $alt_tab
+        New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | 
+            New-BqSchema "Year" "INTEGER" | Set-BqSchema $alt_tab
         $job = $alt_tab | Start-BqJob -Load CSV "$gcspath/param.csv" -WriteMode WriteAppend `
-            -Encoding "ISO-8859-1" -FieldDelimiter "|" -Quote "'" -MaxBadRecords 3 `
+            -Encoding "ISO-8859-1" -FieldDelimiter "|" -Quote "'" `
             -SkipLeadingRows 2 -AllowUnknownfields -AllowJaggedRows -AllowQuotedNewlines
         $job.Configuration.Load.AllowJaggedRows | Should Be $true
         $job.Configuration.Load.AllowQuotedNewlines | Should Be $true
         $job.Configuration.Load.Encoding | Should Be "ISO-8859-1"
         $job.Configuration.Load.FieldDelimiter | Should Be "|"
         $job.Configuration.Load.IgnoreUnknownValues | Should Be $true
-        $job.Configuration.Load.MaxBadRecords | Should Be 3
         $job.Configuration.Load.Quote | Should Be "'"
         $job.Configuration.Load.SkipLeadingRows | Should Be 2
         $job.Configuration.Load.SourceFormat.ToString() | Should Be "CSV"
@@ -251,17 +246,16 @@ Describe "BqJob-Extract-Load" {
     }
 
     It "should default Load parameters correctly" {
-        $alt_tab = $test_set | New-BqTable "param_test_$r"
+        $alt_tab = $test_set | New-BqTable "param_test_default_$r"
         $table | Start-BqJob -Extract CSV "$gcspath/param.csv" -Synchronous
-        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
-            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $alt_tab
+        New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" |
+            New-BqSchema "Year" "INTEGER" | Set-BqSchema $alt_tab
         $job = $alt_tab | Start-BqJob -Load CSV "$gcspath/param.csv"
         $job.Configuration.Load.AllowJaggedRows | Should Be $false
         $job.Configuration.Load.AllowQuotedNewlines | Should Be $false
         $job.Configuration.Load.Encoding | Should Be "UTF-8"
         $job.Configuration.Load.FieldDelimiter | Should Be ","
         $job.Configuration.Load.IgnoreUnknownValues | Should Be $false
-        $job.Configuration.Load.MaxBadRecords | Should Be 0
         $job.Configuration.Load.Quote | Should Be """"
         $job.Configuration.Load.SkipLeadingRows | Should Be 0
         $job.Configuration.Load.SourceFormat.ToString() | Should Be "CSV"
@@ -295,8 +289,8 @@ Describe "BqJob-Extract-Load" {
         $file | Should Not Be $null
 
         $alt_tab = $test_set | New-BqTable "basic_test_$r"
-        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
-            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $alt_tab
+        New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" |
+            New-BqSchema "Year" "INTEGER" | Set-BqSchema $alt_tab
         $boj = $alt_tab | Start-BqJob -Load CSV "$gcspath/basic.csv" -SkipLeadingRows 1 -Synchronous
         $boj.Status.State | Should Be "DONE"
 
@@ -313,8 +307,8 @@ Describe "BqJob-Extract-Load" {
         $file | Should Not Be $null
 
         $alt_tab = $test_set | New-BqTable "complex_test_$r"
-        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
-            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $alt_tab
+        New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" |
+            New-BqSchema "Year" "INTEGER" | Set-BqSchema $alt_tab
         $boj = $alt_tab | Start-BqJob -Load CSV "$gcspath/complex.csv" -FieldDelimiter "|" -Synchronous
         $boj.Status.State | Should Be "DONE"
 
@@ -326,8 +320,8 @@ Describe "BqJob-Extract-Load" {
         $table | Start-BqJob -Extract CSV "$gcspath/write.csv" -Synchronous
         $file = Get-GcsObject "ps_test_$r" "write.csv"
         $alt_tab = $test_set | New-BqTable "writemode_test_$r"
-        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
-            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $alt_tab
+        New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" |
+            New-BqSchema "Year" "INTEGER" | Set-BqSchema $alt_tab
 
         $alt_tab | Start-BqJob -Load CSV "$gcspath/write.csv" -SkipLeadingRows 1 `
             -WriteMode WriteIfEmpty -Synchronous
@@ -369,9 +363,10 @@ Describe "Stop-BqJob" {
         $folder = $folder.ToString()
         $filename = "$folder\classics_large.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
-        New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
-            New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema $table | 
-            Add-BqTabledata $filename CSV -SkipLeadingRows 1
+        New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
+            Set-BqSchema $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1
+        $bucket = New-GcsBucket "ps_test_$r"
+        $gcspath = "gs://ps_test_$r"
     }
 
     It "should stop a query job" {
@@ -388,7 +383,13 @@ Describe "Stop-BqJob" {
         $res.Status.State | Should Be "DONE"
     }
 
-    #TODO(ahandley): Add a few more test cases with different types of jobs that may run longer than a single query
+    It "should stop an extraction" {
+        $job = $table | Start-BqJob -Extract CSV "$gcspath/basic.csv"
+        $res = $job | Stop-Bqjob 
+        Start-Sleep -s 1
+        $res = $res | Get-BqJob
+        $res.Status.State | Should Be "DONE"
+    }
 
     AfterAll {
         $test_set | Remove-BqDataset -Force
