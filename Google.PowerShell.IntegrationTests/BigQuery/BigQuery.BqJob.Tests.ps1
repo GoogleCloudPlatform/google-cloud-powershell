@@ -12,8 +12,8 @@ Describe "Get-BqJob" {
         $filename = "$folder\classics.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
-            Set-BqSchema $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1
-        $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1
+            Set-BqSchema $table
+        $table | Add-BqTableRows CSV $filename -SkipLeadingRows 1
     }
 
     It "should list jobs from the past 6 months" {
@@ -74,7 +74,7 @@ Describe "BqJob-Query" {
         $filename = "$folder\classics.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
-            Set-BqSchema $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1
+            Set-BqSchema $table | Add-BqTableRows CSV $filename -SkipLeadingRows 1
     }
 
     It "should query a pre-loaded table" {
@@ -147,11 +147,11 @@ Describe "BqJob-Copy" {
 
         $table = New-BqTable -Dataset $test_Set "table_$r"
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
-            Set-BqSchema $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1
+            Set-BqSchema $table | Add-BqTableRows CSV $filename -SkipLeadingRows 1
 
         $table_other = New-BqTable -Dataset $test_Set "table_other_$r"
         New-BqSchema "Position" "INTEGER" | New-BqSchema "Number" "INTEGER" | New-BqSchema "Average" "FLOAT" | 
-            Set-BqSchema $table_other | Add-BqTabledata $filename_other CSV -SkipLeadingRows 1
+            Set-BqSchema $table_other | Add-BqTableRows CSV $filename_other -SkipLeadingRows 1
     }
 
     It "should copy a table with the same schema" {
@@ -221,7 +221,7 @@ Describe "BqJob-Extract-Load" {
         $filename = "$folder\classics.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
-            Set-BqSchema $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1
+            Set-BqSchema $table | Add-BqTableRows CSV $filename -SkipLeadingRows 1
         $bucket = New-GcsBucket "ps_test_$r"
         $gcspath = "gs://ps_test_$r"
     }
@@ -364,7 +364,7 @@ Describe "Stop-BqJob" {
         $filename = "$folder\classics_large.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
-            Set-BqSchema $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1
+            Set-BqSchema $table | Add-BqTableRows CSV $filename -SkipLeadingRows 1
         $bucket = New-GcsBucket "ps_test_$r"
         $gcspath = "gs://ps_test_$r"
     }

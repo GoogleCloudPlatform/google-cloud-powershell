@@ -116,13 +116,14 @@ Describe "Set-BqTable" {
         }
     }
 
-    It "should not update a table that does not exist" {
+    It "should insert the table if it does not already exist" {
         $table = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Table
         $table.TableReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.TableReference
         $table.TableReference.ProjectId = $project
         $table.TableReference.DatasetId = $datasetName
         $table.TableReference.TableId = "not_gonna_happen_today"
-        { Set-BqTable $table } | Should Throw 404
+        $new = Set-BqTable $table
+        $new.TableReference.TableId | Should Be "not_gonna_happen_today"
     } 
 
     AfterAll {
@@ -200,6 +201,15 @@ Describe "New-BqTable" {
         $newtab.Description | Should Be "Some cool stuff in a table?!@>><#'()*&^%"
     }
 
+    It "should set schema properly"{
+        $schema = New-BqSchema -JSON `
+            '[{"Name":"Title","Type":"STRING"},{"Name":"Author","Type":"STRING"},{"Name":"Year","Type":"INTEGER"}]' | Set-BqSchema
+        $table = New-BqTable "my_table_schema" -Dataset $test_set -Schema $schema
+        $table.Schema.Fields[0].Name | Should Be "Title"
+        $table.Schema.Fields[1].Name | Should Be "Author"
+        $table.Schema.Fields[2].Name | Should Be "Year"
+    }
+
     It "should properly set the duration of time for which the tables last" {
         $expireInSec = 3600
         $table = New-BqTable -DatasetId $datasetName "my_table_duration" -Expiration $expireInSec
@@ -260,7 +270,7 @@ Describe "Remove-BqTable" {
         { Get-BqTable "table_explicit" -Dataset $test_set } | Should Throw 404
     }
 
-    #TODO(ahandley): It "should delete a nonempty table as long as -Force is specified" #needs set-tabledata
+    #TODO(ahandley): It "should delete a nonempty table as long as -Force is specified" #needs set-tablerows
 
     It "should handle when a table does not exist" {
         $table = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Table

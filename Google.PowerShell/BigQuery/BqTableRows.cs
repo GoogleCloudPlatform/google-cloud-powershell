@@ -37,11 +37,12 @@ namespace Google.PowerShell.BigQuery
     /// Instantiates a new BQ schema or adds a field to a pre-existing schema.
     /// </para>
     /// <para type="description">
-    /// This command defines one column of a TableSchema. To create a multi-row schema, chain 
-    /// multiple instances of this command together on the pipeline. Required fields for each 
-    /// column are Name and Type. Possible values for Type include "STRING", "BYTES", "INTEGER", 
-    /// "FLOAT", "BOOLEAN", "TIMESTAMP", "DATE", "TIME", "DATETIME", and "RECORD" (where "RECORD" 
-    /// indicates that the field contains a nested schema). Case is ignored for both Type and Mode. 
+    /// This command defines one column of a TableSchema. To create a multi-row schema, either chain 
+    /// multiple instances of this command together on the pipeline, pass in a JSON array that describes 
+    /// the schema as a string with "-JSON", or pass in a file containing the JSON array with "-Filename".
+    /// Required fields for each column are Name and Type. Possible values for Type include "STRING", 
+    /// "BYTES", "INTEGER", "FLOAT", "BOOLEAN", "TIMESTAMP", "DATE", "TIME", "DATETIME", and "RECORD" 
+    /// ("RECORD" indicates the field contains a nested schema). Case is ignored for both Type and Mode. 
     /// Possible values for the Mode field include "REQUIRED", "REPEATED", and the default "NULLABLE". 
     /// This command forwards all TableFieldSchemas that it is passed, and will add a new 
     /// TableFieldSchema object to the pipeline.
@@ -51,12 +52,22 @@ namespace Google.PowerShell.BigQuery
     /// PS C:\> $dataset = New-BqDataset "books"
     /// PS C:\> $table = $dataset | New-BqTable "book_info"
     /// PS C:\> $result = New-BqSchema -Name "Author" -Type "STRING" | `
-    ///   New-BqSchema -Name "Copyright" -Type "STRING" | `
-    ///   New-BqSchema -Name "Title" -Type "STRING" | `
-    ///   Set-BqSchema $table
+    ///                   New-BqSchema -Name "Copyright" -Type "STRING" | `
+    ///                   New-BqSchema -Name "Title" -Type "STRING" | `
+    ///                   Set-BqSchema $table
     ///   </code>
     ///   <para>This will create a new schema, assign it to a table, and then send the 
     ///   revised table to the server to be saved.</para>
+    /// </example> 
+    /// <example>
+    ///   <code>
+    /// PS C:\> $dataset = New-BqDataset "books"
+    /// PS C:\> $table = $dataset | New-BqTable "book_info"
+    /// PS C:\> $result = New-BqSchema -JSON `
+    ///                   '[{"Name":"Title","Type":"STRING"},{"Name":"Author","Type":"STRING"},{"Name":"Year","Type":"INTEGER"}]' 
+    ///                   | Set-BqSchema $table
+    ///   </code>
+    ///   <para>This will create a new schema using JSON input and will assign it to a table.</para>
     /// </example> 
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/tables)">
     /// [BigQuery Tables]
@@ -65,6 +76,13 @@ namespace Google.PowerShell.BigQuery
     [Cmdlet(VerbsCommon.New, "BqSchema")]
     public class NewBqSchema : PSCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string ByValue = "ByValue";
+            public const string ByString = "ByString";
+            public const string ByFile = "ByFile";
+        }
+
         /// <summary>
         /// <para type="description">
         /// Holder parameter to allow cmdlet to forward TableFieldSchemas down the pipeline.
@@ -78,7 +96,7 @@ namespace Google.PowerShell.BigQuery
         /// The name of the column to be added. The name must be unique among columns in each schema.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0)]
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByValue)]
         public string Name { get; set; }
 
         /// <summary>
@@ -88,7 +106,7 @@ namespace Google.PowerShell.BigQuery
         /// and "RECORD" (STRUCT).
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 1)]
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.ByValue)]
         public ColumnType Type { get; set; }
 
         /// <summary>
@@ -96,7 +114,7 @@ namespace Google.PowerShell.BigQuery
         /// An optional description for this column.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, Position = 2)]
+        [Parameter(Mandatory = false, Position = 2, ParameterSetName = ParameterSetNames.ByValue)]
         [ValidateNotNull]
         public string Description { get; set; }
 
@@ -106,8 +124,8 @@ namespace Google.PowerShell.BigQuery
         /// "REPEATED". The default value is "NULLABLE".
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, Position = 3)]
-        public ColumnMode? Mode { get; set; }
+        [Parameter(Mandatory = false, Position = 3, ParameterSetName = ParameterSetNames.ByValue)]
+        public ColumnMode? Mode { get; set; } = ColumnMode.NULLABLE;
 
         /// <summary>
         /// <para type="description">
@@ -115,9 +133,28 @@ namespace Google.PowerShell.BigQuery
         /// an array of TableFieldSchema objects and it will be nested inside a single column.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValue)]
         [ValidateNotNullOrEmpty]
         public TableFieldSchema[] Fields { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// JSON string of the schema.  Should be in the form: 
+        /// [{"Name":"Title","Type":"STRING"},{"Name":"Author","Type":"STRING"},{"Name":"Year","Type":"INTEGER"}]
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByString)]
+        [ValidateNotNull]
+        public string JSON { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// File to read a JSON schema from.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByFile)]
+        [ValidateNotNull]
+        public string Filename { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -129,18 +166,38 @@ namespace Google.PowerShell.BigQuery
 
         protected override void EndProcessing()
         {
-            if (Mode == null)
+            switch (ParameterSetName)
             {
-                Mode = ColumnMode.NULLABLE;
+                case ParameterSetNames.ByValue:
+                    TableFieldSchema tfs = new TableFieldSchema()
+                    {
+                        Name = Name,
+                        Type = Type.ToString(),
+                        Description = Description,
+                        Mode = Mode.ToString(),
+                        Fields = Fields
+                    };
+                    WriteObject(tfs);
+                    break;
+                case ParameterSetNames.ByString:
+                    WriteObject(JsonToColumns(JSON), true);
+                    break;
+                case ParameterSetNames.ByFile:
+                    WriteObject(JsonToColumns(File.ReadAllText(Filename)), true);
+                    break;
+                default:
+                    throw new Exception("Invalid parameter set in NewBqSchema");
             }
+        }
 
-            TableFieldSchema tfs = new TableFieldSchema();
-            tfs.Name = Name;
-            tfs.Type = Type.ToString();
-            tfs.Description = Description;
-            tfs.Mode = Mode.ToString();
-            tfs.Fields = Fields;
-            WriteObject(tfs);
+        /// <summary>
+        /// Helper method to serialize TableFieldSchema records.
+        /// </summary>
+        /// <param name="json"></param>
+        /// <returns></returns>
+        public TableFieldSchema[] JsonToColumns(string json)
+        {
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<TableFieldSchema[]>(json);
         }
     }
 
@@ -151,12 +208,20 @@ namespace Google.PowerShell.BigQuery
     /// <para type="description">
     /// This command takes a Table and sets its schema to be the aggregation of all TableFieldSchema 
     /// objects passed in. If multiple columns are passed in with the same "-Name" field, an error 
-    /// will be thrown. This command returns the modified Table object after updating the cloud resource.
-    /// </para>
+    /// will be thrown. If no Table argument is passed in, the Schema object will be written and the
+    /// cmdlet will quit. Otherwise, this command returns a Table showing the updated server state.
     /// <example>
     ///   <code>
     /// PS C:\> $table = Get-BqDataset “book_data” | Get-BqTable "21st_century"
     /// PS C:\> $table = New-BqSchema -Name “Title” -Type “STRING” | Set-BqSchema $table
+    ///   </code>
+    ///   <para>This will create a new schema, assign it to a table, and then send the 
+    ///   revised table to the server to be saved.</para>
+    /// </example> 
+    /// <example>
+    ///   <code>
+    /// PS C:\> $schema = New-BqSchema -Name “Title” -Type “STRING” | Set-BqSchema 
+    /// PS C:\> New-BqTable "my_table" -DatasetId "mydataset" -Schema $schema
     ///   </code>
     ///   <para>This will create a new schema, assign it to a table, and then send the 
     ///   revised table to the server to be saved.</para>
@@ -183,8 +248,7 @@ namespace Google.PowerShell.BigQuery
         /// The table that you wish to add this schema to.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0)]
-        [ValidateNotNull]
+        [Parameter(Mandatory = false, Position = 0)]
         public Table Table { get; set; }
 
         List<TableFieldSchema> Columns = new List<TableFieldSchema>();
@@ -202,6 +266,17 @@ namespace Google.PowerShell.BigQuery
 
         protected override void EndProcessing()
         {
+            // Check if the user just wants a Schema object
+            if (Table == null)
+            {
+                WriteObject(new TableSchema
+                {
+                    Fields = Columns
+                });
+                return;
+            }
+
+            // Otherwise, update the serverside resource
             Table.Schema = new TableSchema();
             Table.Schema.Fields = Columns;
             Table.ETag = "";
@@ -248,14 +323,14 @@ namespace Google.PowerShell.BigQuery
     ///   <code>
     /// PS C:\> $filename = "C:\data.json"
     /// PS C:\> $table = New-BqTable -DatasetId "db_name" "tab_name"
-    /// PS C:\> $table | Add-BqTabledata $filename JSON
+    /// PS C:\> $table | Add-BqTableRows JSON $filename 
     ///   </code>
     ///   <para>This code will ingest a newline-delimited JSON file from the location "$filename" on local 
     ///   disk to db_name:tab_name in BigQuery.</para>
     ///   <code>
     /// PS C:\> $filename = "C:\data.csv"
     /// PS C:\> $table = New-BqTable -DatasetId "db_name" "tab_name"
-    /// PS C:\> $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1 -AllowJaggedRows -AllowUnknownFields
+    /// PS C:\> $table | Add-BqTableRows CSV $filename -SkipLeadingRows 1 -AllowJaggedRows -AllowUnknownFields
     ///   </code>
     ///   <para>This code will take a CSV file and upload it to a BQ table.  It will set missing fields 
     ///   from the CSV to null, and it will keep rows that have fields that aren't in the table's schema.
@@ -265,8 +340,8 @@ namespace Google.PowerShell.BigQuery
     /// [BigQuery Tabledata]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Add, "BqTabledata")]
-    public class AddBqTabledata : BqCmdlet
+    [Cmdlet(VerbsCommon.Add, "BqTableRows")]
+    public class AddBqTableRows : BqCmdlet
     {
         /// <summary>
         /// <para type="description">
@@ -280,19 +355,19 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// The filname containing the data to insert.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = true, Position = 0)]
-        public string Filename { get; set; }
-
-        /// <summary>
-        /// <para type="description">
         /// The format of the data file (CSV | JSON | AVRO).
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 1)]
+        [Parameter(Mandatory = true, Position = 0)]
         public DataFormats Type { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The filname containing the data to insert.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 1)]
+        public string Filename { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -420,7 +495,7 @@ namespace Google.PowerShell.BigQuery
     /// <example>
     ///   <code>
     /// PS C:\> $table = get-bqtable -DatasetID "book_data" "classics"
-    /// PS C:\> $list = $table | get-bqtabledata
+    /// PS C:\> $list = $table | get-bqTableRows
     ///   </code>
     ///   <para>Fetches all of the rows in book_data:classics and exports them to "$list".</para>
     /// </example> 
@@ -428,8 +503,8 @@ namespace Google.PowerShell.BigQuery
     /// [BigQuery Tabledata]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Get, "BqTabledata")]
-    public class GetBqTabledata : BqCmdlet
+    [Cmdlet(VerbsCommon.Get, "BqTableRows")]
+    public class GetBqTableRows : BqCmdlet
     {
         /// <summary>
         /// <para type="description">
