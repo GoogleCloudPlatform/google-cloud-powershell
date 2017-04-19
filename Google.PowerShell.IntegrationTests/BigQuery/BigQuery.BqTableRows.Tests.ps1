@@ -4,13 +4,26 @@ $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 Describe "New-BqSchema" {
 
     BeforeAll {
-        $r = Get-Random
-        $datasetName = "pshell_testing_$r"
-        $test_set = New-BqDataset $datasetName
+        $folder = Get-Location
+        $folder = $folder.ToString()
+        $filename = "$folder\schema.json"
+        $filename_mini = "$folder\schema_mini.json"
     }
 
-    It "should create new TableFieldSchema objects"{
+    It "should create new TableFieldSchema objects by values"{
         $field = New-BqSchema -Name "Title" -Type "STRING"
+        $field.Name | Should Be "Title"
+        $field.Type | Should Be "STRING"
+    }
+
+    It "should create new TableFieldSchema objects by strings"{
+        $field = New-BqSchema -JSON '[{"Name":"Title","Type":"STRING"}]'
+        $field.Name | Should Be "Title"
+        $field.Type | Should Be "STRING"
+    }
+
+    It "should create new TableFieldSchema objects by files"{
+        $field = New-BqSchema -Filename $filename_mini
         $field.Name | Should Be "Title"
         $field.Type | Should Be "STRING"
     }
@@ -18,7 +31,17 @@ Describe "New-BqSchema" {
     It "should add fields to the pipeline when passed any number of fields"{
         $field = New-BqSchema "Title" "STRING"
         $field = $field | New-BqSchema "Author" "STRING"
-        $field = $field | New-BqSchema "Copyright" "STRING"
+        $field = $field | New-BqSchema "Year" "INTEGER"
+        $field.Count | Should Be 3
+    }
+
+    It "should add a bunch of fields via string"{
+        $field = New-BqSchema -JSON '[{"Name":"Title","Type":"STRING"},{"Name":"Author","Type":"STRING"},{"Name":"Year","Type":"INTEGER"}]'
+        $field.Count | Should Be 3
+    }
+
+    It "should add a bunch of fields via file"{
+        $field = New-BqSchema -Filename $filename
         $field.Count | Should Be 3
     }
 
@@ -43,8 +66,12 @@ Describe "New-BqSchema" {
         { New-BqSchema -Name "Title" -Type "STRING" -Mode "NotAMode" } | Should Throw "Cannot convert value"
     }
 
-    AfterAll {
-        $test_set | Remove-BqDataset -Force
+    It "should let users know that they need to have a JSON array"{
+        { $field = New-BqSchema -JSON '{"Name":"Title","Type":"STRING"}' } | Should Throw "Cannot deserialize"
+    }
+
+    It "should handle when files do not exist"{
+        { $field = New-BqSchema -Filename "fileDoesNotExist" } | Should Throw "Could not find file"
     }
 }
 
@@ -54,6 +81,9 @@ Describe "Set-BqSchema" {
         $r = Get-Random
         $datasetName = "pshell_testing_$r"
         $test_set = New-BqDataset $datasetName
+        $folder = Get-Location
+        $folder = $folder.ToString()
+        $filename = "$folder\schema.json"
     }
 
     It "should add a single column schema to a Table"{
@@ -62,15 +92,41 @@ Describe "Set-BqSchema" {
         $result.Schema.Fields[0].Name | Should Be "Title"
     }
 
-    It "should add amultiple column schema to a Table"{
+    It "should add a multiple column schema to a Table by values"{
         $table = $test_set | New-BqTable "double_table"
-        $result = New-BqSchema -Name "Author" -Type "STRING" |
-                  New-BqSchema -Name "Copyright" -Type "STRING" |
-                  New-BqSchema -Name "Title" -Type "STRING" |
+        $result = New-BqSchema -Name "Title" -Type "STRING" |
+                  New-BqSchema -Name "Author" -Type "STRING" |
+                  New-BqSchema -Name "Year" -Type "INTEGER" |
                   Set-BqSchema $table
-        $result.Schema.Fields[0].Name | Should Be "Author"
-        $result.Schema.Fields[1].Name | Should Be "Copyright"
-        $result.Schema.Fields[2].Name | Should Be "Title"
+        $result.Schema.Fields[0].Name | Should Be "Title"
+        $result.Schema.Fields[1].Name | Should Be "Author"
+        $result.Schema.Fields[2].Name | Should Be "Year"
+    }
+
+    It "should add a multiple column schema to a Table by string"{
+        $table = $test_set | New-BqTable "string_table"
+        $result = New-BqSchema -JSON `
+            '[{"Name":"Title","Type":"STRING"},{"Name":"Author","Type":"STRING"},{"Name":"Year","Type":"INTEGER"}]' | Set-BqSchema $table
+        $result.Schema.Fields[0].Name | Should Be "Title"
+        $result.Schema.Fields[1].Name | Should Be "Author"
+        $result.Schema.Fields[2].Name | Should Be "Year"
+    }
+
+    It "should add a multiple column schema to a Table by file"{
+        $table = $test_set | New-BqTable "file_table"
+        $result = New-BqSchema -Filename $filename| 
+                  Set-BqSchema $table
+        $result.Schema.Fields[0].Name | Should Be "Title"
+        $result.Schema.Fields[1].Name | Should Be "Author"
+        $result.Schema.Fields[2].Name | Should Be "Year"
+    }
+
+    It "should properly return a schema object"{
+        $schema = New-BqSchema -JSON `
+            '[{"Name":"Title","Type":"STRING"},{"Name":"Author","Type":"STRING"},{"Name":"Year","Type":"INTEGER"}]' | Set-BqSchema
+        $schema.Fields[0].Name | Should Be "Title"
+        $schema.Fields[1].Name | Should Be "Author"
+        $schema.Fields[2].Name | Should Be "Year"
     }
 
     It "should complain about duplicated column names"{
@@ -93,7 +149,7 @@ Describe "Set-BqSchema" {
     }
 }
 
-Describe "Add-BqTabledata" {
+Describe "Add-BqTableRows" {
 
     BeforeAll {
         $r = Get-Random
@@ -124,78 +180,78 @@ Describe "Add-BqTabledata" {
     }
 
     It "should properly consume a well formed CSV file" {
-        $table | Add-BqTabledata $filename_csv CSV -SkipLeadingRows 1
+        $table | Add-BqTableRows CSV $filename_csv -SkipLeadingRows 1
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
     }
 
     It "should properly consume a well formed JSON file" {
-        $table | Add-BqTabledata $filename_json JSON
+        $table | Add-BqTableRows JSON $filename_json 
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
     }
 
     It "should properly consume a well formed AVRO file" {
-        $table | Add-BqTabledata $filename_avro AVRO
+        $table | Add-BqTableRows AVRO $filename_avro 
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
     }
 
     It "should properly reject an invalid CSV file" {
-        { $table | Add-BqTabledata $filename_broken_csv CSV -SkipLeadingRows 1 } | Should Throw "contained errors"
+        { $table | Add-BqTableRows CSV $filename_broken_csv -SkipLeadingRows 1 } | Should Throw "contained errors"
     }
 
     It "should properly reject an invalid JSON file" {
-        { $table | Add-BqTabledata $filename_broken_json JSON } | Should Throw "contained errors"
+        { $table | Add-BqTableRows JSON $filename_broken_json } | Should Throw "contained errors"
     }
 
     It "should properly reject an invalid AVRO file" {
-        { $table | Add-BqTabledata $filename_broken_avro AVRO } | Should Throw "contained errors"
+        { $table | Add-BqTableRows AVRO $filename_broken_avro } | Should Throw "contained errors"
     }
 
     #TODO(ahandley): Test all CSV options
 
     It "should handle less than perfect CSV files" {
-        $table | Add-BqTabledata $filename_broken_csv CSV -SkipLeadingRows 1 -AllowJaggedRows -AllowUnknownFields
+        $table | Add-BqTableRows CSV $filename_broken_csv -SkipLeadingRows 1 -AllowJaggedRows -AllowUnknownFields
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
     }
 
     It "should handle write disposition WriteAppend" {
-        $table | Add-BqTabledata $filename_csv CSV -SkipLeadingRows 1 
+        $table | Add-BqTableRows CSV $filename_csv -SkipLeadingRows 1 
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
-        $table | Add-BqTabledata $filename_csv CSV -SkipLeadingRows 1 -WriteMode WriteAppend
+        $table | Add-BqTableRows CSV $filename_csv -SkipLeadingRows 1 -WriteMode WriteAppend
         $table = Get-BqTable $table
         $table.NumRows | Should Be 20
     }
 
     It "should handle write disposition WriteIfEmpty on an empty table" {
-        $table | Add-BqTabledata $filename_csv CSV -SkipLeadingRows 1 -WriteMode WriteIfEmpty
+        $table | Add-BqTableRows CSV $filename_csv -SkipLeadingRows 1 -WriteMode WriteIfEmpty
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
     }
 
     It "should handle write disposition WriteIfEmpty on a non-empty table" {
-        $table | Add-BqTabledata $filename_broken_csv CSV -SkipLeadingRows 1 -AllowJaggedRows -AllowUnknownFields 
+        $table | Add-BqTableRows CSV $filename_broken_csv -SkipLeadingRows 1 -AllowJaggedRows -AllowUnknownFields 
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
-        { $table | Add-BqTabledata $filename_csv CSV -SkipLeadingRows 1 `
+        { $table | Add-BqTableRows CSV $filename_csv -SkipLeadingRows 1 `
             -WriteMode WriteIfEmpty } | Should Throw "404"
     }
 
     It "should handle write disposition WriteTruncate" {
-        $table | Add-BqTabledata $filename_csv CSV -SkipLeadingRows 1
+        $table | Add-BqTableRows CSV $filename_csv -SkipLeadingRows 1
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
-        $table | Add-BqTabledata $filename_broken_csv CSV -SkipLeadingRows 1 -AllowJaggedRows `
+        $table | Add-BqTableRows CSV $filename_broken_csv -SkipLeadingRows 1 -AllowJaggedRows `
                 -AllowUnknownFields -WriteMode WriteTruncate
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
     }
 
     It "should allow jagged rows and quoted newlines" {
-        $table | Add-BqTabledata $filename_extra_csv CSV -SkipLeadingRows 1 -AllowJaggedRows -AllowQuotedNewLines
+        $table | Add-BqTableRows CSV $filename_extra_csv -SkipLeadingRows 1 -AllowJaggedRows -AllowQuotedNewLines
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
     }
@@ -203,7 +259,7 @@ Describe "Add-BqTabledata" {
     #TODO(ahandley): Test all JSON options
 
     It "should handle less than perfect JSON files" {
-        $table | Add-BqTabledata $filename_broken_JSON JSON -AllowUnknownFields
+        $table | Add-BqTableRows JSON $filename_broken_JSON -AllowUnknownFields
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
     }
@@ -213,7 +269,7 @@ Describe "Add-BqTabledata" {
     }
 }
 
-Describe "Get-BqTabledata" {
+Describe "Get-BqTableRows" {
 
     BeforeAll {
         $r = Get-Random
@@ -230,12 +286,12 @@ Describe "Get-BqTabledata" {
                  New-BqSchema -Name "Author" -Type "STRING" |
                  New-BqSchema -Name "Year" -Type "INTEGER" |
                  Set-BqSchema $table
-        $table | Add-BqTabledata $filename CSV -SkipLeadingRows 1
+        $table | Add-BqTableRows CSV $filename -SkipLeadingRows 1
         $table = Get-BqTable $table
     }
 
     It "should return an entire table of 10 rows" {
-        $list = $table | Get-BqTabledata 
+        $list = $table | Get-BqTableRows 
         $list.Count | Should Be 10
         $list[0]["Author"] | Should Be "Jane Austin"
         $list[2]["Title"] | Should Be "War and Peas"
@@ -249,10 +305,10 @@ Describe "Get-BqTabledata" {
                  New-BqSchema -Name "Author" -Type "STRING" |
                  New-BqSchema -Name "Year" -Type "INTEGER" |
                  Set-BqSchema $bigtable
-        $bigtable | Add-BqTabledata $filename_big CSV -SkipLeadingRows 1
+        $bigtable | Add-BqTableRows CSV $filename_big -SkipLeadingRows 1
         $bigtable = Get-BqTable $bigtable
 
-        $list = $bigtable | Get-BqTabledata
+        $list = $bigtable | Get-BqTableRows
         $list.Count | Should Be 100100
     }
 

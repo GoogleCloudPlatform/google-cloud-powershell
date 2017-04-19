@@ -30,6 +30,10 @@ namespace Google.PowerShell.BigQuery
         public static string COMPRESSION_GZIP = "GZIP";
         public static string COMPRESSION_NONE = "NONE";
         public static string STATUS_DONE = "DONE";
+
+        // String value for Google.Apis.Requests.RequestError class to signal Database not found (404).
+        public static string DS_404 = "Not found: Dataset";
+        public static string TAB_404 = "Not found: Table";
     }
 
     /// <summary>

@@ -200,6 +200,7 @@ namespace Google.PowerShell.BigQuery
         protected override void ProcessRecord()
         {
             Table response;
+            bool needToInsert = false;
             var request = Service.Tables.Update(InputObject,
                 InputObject.TableReference.ProjectId,
                 InputObject.TableReference.DatasetId,
@@ -223,6 +224,34 @@ namespace Google.PowerShell.BigQuery
                     ErrorCategory.PermissionDenied,
                     InputObject));
             }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+            {
+                if (!ex.Message.Contains(TAB_404))
+                {
+                    ThrowTerminatingError(new ErrorRecord(ex, 
+                        $"Dataset '{InputObject.TableReference.ProjectId}:{InputObject.TableReference.DatasetId}' not found.",
+                        ErrorCategory.ObjectNotFound, Project));
+                }
+                needToInsert = true;
+            }
+
+            if (needToInsert)
+            {
+                // Turn a Set- into a New- in the case of a 404 on the object to set.
+                TablesResource.InsertRequest insertRequest = Service.Tables.Insert(InputObject,
+                    InputObject.TableReference.ProjectId, InputObject.TableReference.DatasetId);
+                try
+                {
+                    var insertResponse = insertRequest.Execute();
+                    WriteObject(insertResponse);
+                }
+                catch (Exception e2)
+                {
+                    ThrowTerminatingError(new ErrorRecord(e2,
+                        $"Table was not found and an error occured while creating a new Table.",
+                        ErrorCategory.NotSpecified, InputObject));
+                }
+            }
         }
     }
 
@@ -235,8 +264,8 @@ namespace Google.PowerShell.BigQuery
     /// via the pipeline or the "-InputObject" parameter, or it can be instantiated by value 
     /// with the flags below. The Dataset ID can be specified by passing in a string to 
     /// "-DatasetId", or you can pass a Dataset or DatasetReference to the "-Dataset" parameter. 
-    /// If no Project is specified, the default project will be used. This cmdlet returns 
-    /// a Table object.
+    /// Schemas can be set by passing in a TableSchema object with the "-Schema" flag. If no 
+    /// Project is specified, the default project will be used. This cmdlet returns a Table object.
     /// </para>
     /// <example>
     ///   <code>
@@ -246,6 +275,8 @@ namespace Google.PowerShell.BigQuery
     ///                     -Expiration (60*60*24*30)
     ///   </code>
     ///   <para>This makes a new Table called "new_tab" with a lifetime of 30 days.</para>
+    /// </example>
+    /// <example>
     ///   <code>
     /// PS C:\> Get-BqDataset "my_data" | New-BqTable “new_tab”
     ///   </code>
@@ -340,6 +371,15 @@ namespace Google.PowerShell.BigQuery
         [ValidateRange(1, (long.MaxValue / 1000))]
         public long Expiration { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// Schema of the new table.  Created by the New-BqSchema and Set-BqSchema cmdlets.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValue)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValueWithRef)]
+        public TableSchema Schema { get; set; }
+
         protected override void ProcessRecord()
         {
             // Set up the Dataset based on parameters
@@ -389,6 +429,7 @@ namespace Google.PowerShell.BigQuery
             };
             newTable.FriendlyName = Name;
             newTable.Description = Description;
+            newTable.Schema = Schema;
             if (Expiration != 0)
             {
                 long currentMillis = Convert.ToInt64(DateTime.Now.ToUniversalTime().Subtract(
@@ -420,6 +461,12 @@ namespace Google.PowerShell.BigQuery
     ///   </code>
     ///   <para>This will remove "my_table" if it is empty, and will prompt for user confirmation 
     ///   if it is not. All data in "my_table" will be deleted if the user accepts.</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    /// PS C:\> Remove-BqTable -DatasetId "my_dataset" -Table "my_table" -Force
+    ///   </code>
+    ///   <para>This will remove "my_table" and all of its data.</para>
     /// </example>
     /// <example>
     ///   <code>

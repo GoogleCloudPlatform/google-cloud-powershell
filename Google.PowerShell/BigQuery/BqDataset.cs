@@ -148,7 +148,7 @@ namespace Google.PowerShell.BigQuery
                 default:
                     throw UnknownParameterSetException;
             }
-        }
+        } 
 
         private IEnumerable<DatasetList.DatasetsData> DoListRequest(string project)
         {
@@ -199,8 +199,8 @@ namespace Google.PowerShell.BigQuery
     /// Updates information describing an existing BigQuery dataset.
     /// </para>
     /// <para type="description">
-    /// Updates information describing an existing BigQuery dataset. The projet and dataset specified 
-    /// by the DatasetReference of "-Dataset" will be used. This cmdlet returns a Dataset object.
+    /// Updates information describing an existing BigQuery dataset. If the dataset passed in does not
+    /// already exist on the server, it will be inserted. This cmdlet returns a Dataset object.
     /// </para>
     /// <example>
     ///   <code>
@@ -228,7 +228,8 @@ namespace Google.PowerShell.BigQuery
     {
         /// <summary>
         /// <para type="description">
-        /// The projectId from the InputObject will be preferred.
+        /// The project to look for datasets in. If not set via PowerShell parameter processing, will
+        /// default to the Cloud SDK's default project.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
@@ -247,9 +248,11 @@ namespace Google.PowerShell.BigQuery
         protected override void ProcessRecord()
         {
             Dataset response;
+            bool needToInsert = false;
             var request = Service.Datasets.Update(Dataset,
                 Dataset.DatasetReference.ProjectId,
                 Dataset.DatasetReference.DatasetId);
+
             try
             {
                 response = request.Execute();
@@ -268,6 +271,32 @@ namespace Google.PowerShell.BigQuery
                     $"You do not have permission to modify '{Dataset.DatasetReference.DatasetId}'.",
                     ErrorCategory.PermissionDenied,
                     Dataset));
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+            {
+                if (!ex.Message.Contains(DS_404))
+                {
+                    ThrowTerminatingError(new ErrorRecord(ex, $"Project '{Project}' not found.",
+                        ErrorCategory.ObjectNotFound, Project));
+                }
+                needToInsert = true;
+            }
+
+            if (needToInsert)
+            {
+                // Turn a Set- into a New- in the case of a 404 on the object to set.
+                DatasetsResource.InsertRequest insertRequest = Service.Datasets.Insert(Dataset, Project);
+                try
+                {
+                    var insertResponse = insertRequest.Execute();
+                    WriteObject(insertResponse);
+                }
+                catch (Exception e2)
+                {
+                    ThrowTerminatingError(new ErrorRecord(e2,
+                        $"Dataset was not found and an error occured while creating a new Dataset.",
+                        ErrorCategory.NotSpecified, Dataset));
+                }
             }
         }
     }

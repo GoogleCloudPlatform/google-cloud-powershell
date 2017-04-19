@@ -119,12 +119,13 @@ Describe "Set-BqDataset" {
         }
     } 
 
-    It "should not update a set that does not exist" {
+    It "should add when a dataset does not exist" {
         $data = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Dataset
         $data.DatasetReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.DatasetReference
-        $data.DatasetReference.DatasetId = "test_dataset_id4"
+        $data.DatasetReference.DatasetId = "test_dataset_id7"
         $data.DatasetReference.ProjectId = $project
-        { Set-BqDataset $data } | Should Throw 404
+        $set = Set-BqDataset $data
+        $set.DatasetReference.DatasetId | Should Be "test_dataset_id7"
     } 
 
     #TODO(ahandley): Find reason behind occasional (25%) 412 Precondition error (If-Match - header).
