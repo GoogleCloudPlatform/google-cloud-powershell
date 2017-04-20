@@ -55,7 +55,7 @@ Describe "Get-BqTable" {
     }
 
     It "should throw when the project is not found"{
-        { Get-BqTable $nonExistTable -DatasetId $datasetName -project $nonExistProject } | Should Throw "404"
+        { Get-BqTable $nonExistTable -DatasetId $datasetName -Project $nonExistProject } | Should Throw "404"
     }
 
     AfterAll {
@@ -91,17 +91,17 @@ Describe "Set-BqTable" {
     It "should update trivial metadata fields via parameter" {
         try {
             New-BqTable "param_table" -DatasetId $datasetName -Name "test" -Description "my table"
-            $table = Get-BqTable -DatasetId $datasetName "param_table"
+            $table = Get-BqTable "param_table" -DatasetId $datasetName 
             $table.FriendlyName = "Some Test Data"
             $table.Description = "A new description!"
             Set-BqTable $table
 
-            $table = Get-BqTable -DatasetId $datasetName "param_table"
+            $table = Get-BqTable "param_table" -DatasetId $datasetName 
             $table | Should Not BeNullOrEmpty
             $table.FriendlyName | Should Be "Some Test Data"
             $table.Description | Should Be "A new description!"
         } finally {
-            Remove-BqTable -Dataset $test_set "param_table"
+            Remove-BqTable "param_table" -Dataset $test_set 
         }
     }
 
@@ -112,7 +112,7 @@ Describe "Set-BqTable" {
             $table.TableReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.TableReference
             { Set-BqTable $table } | Should Throw "is missing"
         } finally {
-            Remove-BqTable -Dataset $test_set "tab_overwrite"
+            Remove-BqTable "tab_overwrite" -Dataset $test_set 
         }
     }
 
@@ -140,8 +140,8 @@ Describe "New-BqTable" {
     }
 
     It "should take strings, name, description, and time to make a table"{
-        $table = New-BqTable "my_table_str" -Project $test_set.DatasetReference.ProjectId `
-            -DatasetId $test_set.DatasetReference.DatasetId -Name "CSV" -Description "Some Comma Separated Values"
+        $table = New-BqTable "my_table_str" -DatasetId $test_set.DatasetReference.DatasetId `
+            -Project $test_set.DatasetReference.ProjectId -Name "CSV" -Description "Some Comma Separated Values"
         $table.TableReference.TableId | Should Be "my_table_str"
         $table.TableReference.DatasetId | Should Be $test_set.DatasetReference.DatasetId
         $table.TableReference.ProjectId | Should Be $test_set.DatasetReference.ProjectId
@@ -212,7 +212,7 @@ Describe "New-BqTable" {
 
     It "should properly set the duration of time for which the tables last" {
         $expireInSec = 3600
-        $table = New-BqTable -DatasetId $datasetName "my_table_duration" -Expiration $expireInSec
+        $table = New-BqTable "my_table_duration" -DatasetId $datasetName -Expiration $expireInSec
         $calculatedTime = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalMilliseconds
         $table.ExpirationTime | Should BeLessThan ($calculatedTime + (($expireInSec + 5) * 1000))
     }
@@ -270,7 +270,19 @@ Describe "Remove-BqTable" {
         { Get-BqTable "table_explicit" -Dataset $test_set } | Should Throw 404
     }
 
-    #TODO(ahandley): It "should delete a nonempty table as long as -Force is specified" #needs set-tablerows
+    It "should delete a nonempty table as long as -Force is specified" {
+        $folder = Get-Location
+        $folder = $folder.ToString()
+        $filename_csv = "$folder\classics.csv"
+        $schema = New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
+                  New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema
+        $table = New-BqTable "table_force_delete" -Dataset $test_set -Schema $schema
+        $table | Add-BqTableRow CSV $filename_csv -SkipLeadingRows 1
+        $table = Get-BqTable $table
+        $table.NumRows | Should Be 10
+        Get-BqTable "table_force_delete" -Dataset $test_set | Remove-BqTable -Force
+        { Get-BqTable "table_force_delete" -Dataset $test_set } | Should Throw 404
+    }
 
     It "should handle when a table does not exist" {
         $table = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Table

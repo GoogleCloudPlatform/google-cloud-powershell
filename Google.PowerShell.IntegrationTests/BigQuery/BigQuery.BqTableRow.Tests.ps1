@@ -149,7 +149,7 @@ Describe "Set-BqSchema" {
     }
 }
 
-Describe "Add-BqTableRows" {
+Describe "Add-BqTableRow" {
 
     BeforeAll {
         $r = Get-Random
@@ -180,86 +180,82 @@ Describe "Add-BqTableRows" {
     }
 
     It "should properly consume a well formed CSV file" {
-        $table | Add-BqTableRows CSV $filename_csv -SkipLeadingRows 1
+        $table | Add-BqTableRow CSV $filename_csv -SkipLeadingRows 1
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
     }
 
     It "should properly consume a well formed JSON file" {
-        $table | Add-BqTableRows JSON $filename_json 
+        $table | Add-BqTableRow JSON $filename_json 
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
     }
 
     It "should properly consume a well formed AVRO file" {
-        $table | Add-BqTableRows AVRO $filename_avro 
+        $table | Add-BqTableRow AVRO $filename_avro 
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
     }
 
     It "should properly reject an invalid CSV file" {
-        { $table | Add-BqTableRows CSV $filename_broken_csv -SkipLeadingRows 1 } | Should Throw "contained errors"
+        { $table | Add-BqTableRow CSV $filename_broken_csv -SkipLeadingRows 1 } | Should Throw "contained errors"
     }
 
     It "should properly reject an invalid JSON file" {
-        { $table | Add-BqTableRows JSON $filename_broken_json } | Should Throw "contained errors"
+        { $table | Add-BqTableRow JSON $filename_broken_json } | Should Throw "contained errors"
     }
 
     It "should properly reject an invalid AVRO file" {
-        { $table | Add-BqTableRows AVRO $filename_broken_avro } | Should Throw "contained errors"
+        { $table | Add-BqTableRow AVRO $filename_broken_avro } | Should Throw "contained errors"
     }
 
-    #TODO(ahandley): Test all CSV options
-
     It "should handle less than perfect CSV files" {
-        $table | Add-BqTableRows CSV $filename_broken_csv -SkipLeadingRows 1 -AllowJaggedRows -AllowUnknownFields
+        $table | Add-BqTableRow CSV $filename_broken_csv -SkipLeadingRows 1 -AllowJaggedRows -AllowUnknownFields
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
     }
 
     It "should handle write disposition WriteAppend" {
-        $table | Add-BqTableRows CSV $filename_csv -SkipLeadingRows 1 
+        $table | Add-BqTableRow CSV $filename_csv -SkipLeadingRows 1 
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
-        $table | Add-BqTableRows CSV $filename_csv -SkipLeadingRows 1 -WriteMode WriteAppend
+        $table | Add-BqTableRow CSV $filename_csv -SkipLeadingRows 1 -WriteMode WriteAppend
         $table = Get-BqTable $table
         $table.NumRows | Should Be 20
     }
 
     It "should handle write disposition WriteIfEmpty on an empty table" {
-        $table | Add-BqTableRows CSV $filename_csv -SkipLeadingRows 1 -WriteMode WriteIfEmpty
+        $table | Add-BqTableRow CSV $filename_csv -SkipLeadingRows 1 -WriteMode WriteIfEmpty
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
     }
 
     It "should handle write disposition WriteIfEmpty on a non-empty table" {
-        $table | Add-BqTableRows CSV $filename_broken_csv -SkipLeadingRows 1 -AllowJaggedRows -AllowUnknownFields 
+        $table | Add-BqTableRow CSV $filename_broken_csv -SkipLeadingRows 1 -AllowJaggedRows -AllowUnknownFields 
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
-        { $table | Add-BqTableRows CSV $filename_csv -SkipLeadingRows 1 `
+        { $table | Add-BqTableRow CSV $filename_csv -SkipLeadingRows 1 `
             -WriteMode WriteIfEmpty } | Should Throw "404"
     }
 
     It "should handle write disposition WriteTruncate" {
-        $table | Add-BqTableRows CSV $filename_csv -SkipLeadingRows 1
+        $table | Add-BqTableRow CSV $filename_csv -SkipLeadingRows 1
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
-        $table | Add-BqTableRows CSV $filename_broken_csv -SkipLeadingRows 1 -AllowJaggedRows `
+        $table | Add-BqTableRow CSV $filename_broken_csv -SkipLeadingRows 1 -AllowJaggedRows `
                 -AllowUnknownFields -WriteMode WriteTruncate
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
     }
 
     It "should allow jagged rows and quoted newlines" {
-        $table | Add-BqTableRows CSV $filename_extra_csv -SkipLeadingRows 1 -AllowJaggedRows -AllowQuotedNewLines
+        $table | Add-BqTableRow CSV $filename_extra_csv -SkipLeadingRows 1 -AllowJaggedRows -AllowQuotedNewLines
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
     }
 
-    #TODO(ahandley): Test all JSON options
-
     It "should handle less than perfect JSON files" {
-        $table | Add-BqTableRows JSON $filename_broken_JSON -AllowUnknownFields
+        $table | Add-BqTableRow JSON $filename_broken_JSON -AllowUnknownFields
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
     }
@@ -269,7 +265,7 @@ Describe "Add-BqTableRows" {
     }
 }
 
-Describe "Get-BqTableRows" {
+Describe "Get-BqTableRow" {
 
     BeforeAll {
         $r = Get-Random
@@ -281,17 +277,17 @@ Describe "Get-BqTableRows" {
         $filename = "$folder\classics.csv"
         $filename_big = "$folder\classics_large.csv"
         # Small Table Setup.
-        $table = New-BqTable -Dataset $test_Set "table_$r"
+        $table = New-BqTable "table_$r" -Dataset $test_Set 
         $table = New-BqSchema -Name "Title" -Type "STRING" |
                  New-BqSchema -Name "Author" -Type "STRING" |
                  New-BqSchema -Name "Year" -Type "INTEGER" |
                  Set-BqSchema $table
-        $table | Add-BqTableRows CSV $filename -SkipLeadingRows 1
+        $table | Add-BqTableRow CSV $filename -SkipLeadingRows 1
         $table = Get-BqTable $table
     }
 
     It "should return an entire table of 10 rows" {
-        $list = $table | Get-BqTableRows 
+        $list = $table | Get-BqTableRow 
         $list.Count | Should Be 10
         $list[0]["Author"] | Should Be "Jane Austin"
         $list[2]["Title"] | Should Be "War and Peas"
@@ -300,15 +296,15 @@ Describe "Get-BqTableRows" {
 
     It "should handle paging correctly" {
         # Default page size = 100,000.
-        $bigtable = New-BqTable -Dataset $test_Set "table_big_$r"
+        $bigtable = New-BqTable "table_big_$r" -Dataset $test_Set 
         $bigtable = New-BqSchema -Name "Title" -Type "STRING" |
                  New-BqSchema -Name "Author" -Type "STRING" |
                  New-BqSchema -Name "Year" -Type "INTEGER" |
                  Set-BqSchema $bigtable
-        $bigtable | Add-BqTableRows CSV $filename_big -SkipLeadingRows 1
+        $bigtable | Add-BqTableRow CSV $filename_big -SkipLeadingRows 1
         $bigtable = Get-BqTable $bigtable
 
-        $list = $bigtable | Get-BqTableRows
+        $list = $bigtable | Get-BqTableRow
         $list.Count | Should Be 100100
     }
 

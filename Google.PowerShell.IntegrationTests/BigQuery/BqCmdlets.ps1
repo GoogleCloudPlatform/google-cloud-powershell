@@ -12,4 +12,3 @@ $oneDayMs = 1000 * $oneDaySec
 $threeDaySec = 3 * $oneDaySec
 $threeDayMs = 3 * $oneDayMs
 
-# Define functions that will be used in testing

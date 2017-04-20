@@ -13,7 +13,9 @@ Describe "Get-BqJob" {
         $table = New-BqTable -Dataset $test_Set "table_$r"
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
             Set-BqSchema $table
-        $table | Add-BqTableRows CSV $filename -SkipLeadingRows 1
+        $table | Add-BqTableRow CSV $filename -SkipLeadingRows 1
+        $bucket = New-GcsBucket "ps_test_$r"
+        $gcspath = "gs://ps_test_$r"
     }
 
     It "should list jobs from the past 6 months" {
@@ -21,9 +23,13 @@ Describe "Get-BqJob" {
         $jobs.Count | Should BeGreaterThan 1
     }
 
-    #TODO(ahandley): When Start- and Stop-BqJob are written, add in tests for AllUsers and State
-    #TODO(ahandley): When Start- is ready, add test with alternate project via jobReference
-    #TODO(ahandley): Add test for the State filter (all caps vs pascal case)
+    It "should filter on state correctly when listing" {
+        $job = $table | Start-BqJob -Extract CSV "$gcspath/basic.csv" -Priority "BATCH"
+        $jobs = Get-BqJob -State "RUNNING"
+        $jobs.Count | Should Be 1
+        $jobs = Get-BqJob -State "PENDING"
+        $jobs.Count | Should Be 0
+    }
 
     It "should get specific job via pipeline" {
         $jobs = Get-BqJob
@@ -46,6 +52,18 @@ Describe "Get-BqJob" {
         $return.JobReference.JobId | Should Be $job.JobReference.JobId
     }
 
+    It "should get a job from another project if asked" {
+        try {
+            $bucket = New-GcsBucket "ps_alt_project_test_bucket_$r" -Project "google.com:g-cloudsharp"
+            $job = Start-BqJob -Extract CSV "gs://ps_alt_project_test_bucket_$r/basic.csv" -Project "google.com:g-cloudsharp"
+            $return = Get-BqJob $job
+            $return.JobReference.JobId | Should Be $job.JobReference.JobId
+            $return.JobReference.ProjectId | Should Be "google.com:g-cloudsharp"
+        } finally {
+            Remove-GcsBucket "ps_alt_project_test_bucket_$r" -Force -Project "google.com:g-cloudsharp"
+        }
+    }
+
     It "should throw when the job is not found"{
         { Get-BqJob $nonExistJob } | Should Throw "404"
     }
@@ -59,6 +77,7 @@ Describe "Get-BqJob" {
     }
 
     AfterAll {
+        Remove-GcsBucket "ps_test_$r" -Force
         $test_set | Remove-BqDataset -Force
     }
 }
@@ -74,7 +93,7 @@ Describe "BqJob-Query" {
         $filename = "$folder\classics.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
-            Set-BqSchema $table | Add-BqTableRows CSV $filename -SkipLeadingRows 1
+            Set-BqSchema $table | Add-BqTableRow CSV $filename -SkipLeadingRows 1
     }
 
     It "should query a pre-loaded table" {
@@ -147,11 +166,11 @@ Describe "BqJob-Copy" {
 
         $table = New-BqTable -Dataset $test_Set "table_$r"
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
-            Set-BqSchema $table | Add-BqTableRows CSV $filename -SkipLeadingRows 1
+            Set-BqSchema $table | Add-BqTableRow CSV $filename -SkipLeadingRows 1
 
         $table_other = New-BqTable -Dataset $test_Set "table_other_$r"
         New-BqSchema "Position" "INTEGER" | New-BqSchema "Number" "INTEGER" | New-BqSchema "Average" "FLOAT" | 
-            Set-BqSchema $table_other | Add-BqTableRows CSV $filename_other -SkipLeadingRows 1
+            Set-BqSchema $table_other | Add-BqTableRow CSV $filename_other -SkipLeadingRows 1
     }
 
     It "should copy a table with the same schema" {
@@ -221,7 +240,7 @@ Describe "BqJob-Extract-Load" {
         $filename = "$folder\classics.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
-            Set-BqSchema $table | Add-BqTableRows CSV $filename -SkipLeadingRows 1
+            Set-BqSchema $table | Add-BqTableRow CSV $filename -SkipLeadingRows 1
         $bucket = New-GcsBucket "ps_test_$r"
         $gcspath = "gs://ps_test_$r"
     }
@@ -364,21 +383,25 @@ Describe "Stop-BqJob" {
         $filename = "$folder\classics_large.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
-            Set-BqSchema $table | Add-BqTableRows CSV $filename -SkipLeadingRows 1
+            Set-BqSchema $table | Add-BqTableRow CSV $filename -SkipLeadingRows 1
         $bucket = New-GcsBucket "ps_test_$r"
         $gcspath = "gs://ps_test_$r"
     }
 
     It "should stop a query job" {
         $job = Start-BqJob -Query "select * from book_data.classics where Year > 1900"
-        $res = $job | Stop-Bqjob | Get-BqJob
+        $res = $job | Stop-Bqjob 
+        while ($res.Status.State -ne "DONE") {
+            $res = $res | Get-BqJob
+        }
         $res.Status.State | Should Be "DONE"
     }
 
     It "should handle jobs that are already done" {
         $job = Start-BqJob -Query "select * from book_data.classics" -Synchronous
-        $job = $job | Get-BqJob
-        $job.Status.State | Should Be "DONE"
+        while ($job.Status.State -ne "DONE") {
+            $job = $job | Get-BqJob
+        }
         $res = $job | Stop-Bqjob | Get-BqJob
         $res.Status.State | Should Be "DONE"
     }
@@ -386,8 +409,9 @@ Describe "Stop-BqJob" {
     It "should stop an extraction" {
         $job = $table | Start-BqJob -Extract CSV "$gcspath/basic.csv"
         $res = $job | Stop-Bqjob 
-        Start-Sleep -s 1
-        $res = $res | Get-BqJob
+        while ($res.Status.State -ne "DONE") {
+            $res = $res | Get-BqJob
+        }
         $res.Status.State | Should Be "DONE"
     }
 
