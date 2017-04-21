@@ -8,6 +8,7 @@ using System;
 using System.Net;
 using System.Management.Automation;
 using System.Collections.Generic;
+using System.Collections;
 
 namespace Google.PowerShell.BigQuery
 {
@@ -272,6 +273,7 @@ namespace Google.PowerShell.BigQuery
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.Default)]
         [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.SetLabel)]
         [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ClearLabel)]
+        [ValidateNotNull]
         public Dataset Dataset { get; set; }
 
         /// <summary>
@@ -280,7 +282,8 @@ namespace Google.PowerShell.BigQuery
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.SetLabel)]
-        public SwitchParameter SetLabel { get; set; }
+        [ValidateNotNullOrEmpty]
+        public Hashtable SetLabel { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -288,49 +291,25 @@ namespace Google.PowerShell.BigQuery
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ClearLabel)]
-        public SwitchParameter ClearLabel { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// Comma separated list of keys to set or clear from a dataset.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.SetLabel)]
-        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ClearLabel)]
         [ValidateNotNullOrEmpty]
-        public string[] Keys { get; set; }
-
-        /// <summary>
-        /// <para type="description">
-        /// List of values corresponding to the list of keys in -Keys.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = false, Position = 1, ParameterSetName = ParameterSetNames.SetLabel)]
-        public string[] Values { get; set; }
+        public string[] ClearLabel { get; set; }
 
         protected override void ProcessRecord()
         {
             switch (ParameterSetName)
             {
                 case ParameterSetNames.Default:
-                    break; //No processing needs to be done here
+                    break;
                 case ParameterSetNames.SetLabel:
-                    if (Keys.Length != Values.Length)
-                    {
-                        ThrowTerminatingError(new ErrorRecord(new Exception("Keys and Values must be of the same length"),
-                            $"Keys is of length {Keys.Length}, but Values is of length {Values.Length}.",
-                            ErrorCategory.InvalidArgument,
-                            Keys));
-                    }
                     Dataset.Labels = Dataset.Labels ?? new Dictionary<string, string>();
-                    for (int i = 0; i < Keys.Length; i++)
+                    foreach (var key in SetLabel.Keys)
                     {
-                        Dataset.Labels.Remove(Keys[i]);
-                        Dataset.Labels.Add(Keys[i], Values[i]);
+                        Dataset.Labels.Remove((string) key);
+                        Dataset.Labels.Add((string) key, (string) SetLabel[key]);
                     }
                     break;
                 case ParameterSetNames.ClearLabel:
-                    foreach (string key in Keys)
+                    foreach (string key in ClearLabel)
                     {
                         Dataset.Labels.Remove(key);
                     }

@@ -19,18 +19,22 @@ Describe "Get-BqDataset" {
         try {
             $data1 = New-BqDataset "test_label_1"
             $data2 = New-BqDataset "test_label_2"
-            $data2 = $data2 | Set-BqDataset -SetLabel "test" "one"
+            $data2 = $data2 | Set-BqDataset -SetLabel @{"test"="one"}
             $data3 = New-BqDataset "test_label_3"
-            $data3 = $data3 | Set-BqDataset -SetLabel "test","other" "three","two"
+            $data3 = $data3 | Set-BqDataset -SetLabel @{"test"="three";"other"="two"}
             
             $ds = Get-BqDataset -Filter "test"
             $ds.Count | Should Be 2
+            $ds[0].DatasetReference.DatasetId | Should Not Be "test_label_1"
+            $ds[1].DatasetReference.DatasetId | Should Not Be "test_label_1"
 
             $ds = Get-BqDataset -Filter "test:one"
             $ds.Count | Should Be 1
+            $ds[0].DatasetReference.DatasetId | Should Be "test_label_2"
 
             $ds = Get-BqDataset -Filter "other:two"
             $ds.Count | Should Be 1
+            $ds[0].DatasetReference.DatasetId | Should Be "test_label_3"
         } finally {
             Get-BqDataset "test_label_1" | Remove-BqDataset
             Get-BqDataset "test_label_2" | Remove-BqDataset
@@ -158,7 +162,7 @@ Describe "Set-BqDataset" {
     It "should label things properly" {
         try {
             $data = New-BqDataset "test_label_1"
-            $data = $data | Set-BqDataset -SetLabel "test" "one"
+            $data = $data | Set-BqDataset -SetLabel @{"test"="one"}
             $data.Labels.Count | Should Be 1
             $data.Labels["test"] | Should Be "one"
         } finally {
@@ -169,7 +173,7 @@ Describe "Set-BqDataset" {
     It "should handle a lot of labels at once" {
         try {
             $data = New-BqDataset "test_label_2"
-            $data = $data | Set-BqDataset -SetLabel "test","other","third" "one","two","three"
+            $data = $data | Set-BqDataset -SetLabel @{"test"="one";"other"="two";"third"="three"}
             $data.Labels.Count | Should Be 3
             $data.Labels["test"] | Should Be "one"
             $data.Labels["other"] | Should Be "two"
@@ -182,7 +186,7 @@ Describe "Set-BqDataset" {
     It "should clear just one label" {
         try {
             $data = New-BqDataset "test_label_3"
-            $data = $data | Set-BqDataset -SetLabel "test","other" "one","two"
+            $data = $data | Set-BqDataset -SetLabel @{"test"="one";"other"="two"}
             $data = $data | Set-BqDataset -ClearLabel "test"
             $data.Labels.Count | Should Be 1
             $data.Labels["other"] | Should Be "two"
@@ -191,11 +195,11 @@ Describe "Set-BqDataset" {
         }
     }
 
-    It "should clear multiple labels" {
+    It "should clear multiple labels + nonexistant labels" {
         try {
             $data = New-BqDataset "test_label_4"
-            $data = $data | Set-BqDataset -SetLabel "test","other" "one","two"
-            $data = $data | Set-BqDataset -ClearLabel "test", "other"
+            $data = $data | Set-BqDataset -SetLabel @{"test"="one";"other"="two"}
+            $data = $data | Set-BqDataset -ClearLabel "test","other","doesnotexist"
             $data.Labels | Should Be $null
         } finally {
             Get-BqDataset "test_label_4" | Remove-BqDataset
