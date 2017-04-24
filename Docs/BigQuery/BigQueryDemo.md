@@ -126,7 +126,7 @@ Remove-GcsBucket "cab_data"
 # Next steps
 I’ve just shown you how to use BigQuery within PowerShell, and there’s an entire universe of data that can be analyzed. To get started on your own analytics projects:
 
-* Install the BigQuery cmdlets from the [GitHub repo](https://github.com/GoogleCloudPlatform/google-cloud-powershell#installation). 
+* Install the BigQuery cmdlets from the [GitHub repo](https://github.com/GoogleCloudPlatform/google-cloud-powershell). 
 * Review the [cmdlet docs](http://googlecloudplatform.github.io/google-cloud-powershell/#/).  
 * For more on BigQuery itself, see the [official product page](https://cloud.google.com/bigquery/docs/).
 
