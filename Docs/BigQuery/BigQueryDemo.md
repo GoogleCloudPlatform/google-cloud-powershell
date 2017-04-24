@@ -10,7 +10,7 @@ In this post, I’ll demonstrate how to use these cmdlets. The demo is based is 
 Before you begin, if you already have a Google Cloud project, skip to **BigQuery Setup**:
 Go to the [Cloud Quickstart](https://cloud.google.com/bigquery/quickstart-web-ui) page and follow the “Before you begin” steps.
 
-IMAGE 1
+![Cloud Quickstart: Before you begin]( ./screenshot101.png "Before you begin")
 
 Set your project as the default project for powershell.
 
@@ -19,9 +19,6 @@ gcloud config set project "your-project-name"
 ```
 
 Import the Cloud Tools for PowerShell module using [the steps listed on the GitHub repo](https://github.com/GoogleCloudPlatform/google-cloud-powershell#installation).
-
-IMAGE 2
-
 
 ## BigQuery setup
 The BigQuery dataset with historical information about cab rides is an interesting playground for data analysis. This table contains pickup and dropoff locations, timestamps, fare information and other assorted metadata from New York City yellow cab rides from 2009 or later. We'll use that data, combined with BigQuery, to identify the best places for drivers who want to maximize their profit.  
@@ -51,7 +48,7 @@ Make a new table with the schema and dataset created above.
 $table = $dataset | New-BqTable "output" -Schema $schema
 ```
 
-IMAGE 3
+![Dataset and Table creation](./screenshot103.png "Dataset and Table creation")
 
 
 ## Running queries
@@ -67,7 +64,7 @@ $query = "SELECT pickup_latitude, pickup_longitude, dropoff_latitude, dropoff_lo
 $job = Start-BqJob -Query $query -Destination $table
 ```
 
-IMAGE 4
+![Initial query job](./screenshot104.png "Initial query job")
 
 Run another query on the initial results table to list just latitude and longitude of top-200 scoring records.
 
@@ -93,17 +90,20 @@ Download the CSV file using the Cloud Storage cmdlets.
 Read-GcsObject "cab_data" "pickup_200.csv" -OutFile "C:\Users\alexhandley\Documents\out.csv"
 ```
 
-IMAGE 5
+![Second query and file export](./screenshot105.png "Second query and file export")
 
 
 # Mapping and analysis
 Now that you have a table with just the refined coordinate data, you can [plot it on a custom Google Map](https://www.google.com/maps/d/u/0/). Create a new map and import your locations from the CSV file. Follow the dialogue box prompts on the site to import the file and select latitude and longitude columns. When asked for a column of names, just select either one because you don’t need the points to be named.
   
-IMAGES 6-9
+![Create a new map button](./screenshot106.png "Create a new map button")
+![Import CSV data](./screenshot107.png "Import CSV data")
+![Latitude and longitude selection](./screenshot108.png "Latitude and longitude selection")
+![Zoomed out map](./screenshot109.png "Zoomed out map")
 
 And there you have it! Scroll toward New York City to focus in the center of the mass of dots. Observe the locations plotted on the map, and identify clusters and holes. The green regions are clusters of high scoring trips, which means short and high-value rides. Drivers should stay in these areas to get the best trips and away from the red regions, which have a much smaller projected yield.
 
-IMAGE 10
+![Final marked up map](./screenshot110.png "Final marked up map")
 
 
 # Repetition and cleanup
