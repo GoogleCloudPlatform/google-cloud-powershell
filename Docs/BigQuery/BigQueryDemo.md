@@ -8,6 +8,7 @@ In this post, I’ll demonstrate how to use these cmdlets. The demo is based is 
 
 ## Project setup
 Before you begin, if you already have a Google Cloud project, skip to **BigQuery Setup**:
+
 Go to the [Cloud Quickstart](https://cloud.google.com/bigquery/quickstart-web-ui) page and follow the “Before you begin” steps.
 
 ![Cloud Quickstart: Before you begin]( ./screenshot101.png "Before you begin")
