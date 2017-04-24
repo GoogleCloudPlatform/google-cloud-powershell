@@ -23,15 +23,15 @@ namespace Google.PowerShell.BigQuery
     /// specified, and any number of TableList.TablesData objects otherwise.
     /// </para>
     /// <example>
-    ///   <code>PS C:\> Get-BqDataset “my_data” | Get-BqTable</code>
+    ///   <code>PS C:\> Get-BqDataset "my_data" | Get-BqTable</code>
     ///   <para>This will list all of the tables in the dataset "my_data" in the default project.</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-BqDataset “my_data” | Get-BqTable "my_table"</code>
+    ///   <code>PS C:\> Get-BqDataset "my_data" | Get-BqTable "my_table"</code>
     ///   <para>This will return a Table descriptor object for "my_table" in "my_data".</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-BqTable -Project "my_proj" -Dataset "my_data" "my_table"</code>
+    ///   <code>PS C:\> Get-BqTable "my_table" -Project "my_proj" -Dataset "my_data"</code>
     ///   <para>This returns a Table descriptor object for this project:dataset:table combination.</para>
     /// </example> 
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/tables)">
@@ -175,8 +175,8 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <example>
     ///   <code>
-    /// PS C:\> $my_tab = Get-BqTable -DatasetId “my_data” “my_table”
-    /// PS C:\> $my_tab.Description = “Some new description!”
+    /// PS C:\> $my_tab = Get-BqTable "my_table" -DatasetId "my_data" 
+    /// PS C:\> $my_tab.Description = "Some new description!"
     /// PS C:\> $my_tab | Set-BqTable
     ///   </code>
     ///   <para>This is an example of how to locally update a field within a table and then 
@@ -269,16 +269,16 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <example>
     ///   <code>
-    /// PS C:\> New-BqTable “new_tab” 
-    ///                     -Dataset “my_data” 
-    ///                     -Description “Some nice data!” 
+    /// PS C:\> New-BqTable "new_tab" 
+    ///                     -Dataset "my_data" 
+    ///                     -Description "Some nice data!" 
     ///                     -Expiration (60*60*24*30)
     ///   </code>
     ///   <para>This makes a new Table called "new_tab" with a lifetime of 30 days.</para>
     /// </example>
     /// <example>
     ///   <code>
-    /// PS C:\> Get-BqDataset "my_data" | New-BqTable “new_tab”
+    /// PS C:\> Get-BqDataset "my_data" | New-BqTable "new_tab"
     ///   </code>
     ///   <para>This shows how the pipeline can be used to specify Dataset and Project.</para>
     /// </example>
@@ -456,7 +456,7 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <example>
     ///   <code>
-    /// PS C:\> $table = Get-BqTable -Dataset "my_dataset" -Table "my_table"
+    /// PS C:\> $table = Get-BqTable "my_table" -Dataset "my_dataset"
     /// PS C:\> $table | Remove-BqTable
     ///   </code>
     ///   <para>This will remove "my_table" if it is empty, and will prompt for user confirmation 
@@ -464,13 +464,7 @@ namespace Google.PowerShell.BigQuery
     /// </example>
     /// <example>
     ///   <code>
-    /// PS C:\> Remove-BqTable -DatasetId "my_dataset" -Table "my_table" -Force
-    ///   </code>
-    ///   <para>This will remove "my_table" and all of its data.</para>
-    /// </example>
-    /// <example>
-    ///   <code>
-    /// PS C:\> Remove-BqTable -DatasetId "my_dataset" -Table "my_table" -Force
+    /// PS C:\> Remove-BqTable "my_table" -DatasetId "my_dataset" -Force
     ///   </code>
     ///   <para>This will remove "my_table" and all of its data.</para>
     /// </example>

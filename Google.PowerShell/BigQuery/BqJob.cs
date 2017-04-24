@@ -193,15 +193,26 @@ namespace Google.PowerShell.BigQuery
     /// <para type="description">
     /// Starts a new asynchronous job. This call requires the "Viewer" role. The Type parameter 
     /// can be "-Query", "-Copy", "-Load", or "-Extract".  Each of these job types has its own set of 
-    /// type-specific parameters to define what the job does.  Job types all share a set of 
-    /// parameters that define job attributes such as start time and handle statistics such 
-    /// as rows and raw amounts of data processed. This cmdlet supports "ShouldProcess()", and as 
-    /// such, has the "-WhatIf" parameter to show the projected results of the cmdlet without 
-    /// actually changing any server resources. 
+    /// type-specific parameters to define what the job does (see below).  Job types all share a set 
+    /// of parameters that define job attributes such as start time and handle statistics such 
+    /// as rows and raw amounts of data processed. This PowerShell module does not support billing 
+    /// tier or maximum billed data control for individual queries, so the project defaults will be 
+    /// taken. This cmdlet supports "ShouldProcess()", and as such, has the "-WhatIf" parameter to 
+    /// show the projected results of the cmdlet without actually changing any server resources. 
+    /// </para>
+    /// <para type="description">
     /// Use "-PollUntilComplete" to have the cmdlet treat the job as a blocking operation.  
     /// It will poll until the job has finished, and then it will return a job reference. 
     /// Tables referenced in queries should be fully qualified, but to use any that are not, 
     /// the DefaultDataset parameter must be used to specify where to find them.
+    /// </para>
+    /// <para type="description">
+    /// | All Job Flags: -Project -PollUntilComplete
+    /// | Query Job Flags: -QueryString, -UseLegacySql, -DefaultDataset, -Priority
+    /// | Copy Job Flags: -Source, -Destination, WriteMode
+    /// | Load Job Flags: -Destination, -Type, -SourceUris, -Encoding, -FieldDelimiter, -Quote, -SkipLeadingRows, 
+    /// -AllowUnknownFields, -AllowJaggedRows, -AllowQuotedNewlines
+    /// | Extract Job Flags: -Source, -Type, -DestinationUris, -FieldDelimiter, -Compress, -NoHeader
     /// </para>
     /// <example>
     ///   <code>

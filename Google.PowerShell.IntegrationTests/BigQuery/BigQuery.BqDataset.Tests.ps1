@@ -15,6 +15,33 @@ Describe "Get-BqDataset" {
         }
     }
 
+    It "should list by label" {
+        try {
+            $data1 = New-BqDataset "test_label_1"
+            $data2 = New-BqDataset "test_label_2"
+            $data2 = $data2 | Set-BqDataset -SetLabel @{"pstestlabel"="one"}
+            $data3 = New-BqDataset "test_label_3"
+            $data3 = $data3 | Set-BqDataset -SetLabel @{"pstestlabel"="three";"psaltlabel"="two"}
+            
+            $ds = Get-BqDataset -Filter "pstestlabel"
+            $ds.Count | Should Be 2
+            $ds[0].DatasetReference.DatasetId | Should Not Be "test_label_1"
+            $ds[1].DatasetReference.DatasetId | Should Not Be "test_label_1"
+
+            $ds = Get-BqDataset -Filter "pstestlabel:one"
+            $ds.Count | Should Be 1
+            $ds[0].DatasetReference.DatasetId | Should Be "test_label_2"
+
+            $ds = Get-BqDataset -Filter "psaltlabel:two"
+            $ds.Count | Should Be 1
+            $ds[0].DatasetReference.DatasetId | Should Be "test_label_3"
+        } finally {
+            Get-BqDataset "test_label_1" | Remove-BqDataset
+            Get-BqDataset "test_label_2" | Remove-BqDataset
+            Get-BqDataset "test_label_3" | Remove-BqDataset
+        }
+    }
+
     It "should get a dataset that exists and has permissions" {
         try {
             New-BqDataset "test_id_4"
@@ -62,11 +89,11 @@ Describe "Get-BqDataset" {
     }
 
     It "should handle projects that do not exist" {
-        { Get-BqDataset -Project $nonExistProject "test_id_5" } | Should Throw 404
+        { Get-BqDataset "test_id_5" -Project $nonExistProject} | Should Throw 404
     }
 
     It "should handle projects that the user does not have permissions for" {
-        { Get-BqDataset -Project $accessErrProject "test_id_5" } | Should Throw 400
+        { Get-BqDataset "test_id_5" -Project $accessErrProject } | Should Throw 400
     }
 }
 
@@ -120,16 +147,64 @@ Describe "Set-BqDataset" {
     } 
 
     It "should add when a dataset does not exist" {
-        $data = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Dataset
-        $data.DatasetReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.DatasetReference
-        $data.DatasetReference.DatasetId = "test_dataset_id7"
-        $data.DatasetReference.ProjectId = $project
-        $set = Set-BqDataset $data
-        $set.DatasetReference.DatasetId | Should Be "test_dataset_id7"
+        try {
+            $data = New-Object -TypeName Google.Apis.Bigquery.v2.Data.Dataset
+            $data.DatasetReference = New-Object -TypeName Google.Apis.Bigquery.v2.Data.DatasetReference
+            $data.DatasetReference.DatasetId = "test_dataset_id7"
+            $data.DatasetReference.ProjectId = $project
+            $set = Set-BqDataset $data
+            $set.DatasetReference.DatasetId | Should Be "test_dataset_id7"
+        } finally {
+            Get-BqDataset "test_dataset_id7" | Remove-BqDataset
+        }
     } 
+    
+    It "should label things properly" {
+        try {
+            $data = New-BqDataset "test_label_1"
+            $data = $data | Set-BqDataset -SetLabel @{"test"="one"}
+            $data.Labels.Count | Should Be 1
+            $data.Labels["test"] | Should Be "one"
+        } finally {
+            Get-BqDataset "test_label_1" | Remove-BqDataset
+        }
+    }
 
-    #TODO(ahandley): Find reason behind occasional (25%) 412 Precondition error (If-Match - header).
+    It "should handle a lot of labels at once" {
+        try {
+            $data = New-BqDataset "test_label_2"
+            $data = $data | Set-BqDataset -SetLabel @{"test"="one";"other"="two";"third"="three"}
+            $data.Labels.Count | Should Be 3
+            $data.Labels["test"] | Should Be "one"
+            $data.Labels["other"] | Should Be "two"
+            $data.Labels["third"] | Should Be "three"
+        } finally {
+            Get-BqDataset "test_label_2" | Remove-BqDataset
+        }
+    }
 
+    It "should clear just one label" {
+        try {
+            $data = New-BqDataset "test_label_3"
+            $data = $data | Set-BqDataset -SetLabel @{"test"="one";"other"="two"}
+            $data = $data | Set-BqDataset -ClearLabel "test"
+            $data.Labels.Count | Should Be 1
+            $data.Labels["other"] | Should Be "two"
+        } finally {
+            Get-BqDataset "test_label_3" | Remove-BqDataset
+        }
+    }
+
+    It "should clear multiple labels + nonexistant labels" {
+        try {
+            $data = New-BqDataset "test_label_4"
+            $data = $data | Set-BqDataset -SetLabel @{"test"="one";"other"="two"}
+            $data = $data | Set-BqDataset -ClearLabel "test","other","doesnotexist"
+            $data.Labels | Should Be $null
+        } finally {
+            Get-BqDataset "test_label_4" | Remove-BqDataset
+        }
+    }
 }
 
 Describe "New-BqDataset" {
@@ -235,12 +310,12 @@ Describe "New-BqDataset" {
     }
 
     It "should throw when you try to add to a project that doesnt exist" {
-        { New-BqDataset -Project $nonExistProject "test_data_id8" `
+        { New-BqDataset "test_data_id8" -Project $nonExistProject `
             -Name "Testdata" -Description "Some interesting data!" } | Should Throw 404
     }
 
     It "should throw when you try to add to a project that is not yours" {
-        { New-BqDataset -Project $accessErrProject "test_data_id9" `
+        { New-BqDataset "test_data_id9" -Project $accessErrProject `
             -Name "Testdata" -Description "Some interesting data!" } | Should Throw 400
     }
 }
@@ -279,7 +354,7 @@ Describe "Remove-BqDataset" {
 
     It "should delete a dataset by value with explicit project" {
         try {
-            New-BqDataset -Project $project "test_set_explicit"
+            New-BqDataset "test_set_explicit" -Project $project 
         } finally {
             Remove-BqDataset "test_set_explicit" -Project $project
             { Get-BqDataset "test_set_explicit" } | Should Throw 404
@@ -305,15 +380,15 @@ Describe "Remove-BqDataset" {
     }
 
     It "should handle projects that do not exist" {
-        { Remove-BqDataset -Project $nonExistProject $nonExistDataset } | Should Throw 404
+        { Remove-BqDataset $nonExistDataset -Project $nonExistProject } | Should Throw 404
     }
 
     It "should handle project:dataset combinations that do not exist" {
-        { Remove-BqDataset -Project $project $nonExistDataset } | Should Throw 404
+        { Remove-BqDataset $nonExistDataset -Project $project } | Should Throw 404
     }
 
     It "should handle projects that the user does not have permissions for" {
-        { Remove-BqDataset -Project $accessErrProject $nonExistDataset } | Should Throw 400
+        { Remove-BqDataset $nonExistDataset -Project $accessErrProject } | Should Throw 400
     }
 }
 

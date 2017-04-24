@@ -8,6 +8,8 @@ using System;
 using System.Net;
 using System.Management.Automation;
 using System.Collections.Generic;
+using System.Collections;
+using System.Linq;
 
 namespace Google.PowerShell.BigQuery
 {
@@ -93,12 +95,11 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// Filters results by label. The syntax is "labels./<name/>[:/<value/>]". Multiple filters can 
-        /// be ANDed together by a space.
+        /// Filters results by label. The syntax for each label is "/<name/>[:/<value/>]".
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.List)]
-        public string Filter { get; set; }
+        public string[] Filter { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -154,7 +155,7 @@ namespace Google.PowerShell.BigQuery
         {
             DatasetsResource.ListRequest lRequest = Service.Datasets.List(project);
             lRequest.All = IncludeHidden;
-            lRequest.Filter = Filter;
+            lRequest.Filter = (Filter == null) ? null : string.Join(" ", Filter.Select(item => $"labels.{item}"));
             do
             {
                 DatasetList response = lRequest.Execute();
@@ -200,7 +201,8 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <para type="description">
     /// Updates information describing an existing BigQuery dataset. If the dataset passed in does not
-    /// already exist on the server, it will be inserted. This cmdlet returns a Dataset object.
+    /// already exist on the server, it will be inserted. Use the -SetLabel and -ClearLabel flags to 
+    /// manage the dataset's key:value label pairs. This cmdlet returns a Dataset object.
     /// </para>
     /// <example>
     ///   <code>
@@ -212,20 +214,32 @@ namespace Google.PowerShell.BigQuery
     /// </example>
     /// <example>
     ///   <code>
-    /// PS C:\> $updatedSet = Get-BqDataset "my_dataset"
-    /// PS C:\> $updatedSet.DefaultTableExpirationMs = 60 * 60 * 24 * 7
-    /// PS C:\> $updatedSet.Description = "A set of tables that last for exactly one week."
-    /// PS C:\> Set-BqDataset -Dataset $updatedSet
+    /// PS C:\> $data = Get-BqDataset "test_set"
+    /// PS C:\> $data = $data | Set-BqDataset -SetLabel "test","other" "three","two"
     ///   </code>
-    ///   <para>This will update the values stored for my_dataset and shows how to pass it in as a parameter.</para>
+    ///   <para>This will add the labels "test" and "other" with their values to "test_set".</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    /// PS C:\> $data = Get-BqDataset "test_set"
+    /// PS C:\> $data = $data | Set-BqDataset -ClearLabel "test","other"
+    ///   </code>
+    ///   <para>This is the opposite of the above. It removes the labels "test" and "other" from the Dataset.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets)">
     /// [BigQuery Datasets]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Set, "BqDataset")]
+    [Cmdlet(VerbsCommon.Set, "BqDataset", DefaultParameterSetName = ParameterSetNames.Default)]
     public class SetBqDataset : BqCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string Default = "Default";
+            public const string SetLabel = "SetLabel";
+            public const string ClearLabel = "ClearLabel";
+        }
+
         /// <summary>
         /// <para type="description">
         /// The project to look for datasets in. If not set via PowerShell parameter processing, will
@@ -242,16 +256,60 @@ namespace Google.PowerShell.BigQuery
         /// dataset in the project specified.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.Default)]
+        [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.SetLabel)]
+        [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = ParameterSetNames.ClearLabel)]
+        [ValidateNotNull]
         public Dataset Dataset { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Sets the labels in Keys to the values in Values for the target Dataset.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.SetLabel)]
+        [ValidateNotNullOrEmpty]
+        public Hashtable SetLabel { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Clears the keys in Keys for the target Dataset.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ClearLabel)]
+        [ValidateNotNullOrEmpty]
+        public string[] ClearLabel { get; set; }
 
         protected override void ProcessRecord()
         {
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.Default:
+                    break;
+                case ParameterSetNames.SetLabel:
+                    Dataset.Labels = Dataset.Labels ?? new Dictionary<string, string>();
+                    foreach (var key in SetLabel.Keys)
+                    {
+                        Dataset.Labels.Remove((string) key);
+                        Dataset.Labels.Add((string) key, (string) SetLabel[key]);
+                    }
+                    break;
+                case ParameterSetNames.ClearLabel:
+                    foreach (string key in ClearLabel)
+                    {
+                        Dataset.Labels.Remove(key);
+                    }
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+
             Dataset response;
-            bool needToInsert = false;
             var request = Service.Datasets.Update(Dataset,
                 Dataset.DatasetReference.ProjectId,
                 Dataset.DatasetReference.DatasetId);
+            //necessary because of wacky things happening when you throw inside a catch
+            bool needToInsert = false;
 
             try
             {
@@ -422,6 +480,10 @@ namespace Google.PowerShell.BigQuery
             try
             {
                 Dataset response = request.Execute();
+                // Send a Get request to correctly populate the ETag field.
+                DatasetsResource.GetRequest getCorrectETag = 
+                    Service.Datasets.Get(Project, response.DatasetReference.DatasetId);
+                response = getCorrectETag.Execute();
                 WriteObject(response);
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)

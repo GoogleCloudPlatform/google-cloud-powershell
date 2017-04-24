@@ -90,7 +90,7 @@
     <None Include="BigQuery\BigQuery.BqJob.Tests.ps1" />
     <None Include="BigQuery\BigQuery.BqTable.Tests.ps1" />
     <None Include="BigQuery\BigQuery.BqDataset.Tests.ps1" />
-    <None Include="BigQuery\BigQuery.BqTableRows.Tests.ps1" />
+    <None Include="BigQuery\BigQuery.BqTableRow.Tests.ps1" />
     <None Include="BigQuery\BqCmdlets.ps1" />
     <None Include="Compute\Compute.GceAddress.Tests.ps1" />
     <None Include="Compute\Compute.GceAttachedDiskConfig.Tests.ps1" />

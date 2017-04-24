@@ -208,24 +208,28 @@ namespace Google.PowerShell.BigQuery
     /// <para type="description">
     /// This command takes a Table and sets its schema to be the aggregation of all TableFieldSchema 
     /// objects passed in. If multiple columns are passed in with the same "-Name" field, an error 
-    /// will be thrown. If no Table argument is passed in, the Schema object will be written and the
-    /// cmdlet will quit. Otherwise, this command returns a Table showing the updated server state.
+    /// will be thrown. If no Table argument is passed in, the Schema object will be written to the 
+    /// pipeline and the cmdlet will quit. This can be used in combination with the -Schema flag in
+    /// New-BqTable to apply one schema to mulitple tables. If a Table is passed in, this command 
+    /// returns a Table object showing the updated server state.
     /// <example>
     ///   <code>
-    /// PS C:\> $table = Get-BqDataset “book_data” | Get-BqTable "21st_century"
-    /// PS C:\> $table = New-BqSchema -Name “Title” -Type “STRING” | Set-BqSchema $table
+    /// PS C:\> $table = Get-BqTable "21st_century" -DatasetId "book_data"
+    /// PS C:\> $table = New-BqSchema -Name "Title" -Type "STRING" | Set-BqSchema $table
     ///   </code>
     ///   <para>This will create a new schema, assign it to a table, and then send the 
     ///   revised table to the server to be saved.</para>
-    /// </example> 
+    /// </example>
     /// <example>
     ///   <code>
-    /// PS C:\> $schema = New-BqSchema -Name “Title” -Type “STRING” | Set-BqSchema 
-    /// PS C:\> New-BqTable "my_table" -DatasetId "mydataset" -Schema $schema
+    /// PS C:\> $schema = New-BqSchema -Name "Title" -Type "STRING" | Set-BqSchema
+    /// PS C:\> $table1 = New-BqTable "my_table" -DatasetId "my_dataset" -Schema $schema
+    /// PS C:\> $table2 = New-BqTable "another_table" -DatasetId "my_dataset" -Schema $schema
     ///   </code>
-    ///   <para>This will create a new schema, assign it to a table, and then send the 
-    ///   revised table to the server to be saved.</para>
+    ///   <para>This will create a new schema and save it to a variable so it can be passed into 
+    ///   multiple table creation cmdlets.</para>
     /// </example> 
+    /// </para>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/tables)">
     /// [BigQuery Tables]
     /// </para>
@@ -322,15 +326,15 @@ namespace Google.PowerShell.BigQuery
     /// <example>
     ///   <code>
     /// PS C:\> $filename = "C:\data.json"
-    /// PS C:\> $table = New-BqTable -DatasetId "db_name" "tab_name"
-    /// PS C:\> $table | Add-BqTableRows JSON $filename 
+    /// PS C:\> $table = New-BqTable "tab_name" -DatasetId "db_name"
+    /// PS C:\> $table | Add-BqTableRow JSON $filename 
     ///   </code>
     ///   <para>This code will ingest a newline-delimited JSON file from the location "$filename" on local 
     ///   disk to db_name:tab_name in BigQuery.</para>
     ///   <code>
     /// PS C:\> $filename = "C:\data.csv"
-    /// PS C:\> $table = New-BqTable -DatasetId "db_name" "tab_name"
-    /// PS C:\> $table | Add-BqTableRows CSV $filename -SkipLeadingRows 1 -AllowJaggedRows -AllowUnknownFields
+    /// PS C:\> $table = New-BqTable "tab_name" -DatasetId "db_name"
+    /// PS C:\> $table | Add-BqTableRow CSV $filename -SkipLeadingRows 1 -AllowJaggedRows -AllowUnknownFields
     ///   </code>
     ///   <para>This code will take a CSV file and upload it to a BQ table.  It will set missing fields 
     ///   from the CSV to null, and it will keep rows that have fields that aren't in the table's schema.
@@ -340,8 +344,8 @@ namespace Google.PowerShell.BigQuery
     /// [BigQuery Tabledata]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Add, "BqTableRows")]
-    public class AddBqTableRows : BqCmdlet
+    [Cmdlet(VerbsCommon.Add, "BqTableRow")]
+    public class AddBqTableRow : BqCmdlet
     {
         /// <summary>
         /// <para type="description">
@@ -494,8 +498,8 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <example>
     ///   <code>
-    /// PS C:\> $table = get-bqtable -DatasetID "book_data" "classics"
-    /// PS C:\> $list = $table | get-bqTableRows
+    /// PS C:\> $table = Get-BqTable "classics" -DatasetID "book_data"
+    /// PS C:\> $list = $table | Get-BqTableRow
     ///   </code>
     ///   <para>Fetches all of the rows in book_data:classics and exports them to "$list".</para>
     /// </example> 
@@ -503,8 +507,8 @@ namespace Google.PowerShell.BigQuery
     /// [BigQuery Tabledata]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Get, "BqTableRows")]
-    public class GetBqTableRows : BqCmdlet
+    [Cmdlet(VerbsCommon.Get, "BqTableRow")]
+    public class GetBqTableRow : BqCmdlet
     {
         /// <summary>
         /// <para type="description">
