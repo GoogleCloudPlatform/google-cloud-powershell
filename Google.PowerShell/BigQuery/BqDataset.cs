@@ -319,7 +319,6 @@ namespace Google.PowerShell.BigQuery
             }
 
             Dataset response;
-            Dataset.ETag = null;
             var request = Service.Datasets.Update(Dataset,
                 Dataset.DatasetReference.ProjectId,
                 Dataset.DatasetReference.DatasetId);
@@ -495,6 +494,10 @@ namespace Google.PowerShell.BigQuery
             try
             {
                 Dataset response = request.Execute();
+                // Send a Get request to correctly populate the ETag field.
+                DatasetsResource.GetRequest getCorrectETag = 
+                    Service.Datasets.Get(Project, response.DatasetReference.DatasetId);
+                response = getCorrectETag.Execute();
                 WriteObject(response);
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)

@@ -19,20 +19,20 @@ Describe "Get-BqDataset" {
         try {
             $data1 = New-BqDataset "test_label_1"
             $data2 = New-BqDataset "test_label_2"
-            $data2 = $data2 | Set-BqDataset -SetLabel @{"test"="one"}
+            $data2 = $data2 | Set-BqDataset -SetLabel @{"pstestlabel"="one"}
             $data3 = New-BqDataset "test_label_3"
-            $data3 = $data3 | Set-BqDataset -SetLabel @{"test"="three";"other"="two"}
+            $data3 = $data3 | Set-BqDataset -SetLabel @{"pstestlabel"="three";"psaltlabel"="two"}
             
-            $ds = Get-BqDataset -Filter "test"
+            $ds = Get-BqDataset -Filter "pstestlabel"
             $ds.Count | Should Be 2
             $ds[0].DatasetReference.DatasetId | Should Not Be "test_label_1"
             $ds[1].DatasetReference.DatasetId | Should Not Be "test_label_1"
 
-            $ds = Get-BqDataset -Filter "test:one"
+            $ds = Get-BqDataset -Filter "pstestlabel:one"
             $ds.Count | Should Be 1
             $ds[0].DatasetReference.DatasetId | Should Be "test_label_2"
 
-            $ds = Get-BqDataset -Filter "other:two"
+            $ds = Get-BqDataset -Filter "psaltlabel:two"
             $ds.Count | Should Be 1
             $ds[0].DatasetReference.DatasetId | Should Be "test_label_3"
         } finally {
