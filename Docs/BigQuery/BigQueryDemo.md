@@ -1,4 +1,4 @@
-# BigQuery in PowerShell Demo
+# BigQuery for PowerShell Demo
 ##### Author: Alex Handley, SWE Intern
 
 [Google BigQuery](https://cloud.google.com/bigquery/) is a versatile tool that solves the problem of storing and querying massive datasets without having to worry about data formats, underlying resources, and other things that distract you from the analysis at hand. To help those BigQuery users who virtually live in Microsoft PowerShell, I’ve written a set of PowerShell cmdlets for BigQuery--allowing them to script BigQuery commands straight from the PowerShell environment that they know and love.  
