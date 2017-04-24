@@ -9,6 +9,7 @@ using System.Net;
 using System.Management.Automation;
 using System.Collections.Generic;
 using System.Collections;
+using System.Linq;
 
 namespace Google.PowerShell.BigQuery
 {
@@ -154,7 +155,7 @@ namespace Google.PowerShell.BigQuery
         {
             DatasetsResource.ListRequest lRequest = Service.Datasets.List(project);
             lRequest.All = IncludeHidden;
-            lRequest.Filter = MakeFilter();
+            lRequest.Filter = (Filter == null) ? null : string.Join(" ", Filter.Select(item => $"labels.{item}"));
             do
             {
                 DatasetList response = lRequest.Execute();
@@ -191,21 +192,6 @@ namespace Google.PowerShell.BigQuery
                     dataset));
                 return null;
             }
-        }
-
-        /// <summary>
-        /// Helper function to take an array of key:value filters and turn it into a filter string.
-        /// </summary>
-        /// <returns></returns>
-        public string MakeFilter()
-        {
-            if (Filter == null) { return null; }
-            string labels = "";
-            foreach (string f in Filter)
-            {
-                labels = $"{labels} labels.{f}";
-            }
-            return labels;
         }
     }
 
