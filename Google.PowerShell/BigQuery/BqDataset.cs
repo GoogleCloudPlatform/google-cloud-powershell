@@ -21,17 +21,12 @@ namespace Google.PowerShell.BigQuery
     /// If a Dataset is specified, it will return an object describing that dataset. If no Dataset is 
     /// specified, this cmdlet lists all datasets in the specified project to which you have been granted the 
     /// "READER" dataset role. The "-IncludeHidden" flag will include hidden datasets in the search results. 
-    /// The "-Filter" flag allows you to filter results by label. The syntax to filter is "labels.name[:value]". 
-    /// Multiple filters can be ANDed together by connecting with a space. See the link below for more 
-    /// information. If no Project is specified, the default project will be used. This cmdlet returns any 
-    /// number of DatasetList.DatasetData objects if no Dataset was specified, or a Dataset otherwise.
+    /// The "-Filter" flag allows you to filter results by label. The syntax to filter is "name[:value]". 
+    /// Multiple filters can be ANDed together by passing them in as a string array. See the link below for  
+    /// more on labels. If no Project is specified, the default project will be used. If no Dataset was 
+    /// specified, this cmdlet returns any number of DatasetList.DatasetData objects. Otherwise, it returns
+    /// a Dataset object.
     /// </para>
-    /// <example>
-    ///   <code>
-    /// PS C:\> Get-BqDataset "my-dataset"
-    ///   </code>
-    ///   <para>This returns a Dataset object from the default project of the dataset with id "my-dataset".</para>
-    /// </example>
     /// <example>
     ///   <code>
     /// PS C:\> Get-BqDataset -Project my-project
@@ -40,22 +35,22 @@ namespace Google.PowerShell.BigQuery
     /// </example>
     /// <example>
     ///   <code>
-    /// PS C:\> Get-BqDataset -IncludeHidden
-    ///   </code>
-    ///   <para>This lists all of the datasets in the default Cloud project for your account.</para>
-    /// </example>
-    /// <example>
-    ///   <code>
-    /// PS C:\> Get-BqDataset -IncludeHidden -Filter "labels.department:shipping"
+    /// PS C:\> Get-BqDataset -IncludeHidden -Filter "department:shipping"
     ///   </code>
     ///   <para>This lists all of the datasets in the default Cloud project for your account that have 
     ///   the key "department" with the value "shipping".</para>
     /// </example>
     /// <example>
     ///   <code>
-    /// PS C:\> Get-BqDataset -IncludeHidden -Filter "labels.department:shipping labels.location:usa"
+    /// PS C:\> Get-BqDataset -IncludeHidden -Filter "department:shipping","location:usa"
     ///   </code>
-    ///   <para>This is an example of ANDing multiple filters.</para>
+    ///   <para>This is an example of ANDing multiple filters for a list request.</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    /// PS C:\> Get-BqDataset "my-dataset"
+    ///   </code>
+    ///   <para>This returns a Dataset object from the default project of the dataset with id "my-dataset".</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets)">
     /// [BigQuery Datasets]
@@ -215,7 +210,7 @@ namespace Google.PowerShell.BigQuery
     /// <example>
     ///   <code>
     /// PS C:\> $data = Get-BqDataset "test_set"
-    /// PS C:\> $data = $data | Set-BqDataset -SetLabel "test","other" "three","two"
+    /// PS C:\> $data = $data | Set-BqDataset -SetLabel @{"test"="three";"test"="two"}
     ///   </code>
     ///   <para>This will add the labels "test" and "other" with their values to "test_set".</para>
     /// </example>
@@ -252,7 +247,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description"> 
-        /// The updated Dataset object.  Must have the same datasetId as an existing 
+        /// The updated Dataset object.  Must have the same DatasetId as an existing 
         /// dataset in the project specified.
         /// </para>
         /// </summary>

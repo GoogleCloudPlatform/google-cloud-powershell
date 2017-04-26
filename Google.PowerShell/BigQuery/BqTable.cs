@@ -446,8 +446,8 @@ namespace Google.PowerShell.BigQuery
     /// Deletes the specified table.
     /// </para>
     /// <para type="description">
-    /// Deletes the specified table from the dataset. The table to be deleted can be passed 
-    /// in via the pipeline or with the "-InputObject" parameter. If the table contains data, 
+    /// Deletes the specified table from the dataset. The table to be deleted should be passed 
+    /// in via the pipeline or identified by DatasetId and TableId. If the table contains data, 
     /// this operation will prompt the user for confirmation before any deletions are performed. 
     /// To delete a non-empty table automatically, use the "-Force" parameter. If no Project is 
     /// specified, the default project will be used. This cmdlet returns a Table object. 

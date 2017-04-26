@@ -51,10 +51,8 @@ namespace Google.PowerShell.BigQuery
     ///   <code>
     /// PS C:\> $dataset = New-BqDataset "books"
     /// PS C:\> $table = $dataset | New-BqTable "book_info"
-    /// PS C:\> $result = New-BqSchema -Name "Author" -Type "STRING" | `
-    ///                   New-BqSchema -Name "Copyright" -Type "STRING" | `
-    ///                   New-BqSchema -Name "Title" -Type "STRING" | `
-    ///                   Set-BqSchema $table
+    /// PS C:\> $result = New-BqSchema "Author" "STRING" | New-BqSchema "Copyright" "STRING" |
+    ///                   New-BqSchema "Title" "STRING" | Set-BqSchema $table
     ///   </code>
     ///   <para>This will create a new schema, assign it to a table, and then send the 
     ///   revised table to the server to be saved.</para>
@@ -64,8 +62,8 @@ namespace Google.PowerShell.BigQuery
     /// PS C:\> $dataset = New-BqDataset "books"
     /// PS C:\> $table = $dataset | New-BqTable "book_info"
     /// PS C:\> $result = New-BqSchema -JSON `
-    ///                   '[{"Name":"Title","Type":"STRING"},{"Name":"Author","Type":"STRING"},{"Name":"Year","Type":"INTEGER"}]' 
-    ///                   | Set-BqSchema $table
+    ///                   '[{"Name":"Title","Type":"STRING"},{"Name":"Author","Type":"STRING"},{"Name":"Year","Type":"INTEGER"}]' |
+    ///                   Set-BqSchema $table
     ///   </code>
     ///   <para>This will create a new schema using JSON input and will assign it to a table.</para>
     /// </example> 
@@ -222,7 +220,7 @@ namespace Google.PowerShell.BigQuery
     /// </example>
     /// <example>
     ///   <code>
-    /// PS C:\> $schema = New-BqSchema -Name "Title" -Type "STRING" | Set-BqSchema
+    /// PS C:\> $schema = New-BqSchema "Title" "STRING" | Set-BqSchema
     /// PS C:\> $table1 = New-BqTable "my_table" -DatasetId "my_dataset" -Schema $schema
     /// PS C:\> $table2 = New-BqTable "another_table" -DatasetId "my_dataset" -Schema $schema
     ///   </code>
