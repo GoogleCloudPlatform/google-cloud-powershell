@@ -280,9 +280,8 @@ $list = Get-BqTable "logs2014" -DatasetID "page_views" | Get-BqTableRow
       request to the server to stop a certain job, and then returns immediately.
       <blockquote>
       Note on formatting table names within query strings: BigQuery format specifies that table names 
-      should be surrounded by backticks (`), but this is Powershell's "continue on the next line" 
-      operator. Backticks must be escaped by adding a second backtick, so tables in query strings will 
-      look like this: ``datasetid:tableid``. See the example below for context.
+      should be surrounded by backticks (`), but backticks are also Powershell's escape operators. 
+      Because of this, backticks must be escaped by adding a second backtick. See the example below.
       </blockquote>
     </p>
     <pre>
