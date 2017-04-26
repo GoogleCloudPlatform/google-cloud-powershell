@@ -33,14 +33,10 @@ $dataset = New-BqDataset "cab_data"
 Now that you have a dataset, you need to make a schema for the following fields so that you only include relevant information: pickup_latitude, pickup_longitude, dropoff_latitude, dropoff_longitude, trip_distance, base_price, score.
 
 ```
-$schema = New-BqSchema -Name "pickup_latitude" -Type "FLOAT" |
-	New-BqSchema -Name "pickup_longitude" -Type "FLOAT" |
-	New-BqSchema -Name "dropoff_latitude" -Type "FLOAT" |
-	New-BqSchema -Name "dropoff_longitude" -Type "FLOAT" |
-	New-BqSchema -Name "trip_distance" -Type "FLOAT" |
-	New-BqSchema -Name "base_price" -Type "FLOAT" |
-	New-BqSchema -Name "score" -Type "FLOAT" |
-	Set-BqSchema
+$schema = New-BqSchema "pickup_latitude" "FLOAT" | New-BqSchema "pickup_longitude" "FLOAT" |
+	New-BqSchema "dropoff_latitude" "FLOAT" | New-BqSchema "dropoff_longitude" "FLOAT" |
+	New-BqSchema "trip_distance" "FLOAT" | New-BqSchema "base_price" "FLOAT" |
+	New-BqSchema "score" "FLOAT" | Set-BqSchema
 ```
 
 Make a new table with the schema and dataset created above.
