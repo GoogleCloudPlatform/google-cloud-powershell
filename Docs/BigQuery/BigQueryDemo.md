@@ -45,7 +45,7 @@ Make a new table with the schema and dataset created above.
 $table = $dataset | New-BqTable "output" -Schema $schema
 ```
 
-![Dataset and Table creation](./screenshot103.png "Dataset and Table creation")
+![Dataset and Table creation](./screenshot111.png "Dataset and Table creation")
 
 
 ## Running queries
