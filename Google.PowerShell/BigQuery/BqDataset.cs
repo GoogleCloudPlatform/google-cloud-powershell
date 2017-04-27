@@ -210,7 +210,7 @@ namespace Google.PowerShell.BigQuery
     /// <example>
     ///   <code>
     /// PS C:\> $data = Get-BqDataset "test_set"
-    /// PS C:\> $data = $data | Set-BqDataset -SetLabel @{"test"="three";"test"="two"}
+    /// PS C:\> $data = $data | Set-BqDataset -SetLabel @{"test"="three";"other"="two"}
     ///   </code>
     ///   <para>This will add the labels "test" and "other" with their values to "test_set".</para>
     /// </example>
