@@ -156,7 +156,8 @@ mkdir my-new-bucket</pre>
     </p>
     <pre>
 # Makes a new dataset with DatasetId "page_views".
-$dataset = New-BqDataset "page_views" -Name "Page Views" -Description "Page views from 2014 onwards"
+$dataset = New-BqDataset "page_views" -Name "Page Views" `
+    -Description "Page views from 2014 onwards"
 
 # Two ways to get a Dataset: by DatasetId and by Dataset object.
 $dataset = Get-BqDataset "page_views"
@@ -178,9 +179,10 @@ $dataset.Name = "PageView Data"
 $dataset = Set-BqDataset "page_views"
 
 # Adds the labels 'department' and 'purpose' to $dataset.
-$dataset = Set-BqDataset "page_views" -SetLabel @{"department" = "statistics"; "purpose" = "metrics"}
+$dataset = Set-BqDataset "page_views" -SetLabel `
+    @{"department" = "statistics"; "purpose" = "metrics"}
 
-# Filter Datasets by their labels and return all statistics department Datasets.
+# Filter Datasets by the department label.
 $stats = Get-BqDataset -Filter "department:statistics"
     </pre>
     <p>
@@ -205,7 +207,8 @@ $dataset | Remove-BqDataset
     </p>
     <pre>
 # Creates a new table in the dataset from above.
-$table = $dataset | New-BqTable "logs2014" -Description "Log data from Jan 2014 to Dec 2014 inclusive"
+$table = $dataset | New-BqTable "logs2014" `
+    -Description "Log data from Jan 2014 to Dec 2014 inclusive"
 
 # Gets a reference object for "page_views:logs2014".
 $table = Get-BqTable "logs2014" -DatasetId "page_views"
@@ -261,7 +264,8 @@ $table = $dataset | New-BqTable "logs2014" -Schema $schema
     <pre>
 # Ingests a CSV file and appends its rows onto the table 'my_dataset:my_table'.
 $table = New-BqTable "logs2014" -DatasetId "page_views"
-$table | Add-BqTableRow CSV $filename -SkipLeadingRows 1 -WriteMode WriteAppend
+$table | Add-BqTableRow CSV $filename -SkipLeadingRows 1 `
+                                      -WriteMode WriteAppend
 
 # Returns a list of the rows in 'page_views:logs2014'.
 $list = Get-BqTable "logs2014" -DatasetID "page_views" | Get-BqTableRow
@@ -286,15 +290,18 @@ $list = Get-BqTable "logs2014" -DatasetID "page_views" | Get-BqTableRow
     </p>
     <pre>
 # Query Job: starts a query and outputs results into $table.
-Start-BqJob -Query "SELECT * FROM ``page_views:logs2014``" -Destination $table
+Start-BqJob -Query "SELECT * FROM ``page_views:logs2014``" `
+            -Destination $table
     </pre>
     <pre>
 # Load Job: adds TableRows to $table from the GCS file specified.
-$job = $dest_table | Start-BqJob -Load CSV "gs://page_views/server_logs_raw_2014.csv"
+$job = $dest_table | Start-BqJob `
+    -Load CSV "gs://page_views/server_logs_raw_2014.csv"
     </pre>
     <pre>
 # Extract Job: exports $src_table to a GCS file.
-$job = $src_table | Start-BqJob -Extract CSV "gs://page_views/logs2014.csv"
+$job = $src_table | Start-BqJob `
+    -Extract CSV "gs://page_views/logs2014.csv"
     </pre>
     <pre>
 # Copy Job: Starts a copy job, cancels it, and polls until the job is complely done.
