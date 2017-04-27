@@ -138,7 +138,180 @@ mkdir my-new-bucket</pre>
       the Cloud Tools for PowerShell module via <code>Import-Module GoogleCloud</code>.
     </p>
   </div>
+  
+  <!-- Google Cloud BigQuery -->
+  <div ng-switch-when="google-cloud-bigquery">
+    <p>
+      Google BigQuery is a versatile tool that solves the problem of storing and querying massive 
+      datasets without having to worry about data formats, underlying resources, and other things 
+      that distract you from your analysis.
+    </p>
+    
+    <h2>Dataset</h2>
+    <p>
+      To use BigQuery in a Cloud project, first create a <code>Dataset</code> using the 
+      <cmdlet-ref name="New-BqDataset"></cmdlet-ref> cmdlet. This will take in basic information and 
+      create the resource server-side. Locally, a <code>Dataset</code> <em>reference object</em> is returned. 
+      To get a reference object for an existing dataset, use <cmdlet-ref name="Get-BqDataset"></cmdlet-ref>.
+    </p>
+    <pre>
+# Makes a new dataset with DatasetId "page_views".
+$dataset = New-BqDataset "page_views" -Name "Page Views" `
+    -Description "Page views from 2014 onwards"
 
+# Two ways to get a Dataset: by DatasetId and by Dataset object.
+$dataset = Get-BqDataset "page_views"
+$dataset = $dataset | Get-BqDataset
+    </pre>
+    <p>
+      This object <code>$dataset</code> can be modified and passed into further cmdlets such as 
+      <cmdlet-ref name="Set-BqDataset"></cmdlet-ref> to manipulate cloud resources. This cmdlet also
+      handles adding and removing <em>labels</em> with <code>-SetLabel</code> and <code>-ClearLabel</code>.
+    </p>
+    <blockquote>
+      Labels are used to tag datasets with keywords and/or values so they can be filtered and searched later. 
+      The <code>Get-BqDataset</code> cmdlet has a built in <code>-Filter</code> flag that allows fine grained 
+      control when listing datasets for processing with other cmdlets.
+    </blockquote>
+    <pre>
+# Updates the Name field of $dataset.
+$dataset.Name = "PageView Data"
+$dataset = Set-BqDataset "page_views"
+
+# Adds the labels 'department' and 'purpose' to $dataset.
+$dataset = Set-BqDataset "page_views" -SetLabel `
+    @{"department" = "statistics"; "purpose" = "metrics"}
+
+# Filter Datasets by the department label.
+$stats = Get-BqDataset -Filter "department:statistics"
+    </pre>
+    <p>
+      <code>Datasets</code> can be deleted by the <cmdlet-ref name="Remove-BqDataset"></cmdlet-ref> cmdlet. This 
+      cmdlet supports <em>ShouldProcess</em> (the <code>-WhatIf</code> parameter) and will prompt for user 
+      confirmation before deleting a non-empty <code>Dataset</code>. This safeguard can be bypassed with the 
+      <code>-Force</code> parameter when scripting.  
+    </p>
+    <pre>
+# Deletes $dataset.
+$dataset | Remove-BqDataset
+    </pre>
+    
+    <h2>Table</h2>
+    <p>
+      Each <code>Dataset</code> has a number of <code>Tables</code> to hold data. <code>Tables</code> are 
+      created with the <cmdlet-ref name="New-BqTable"></cmdlet-ref> cmdlet by passing in a <em>TableId</em> 
+      and the <code>Dataset</code> where the table will reside. The <code>Dataset</code> can be passed in by object 
+      or with the <code>-DatasetId</code> parameter. <cmdlet-ref name="Get-BqTable"></cmdlet-ref> and 
+      <cmdlet-ref name="Set-BqTable"></cmdlet-ref> work the same way as the <code>Get-</code> and 
+      <code>Set-</code> dataset cmdlets above.
+    </p>
+    <pre>
+# Creates a new table in the dataset from above.
+$table = $dataset | New-BqTable "logs2014" `
+    -Description "Log data from Jan 2014 to Dec 2014 inclusive"
+
+# Gets a reference object for "page_views:logs2014".
+$table = Get-BqTable "logs2014" -DatasetId "page_views"
+
+# Modifies the Name attribute of logs2014.
+$table.Name = "Logs 2014"
+$table = $table | Set-BqTable
+    </pre>
+    <p>
+      <code>Tables</code> can be deleted by the <cmdlet-ref name="Remove-BqTable"></cmdlet-ref> cmdlet. This 
+      cmdlet supports <em>ShouldProcess</em> (the <code>-WhatIf</code> parameter) and will prompt for user 
+      confirmation before deleting a <code>Table</code> that contains data. This safeguard can be bypassed with 
+      the <code>-Force</code> parameter.  
+    </p>
+    <pre>
+# Deletes $table.
+$table | Remove-BqTable -Force
+    </pre>
+    
+    <h2>Schema</h2>
+    <p>
+      <code>Tables</code> need <code>Schemas</code> to describe the format of the data they contain. Schemas are created 
+      with the <cmdlet-ref name="New-BqSchema"></cmdlet-ref> and <cmdlet-ref name="Set-BqSchema"></cmdlet-ref>
+      cmdlets. <code>New-BqSchema</code> can take the formats for rows as parameters directly or as a JSON array 
+      of row descriptions. The results of <code>New-BqSchema</code> are always passed into <code>Set-BqSchema</code> 
+      which can either output a <code>Schema</code> object or assign the schema to an existing <code>Table</code>.  
+    </p>
+    <pre>
+# Assigns a Schema to $table
+$table = Get-BqTable "logs2014" -DatasetId "page_views"
+New-BqSchema "Page" "STRING" | New-BqSchema "Referrer" "STRING" | 
+    New-BqSchema "Timestamp" "DATETIME" | Set-BqSchema $table
+
+# Creates a schema object to be used in multiple tables.
+$schema = New-BqSchema "Page" "STRING" | New-BqSchema "Referrer" "STRING" | 
+    New-BqSchema "Timestamp" "DATETIME" | Set-BqSchema
+    </pre>
+    <p>
+      <code>Schema</code> objects can be passed as parameters in <code>Table</code> creation if they are created 
+      ahead of time.
+    </p>
+    <pre>
+# Creates a new table with the Schema object from above.
+$table = $dataset | New-BqTable "logs2014" -Schema $schema
+    </pre>
+    
+    <h2>TableRow</h2>
+    <p>
+      Data is added and removed from <code>Tables</code> in <em>Rows</em>. These rows are accessible using the 
+      <cmdlet-ref name="Add-BqTableRow"></cmdlet-ref> and <cmdlet-ref name="Get-BqTableRow"></cmdlet-ref>
+      cmdlets. <code>Add-BqTableRow</code> takes CSV, JSON, and AVRO files to import into BigQuery.
+    </p>
+    <pre>
+# Ingests a CSV file and appends its rows onto the table 'my_dataset:my_table'.
+$table = New-BqTable "logs2014" -DatasetId "page_views"
+$table | Add-BqTableRow CSV $filename -SkipLeadingRows 1 `
+                                      -WriteMode WriteAppend
+
+# Returns a list of the rows in 'page_views:logs2014'.
+$list = Get-BqTable "logs2014" -DatasetID "page_views" | Get-BqTableRow
+    </pre>
+    
+    <h2>Jobs</h2>
+    <p>
+      There are four types of <code>Jobs</code>: Query, Load, Extract, and Copy. <em>Query</em> jobs run SQL style 
+      queries and output results to tables. <em>Load</em> jobs import Google Cloud Storage files into BigQuery. 
+      <em>Extract</em> jobs export BigQuery tables to GCS. <em>Copy</em> jobs copy an existing table to another new or 
+      existing table. <cmdlet-ref name="Start-BqJob"></cmdlet-ref> starts any of these kinds of jobs as an asynchronous 
+      operation. Use the <code>-PollUntilComplete</code> flag to have the cmdlet block until the job is done.
+      <cmdlet-ref name="Receive-BqJob"></cmdlet-ref> will return the results of a query job once it is 
+      finished. <cmdlet-ref name="Get-BqJob"></cmdlet-ref> will return a reference object detailing the
+      current state and statistics on the job.  <cmdlet-ref name="Stop-BqJob"></cmdlet-ref> will send a 
+      request to the server to stop a certain job, and then returns immediately.
+      <blockquote>
+      Note on formatting table names within query strings: BigQuery format specifies that table names 
+      should be surrounded by backticks (`), but backticks are also Powershell's escape operators. 
+      Because of this, backticks must be escaped by adding a second backtick. See the example below.
+      </blockquote>
+    </p>
+    <pre>
+# Query Job: starts a query and outputs results into $table.
+Start-BqJob -Query "SELECT * FROM ``page_views:logs2014``" `
+            -Destination $table
+    </pre>
+    <pre>
+# Load Job: adds TableRows to $table from the GCS file specified.
+$job = $dest_table | Start-BqJob `
+    -Load CSV "gs://page_views/server_logs_raw_2014.csv"
+    </pre>
+    <pre>
+# Extract Job: exports $src_table to a GCS file.
+$job = $src_table | Start-BqJob `
+    -Extract CSV "gs://page_views/logs2014.csv"
+    </pre>
+    <pre>
+# Copy Job: Starts a copy job, cancels it, and polls until the job is complely done.
+$job = $table | Start-BqJob -Copy $dest_table
+$result = $job | Stop-BqJob
+while ($result.Status.State -ne "DONE") {
+    $result = $result | Get-BqJob
+}
+    </pre>
+  </div>
 
   <!-- Google Cloud DNS -->
   <div ng-switch-when="google-cloud-dns">
