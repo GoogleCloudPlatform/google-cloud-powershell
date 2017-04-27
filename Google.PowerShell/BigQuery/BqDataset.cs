@@ -22,7 +22,7 @@ namespace Google.PowerShell.BigQuery
     /// specified, this cmdlet lists all datasets in the specified project to which you have been granted the 
     /// "READER" dataset role. The "-IncludeHidden" flag will include hidden datasets in the search results. 
     /// The "-Filter" flag allows you to filter results by label. The syntax to filter is "name[:value]". 
-    /// Multiple filters can be ANDed together by passing them in as a string array. See the link below for  
+    /// Multiple filters can be ANDed together by passing them in as a string array. See the link below for 
     /// more on labels. If no Project is specified, the default project will be used. If no Dataset was 
     /// specified, this cmdlet returns any number of DatasetList.DatasetData objects. Otherwise, it returns
     /// a Dataset object.
@@ -247,7 +247,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description"> 
-        /// The updated Dataset object.  Must have the same DatasetId as an existing 
+        /// The updated Dataset object. Must have the same DatasetId as an existing 
         /// dataset in the project specified.
         /// </para>
         /// </summary>
@@ -483,7 +483,7 @@ namespace Google.PowerShell.BigQuery
             }
             catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
             {
-                ThrowTerminatingError(new ErrorRecord(ex,  
+                ThrowTerminatingError(new ErrorRecord(ex, 
                     $"A dataset with the name '{DatasetId}' already exists in project '{Project}'.",
                     ErrorCategory.InvalidArgument, 
                     newData));

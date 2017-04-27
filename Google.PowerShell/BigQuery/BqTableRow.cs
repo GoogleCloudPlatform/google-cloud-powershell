@@ -44,8 +44,8 @@ namespace Google.PowerShell.BigQuery
     /// "BYTES", "INTEGER", "FLOAT", "BOOLEAN", "TIMESTAMP", "DATE", "TIME", "DATETIME", and "RECORD" 
     /// ("RECORD" indicates the field contains a nested schema). Case is ignored for both Type and Mode. 
     /// Possible values for the Mode field include "REQUIRED", "REPEATED", and the default "NULLABLE". 
-    /// This command forwards all TableFieldSchemas that it is passed, and will add a new 
-    /// TableFieldSchema object to the pipeline.
+    /// This command forwards all TableFieldSchemas that it is passed, and will add one or more new 
+    /// TableFieldSchema objects to the pipeline.
     /// </para>
     /// <example>
     ///   <code>
@@ -137,7 +137,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// JSON string of the schema.  Should be in the form: 
+        /// JSON string of the schema. Should be in the form: 
         /// [{"Name":"Title","Type":"STRING"},{"Name":"Author","Type":"STRING"},{"Name":"Year","Type":"INTEGER"}]
         /// </para>
         /// </summary>
@@ -205,22 +205,22 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <para type="description">
     /// This command takes a Table and sets its schema to be the aggregation of all TableFieldSchema 
-    /// objects passed in. If multiple columns are passed in with the same "-Name" field, an error 
-    /// will be thrown. If no Table argument is passed in, the Schema object will be written to the 
-    /// pipeline and the cmdlet will quit. This can be used in combination with the -Schema flag in
-    /// New-BqTable to apply one schema to mulitple tables. If a Table is passed in, this command 
-    /// returns a Table object showing the updated server state.
+    /// objects passed in from New-BqSchema calls earlier on the pipeline. If multiple columns are 
+    /// passed in with the same "-Name" field, an error will be thrown. If no Table argument is passed in, 
+    /// the Schema object will be written to the pipeline and the cmdlet will quit. This can be used in 
+    /// combination with the -Schema flag in New-BqTable to apply one schema to multiple tables. If a 
+    /// Table is passed in, this command returns a Table object showing the updated server state.
     /// <example>
     ///   <code>
     /// PS C:\> $table = Get-BqTable "21st_century" -DatasetId "book_data"
-    /// PS C:\> $table = New-BqSchema -Name "Title" -Type "STRING" | Set-BqSchema $table
+    /// PS C:\> $table = New-BqSchema "Title" "STRING" | Set-BqSchema $table
     ///   </code>
     ///   <para>This will create a new schema, assign it to a table, and then send the 
     ///   revised table to the server to be saved.</para>
     /// </example>
     /// <example>
     ///   <code>
-    /// PS C:\> $schema = New-BqSchema "Title" "STRING" | Set-BqSchema
+    /// PS C:\> $schema = New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | Set-BqSchema
     /// PS C:\> $table1 = New-BqTable "my_table" -DatasetId "my_dataset" -Schema $schema
     /// PS C:\> $table2 = New-BqTable "another_table" -DatasetId "my_dataset" -Schema $schema
     ///   </code>
@@ -237,7 +237,7 @@ namespace Google.PowerShell.BigQuery
     {
         /// <summary>
         /// <para type="description">
-        /// Variable to aggregate the TableFieldSchemas from the pipeline.  Pipe one or 
+        /// Variable to aggregate the TableFieldSchemas from the pipeline. Pipe one or 
         /// TableFieldSchema object in using the New-BqSchema cmdlet.
         /// </para>
         /// </summary>
@@ -317,7 +317,7 @@ namespace Google.PowerShell.BigQuery
     /// accepts CSV, JSON, and Avro files, and has a number of configuration parameters for each type. 
     /// This cmdlet returns nothing if the insert completed successfully.
     /// WriteMode Options:
-    /// - "WriteAppend" will add data on to the existing table.
+    /// - "WriteAppend" will add data to the existing table.
     /// - "WriteTruncate" will truncate the table before additional data is inserted.
     /// - "WriteIfEmpty" will throw an error unless the table is empty.
     /// </para>
@@ -334,7 +334,7 @@ namespace Google.PowerShell.BigQuery
     /// PS C:\> $table = New-BqTable "tab_name" -DatasetId "db_name"
     /// PS C:\> $table | Add-BqTableRow CSV $filename -SkipLeadingRows 1 -AllowJaggedRows -AllowUnknownFields
     ///   </code>
-    ///   <para>This code will take a CSV file and upload it to a BQ table.  It will set missing fields 
+    ///   <para>This code will take a CSV file and upload it to a BQ table. It will set missing fields 
     ///   from the CSV to null, and it will keep rows that have fields that aren't in the table's schema.
     ///   </para>
     /// </example> 
@@ -406,7 +406,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// CSV ONLY: Separator between fields in the data.  Default value is comma (,).
+        /// CSV ONLY: Separator between fields in the data. Default value is comma (,).
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
@@ -414,7 +414,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// CSV ONLY: Value used to quote data sections.  Default value is double-quote (").
+        /// CSV ONLY: Value used to quote data sections. Default value is double-quote (").
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
@@ -490,9 +490,9 @@ namespace Google.PowerShell.BigQuery
     /// Retrieves table data from a specified set of rows.
     /// </para>
     /// <para type="description">
-    /// Retrieves table data from a specified set of rows. Requires the "READER" dataset role.  
+    /// Retrieves table data from a specified set of rows. Requires the "READER" dataset role. 
     /// Rows are returned as Google.Cloud.BigQuery.V2.BigQueryRow objects.
-    /// Data can be extracted by indexing by column name (ex: (string) row["title"]; ).
+    /// Data can be extracted by indexing by column name. (ex: row["title"] )
     /// </para>
     /// <example>
     ///   <code>

@@ -20,13 +20,12 @@ Describe "Get-BqJob" {
 
     It "should list jobs from the past 6 months" {
         $jobs = Get-BqJob
-        $jobs.Count | Should BeGreaterThan 1
+        $jobs.Count | Should BeGreaterThan 0
     }
 
     It "should filter on state correctly when listing" {
-        $job = $table | Start-BqJob -Extract CSV "$gcspath/basic.csv" -Priority "BATCH"
-        $jobs = Get-BqJob -State "RUNNING"
-        $jobs.Count | Should Be 1
+        $jobs = Get-BqJob -State "DONE"
+        $jobs.Count | Should BeGreaterThan 1
         $jobs = Get-BqJob -State "PENDING"
         $jobs.Count | Should Be 0
     }
@@ -50,18 +49,6 @@ Describe "Get-BqJob" {
         $job = $jobs[0] 
         $return = Get-BqJob $job
         $return.JobReference.JobId | Should Be $job.JobReference.JobId
-    }
-
-    It "should get a job from another project if asked" {
-        try {
-            $bucket = New-GcsBucket "ps_alt_project_test_bucket_$r" -Project "google.com:g-cloudsharp"
-            $job = Start-BqJob -Extract CSV "gs://ps_alt_project_test_bucket_$r/basic.csv" -Project "google.com:g-cloudsharp"
-            $return = Get-BqJob $job
-            $return.JobReference.JobId | Should Be $job.JobReference.JobId
-            $return.JobReference.ProjectId | Should Be "google.com:g-cloudsharp"
-        } finally {
-            Remove-GcsBucket "ps_alt_project_test_bucket_$r" -Force -Project "google.com:g-cloudsharp"
-        }
     }
 
     It "should throw when the job is not found"{

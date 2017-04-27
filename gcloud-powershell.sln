@@ -19,6 +19,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFiles", "SolutionFi
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{31BC29EB-08CC-4060-B64A-189B0E908A73}"
 	ProjectSection(SolutionItems) = preProject
+		Tools\BetaCmdlets.ps1 = Tools\BetaCmdlets.ps1
 		Tools\BuildAndPackage.ps1 = Tools\BuildAndPackage.ps1
 		Tools\CheckCmdletXmlDocs.psm1 = Tools\CheckCmdletXmlDocs.psm1
 		Tools\GenerateWebsiteData.ps1 = Tools\GenerateWebsiteData.ps1

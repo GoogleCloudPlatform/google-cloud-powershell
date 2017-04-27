@@ -96,7 +96,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// Filter jobs returned by state.  Options are "DONE", "PENDING", and "RUNNING"
+        /// Filter jobs returned by state. Options are "DONE", "PENDING", and "RUNNING"
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.List)]
@@ -192,21 +192,19 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <para type="description">
     /// Starts a new asynchronous job. This call requires the "Viewer" role. The Type parameter 
-    /// can be "-Query", "-Copy", "-Load", or "-Extract".  Each of these job types has its own set of 
-    /// type-specific parameters to define what the job does (see below).  Job types all share a set 
+    /// can be "-Query", "-Copy", "-Load", or "-Extract". Each of these job types has its own set of 
+    /// type-specific parameters to define what the job does (see below). Job types all share a set 
     /// of parameters that define job attributes such as start time and handle statistics such 
     /// as rows and raw amounts of data processed. This PowerShell module does not support billing 
     /// tier or maximum billed data control for individual queries, so the project defaults will be 
     /// taken. This cmdlet supports "ShouldProcess()", and as such, has the "-WhatIf" parameter to 
     /// show the projected results of the cmdlet without actually changing any server resources. 
-    /// </para>
-    /// <para type="description">
-    /// Use "-PollUntilComplete" to have the cmdlet treat the job as a blocking operation.  
+    /// 
+    /// Use "-PollUntilComplete" to have the cmdlet treat the job as a blocking operation. 
     /// It will poll until the job has finished, and then it will return a job reference. 
     /// Tables referenced in queries should be fully qualified, but to use any that are not, 
     /// the DefaultDataset parameter must be used to specify where to find them.
-    /// </para>
-    /// <para type="description">
+    /// 
     /// | All Job Flags: -Project -PollUntilComplete
     /// | Query Job Flags: -QueryString, -UseLegacySql, -DefaultDataset, -Priority
     /// | Copy Job Flags: -Source, -Destination, WriteMode
@@ -332,7 +330,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// Priority of the query.  Can be "Batch" or "Interactive".
+        /// Priority of the query. Can be "Batch" or "Interactive".
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoQuery)]
@@ -492,7 +490,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// Instructs the server to output with GZIP compression.  Otherwise, no compression is used.
+        /// Instructs the server to output with GZIP compression. Otherwise, no compression is used.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoExtract)]
@@ -500,7 +498,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// Disables printing of a header row in the results.  Otherwise, a header will be printed.
+        /// Disables printing of a header row in the results. Otherwise, a header will be printed.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoExtract)]
@@ -588,7 +586,7 @@ namespace Google.PowerShell.BigQuery
         }
 
         /// <summary>
-        /// Copy Job main processing function.  
+        /// Copy Job main processing function. 
         /// *This is written using Apis.BigQuery.v2 becuase Cloud.BigQuery did not 
         /// support Copy opertations at the time of writing.
         /// </summary>
@@ -772,7 +770,7 @@ namespace Google.PowerShell.BigQuery
     /// PS C:\> $job | Receive-BqJob -Timeout 60
     ///   </code>
     ///   <para>This will run a query in the book_data.classics table and will wait up to 60 seconds 
-    ///   for its completion.  When it finishes, it will print a number of BigQueryRow objects to 
+    ///   for its completion. When it finishes, it will print a number of BigQueryRow objects to 
     ///   the terminal.</para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs)">
@@ -835,7 +833,7 @@ namespace Google.PowerShell.BigQuery
     /// </para>
     /// <para type="description">
     /// Requests that a job be canceled. This call will return immediately, and the client 
-    /// is responible for polling for job status. Canceled jobs may still incur costs. 
+    /// is responsible for polling for job status. Canceled jobs may still incur costs. 
     /// This cmdlet returns a Job object if successful.
     /// </para>
     /// <example>
