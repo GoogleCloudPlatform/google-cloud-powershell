@@ -10,7 +10,7 @@ Describe "Get-GcdChange" {
     }
 
     It "should fail to return changes of non-existent project" {
-        { Get-GcdChange -Project $nonExistProject -Zone $testZone1 } | Should Throw "400"
+        { Get-GcdChange -Project $nonExistProject -Zone $testZone1 } | Should Throw "404"
     }
 
     It "should give access errors as appropriate" {
@@ -85,7 +85,7 @@ Describe "Add-GcdChange" {
     $copyChange.Deletions = $null
 
     It "should fail to add a Change to a non-existent project" {
-        { Add-GcdChange -Project $nonExistProject $testZone1 $copyChange } | Should Throw "400"
+        { Add-GcdChange -Project $nonExistProject $testZone1 $copyChange } | Should Throw "404"
     }
 
     It "should give access errors as appropriate" {

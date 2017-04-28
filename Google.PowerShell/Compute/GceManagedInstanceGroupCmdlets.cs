@@ -194,7 +194,8 @@ namespace Google.PowerShell.Compute
             do
             {
                 InstanceGroupManagerList response = request.Execute();
-                foreach (InstanceGroupManager manager in response.Items)
+                var managers = response.Items ?? Enumerable.Empty<InstanceGroupManager>();
+                foreach (InstanceGroupManager manager in managers)
                 {
                     yield return manager;
                 }

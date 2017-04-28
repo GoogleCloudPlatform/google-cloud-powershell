@@ -14,6 +14,9 @@ using IamService = Google.Apis.Iam.v1.IamService;
 
 namespace Google.PowerShell.CloudResourceManager
 {
+    /// <summary>
+    /// Base class for IAM Policy Binding Cmdlets. Contains common method to retrieve all grantable roles.
+    /// </summary>
     public class GcIamPolicyBindingCmdlet : CloudResourceManagerCmdlet
     {
         // IAM Service used for getting roles that can be granted to a project.
@@ -98,42 +101,12 @@ namespace Google.PowerShell.CloudResourceManager
     }
 
     /// <summary>
-    /// <para type="synopsis">
-    /// Add an IAM policy binding to a project.
-    /// </para>
-    /// <para type="description">
-    /// Add an IAM policy binding to a project. The cmdlet will use the default project if -Project is not used.
-    /// </para>
-    /// <example>
-    ///   <code>PS C:\> Add-GcIamPolicyBinding -Role roles/owner -User abc@google.com -Project "my-project"</code>
-    ///   <para>This command gives user abc@google.com owner role in the project "my-project".</para>
-    /// </example>
-    /// <example>
-    ///   <code>PS C:\> Add-GcIamPolicyBinding -Role roles/container.admin -Group my-group@google.com</code>
-    ///   <para>This command gives the group my-group@google.com container admin role in the default project.</para>
-    /// </example>
-    /// <example>
-    ///   <code>
-    ///   PS C:\> Add-GcIamPolicyBinding -Role roles/container.admin `
-    ///                                  -ServiceAccount service@project.iam.gserviceaccount.com
-    ///   </code>
-    ///   <para>
-    ///   This command gives the serviceaccount service@project.iam.gserviceaccount.com
-    ///   container admin role in the default project.
-    ///   </para>
-    /// </example>
-    /// <example>
-    ///   <code>PS C:\> Add-GcIamPolicyBinding -Role roles/editor -Domain example.com</code>
-    ///   <para>This command gives all users of the domain example.com editor role in the default project.</para>
-    /// </example>
-    /// <para type="link" uri="(https://cloud.google.com/iam/docs/overview)">
-    /// [Google Cloud IAM]
-    /// </para>
+    /// Base class for cmdlet that add or remove IAM Policy Bindings.
+    /// Contains all the neccessary parameters. Inherited class just needs to implement ProcessRecord.
     /// </summary>
-    [Cmdlet(VerbsCommon.Add, "GcIamPolicyBinding", DefaultParameterSetName = ParameterSetNames.User)]
-    public class AddGcIamPolicyBindingCmdlet : GcIamPolicyBindingCmdlet, IDynamicParameters
+    public class AddOrRemoveGcIamPolicyBindingCmdlet : GcIamPolicyBindingCmdlet, IDynamicParameters
     {
-        private class ParameterSetNames
+        protected class ParameterSetNames
         {
             public const string User = nameof(User);
             public const string ServiceAccount = nameof(ServiceAccount);
@@ -143,7 +116,7 @@ namespace Google.PowerShell.CloudResourceManager
 
         /// <summary>
         /// <para type="description">
-        /// The project to set the IAM Policy Bindings. If not set via PowerShell parameter processing, will
+        /// The project for the IAM Policy Bindings. If not set via PowerShell parameter processing, will
         /// default to the Cloud SDK's DefaultProject property.
         /// </para>
         /// </summary>
@@ -212,26 +185,8 @@ namespace Google.PowerShell.CloudResourceManager
                 };
                 List<Attribute> attributeLists = new List<Attribute>() { paramAttribute };
 
-                if (Project != null)
-                {
-                    // If the cmdlet is not executing and the user is only using tab completion, the string project
-                    // will have double quotes at the start and end so we have to trim that.
-                    Project = Project.Trim('"');
-
-                    // If the project is a variable, then we have to extract out the variable name.
-                    if (Project.StartsWith("$"))
-                    {
-                        // Try to resolve the variable project, if unsuccessful, set it to an empty string.
-                        Project = ResolveVariable(Project, string.Empty).ToString();
-                    }
-                }
-
-                // If we cannot resolve the variable or the user has not entered parameter for the project yet,
-                // project will be null here.
-                if (string.IsNullOrWhiteSpace(Project))
-                {
-                    Project = CloudSdkSettings.GetSettingsValue(CloudSdkSettings.CommonProperties.Project);
-                }
+                // Try to resolve Project variable to a string, use default value from the SDK if we fail to do so.
+                Project = GetCloudSdkSettingValue(CloudSdkSettings.CommonProperties.Project, Project);
 
                 string[] roles = GetGrantableRoles(Project);
                 // If there are no roles, do not add validate set attribute to the parameter (hence, no tab completion).
@@ -251,9 +206,23 @@ namespace Google.PowerShell.CloudResourceManager
         }
 
         /// <summary>
+        /// Returns the appropriate role of the member.
+        /// </summary>
+        protected string GetRole()
+        {
+            if (_dynamicParameters == null
+                || !_dynamicParameters.ContainsKey("Role")
+                || string.IsNullOrWhiteSpace(_dynamicParameters["Role"].Value?.ToString()))
+            {
+                throw new PSArgumentNullException("Role");
+            }
+            return _dynamicParameters["Role"].Value.ToString();
+        }
+
+        /// <summary>
         /// Returns the appropriate member string based on the parameter set.
         /// </summary>
-        private string GetMember()
+        protected string GetMember()
         {
             switch (ParameterSetName)
             {
@@ -269,17 +238,47 @@ namespace Google.PowerShell.CloudResourceManager
                     throw UnknownParameterSetException;
             }
         }
+    }
 
+    /// <summary>
+    /// <para type="synopsis">
+    /// Adds an IAM policy binding to a project.
+    /// </para>
+    /// <para type="description">
+    /// Adds an IAM policy binding to a project. The cmdlet will use the default project if -Project is not used.
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> Add-GcIamPolicyBinding -Role roles/owner -User abc@google.com -Project "my-project"</code>
+    ///   <para>This command gives user abc@google.com owner role in the project "my-project".</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Add-GcIamPolicyBinding -Role roles/container.admin -Group my-group@google.com</code>
+    ///   <para>This command gives the group my-group@google.com container admin role in the default project.</para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Add-GcIamPolicyBinding -Role roles/container.admin `
+    ///                                  -ServiceAccount service@project.iam.gserviceaccount.com
+    ///   </code>
+    ///   <para>
+    ///   This command gives the serviceaccount service@project.iam.gserviceaccount.com
+    ///   container admin role in the default project.
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Add-GcIamPolicyBinding -Role roles/editor -Domain example.com</code>
+    ///   <para>This command gives all users of the domain example.com editor role in the default project.</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/iam/docs/overview)">
+    /// [Google Cloud IAM]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Add, "GcIamPolicyBinding", DefaultParameterSetName = ParameterSetNames.User)]
+    public class AddGcIamPolicyBindingCmdlet : AddOrRemoveGcIamPolicyBindingCmdlet
+    {
         protected override void ProcessRecord()
         {
-            if (_dynamicParameters == null
-                || !_dynamicParameters.ContainsKey("Role")
-                || string.IsNullOrWhiteSpace(_dynamicParameters["Role"].Value?.ToString()))
-            {
-                throw new PSArgumentNullException("Role");
-            }
-
-            string role = _dynamicParameters["Role"].Value.ToString();
+            string role = GetRole();
             string member = GetMember();
 
             // We have to search through all the existing bindings and try to insert the role if possible
@@ -295,7 +294,7 @@ namespace Google.PowerShell.CloudResourceManager
                 if (string.Equals(role, binding.Role, StringComparison.OrdinalIgnoreCase))
                 {
                     bindingFound = true;
-                    if (!binding.Members.Contains(role, StringComparer.OrdinalIgnoreCase))
+                    if (!binding.Members.Contains(member, StringComparer.OrdinalIgnoreCase))
                     {
                         binding.Members.Add(member);
                     }
@@ -330,6 +329,88 @@ namespace Google.PowerShell.CloudResourceManager
 
                 Policy changedPolicy = setRequest.Execute();
                 WriteObject(changedPolicy.Bindings, true);
+            }
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Removes an IAM policy binding to a project.
+    /// </para>
+    /// <para type="description">
+    /// Removes an IAM policy binding to a project. The cmdlet will use the default project if -Project is not used.
+    /// If the binding does not exist, the cmdlet will not raise error.
+    /// </para>
+    /// <example>
+    ///   <code>PS C:\> Remove-GcIamPolicyBinding -Role roles/owner -User abc@google.com -Project "my-project"</code>
+    ///   <para>This command removes the owner role of user abc@google.com in the project "my-project".</para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Remove-GcIamPolicyBinding -Role roles/container.admin -Group my-group@google.com</code>
+    ///   <para>
+    ///   This command removes the container admin role of the group my-group@google.com in the default project.
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Remove-GcIamPolicyBinding -Role roles/container.admin `
+    ///                                  -ServiceAccount service@project.iam.gserviceaccount.com
+    ///   </code>
+    ///   <para>
+    ///   This command removes the container admin role of the serviceaccount service@project.iam.gserviceaccount.com
+    ///   in the default project.
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Remove-GcIamPolicyBinding -Role roles/editor -Domain example.com</code>
+    ///   <para>This command removes the editor role of all users of the domain example.com in the default project.</para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/iam/docs/overview)">
+    /// [Google Cloud IAM]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Remove, "GcIamPolicyBinding", SupportsShouldProcess = true,
+        DefaultParameterSetName = ParameterSetNames.User)]
+    public class RemoveGcIamPolicyBindingCmdlet : AddOrRemoveGcIamPolicyBindingCmdlet
+    {
+        protected override void ProcessRecord()
+        {
+            string role = GetRole();
+            string member = GetMember();
+
+            // Remove the role from existing bindings.
+            ProjectsResource.GetIamPolicyRequest getRequest = Service.Projects.GetIamPolicy(new GetIamPolicyRequest(), $"{Project}");
+            Policy existingPolicy = getRequest.Execute();
+            bool needToExecuteRequest = false;
+
+            foreach (Binding binding in existingPolicy.Bindings)
+            {
+                if (string.Equals(role, binding.Role, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (binding.Members.Contains(member, StringComparer.OrdinalIgnoreCase))
+                    {
+                        binding.Members.Remove(member);
+                        needToExecuteRequest = true;
+                    }
+                    break;
+                }
+            }
+
+            if (!needToExecuteRequest)
+            {
+                WriteObject(existingPolicy.Bindings, true);
+            }
+            else
+            {
+                if (ShouldProcess($"{member}", $"Remove IAM policy binding in project '{Project}' for role '{role}'"))
+                {
+                    var requestBody = new SetIamPolicyRequest() { Policy = existingPolicy };
+                    ProjectsResource.SetIamPolicyRequest setRequest =
+                        Service.Projects.SetIamPolicy(requestBody, $"{Project}");
+
+                    Policy changedPolicy = setRequest.Execute();
+                    WriteObject(changedPolicy.Bindings, true);
+                }
             }
         }
     }

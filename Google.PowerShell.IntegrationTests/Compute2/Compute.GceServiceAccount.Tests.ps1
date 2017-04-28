@@ -7,6 +7,7 @@ while($child -eq $null) {
 
 . $child.FullName
 Install-GcloudCmdlets
+$project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Describe "New-GceServiceAccountConfig" {
     $email = "email@address.tld"
@@ -19,6 +20,17 @@ Describe "New-GceServiceAccountConfig" {
         ($account.Scopes -match "servicecontrol").Count | Should Be 1
         ($account.Scopes -match "service.management").Count | Should Be 1
         ($account.Scopes -match "devstorage.read_only").Count | Should Be 1
+    }
+
+    It "should use default service account if -Email is not provided" {
+        $account = New-GceServiceAccountConfig
+        $account.Scopes.Count | Should Be 5
+        ($account.Scopes -match "logging.write").Count | Should Be 1
+        ($account.Scopes -match "monitoring.write").Count | Should Be 1
+        ($account.Scopes -match "servicecontrol").Count | Should Be 1
+        ($account.Scopes -match "service.management").Count | Should Be 1
+        ($account.Scopes -match "devstorage.read_only").Count | Should Be 1
+        $account.Email | Should Match "-compute@developer.gserviceaccount.com"
     }
 
     It "should get none" {
@@ -172,3 +184,5 @@ Describe "New-GceServiceAccountConfig" {
         ($account.Scopes -match "scopeuri2").Count | Should Be 1
     }
 }
+
+Reset-GCloudConfig $oldActiveConfig $configName

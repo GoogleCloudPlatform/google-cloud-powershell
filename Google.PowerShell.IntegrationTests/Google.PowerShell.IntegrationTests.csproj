@@ -92,6 +92,8 @@
     <None Include="BigQuery\BigQuery.BqDataset.Tests.ps1" />
     <None Include="BigQuery\BigQuery.BqTableRow.Tests.ps1" />
     <None Include="BigQuery\BqCmdlets.ps1" />
+    <None Include="CloudResourceManager\CloudResourceManager.GcpProject.Tests.ps1" />
+    <None Include="CloudResourceManager\CloudResourceManager.IamPolicy.Tests.ps1" />
     <None Include="Compute\Compute.GceAddress.Tests.ps1" />
     <None Include="Compute\Compute.GceAttachedDiskConfig.Tests.ps1" />
     <None Include="Compute\Compute.GceBackendService.Tests.ps1" />
@@ -111,6 +113,8 @@
     <None Include="Compute2\Compute.GceTargetPool.Tests.ps1" />
     <None Include="Compute2\Compute.GceTargetProxy.Tests.ps1" />
     <None Include="Compute2\Compute.GceUrlMap.Tests.ps1" />
+    <None Include="Container\Container.GkeCluster.Tests.ps1" />
+    <None Include="Container\Container.GkeNodePool.Tests.ps1" />
     <None Include="Dns\Dns.GcdChange.Tests.ps1" />
     <None Include="Dns\Dns.GcdManagedZone.Tests.ps1" />
     <None Include="Dns\Dns.GcdQuota.Tests.ps1" />
@@ -135,6 +139,7 @@
     <None Include="SQL2\public.pem" />
     <None Include="SQL2\sample-table.csv" />
     <None Include="SQL2\SQL.GcSqlInstances.Tests.ps1" />
+    <None Include="SQL3\SQL.GcSqlInstances.Two.Tests.ps1" />
     <None Include="Storage\Storage.GcsAcl.Tests.ps1" />
     <None Include="Storage\Storage.GcsBucket.Tests.ps1" />
     <None Include="Storage\Storage.GcsBucketLogging.Tests.ps1" />

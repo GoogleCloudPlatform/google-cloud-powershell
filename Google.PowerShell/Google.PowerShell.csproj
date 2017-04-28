@@ -76,6 +76,12 @@
     </Reference>
     <Reference Include="Google.Apis.Dns.v1, Version=1.20.0.760, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
       <HintPath>..\packages\Google.Apis.Dns.v1.1.20.0.760\lib\net45\Google.Apis.Dns.v1.dll</HintPath>
+    <Reference Include="Google.Apis.Container.v1, Version=1.21.0.662, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.Container.v1.1.21.0.662\lib\net45\Google.Apis.Container.v1.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Google.Apis.Core, Version=1.21.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.Core.1.21.0\lib\net45\Google.Apis.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Google.Apis.Iam.v1, Version=1.20.0.756, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
@@ -166,6 +172,7 @@
     <Compile Include="BigQuery\BqDataset.cs" />
     <Compile Include="BigQuery\BqTableRow.cs" />
     <Compile Include="CloudResourceManager\CloudResourceManagerCmdlets.cs" />
+    <Compile Include="CloudResourceManager\GoogleCloudProjectCmdlets.cs" />
     <Compile Include="CloudResourceManager\IamPolicyCmdlets.cs" />
     <Compile Include="Common\ActiveUserConfig.cs" />
     <Compile Include="Common\JsonExtensions.cs" />
@@ -205,6 +212,9 @@
     <Compile Include="Compute\GoogleComputeOperationException.cs" />
     <Compile Include="Compute\GceFirewallProtocolCmdlet.cs" />
     <Compile Include="Compute\InstanceMetadataConverter.cs" />
+    <Compile Include="Container\GkeCmdlet.cs" />
+    <Compile Include="Container\GkeClusterCmdlets.cs" />
+    <Compile Include="Container\GkeNodePoolCmdlets.cs" />
     <Compile Include="Dns\GcdCmdlet.cs" />
     <Compile Include="Dns\GcdChange.cs" />
     <Compile Include="Dns\GcdManagedZone.cs" />
