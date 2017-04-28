@@ -19,7 +19,7 @@ namespace Google.PowerShell.BigQuery
     /// dataset role). If a table is specified, it will return the table resource. Note that 
     /// this is not the actual data from the table. If no Project is specified, the default 
     /// project will be used. Dataset can be specified by the "-DatasetId" parameter or by 
-    /// passing in a Dataset object.  This cmdlet returns a single Table if a table ID is 
+    /// passing in a Dataset object. This cmdlet returns a single Table if a table ID is 
     /// specified, and any number of TableList.TablesData objects otherwise.
     /// </para>
     /// <example>
@@ -191,7 +191,7 @@ namespace Google.PowerShell.BigQuery
     {
         /// <summary>
         /// <para type="description">
-        /// The updated Table object.  Must have the same tableId as an existing table in the dataset.
+        /// The updated Table object. Must have the same tableId as an existing table in the dataset.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true)]
@@ -373,7 +373,7 @@ namespace Google.PowerShell.BigQuery
 
         /// <summary>
         /// <para type="description">
-        /// Schema of the new table.  Created by the New-BqSchema and Set-BqSchema cmdlets.
+        /// Schema of the new table. Created by the New-BqSchema and Set-BqSchema cmdlets.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByValue)]
@@ -446,8 +446,8 @@ namespace Google.PowerShell.BigQuery
     /// Deletes the specified table.
     /// </para>
     /// <para type="description">
-    /// Deletes the specified table from the dataset. The table to be deleted can be passed 
-    /// in via the pipeline or with the "-InputObject" parameter. If the table contains data, 
+    /// Deletes the specified table from the dataset. The table to be deleted should be passed 
+    /// in via the pipeline or identified by DatasetId and TableId. If the table contains data, 
     /// this operation will prompt the user for confirmation before any deletions are performed. 
     /// To delete a non-empty table automatically, use the "-Force" parameter. If no Project is 
     /// specified, the default project will be used. This cmdlet returns a Table object. 

@@ -46,24 +46,24 @@ Describe "New-BqSchema" {
     }
 
     It "should handle optional strings correctly"{
-        $field = New-BqSchema -Name "Title" -Type "STRING" -Description "Test data table" -Mode "REQUIRED"
+        $field = New-BqSchema "Title" "STRING" -Description "Test data table" -Mode "REQUIRED"
         $field.Description | Should Be "Test data table"
         $field.Mode | Should Be "REQUIRED"
     }
 
     It "should handle fields / nested structures"{
-        $inner = New-BqSchema -Name "Title" -Type "STRING"
-        $inner = $inner | New-BqSchema -Name "Author" -Type "STRING"
-        $outer = New-BqSchema -Name "Nest" -Type "RECORD" -Fields $inner
+        $inner = New-BqSchema "Title" "STRING"
+        $inner = $inner | New-BqSchema "Author" "STRING"
+        $outer = New-BqSchema "Nest" "RECORD" -Fields $inner
         $outer.Fields.Count | Should Be 2
     }
 
     It "should deny invalid types"{
-        { New-BqSchema -Name "Title" -Type "NotAType" } | Should Throw "Cannot convert value"
+        { New-BqSchema "Title" "NotAType" } | Should Throw "Cannot convert value"
     }
 
     It "should deny invalid modes"{
-        { New-BqSchema -Name "Title" -Type "STRING" -Mode "NotAMode" } | Should Throw "Cannot convert value"
+        { New-BqSchema "Title" "STRING" -Mode "NotAMode" } | Should Throw "Cannot convert value"
     }
 
     It "should let users know that they need to have a JSON array"{
@@ -88,16 +88,14 @@ Describe "Set-BqSchema" {
 
     It "should add a single column schema to a Table"{
         $table = $test_set | New-BqTable "my_table"
-        $result = New-BqSchema -Name "Title" -Type "STRING" | Set-BqSchema $table
+        $result = New-BqSchema "Title" "STRING" | Set-BqSchema $table
         $result.Schema.Fields[0].Name | Should Be "Title"
     }
 
     It "should add a multiple column schema to a Table by values"{
         $table = $test_set | New-BqTable "double_table"
-        $result = New-BqSchema -Name "Title" -Type "STRING" |
-                  New-BqSchema -Name "Author" -Type "STRING" |
-                  New-BqSchema -Name "Year" -Type "INTEGER" |
-                  Set-BqSchema $table
+        $result = New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" |
+                  New-BqSchema "Year" "INTEGER" | Set-BqSchema $table
         $result.Schema.Fields[0].Name | Should Be "Title"
         $result.Schema.Fields[1].Name | Should Be "Author"
         $result.Schema.Fields[2].Name | Should Be "Year"
