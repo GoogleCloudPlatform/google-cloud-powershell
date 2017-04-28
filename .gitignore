@@ -225,3 +225,5 @@ FakesAssemblies/
 **/*.Server/ModelManifest.xml
 _Pvt_Extensions
 -
+/Google.PowerShell/GcbqCmdlet.cs
+/Google.PowerShell/GcbqDataset.cs

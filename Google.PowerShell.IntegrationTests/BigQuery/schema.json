@@ -1,0 +1,3 @@
+[{"Name":"Title","Type":"STRING"},
+{"Name":"Author","Type":"STRING"},
+{"Name":"Year","Type":"INTEGER"}]

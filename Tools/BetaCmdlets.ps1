@@ -7,7 +7,8 @@ $cmdletsToBeExported = @("Get-GcLogEntry", "New-GcLogEntry", "New-GcLogMonitored
                          "Remove-GcpsSubscription", "New-GcpsMessage", "Publish-GcpsMessage",
                          "Get-GcpsMessage", "Set-GcpsAckDeadline", "Send-GcpsAck"
                          "Get-GcIamPolicyBinding", "Add-GcIamPolicyBinding",
-                         "Remove-GcIamPolicyBinding", "Get-GcpProject",
-                         "Get-GkeCluster", "New-GkeNodeConfig", "Add-GkeCluster",
-                         "Remove-GkeCluster", "Get-GkeNodePool")
+                         "Get-BqDataset", "Set-BqDataset", "New-BqDataset", "Remove-BqDataset",
+                         "Get-BqTable", "Set-BqTable", "New-BqTable", "Remove-BqTable",
+                         "New-BqSchema", "Set-BqSchema", "Add-BqTableRows", "Get-BqTableRows",
+                         "Get-BqJob", "Start-BqJob", "Receive-BqJob", "Stop-BqJob")
 $cmdletsToBeExported
