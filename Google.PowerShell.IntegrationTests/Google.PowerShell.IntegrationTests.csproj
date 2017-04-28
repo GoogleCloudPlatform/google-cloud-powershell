@@ -90,7 +90,6 @@
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
     <None Include="BigQuery\BigQuery.BqJob.Tests.ps1" />
     <None Include="BigQuery\BigQuery.BqTable.Tests.ps1" />
     <None Include="BigQuery\BigQuery.BqDataset.Tests.ps1" />
@@ -128,7 +127,6 @@
     <None Include="Logging\Logging.GcLog.Tests.ps1" />
     <None Include="Logging\Logging.GcLogMetric.Tests.ps1" />
     <None Include="Logging\Logging.GcLogSink.Tests.ps1" />
-    <None Include="packages.config" />
     <None Include="README.md" />
     <None Include="Provider\Storage.Provider.Tests.ps1" />
     <None Include="PubSub\PubSub.Message.Tests.ps1" />
