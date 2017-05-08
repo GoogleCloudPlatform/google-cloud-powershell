@@ -8,23 +8,14 @@ cloud resources or create new ones.
 
 # Installation
 
-Cloud Tools for PowerShell is included in the Windows version of the
-[Google Cloud SDK](https://cloud.google.com/sdk/docs/quickstart-windows).
+You can install Cloud Tools for PowerShell from the PowerShell gallery by running
+`Install-Module GoogleCloud`. When you first use the module, you will be prompted
+to install the Google Cloud SDK. Select yes and the module will download
+and install the SDK.
 
-If you already have the Cloud SDK installed on your machine, you can uninstall
-and reinstall to get Cloud Tools for PowerShell. Or, you can install it
-manually via:
-
-    # Install the "powershell" component of the Cloud SDK
-    $ gcloud components install powershell
-
-    # Run "AppendPsModulePath.ps1" to register the Cloud Tools for PowerShell
-    # module. Where the script is located depends on where you installed the
-    # Cloud SDK. For normal user-based installs:
-    $env:LOCALAPPDATA\Google\Cloud SDK\google-cloud-sdk\platform\PowerShell\GoogleCloud\1.0.0.0
-    
-    # For admin-based installs:
-    ${env:ProgramFiles(x86)}\Google\Cloud SDK\google-cloud-sdk\platform\PowerShell\GoogleCloud\1.0.0.0
+Alternatively, you can install the [Google Cloud SDK](https://cloud.google.com/sdk/docs/quickstart-windows)
+directly by downloading and installing the installer (the instruction is in the link).
+Cloud Tools for PowerShell will be included in the SDK by default.
 
 Cloud Tools for PowerShell uses your Cloud SDK credentials. So if you have not
 already, run `gcloud auth login` or `gcloud init` to login.
