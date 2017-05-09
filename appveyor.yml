@@ -12,6 +12,7 @@ environment:
     - test_folder: "Storage"
     - test_folder: "Dns"
     - test_folder: "Provider"
+    - test_folder: "BigQuery"
     - test_folder: "Compute"
     - test_folder: "Compute2"
     - test_folder: "SQL"
