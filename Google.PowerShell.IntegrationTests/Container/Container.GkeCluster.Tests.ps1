@@ -128,21 +128,21 @@ Describe "New-GkeNodeConfig" {
     }
 
     It "should work with -LocalSsdCount" {
-        $nodeConfig = New-GkeNodeConfig -ImageType gci -MachineType n1-highcpu-4 -LocalSsdCount 2
+        $nodeConfig = New-GkeNodeConfig -ImageType cos -MachineType n1-highcpu-4 -LocalSsdCount 2
         $nodeConfig.MachineType | Should BeExactly n1-highcpu-4
-        $nodeConfig.ImageType | Should BeExactly gci
+        $nodeConfig.ImageType | Should BeExactly cos
         $nodeConfig.LocalSsdCount | Should Be 2
     }
 
     It "should work with -Metadata" {
-        $nodeConfig = New-GkeNodeConfig -ImageType gci -Metadata @{"key" = "value"}
-        $nodeConfig.ImageType | Should BeExactly gci
+        $nodeConfig = New-GkeNodeConfig -ImageType cos -Metadata @{"key" = "value"}
+        $nodeConfig.ImageType | Should BeExactly cos
         $nodeConfig.Metadata["key"] | Should BeExactly "value"
     }
 
     It "should work with -Label" {
-        $nodeConfig = New-GkeNodeConfig -ImageType gci -Metadata @{"key" = "value"} -Label @{"release" = "stable"}
-        $nodeConfig.ImageType | Should BeExactly gci
+        $nodeConfig = New-GkeNodeConfig -ImageType cos -Metadata @{"key" = "value"} -Label @{"release" = "stable"}
+        $nodeConfig.ImageType | Should BeExactly cos
         $nodeConfig.Metadata["key"] | Should BeExactly "value"
         $nodeConfig.Labels["release"] | Should BeExactly "stable"
     }
@@ -310,7 +310,7 @@ Describe "Add-GkeCluster" {
 
         $cluster.Status | Should Be RUNNING
         $cluster.LoggingService | Should Be none
-        $cluster.NodeConfig.ImageType | Should Be gci
+        $cluster.NodeConfig.ImageType | Should Be cos
         $cluster.Description | Should Be $clusterOneDescription
         $cluster.Zone | Should Be $zone
         $cluster.AddonsConfig.HttpLoadBalancing.Disabled | Should Be $true
