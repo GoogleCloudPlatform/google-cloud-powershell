@@ -353,6 +353,7 @@ namespace Google.PowerShell.Container
     /// [Node Pools]
     /// </para>
     /// </summary>
+    [Cmdlet(VerbsCommon.New, "GkeNodePool")]
     public class NewGkeNodePoolCmdlet : GkeNodePoolConfigCmdlet
     {
         private class ParameterSetNames

@@ -805,7 +805,7 @@ namespace Google.PowerShell.Container
 
         /// <summary>
         /// <para type="description">
-        /// Removes horizontal pod autoscaling feature, which increases or decreases the nmber of replica
+        /// Removes horizontal pod autoscaling feature, which increases or decreases the number of replica
         /// pods a replication controller has based on the resource usage of the existing pods.
         /// </para>
         /// </summary>
