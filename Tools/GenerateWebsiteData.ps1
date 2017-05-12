@@ -209,7 +209,7 @@ function Add-DynamicParameterToDocObj($cmdletName, $docObj) {
 # Generate an object similar to what (Get-Help -Full $cmdletName).Syntax.SyntaxItem
 # looks like. We have to do this because for some reason (most likely a bug?), the
 # Get-Help cmdlet always generate incorrect value when a cmdlet has a dynamic parameter.
-function New-SyntaxObjectArray($cmdletName, $cmdletInfo) {
+function New-SyntaxObjectArray($cmdletInfo) {
     $syntaxObjectArray = @()
     ForEach ($parameterSet in $cmdletInfo.ParameterSets) {
         $syntaxObjParams = @()
@@ -231,7 +231,7 @@ function New-SyntaxObjectArray($cmdletName, $cmdletInfo) {
             "parameterSet" = $parameterSetName;
             "isDefault" = $parameterSet.IsDefault;
             "parameter" = $syntaxObjParams;
-            "name" = $cmdletName
+            "name" = $cmdletInfo.Name
         }
         $syntaxObjectArray += $syntaxObject
     }
@@ -267,7 +267,7 @@ $productInfoLookup = @{
     "GcpProject"   = @{ name = "Google Cloud Project";
                    shortName = "google-cloud-project";
                    resources = @() }
-    "Gke"    = @{ name = "Google Container Engine";  shortName = "google-cloud-container" ; resources = @() }
+    "Gke"   = @{ name = "Google Container Engine";  shortName = "google-cloud-container" ; resources = @() }
     "Bq"    = @{ name = "Google Cloud BigQuery";  shortName = "google-cloud-bigquery" ; resources = @() }
 }
 
@@ -280,9 +280,6 @@ $allDocumentationObj = @{
 
 ForEach ($cmdlet in $cmdlets) {
     Write-Host "Building $($cmdlet.Name)..."
-    if ($cmdlet.Name -eq "Add-GkeCluster") {
-        $continue
-    }
 
     $cmdletVerb = $cmdlet.Name.Split("-")[0]
     $cmdletResource = $cmdlet.Name.Split("-")[1]
@@ -295,7 +292,7 @@ ForEach ($cmdlet in $cmdlets) {
         "name"        = $cmdlet.Name
         "synopsis"    = $helpObj.Synopsis
         "description" = Collapse-TextArray($helpObj.Description)
-        "syntax"      = (New-SyntaxObjectArray $cmdlet.Name $cmdletInfo)
+        "syntax"      = New-SyntaxObjectArray($cmdletInfo)
         "parameters"  = $helpObj.parameters.parameter
         "inputs"      = $helpObj.inputTypes
         "outputs"     = $helpObj.returnValues
