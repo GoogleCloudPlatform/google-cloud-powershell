@@ -80,7 +80,7 @@ function Get-Links ($docObj) {
 }
 
 # Generate a PSObject that will be used to populate the cmdlet JSON file based on $parameter.
-function New-DynamicParamObject($parameter) {
+function New-ParamObject($parameter) {
     $position = "named"
 
     if ($parameter.Position -ge 0) {
@@ -100,11 +100,19 @@ function New-DynamicParamObject($parameter) {
         $pipelineInput = "false"
     }
 
-    $parameterType = @{"name" = $parameter.ParameterType.FullName; "uri" = ""}
-    $parameterValue = @{"value" = $parameter.ParameterType.Name}
+    $parameterTypeName = $parameter.ParameterType.FullName
+    # Nullable type has a really long fullname (with public key token and assembly name)
+    # so we have to get the underlying type.
+    if ($parameter.ParameterType.Name -eq "Nullable``1") {
+        $firstGenericArg = $parameter.ParameterType.GetGenericArguments()[0]
+        $parameterTypeName = $firstGenericArg.FullName
+    }
+
+    $parameterType = New-Object PSObject -Property @{"name" = $parameterTypeName; "uri" = ""}
+    $parameterValue = New-Object PSObject -Property @{"value" = $parameter.ParameterType.Name}
     $parameterDescription = New-Object PSObject -Property @{"Text" = $parameter.HelpMessage}
 
-    $dynamicParameterSyntaxObject = New-Object PSObject -Property @{"name" = $parameter.Name
+    $parameterSyntaxObject = New-Object PSObject -Property @{"name" = $parameter.Name
                                                                     "required" = "$($parameter.IsMandatory)".ToLower();
                                                                     "position" = $position;
                                                                     "pipelineInput" = $pipelineInput;
@@ -118,29 +126,27 @@ function New-DynamicParamObject($parameter) {
     if ($null -ne $validateSetAttribute -and $null -ne $validateSetAttribute.ValidValues) {
         $validateSetJoined = $validateSetAttribute.ValidValues -join " "
         $parameterValueGroup = @{"parameterValue" = $validateSetJoined}
-        $dynamicParameterSyntaxObject | Add-Member "parameterValueGroup" $parameterValueGroup
+        $parameterSyntaxObject | Add-Member "parameterValueGroup" $parameterValueGroup
     }
 
     # If there is an alias, add that to the object too.
     $aliasAttribute = $parameter.Attributes | Where-Object {$_.TypeId.Name -eq "AliasAttribute"}
     if ($null -ne $aliasAttribute -and $aliasAttribute.AliasNames.Count -gt 0) {
-        $dynamicParameterSyntaxObject | Add-Member "aliases" $aliasAttribute.AliasNames
+        $parameterSyntaxObject | Add-Member "aliases" $aliasAttribute.AliasNames
     }
 
-    return $dynamicParameterSyntaxObject
+    return $parameterSyntaxObject
 }
 
 # The PowerShell objects returned from Get-Help are missing a few, key pieces of data. This method
 # updates the Syntax and Parameter objects to cross reference parameters, parameter sets, and
 # cmdlet invocation syntax.
 #
-# - Each Syntax object ($docObj.syntax.syntaxItems) will be given a new field "parameterSetName".
-# - Each Syntax object ($docObj.syntax.syntaxItems) will be given a new field "isDefault".
 # - Each Parameter ($docObj.parameters.parameter) will give given a new field "parameterSets".
 #
 # We update the objects in-memory, and rely on their persistance until we convert them to JSON.
-function Annotate-ParametersAndSyntaxObjects($cmdletName, $docObj) {
-    $parameterSets = (Get-Command $cmdletName).ParameterSets
+function Annotate-ParametersAndSyntaxObjects($cmdletInfo, $docObj) {
+    $parameterSets = $cmdletInfo.ParameterSets
 
     # Go through each parameter set and annotate the parameters that belong to it.
     ForEach ($parameterSet in $parameterSets) {
@@ -171,71 +177,6 @@ function Annotate-ParametersAndSyntaxObjects($cmdletName, $docObj) {
             $docParam.parameterSet += $parameterSet.HackName
         }
     }
-
-    # Go through each syntax object and mark which parameter set it belongs to, and if it is the
-    # default parameter set.
-    ForEach ($syntaxObj in $docObj.syntax.syntaxItem) {
-        $matchingParameterSet = $null
-
-        # The syntax matches the parameter set IFF all syntax obj params are in the parameter set.
-        ForEach ($parameterSet in $parameterSets) {
-            $parameterSetMatches = $true
-
-            # Note that the syntax obj only contains defined prameters, not "common" parameters
-            # -Verbose. So we loop through the syntax objs' parameters, not the parameter set's.
-            ForEach ($syntaxParam in $syntaxObj.parameter) {
-                # Remove a property which is redundant.
-                if (($syntaxParam | Get-Member "description") -ne $null) {
-                    $syntaxParam.description = $null
-                }
-
-                # Is the Parameter Set parameter found?
-                $paramInBoth = ($parameterSet.Parameters | Where Name -eq $syntaxParam.Name) -ne $null
-                if (-Not $paramInBoth) {
-                    $parameterSetMatches = $false
-                    break
-                }
-            }
-
-            # Do the reverse lookup and confirm that all required parameters of the parameter of
-            # the parameter set are honored. It is possible to have one parameter set be a proper
-            # subset of another.
-            ForEach ($paramSetParam in $parameterSet.Parameters) {
-                # If the parameter is a dynamic parameter, then it won't show up in Get-Help -Full.
-                # So we will have to generate an object that corresponds to this dynamic parameter and add it to $syntaxObj.parameter.
-                if ($paramSetParam.IsDynamic) {
-                    $dynamicParameterSyntaxObject = New-DynamicParamObject $paramSetParam
-                    $parameterArray = @($dynamicParameterSyntaxObject) + $syntaxObj.parameter
-                    $syntaxObj.parameter = $parameterArray
-                }
-
-                if (-Not $paramSetParam.IsMandatory) {
-                    continue
-                }
-
-                $paramInBoth = ($syntaxObj.parameter | Where Name -eq $paramSetParam.Name) -ne $null
-                if (-Not $paramInBoth) {
-                    $parameterSetMatches = $false
-                    break
-                }
-            }
-
-            if ($parameterSetMatches) {
-                $matchingParameterSet = $parameterSet
-                break
-            }
-        }
-
-
-        if ($matchingParameterSet -eq $null) {
-            Write-Warning "Unable to map syntax to parameter set for $cmdletName"
-            exit
-        }
-
-        Write-Host "`tMarking syntax for parameter set $($matchingParameterSet.HackName)"
-        $syntaxObj | Add-Member "parameterSet" $matchingParameterSet.HackName
-        $syntaxObj | Add-Member "isDefault"    $matchingParameterSet.IsDefault
-    }
 }
 
 # Add dynamic parameter to $docObj.parameters
@@ -245,7 +186,7 @@ function Add-DynamicParameterToDocObj($cmdletName, $docObj) {
     ForEach($parameterSet in $parameterSets) {
         ForEach ($paramSetParam in $parameterSet.Parameters) {
             if ($paramSetParam.IsDynamic) {
-                $dynamicParameterSyntaxObject = New-DynamicParamObject $paramSetParam
+                $dynamicParameterSyntaxObject = New-ParamObject $paramSetParam
 
                 if ($parameterSet.ParameterSetName -eq "__AllParameterSets") {
                     $dynamicParameterSyntaxObject | Add-Member "parameterSet" $script:defaultParameterSetName
@@ -263,6 +204,39 @@ function Add-DynamicParameterToDocObj($cmdletName, $docObj) {
         Collapse-ParameterDescriptions($dynamicParameters)
         $docObj.parameters = $dynamicParameters + $docObj.parameters
     }
+}
+
+# Generate an object similar to what (Get-Help -Full $cmdletName).Syntax.SyntaxItem
+# looks like. We have to do this because for some reason (most likely a bug?), the
+# Get-Help cmdlet always generate incorrect value when a cmdlet has a dynamic parameter.
+function New-SyntaxObjectArray($cmdletInfo) {
+    $syntaxObjectArray = @()
+    ForEach ($parameterSet in $cmdletInfo.ParameterSets) {
+        $syntaxObjParams = @()
+        ForEach($parameter in $parameterSet.Parameters) {
+            if ([System.Management.Automation.PSCmdlet]::CommonParameters.Contains($parameter.Name) -or
+                [System.Management.Automation.PSCmdlet]::OptionalCommonParameters.Contains($parameter.Name)) {
+                continue
+            }
+
+            $syntaxObjParams += (New-ParamObject $parameter)
+        }
+
+        $parameterSetName = $parameterSet.Name;
+        if ($parameterSetName -eq "__AllParameterSets") {
+            $parameterSetName = $script:defaultParameterSetName
+        }
+
+        $syntaxObject = New-Object PSObject -Property @{
+            "parameterSet" = $parameterSetName;
+            "isDefault" = $parameterSet.IsDefault;
+            "parameter" = $syntaxObjParams;
+            "name" = $cmdletInfo.Name
+        }
+        $syntaxObjectArray += $syntaxObject
+    }
+
+    return $syntaxObjectArray
 }
 
 # Each parameter description is either a single string, or an array of PSAutomationObjects with a
@@ -285,14 +259,16 @@ $productInfoLookup = @{
     "Gce"   = @{ name = "Google Compute Engine"; shortName = "google-compute-engine"; resources = @() }
     "GcSql" = @{ name = "Google Cloud SQL";      shortName = "google-cloud-sql"     ; resources = @() }
     "Gcd"   = @{ name = "Google Cloud DNS";      shortName = "google-cloud-dns"     ; resources = @() }
-    "Gcps"   = @{ name = "Google Cloud PubSub";      shortName = "google-cloud-pubsub"     ; resources = @() }
-    "GcLog"   = @{ name = "Google Cloud Logging";      shortName = "google-cloud-logging"     ; resources = @() }
-    "GcIam"   = @{ name = "Google Cloud IAM";
+    "Gcps"  = @{ name = "Google Cloud PubSub";      shortName = "google-cloud-pubsub"     ; resources = @() }
+    "GcLog" = @{ name = "Google Cloud Logging";      shortName = "google-cloud-logging"     ; resources = @() }
+    "GcIam" = @{ name = "Google Cloud IAM";
                    shortName = "google-cloud-iam";
                    resources = @() }
     "GcpProject"   = @{ name = "Google Cloud Project";
                    shortName = "google-cloud-project";
                    resources = @() }
+    "Gke"   = @{ name = "Google Container Engine";  shortName = "google-cloud-container" ; resources = @() }
+    "Bq"    = @{ name = "Google Cloud BigQuery";  shortName = "google-cloud-bigquery" ; resources = @() }
 }
 
 # Generate a giant JSON file containing all of our cmdlet's documentation. We later write this as
@@ -309,13 +285,14 @@ ForEach ($cmdlet in $cmdlets) {
     $cmdletResource = $cmdlet.Name.Split("-")[1]
 
     $helpObj = Get-Help -Full $cmdlet.Name
+    $cmdletInfo = Get-Command $cmdlet.Name
 
     # Generate the object to be written out.
     $docObj = @{
         "name"        = $cmdlet.Name
         "synopsis"    = $helpObj.Synopsis
         "description" = Collapse-TextArray($helpObj.Description)
-        "syntax"      = $helpObj.Syntax.syntaxItem
+        "syntax"      = New-SyntaxObjectArray($cmdletInfo)
         "parameters"  = $helpObj.parameters.parameter
         "inputs"      = $helpObj.inputTypes
         "outputs"     = $helpObj.returnValues
@@ -324,7 +301,7 @@ ForEach ($cmdlet in $cmdlets) {
     }
 
     Add-DynamicParameterToDocObj $cmdlet.Name $docObj
-    Annotate-ParametersAndSyntaxObjects $cmdlet.Name $helpObj
+    Annotate-ParametersAndSyntaxObjects $cmdletInfo $helpObj
     Collapse-ParameterDescriptions $helpObj.parameters.parameter
 
     # Determine which product the cmdlet belongs to
@@ -360,7 +337,7 @@ ForEach ($cmdlet in $cmdlets) {
 $cmdletDocOutputPath = Join-Path $PSScriptRoot "\..\website\data\cmdletsFull.json"
 Write-Host "Writing cmdlet documentation to '$cmdletDocOutputPath'."
 $allDocumentationObj |
-    ConvertTo-Json -Depth 10 -Compress |
+    ConvertTo-Json -Depth 15 -Compress |
     Out-File -FilePath $cmdletDocOutputPath -Encoding "UTF8"
 
 Write-Host "`tWrote $([Math]::Round((Get-Item $cmdletDocOutputPath).Length / 1MB, 2))MiB"
