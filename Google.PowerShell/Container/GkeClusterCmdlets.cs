@@ -491,66 +491,6 @@ namespace Google.PowerShell.Container
 
             return nodeConfig;
         }
-
-        /// <summary>
-        /// Helper function to build a NodePool object.
-        /// InitialNodeCount will default to 1.
-        /// MaximumNodesToScaleTo has to be greater than MinimumNodesToScaleTo, which defaults to 1.
-        /// </summary>
-        /// <param name="name">The name of the node pool.</param>
-        /// <param name="config">The config of the node pool.</param>
-        /// <param name="initialNodeCount">The number of nodes created in the pool initially.</param>
-        /// <param name="autoUpgrade">If true, nodes will have auto-upgrade enabled.</param>
-        /// <param name="minimumNodesToScaleTo">The maximum number of nodes to scale to.</param>
-        /// <param name="maximumNodesToScaleTo">
-        /// The minimum number of nodes to scale to. Defaults to 1.
-        /// </param>
-        /// <returns></returns>
-        protected NodePool BuildNodePool(string name, NodeConfig config, int? initialNodeCount, bool autoUpgrade,
-            int? minimumNodesToScaleTo, int? maximumNodesToScaleTo)
-        {
-            var nodePool = new NodePool()
-            {
-                Name = name,
-                InitialNodeCount = initialNodeCount ?? 1,
-                Config = config
-            };
-
-            if (maximumNodesToScaleTo != null)
-            {
-                var scaling = new NodePoolAutoscaling() { Enabled = true };
-
-                if (minimumNodesToScaleTo == null)
-                {
-                    minimumNodesToScaleTo = 1;
-                }
-
-                if (maximumNodesToScaleTo < minimumNodesToScaleTo)
-                {
-                    throw new PSArgumentException(
-                        "Maximum node count in a node pool has to be greater or equal to the minimum count.");
-                }
-
-                // No need to check maximum nodes since we know for sure at this point it will be greater or equal to this.
-                if (minimumNodesToScaleTo <= 0)
-                {
-                    throw new PSArgumentException(
-                        "Both -MaximumNodesToScaleTo and -MinimumNodesToScaleTo has to be greater than 0.");
-                }
-
-                scaling.MaxNodeCount = maximumNodesToScaleTo;
-                scaling.MinNodeCount = minimumNodesToScaleTo;
-                nodePool.Autoscaling = scaling;
-            }
-
-            if (autoUpgrade)
-            {
-                var nodeManagement = new NodeManagement() { AutoUpgrade = true };
-                nodePool.Management = nodeManagement;
-            }
-
-            return nodePool;
-        }
     }
 
     /// <summary>
@@ -733,7 +673,7 @@ namespace Google.PowerShell.Container
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GkeCluster")]
-    public class AddGkeClusterCmdlet : GkeNodeConfigCmdlet
+    public class AddGkeClusterCmdlet : GkeNodePoolConfigCmdlet
     {
         private class ParameterSetNames
         {
@@ -832,15 +772,6 @@ namespace Google.PowerShell.Container
 
         /// <summary>
         /// <para type="description">
-        /// The number of nodes to create in the cluster.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = false)]
-        [ValidateRange(0, int.MaxValue)]
-        public int? InitialNodeCount { get; set; }
-
-        /// <summary>
-        /// <para type="description">
         /// The credential to access the master endpoint.
         /// </para>
         /// </summary>
@@ -874,7 +805,7 @@ namespace Google.PowerShell.Container
 
         /// <summary>
         /// <para type="description">
-        /// Removes horizontal pod autoscaling feature, which increases or decreases the nmber of replica
+        /// Removes horizontal pod autoscaling feature, which increases or decreases the number of replica
         /// pods a replication controller has based on the resource usage of the existing pods.
         /// </para>
         /// </summary>
@@ -899,7 +830,7 @@ namespace Google.PowerShell.Container
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfig)]
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
-        public SwitchParameter EnableAutoUpgrade { get; set; }
+        public override SwitchParameter EnableAutoUpgrade { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -909,7 +840,7 @@ namespace Google.PowerShell.Container
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfig)]
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
-        public int? MaximumNodesToScaleTo { get; set; }
+        public override int? MaximumNodesToScaleTo { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -919,7 +850,7 @@ namespace Google.PowerShell.Container
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfig)]
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
-        public int? MininumNodesToScaleTo { get; set; }
+        public override int? MininumNodesToScaleTo { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -966,7 +897,8 @@ namespace Google.PowerShell.Container
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByNodeConfig, ValueFromPipeline = true)]
-        public NodeConfig NodeConfig { get; set; }
+        [ValidateNotNull]
+        public override NodeConfig NodeConfig { get; set; }
 
         /// <summary>
         /// <para type="description">
