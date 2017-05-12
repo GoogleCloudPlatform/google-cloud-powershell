@@ -210,7 +210,7 @@ namespace Google.PowerShell.Container
         /// <summary>
         /// Helper function to build a NodePool object.
         /// InitialNodeCount will default to 1.
-        /// MaximumNodesToScaleTo has to be greater than MinimumNodesToScaleTo, which defaults to 1.
+        /// MaximumNodesToScaleTo have to be greater than MinimumNodesToScaleTo, which defaults to 1.
         /// </summary>
         /// <param name="name">The name of the node pool.</param>
         /// <param name="config">The config of the node pool.</param>
