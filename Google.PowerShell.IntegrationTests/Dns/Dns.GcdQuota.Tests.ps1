@@ -1,4 +1,5 @@
 ﻿. $PSScriptRoot\..\Dns\GcdCmdlets.ps1
+Install-GcloudCmdlets
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 
 Describe "Get-GcdQuota" {
