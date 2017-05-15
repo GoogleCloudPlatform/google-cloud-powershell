@@ -15,7 +15,7 @@ Describe "Get-GcLogSink" {
     $destinationTwo = "storage.googleapis.com/random-destination-will-do2-$r"
     $logFilter = "this is a filter"
     gcloud beta logging sinks create $script:sinkName $destination --log-filter=$logFilter --quiet 2>$null
-    gcloud beta logging sinks create $script:secondSinkName $destinationTwo --output-version-format=V2 --quiet 2>$null
+    gcloud beta logging sinks create $script:secondSinkName $destinationTwo --quiet 2>$null
     
 
     AfterAll {
@@ -29,7 +29,7 @@ Describe "Get-GcLogSink" {
         $firstSink = $sinks | Where-Object {$_.Name -eq $sinkName}
         $firstSink | Should Not BeNullOrEmpty
         $firstSink.Destination | Should BeExactly $destination
-        $firstSink.OutputVersionFormat | Should BeExactly V1
+        $firstSink.OutputVersionFormat | Should BeExactly V2
         $firstSink.Filter | Should BeExactly $logFilter
         $firstSink.WriterIdentity | Should Not BeNullOrEmpty
 
@@ -46,7 +46,7 @@ Describe "Get-GcLogSink" {
         $firstSink | Should Not BeNullOrEmpty
         $firstSink.Name | Should BeExactly "$sinkName"
         $firstSink.Destination | Should BeExactly $destination
-        $firstSink.OutputVersionFormat | Should BeExactly V1
+        $firstSink.OutputVersionFormat | Should BeExactly V2
         $firstSink.Filter | Should BeExactly $logFilter
         $firstSink.WriterIdentity | Should Not BeNullOrEmpty
     }
@@ -58,7 +58,7 @@ Describe "Get-GcLogSink" {
         $firstSink = $sinks | Where-Object {$_.Name -eq $sinkName}
         $firstSink | Should Not BeNullOrEmpty
         $firstSink.Destination | Should BeExactly $destination
-        $firstSink.OutputVersionFormat | Should BeExactly V1
+        $firstSink.OutputVersionFormat | Should BeExactly V2
         $firstSink.Filter | Should BeExactly $logFilter
         $firstSink.WriterIdentity | Should Not BeNullOrEmpty
 
@@ -171,20 +171,19 @@ Describe "New-GcLogSink" {
 
     It "should work with -OutputVersionFormat" {
         $r = Get-Random
-        $bucket = "gcloud-powershell-testing-pubsubtopicv1-$r"
-        $bucketTwo = "gcloud-powershell-testing-pubsubtopicv2-$r"
+        $bucket = "gcloud-powershell-testing-pubsubtopic-1-$r"
+        $bucketTwo = "gcloud-powershell-testing-pubsubtopic-2-$r"
         $sinkName = "gcps-new-gclogsink-$r"
         $sinkNameTwo = "gcps-new-gclogsink2-$r"
         try {
-            New-GcLogSink $sinkName -GcsBucketDestination $bucket -OutputVersionFormat V1 -UniqueWriterIdentity
-            # Have to be a different topic because sinks with diffferent output formats cannot share destination.
-            New-GcLogSink $sinkNameTwo -GcsBucketDestination $bucketTwo -OutputVersionFormat V2 -UniqueWriterIdentity
+            New-GcLogSink $sinkName -GcsBucketDestination $bucket -UniqueWriterIdentity
+            New-GcLogSink $sinkNameTwo -GcsBucketDestination $bucketTwo -UniqueWriterIdentity
             Start-Sleep -Seconds 1
 
             $createdSink = Get-GcLogSink -Sink $sinkName
             Test-GcLogSink -Name $sinkName `
                            -Destination "storage.googleapis.com/$bucket" `
-                           -OutputVersionFormat "V1" `
+                           -OutputVersionFormat "V2" `
                            -Sink $createdSink
 
             $createdSink = Get-GcLogSink -Sink $sinkNameTwo
@@ -523,18 +522,18 @@ Describe "Set-GcLogSink" {
 
     It "should work with -OutputVersionFormat" {
         $r = Get-Random
-        $bucket = "gcloud-powershell-testing-pubsubtopicv1-$r"
-        $bucketTwo = "gcloud-powershell-testing-pubsubtopicv2-$r"
+        $bucket = "gcloud-powershell-testing-pubsubtopic-1-$r"
+        $bucketTwo = "gcloud-powershell-testing-pubsubtopic-2-$r"
         $sinkName = "gcps-new-gclogsink-$r"
         $sinkNameTwo = "gcps-new-gclogsink2-$r"
         try {
-            New-GcLogSink $sinkName -GcsBucketDestination $bucket -OutputVersionFormat V1 -UniqueWriterIdentity
+            New-GcLogSink $sinkName -GcsBucketDestination $bucket -UniqueWriterIdentity
             # Have to be a different topic because sinks with diffferent output formats cannot share destination.
-            New-GcLogSink $sinkNameTwo -GcsBucketDestination $bucketTwo -OutputVersionFormat V2 -UniqueWriterIdentity
+            New-GcLogSink $sinkNameTwo -GcsBucketDestination $bucketTwo -UniqueWriterIdentity
             Start-Sleep -Seconds 1
 
             Set-GcLogSink $sinkName -OutputVersionFormat V2 -UniqueWriterIdentity
-            Set-GcLogSink $sinkNameTwo -GcsBucketDestination $bucketTwo -OutputVersionFormat V1 -UniqueWriterIdentity
+            Set-GcLogSink $sinkNameTwo -GcsBucketDestination $bucketTwo -UniqueWriterIdentity
             Start-Sleep -Seconds 1
 
             $updatedSink = Get-GcLogSink -Sink $sinkName
@@ -546,7 +545,7 @@ Describe "Set-GcLogSink" {
             $updatedSink = Get-GcLogSink -Sink $sinkNameTwo
             Test-GcLogSink -Name $sinkNameTwo `
                            -Destination "storage.googleapis.com/$bucketTwo" `
-                           -OutputVersionFormat "V1" `
+                           -OutputVersionFormat "V2" `
                            -Sink $updatedSink
         }
         finally {

@@ -137,15 +137,6 @@ namespace Google.PowerShell.Logging
 
         /// <summary>
         /// <para type="description">
-        /// The log entry format to use for this sink's exported log entries. The v2 format is used by default.
-        /// The v1 format is deprecated and should be used only as part of a migration effort to v2.
-        /// </para>
-        /// </summary>
-        [Parameter(Mandatory = false)]
-        public LogEntryVersionFormat? OutputVersionFormat { get; set; }
-
-        /// <summary>
-        /// <para type="description">
         /// The name of the sink to be created. This name must be unique within the project.
         /// </para>
         /// </summary>
@@ -229,11 +220,6 @@ namespace Google.PowerShell.Logging
                 before: null,
                 after: null,
                 otherFilter: Filter);
-
-            if (OutputVersionFormat.HasValue)
-            {
-                logSink.OutputVersionFormat = Enum.GetName(typeof(LogEntryVersionFormat), OutputVersionFormat.Value).ToUpper();
-            }
 
             if (Before.HasValue)
             {

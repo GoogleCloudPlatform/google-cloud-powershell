@@ -1,5 +1,6 @@
 ﻿. $PSScriptRoot\..\BigQuery\BqCmdlets.ps1
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
+$folder = Resolve-Path $PSScriptRoot
 
 Describe "Get-BqJob" {
 
@@ -7,8 +8,6 @@ Describe "Get-BqJob" {
         $r = Get-Random
         $datasetName = "pshell_testing_$r"
         $test_set = New-BqDataset $datasetName
-        $folder = Get-Location
-        $folder = $folder.ToString()
         $filename = "$folder\classics.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
@@ -75,8 +74,6 @@ Describe "BqJob-Query" {
         $r = Get-Random
         $datasetName = "pshell_testing_$r"
         $test_set = New-BqDataset $datasetName
-        $folder = Get-Location
-        $folder = $folder.ToString()
         $filename = "$folder\classics.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
@@ -146,8 +143,6 @@ Describe "BqJob-Copy" {
         $r = Get-Random
         $datasetName = "pshell_testing_$r"
         $test_set = New-BqDataset $datasetName
-        $folder = Get-Location
-        $folder = $folder.ToString()
         $filename = "$folder\classics.csv"
         $filename_other = "$folder\otherschema.csv"
 
@@ -222,8 +217,6 @@ Describe "BqJob-Extract-Load" {
         $r = Get-Random
         $datasetName = "pshell_testing_$r"
         $test_set = New-BqDataset $datasetName
-        $folder = Get-Location
-        $folder = $folder.ToString()
         $filename = "$folder\classics.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
@@ -365,8 +358,6 @@ Describe "Stop-BqJob" {
         $r = Get-Random
         $datasetName = "pshell_testing_$r"
         $test_set = New-BqDataset $datasetName
-        $folder = Get-Location
-        $folder = $folder.ToString()
         $filename = "$folder\classics_large.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
