@@ -1,11 +1,10 @@
 . $PSScriptRoot\..\BigQuery\BqCmdlets.ps1
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
+$folder = Resolve-Path $PSScriptRoot
 
 Describe "New-BqSchema" {
 
     BeforeAll {
-        $folder = Get-Location
-        $folder = $folder.ToString()
         $filename = "$folder\schema.json"
         $filename_mini = "$folder\schema_mini.json"
     }
@@ -81,8 +80,6 @@ Describe "Set-BqSchema" {
         $r = Get-Random
         $datasetName = "pshell_testing_$r"
         $test_set = New-BqDataset $datasetName
-        $folder = Get-Location
-        $folder = $folder.ToString()
         $filename = "$folder\schema.json"
     }
 
@@ -154,8 +151,6 @@ Describe "Add-BqTableRow" {
         $datasetName = "pshell_testing_$r"
         $test_set = New-BqDataset $datasetName
         # Input file path setup.
-        $folder = Get-Location
-        $folder = $folder.ToString()
         $filename_csv = "$folder\classics.csv"
         $filename_json = "$folder\classics.json"
         $filename_avro = "$folder\classics.avro"
@@ -270,8 +265,6 @@ Describe "Get-BqTableRow" {
         $datasetName = "pshell_testing_$r"
         $test_set = New-BqDataset $datasetName
         # Input file path setup.
-        $folder = Get-Location
-        $folder = $folder.ToString()
         $filename = "$folder\classics.csv"
         $filename_big = "$folder\classics_large.csv"
         # Small Table Setup.
