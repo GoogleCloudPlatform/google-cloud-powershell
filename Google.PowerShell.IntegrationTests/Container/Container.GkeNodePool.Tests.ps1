@@ -7,8 +7,10 @@ $script:gcloudCmdletsPath = (Resolve-Path "$PSScriptRoot\..\GcloudCmdlets.ps1").
 
 $r = Get-Random
 $clusterOneName = "gkenodepool-one-$r"
-$clusterTwoName = "get-gkecluster-two-$r"
+$clusterTwoName = "gkenodepool-two-$r"
+$clusterThreeName = "gkenodepool-three-$r"
 $clusterTwoZone = "europe-west1-c"
+$clusterThreeZone = "europe-west1-d"
 
 # Create Cluster in Parallel to save time.
 $clusterCreationScriptBlock =
@@ -23,8 +25,10 @@ $clusterOneCreationJob = Start-Job -ScriptBlock $clusterCreationScriptBlock `
                                    -ArgumentList @($gcloudCmdletsPath, $clusterOneName, $zone)
 $clusterTwoCreationJob = Start-Job -ScriptBlock $clusterCreationScriptBlock `
                                    -ArgumentList @($gcloudCmdletsPath, $clusterTwoName, $clusterTwoZone)
+$clusterThreeCreationJob = Start-Job -ScriptBlock $clusterCreationScriptBlock `
+                                   -ArgumentList @($gcloudCmdletsPath, $clusterThreeName, $clusterThreeZone)
 
-Wait-Job $clusterOneCreationJob, $clusterTwoCreationJob | Remove-Job
+Wait-Job $clusterOneCreationJob, $clusterTwoCreationJob, $clusterThreeCreationJob | Remove-Job
 
 Describe "Get-GkeNodePool" {
     $additionalNodePool = "get-gkenodepool-$r"
@@ -165,6 +169,102 @@ Describe "New-GkeNodePool" {
     }
 }
 
+Describe "Add-GkeNodePool" {
+    It "should work with -ImageType, -MachineType and -DiskSizeGb" {
+        $nodePool = Add-GkeNodePool "my-pool" -ImageType container_vm `
+                                              -MachineType n1-standard-1 `
+                                              -DiskSizeGb 20 `
+                                              -Cluster $clusterOneName
+        $cluster = Get-GkeCluster $clusterOneName
+        $nodePoolOnline = $cluster.NodePools | Where Name -eq $nodePool.Name
+
+        ForEach($pool in @($nodePool, $nodePoolOnline)) {
+            $pool.Name | Should BeExactly "my-pool"
+            $pool.Config.ImageType | Should Match CONTAINER_VM
+            $pool.Config.MachineType | Should BeExactly n1-standard-1
+            $pool.Config.DiskSizeGb | Should Be 20
+        }
+    }
+
+    It "should work with -NodePool and Cluster Object" {
+        $nodePoolObject = New-GkeNodePool "my-pool1" -ImageType cos `
+                                               -Metadata @{"key" = "value"} `
+                                               -MininumNodesToScaleTo 2 `
+                                               -MaximumNodesToScaleTo 3
+        $clusterObject = Get-GkeCluster $clusterTwoName -Zone $clusterTwoZone
+
+        $nodePool = Add-GkeNodePool -NodePool $nodePoolObject `
+                                    -Cluster $clusterObject `
+                                    -Zone $clusterTwoZone
+
+        $cluster = Get-GkeCluster $clusterTwoName -Zone $clusterTwoZone
+        $nodePoolOnline = $cluster.NodePools | Where Name -eq $nodePool.Name
+
+        ForEach($pool in @($nodePool, $nodePoolOnline)) {
+            $pool.Name | Should BeExactly "my-pool1"
+            $pool.Config.ImageType | Should Match cos
+            $pool.Config.Metadata["key"] | Should BeExactly "value"
+            $pool.Autoscaling.MinNodeCount | Should Be 2
+            $pool.Autoscaling.MaxNodeCount | Should Be 3
+        }
+    }
+
+    It "should work with -Label, -Preemptible and service account and pipeline" {
+        $serviceAccount = New-GceServiceAccountConfig -BigtableAdmin Full `
+                                                      -CloudLogging None `
+                                                      -CloudMonitoring None `
+                                                      -ServiceControl $false `
+                                                      -ServiceManagement $false `
+                                                      -Storage None
+
+        $nodePoolConfig = New-GkeNodePool "my-pool2" -Metadata @{"key" = "value"} `
+                                                     -Label @{"release" = "stable"} `
+                                                     -PreEmptible `
+                                                     -ServiceAccount $serviceAccount
+
+        $nodePool = $nodePoolConfig | Add-GkeNodePool -Cluster $clusterThreeName -Zone $clusterThreeZone
+        $cluster = Get-GkeCluster $clusterThreeName -Zone $clusterThreeZone
+        $nodePoolOnline = $cluster.NodePools | Where Name -eq $nodePool.Name
+
+        ForEach($pool in @($nodePool, $nodePoolOnline)) {
+            $pool.Name | Should BeExactly "my-pool2"
+            $pool.Config.Metadata["key"] | Should BeExactly "value"
+            $pool.Config.Labels["release"] | Should BeExactly "stable"
+            $pool.Config.Preemptible | Should Be $true
+            $pool.Config.ServiceAccount | Should Match "-compute@developer.gserviceaccount.com"
+            $pool.Config.OauthScopes[0] | Should Match "bigtable.admin"
+        }
+    }
+
+    It "should raise an error for bad metadata key" {
+        { Add-GkeNodePool "nodepool" -Metadata @{"#$" = "value"} -Cluster $clusterOneName } |
+            Should Throw "can only be alphanumeric, hyphen or underscore."
+
+        { Add-GkeNodePool "nodepool" -Metadata @{"instance-template" = "test" } -Cluster $clusterOneName } |
+            Should Throw "reserved keyword"
+    }
+
+    It "should raise an error for negative SsdCount" {
+        { Add-GkeNodePool "nodepool" -LocalSsdCount -3 -Cluster $clusterOneName } |
+            Should Throw "less than the minimum allowed range of 0"
+    }
+
+    It "should raise an error for wrong DiskSize" {
+        { Add-GkeNodePool "nodepool" -DiskSizeGb 3 -Cluster $clusterOneName } |
+            Should Throw "less than the minimum allowed range of 10"
+    }
+
+    It "should raise error if we try to create an existing node pool" {
+        { Add-GkeNodePool "default-pool" -Cluster $clusterOneName -ErrorAction Stop } |
+            Should Throw "already exists"
+    }
+
+    It "should raise error if we try to add to non-existing cluster" {
+        { Add-GkeNodePool "new-pool" -Cluster "cluster-non-exist-$r" -ErrorAction Stop } |
+            Should Throw "not found"
+    }
+}
+
 $clusterDeletionScriptBlock =
 {
     param($cmdletPath, $clusterName, $clusterZone)
@@ -177,5 +277,7 @@ $clusterOneDeletionJob = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
                                    -ArgumentList @($gcloudCmdletsPath, $clusterOneName, $zone)
 $clusterTwoDeletionJob = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
                                    -ArgumentList @($gcloudCmdletsPath, $clusterTwoName, $clusterTwoZone)
+$clusterThreeDeletionJob = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
+                                   -ArgumentList @($gcloudCmdletsPath, $clusterThreeName, $clusterThreeZone)
 
-Wait-Job $clusterOneDeletionJob, $clusterTwoDeletionJob | Remove-Job
+Wait-Job $clusterOneDeletionJob, $clusterTwoDeletionJob, $clusterThreeDeletionJob | Remove-Job
