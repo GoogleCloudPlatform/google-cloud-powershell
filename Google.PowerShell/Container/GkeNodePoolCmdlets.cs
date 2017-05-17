@@ -155,6 +155,13 @@ namespace Google.PowerShell.Container
     /// </summary>
     public abstract class GkeNodePoolConfigCmdlet : GkeNodeConfigCmdlet
     {
+        protected class ParameterSetNames
+        {
+            public const string ByNodeConfig = "ByNodeConfig";
+            public const string ByNodeConfigValues = "ByNodeConfigValues";
+            public const string ByNodePool = "ByNodePool";
+        }
+
         /// <summary>
         /// <para type="description">
         /// Name of the node pool.
@@ -356,12 +363,6 @@ namespace Google.PowerShell.Container
     [Cmdlet(VerbsCommon.New, "GkeNodePool")]
     public class NewGkeNodePoolCmdlet : GkeNodePoolConfigCmdlet
     {
-        private class ParameterSetNames
-        {
-            public const string ByNodeConfig = "ByNodeConfig";
-            public const string ByNodeConfigValues = "ByNodeConfigValues";
-        }
-
         /// <summary>
         /// <para type="description">
         /// Name of the node pool.
@@ -378,6 +379,7 @@ namespace Google.PowerShell.Container
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByNodeConfig)]
+        [ValidateNotNull]
         public override NodeConfig NodeConfig { get; set; }
 
         /// <summary>
@@ -475,15 +477,164 @@ namespace Google.PowerShell.Container
 
         protected override void ProcessRecord()
         {
+            NodePool nodePool = BuildNodePoolFromParams();
+            WriteObject(nodePool);
+        }
+
+        protected NodePool BuildNodePoolFromParams()
+        {
             // Build the node config from parameters if user does not supply a NodeConfig object.
             if (ParameterSetName == ParameterSetNames.ByNodeConfigValues)
             {
                 NodeConfig = BuildNodeConfig();
             }
 
-            NodePool nodePool = BuildNodePool(NodePoolName, NodeConfig, InitialNodeCount, EnableAutoUpgrade,
+            return BuildNodePool(NodePoolName, NodeConfig, InitialNodeCount, EnableAutoUpgrade,
                 MininumNodesToScaleTo, MaximumNodesToScaleTo);
-            WriteObject(nodePool);
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Adds a Google Container Engine Node Pool to a Cluster.
+    /// </para>
+    /// <para type="description">
+    /// Adds a Google Container Engine Node Pool to a Cluster. If -Project is not used,
+    /// the cmdlet will use the default project. If -Zone is not used, the cmdlet will use the default zone.
+    /// -Project and -Zone parameters are only used to provide tab-completion for the possible list of
+    /// image and machine types applicable to the nodes. You can either create a NodePool
+    /// object separately with New-GkeNodePool and use it with -NodePool parameter or simply use
+    /// the available parameters on this cmdlet to create a new NodePool.
+    /// </para>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> $nodePool = New-GkeNodePool -NodePoolName "my-nodepool" -ImageType CONTAINER_VM
+    ///   PS C:\> Add-GkeNodePool -NodePool $nodePool -Cluster "my-cluster"
+    ///   </code>
+    ///   <para>
+    ///   Creates a node pool "my-nodepool" with image type CONTAINER_VM for each node.
+    ///   Adds that pool to cluster "my-cluter".
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Add-GkeNodePool -NodePoolName "my-nodepool" `
+    ///                           -ImageType CONTAINER_VM `
+    ///                           -MachineType n1-standard-1 `
+    ///                           -InitialNodeCount 3 `
+    ///                           -Cluster $cluster
+    ///   </code>
+    ///   <para>
+    ///   Creates a node pool with image type CONTAINER_VM for each node and machine type n1-standard-1
+    ///   for each Google Compute Engine used to create the node pool. The node pool will be added
+    ///   to cluster $cluster where $cluster is a Cluster object returned from Get-GkeCluster.
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>PS C:\> Add-GkeNodePool "my-nodepool" -DiskSizeGb 20 `
+    ///                                               -SsdCount 2 `
+    ///                                               -EnableAutoUpgrade `
+    ///                                               -Cluster "my-cluster" `
+    ///                                               -Zone "europe-west1-c"
+    ///   </code>
+    ///   <para>
+    ///   Creates a node pool with 20 Gb disk size and 2 SSDs for each node. Each node in the node pool
+    ///   will have autoupgrade enabled. The node pool will be added to cluster "my-cluster" in zone
+    ///   "europe-west1-c".
+    ///   </para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/container-engine/reference/rest/v1/NodeConfig)">
+    /// [Node Configs]
+    /// </para>
+    /// <para type="link" uri="(https://kubernetes.io/docs/user-guide/labels/)">
+    /// [Kubernetes Labels]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/compute/docs/instances/preemptible)">
+    /// [Preemptible VM instances]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/container-engine/docs/node-pools)">
+    /// [Node Pools]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Add, "GkeNodePool")]
+    public class AddGkeNodePoolCmdlet : NewGkeNodePoolCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The node pool to be added to the cluster.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
+            ParameterSetName = ParameterSetNames.ByNodePool)]
+        [ValidateNotNull]
+        public NodePool NodePool { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Name of the node pool.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByNodeConfig)]
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
+        [ValidateNotNullOrEmpty]
+        public override string NodePoolName { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the cluster.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Google.Apis.Container.v1.Data.Cluster),
+            Property = nameof(Google.Apis.Container.v1.Data.Cluster.Name))]
+        [ValidateNotNullOrEmpty]
+        public string Cluster { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            try
+            {
+                NodePool = NodePool ?? BuildNodePoolFromParams();
+                var requestBody = new CreateNodePoolRequest() { NodePool = NodePool };
+                ProjectsResource.ZonesResource.ClustersResource.NodePoolsResource.CreateRequest request =
+                    Service.Projects.Zones.Clusters.NodePools.Create(requestBody, Project, Zone, Cluster);
+                Operation createOperation = request.Execute();
+                NodePool createdNodePool = WaitForNodePoolCreation(createOperation);
+                WriteObject(createdNodePool);
+            }
+            catch (GoogleApiException apiEx) when (apiEx.HttpStatusCode == HttpStatusCode.Conflict)
+            {
+                WriteResourceExistsError(
+                    exceptionMessage: $"NodePool '{NodePool.Name}' already exists in cluster '{Cluster}'"
+                        + $"in zone '{Zone}' of project '{Project}'.",
+                    errorId: "NodePoolAlreadyExists",
+                    targetObject: NodePool.Name);
+            }
+            catch (GoogleApiException apiEx) when (apiEx.HttpStatusCode == HttpStatusCode.NotFound)
+            {
+                WriteResourceExistsError(
+                    exceptionMessage: $"Cluster '{Cluster}' cannot be found in zone '{Zone}'"
+                        + $" of project '{Project}'.",
+                    errorId: "ClusterNotFound",
+                    targetObject: Cluster);
+            }
+        }
+
+        /// <summary>
+        /// Wait for the NodePool creation operation to complete.
+        /// Use write progress to display the progress in the meantime.
+        /// </summary>
+        private NodePool WaitForNodePoolCreation(Operation operation)
+        {
+            string activity = $"Creating NodePool '{NodePool.Name}' in cluster '{Cluster}'" +
+                $" in zone '{Zone}' of project '{Project}'.";
+            string status = "Creating NodePool";
+            WaitForClusterOperation(operation, Project, Zone, activity, status);
+
+            // Returns the NodePool after it is created.
+            ProjectsResource.ZonesResource.ClustersResource.NodePoolsResource.GetRequest getRequest =
+                Service.Projects.Zones.Clusters.NodePools.Get(Project, Zone, Cluster, NodePool.Name);
+            return getRequest.Execute();
         }
     }
 }

@@ -675,13 +675,6 @@ namespace Google.PowerShell.Container
     [Cmdlet(VerbsCommon.Add, "GkeCluster")]
     public class AddGkeClusterCmdlet : GkeNodePoolConfigCmdlet
     {
-        private class ParameterSetNames
-        {
-            public const string ByNodeConfig = "ByNodeConfig";
-            public const string ByNodePool = "ByNodePool";
-            public const string ByNodeConfigValues = "ByNodeConfigValues";
-        }
-
         /// <summary>
         /// <para type="description">
         /// Size of the disk attached to each node in the cluster, specified in GB.
