@@ -169,35 +169,6 @@ Describe "New-GcLogSink" {
         }
     }
 
-    It "should work with -OutputVersionFormat" {
-        $r = Get-Random
-        $bucket = "gcloud-powershell-testing-pubsubtopic-1-$r"
-        $bucketTwo = "gcloud-powershell-testing-pubsubtopic-2-$r"
-        $sinkName = "gcps-new-gclogsink-$r"
-        $sinkNameTwo = "gcps-new-gclogsink2-$r"
-        try {
-            New-GcLogSink $sinkName -GcsBucketDestination $bucket -UniqueWriterIdentity
-            New-GcLogSink $sinkNameTwo -GcsBucketDestination $bucketTwo -UniqueWriterIdentity
-            Start-Sleep -Seconds 1
-
-            $createdSink = Get-GcLogSink -Sink $sinkName
-            Test-GcLogSink -Name $sinkName `
-                           -Destination "storage.googleapis.com/$bucket" `
-                           -OutputVersionFormat "V2" `
-                           -Sink $createdSink
-
-            $createdSink = Get-GcLogSink -Sink $sinkNameTwo
-            Test-GcLogSink -Name $sinkNameTwo `
-                           -Destination "storage.googleapis.com/$bucketTwo" `
-                           -OutputVersionFormat "V2" `
-                           -Sink $createdSink
-        }
-        finally {
-            gcloud beta logging sinks delete $sinkName --quiet 2>$null
-            gcloud beta logging sinks delete $sinkNameTwo --quiet 2>$null
-        }
-    }
-
     It "should work with -UniqueWriterIdentity" {
         $r = Get-Random
         $pubsubTopic = "gcloud-powershell-testing-pubsubtopic-$r"

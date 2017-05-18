@@ -19,7 +19,7 @@ Describe "Get-GcLogEntry" {
     $timeAfterCreatingLogs = [DateTime]::Now.AddMinutes(2)
 
     AfterAll {
-        gcloud beta logging logs delete $logName --quiet
+        gcloud beta logging logs delete $logName --quiet 2>$null
         $logs = Get-GcLogEntry -LogName $logName
         if ($null -ne $logs)
         {
@@ -166,7 +166,7 @@ Describe "New-GcLogEntry" {
             $protoLogEntry.ProtoPayload["serviceName"] | Should BeExactly $proto["serviceName"]
         }
         finally {
-            gcloud beta logging logs delete $logName --quiet
+            gcloud beta logging logs delete $logName --quiet 2>$null
         }
     }
 

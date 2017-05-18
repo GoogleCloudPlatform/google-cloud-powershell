@@ -54,7 +54,7 @@ Describe "Get-GceTargetPool"{
 Describe "Set-GceTargetPool" {
     $instance = Add-GceInstance "instance-$r" -BootDiskImage (Get-GceImage -Family "coreos-stable")
     $poolName = "pool-$r"
-    gcloud compute target-pools create $poolName 2>$null
+    gcloud compute target-pools create $poolName --region us-central1 2>$null
     $poolObj = Get-GceTargetPool $poolName
     It "should add instance with object" {
         $pool = $poolObj | Set-GceTargetPool -AddInstance $instance
@@ -77,7 +77,7 @@ Describe "Set-GceTargetPool" {
         $pool.Instances.Count | Should Be 0
     }
 
-    gcloud compute target-pools delete $poolName -q 2>$null
+    gcloud compute target-pools delete $poolName --region us-central1 -q 2>$null
     $instance | Remove-GceInstance
 }
 
