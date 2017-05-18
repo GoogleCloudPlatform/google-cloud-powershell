@@ -24,6 +24,9 @@ namespace Google.PowerShell.Container
     /// Gets Google Container Engine Node Pools from a Cluster. If -Project and/or -Zone parameter is not specified,
     /// the default project and/or the default zone will be used. If -NodePoolName parameter is not used,
     /// the cmdlet will return every node pools in the cluster.
+    /// You can either supply cluster name with -ClusterName or a Cluster object from
+    /// Get-GkeCluster with -ClusterObject. If a Cluster object is used, the cmdlet will use the
+    /// Project and Zone from the object.
     /// </para>
     /// <example>
     ///   <code>PS C:\> Get-GkeNodePool -ClusterName "my-cluster"</code>
@@ -52,12 +55,18 @@ namespace Google.PowerShell.Container
     [Cmdlet(VerbsCommon.Get, "GkeNodePool")]
     public class GetGkeNodePoolCmdlet : GkeCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string ByClusterName = "ByClusterName";
+            public const string ByClusterObject = "ByClusterObject";
+        }
+
         /// <summary>
         /// <para type="description">
         /// The project that the node pool's cluster is in.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByClusterName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public override string Project { get; set; }
 
@@ -66,7 +75,7 @@ namespace Google.PowerShell.Container
         /// The zone in which the node pool's cluster is in.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByClusterName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         public string Zone { get; set; }
 
@@ -75,7 +84,7 @@ namespace Google.PowerShell.Container
         /// The name of the cluster that the node pool belongs to.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0)]
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByClusterName)]
         [ValidateNotNullOrEmpty]
         public string ClusterName { get; set; }
 
@@ -88,8 +97,25 @@ namespace Google.PowerShell.Container
         [ValidateNotNullOrEmpty]
         public string[] NodePoolName { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The name of the cluster that the node pool belongs to.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByClusterObject,
+            ValueFromPipeline = true)]
+        [ValidateNotNull]
+        public Cluster ClusterObject { get; set; }
+
         protected override void ProcessRecord()
         {
+            if (ClusterObject != null)
+            {
+                Zone = ClusterObject.Zone;
+                ClusterName = ClusterObject.Name;
+                Project = GetProjectNameFromUri(ClusterObject.SelfLink);
+            }
+
             if (NodePoolName != null)
             {
                 WriteObject(GetNodePoolsByName(Project, Zone, ClusterName, NodePoolName), true);
@@ -138,7 +164,7 @@ namespace Google.PowerShell.Container
         private IEnumerable<NodePool> GetAllNodepools(string project, string zone, string clusterName)
         {
             ProjectsResource.ZonesResource.ClustersResource.NodePoolsResource.ListRequest listRequest =
-                Service.Projects.Zones.Clusters.NodePools.List(Project, Zone, ClusterName);
+                Service.Projects.Zones.Clusters.NodePools.List(Project, Zone, clusterName);
             ListNodePoolsResponse response = listRequest.Execute();
             if (response.NodePools != null)
             {
@@ -155,13 +181,6 @@ namespace Google.PowerShell.Container
     /// </summary>
     public abstract class GkeNodePoolConfigCmdlet : GkeNodeConfigCmdlet
     {
-        protected class ParameterSetNames
-        {
-            public const string ByNodeConfig = "ByNodeConfig";
-            public const string ByNodeConfigValues = "ByNodeConfigValues";
-            public const string ByNodePool = "ByNodePool";
-        }
-
         /// <summary>
         /// <para type="description">
         /// Name of the node pool.
@@ -363,6 +382,13 @@ namespace Google.PowerShell.Container
     [Cmdlet(VerbsCommon.New, "GkeNodePool")]
     public class NewGkeNodePoolCmdlet : GkeNodePoolConfigCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string ByNodeConfig = "ByNodeConfig";
+            public const string ByNodeConfigValues = "ByNodeConfigValues";
+            public const string ByNodePool = "ByNodePool";
+        }
+
         /// <summary>
         /// <para type="description">
         /// Name of the node pool.
@@ -461,8 +487,8 @@ namespace Google.PowerShell.Container
             RuntimeDefinedParameter machineTypeParam = GenerateRuntimeParameter(
                 parameterName: "MachineType",
                 helpMessage: "The Google Compute Engine machine type to use for node in this node pool.",
-                parameterSetName: ParameterSetNames.ByNodeConfigValues,
-                validSet: machineTypes);
+                validSet: machineTypes,
+                parameterSetNames: ParameterSetNames.ByNodeConfigValues);
             dynamicParamDict.Add("MachineType", machineTypeParam);
 
             // Gets all the valid image types of this zone and project combination.
@@ -470,8 +496,8 @@ namespace Google.PowerShell.Container
             RuntimeDefinedParameter imageTypeParam = GenerateRuntimeParameter(
                 parameterName: "ImageType",
                 helpMessage: "The image type to use for node in this node pool.",
-                parameterSetName: ParameterSetNames.ByNodeConfigValues,
-                validSet: imageTypes);
+                validSet: imageTypes,
+                parameterSetNames: ParameterSetNames.ByNodeConfigValues);
             dynamicParamDict.Add("ImageType", imageTypeParam);
         }
 
@@ -505,6 +531,9 @@ namespace Google.PowerShell.Container
     /// image and machine types applicable to the nodes. You can either create a NodePool
     /// object separately with New-GkeNodePool and use it with -NodePool parameter or simply use
     /// the available parameters on this cmdlet to create a new NodePool.
+    /// Instead of using -ClusterName to provide the name of the cluster, you can also use
+    /// -ClusterObject, which takes in a Cluster object from Get-GkeCluster. When you use
+    /// -ClusterObject, the Project and Zone will automatically be taken from the Cluster object.
     /// </para>
     /// <example>
     ///   <code>
@@ -557,25 +586,62 @@ namespace Google.PowerShell.Container
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Add, "GkeNodePool")]
-    public class AddGkeNodePoolCmdlet : NewGkeNodePoolCmdlet
+    public class AddGkeNodePoolCmdlet : GkeNodePoolConfigCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string ByNodeConfigClusterName = "ByNodeConfigClusterName";
+            public const string ByNodeConfigValuesClusterName = "ByNodeConfigValuesClusterName";
+            public const string ByNodePoolClusterName = "ByNodePoolClusterName";
+
+            public const string ByNodeConfigClusterObject = "ByNodeConfigClusterObject";
+            public const string ByNodeConfigValuesClusterObject = "ByNodeConfigValuesClusterObject";
+            public const string ByNodePoolClusterObject = "ByNodePoolClusterObject";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// The project that the node pool's cluster is in.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigClusterName)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValuesClusterName)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodePoolClusterName)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public override string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The zone in which the node pool's cluster is in.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigClusterName)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValuesClusterName)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodePoolClusterName)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
+        public override string Zone { get; set; }
+
         /// <summary>
         /// <para type="description">
         /// The node pool to be added to the cluster.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
-            ParameterSetName = ParameterSetNames.ByNodePool)]
+            ParameterSetName = ParameterSetNames.ByNodePoolClusterObject)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
+            ParameterSetName = ParameterSetNames.ByNodePoolClusterName)]
         [ValidateNotNull]
         public NodePool NodePool { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// Name of the node pool.
+        /// Name of the node pool to be added.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByNodeConfig)]
-        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByNodeConfigValues)]
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByNodeConfigClusterName)]
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByNodeConfigValuesClusterName)]
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByNodeConfigClusterObject)]
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = ParameterSetNames.ByNodeConfigValuesClusterObject)]
         [ValidateNotNullOrEmpty]
         public override string NodePoolName { get; set; }
 
@@ -584,20 +650,151 @@ namespace Google.PowerShell.Container
         /// The name of the cluster.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0)]
-        [PropertyByTypeTransformation(TypeToTransform = typeof(Google.Apis.Container.v1.Data.Cluster),
-            Property = nameof(Google.Apis.Container.v1.Data.Cluster.Name))]
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.ByNodeConfigClusterName)]
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.ByNodeConfigValuesClusterName)]
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.ByNodePoolClusterName)]
         [ValidateNotNullOrEmpty]
-        public string Cluster { get; set; }
+        public string ClusterName { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The cluster object that the node pool will be added to.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.ByNodeConfigClusterObject)]
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.ByNodeConfigValuesClusterObject)]
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.ByNodePoolClusterObject)]
+        [ValidateNotNull]
+        public Cluster ClusterObject { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Passed in a NodeConfig object containing configuration for the nodes in this node pool.
+        /// This object can be created with New-GkeNodeConfig cmdlet.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByNodeConfigClusterObject)]
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByNodeConfigClusterName)]
+        [ValidateNotNull]
+        public override NodeConfig NodeConfig { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Size of the disk attached to each node in this node pool, specified in GB.
+        /// The smallest allowed disk size is 10GB.
+        /// The default disk size is 100GB.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValuesClusterObject)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValuesClusterName)]
+        [ValidateRange(10, int.MaxValue)]
+        public override int? DiskSizeGb { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Metadata key/value pairs assigned to instances in this node pool.
+        /// Keys must conform to the regexp [a-zA-Z0-9-_]+ and not conflict with any other
+        /// metadata keys for the project or be one of the four reserved keys: "instance-template",
+        /// "kube-env", "startup-script" and "user-data".
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValuesClusterObject)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValuesClusterName)]
+        [Alias("Metadata")]
+        public override Hashtable InstanceMetadata { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The map of Kubernetes labels (key/value pairs) to be applied to each node in this node pool.
+        /// This is in addition to any default label(s) that Kubernetes may apply to the node.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValuesClusterObject)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValuesClusterName)]
+        public override Hashtable Label { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The number of local SSD disks attached to each node in this node pool.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValuesClusterObject)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValuesClusterName)]
+        [ValidateRange(0, int.MaxValue)]
+        public override int? LocalSsdCount { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The list of instance tags applied to each node in this node pool.
+        /// Tags are used to identify valid sources or targets for network firewalls.
+        /// Each tag must complied with RFC1035.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValuesClusterObject)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValuesClusterName)]
+        public override string[] Tags { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The Google Cloud Platform Service Account to be used by each node's VMs.
+        /// Use New-GceServiceAccountConfig to create the service account and appropriate scopes.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValuesClusterObject)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValuesClusterName)]
+        public override Apis.Compute.v1.Data.ServiceAccount ServiceAccount { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// If set, every node created in this node pool will be a preemptible VM instance.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValuesClusterObject)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfigValuesClusterName)]
+        public override SwitchParameter Preemptible { get; set; }
+
+        /// <summary>
+        /// Add -MachineType and -ImageType parameter (they belong to "ByNodeConfigValues" parameter set).
+        /// </summary>
+        protected override void PopulateDynamicParameter(string project, string zone,
+            RuntimeDefinedParameterDictionary dynamicParamDict)
+        {
+            // Gets all the valid machine types of this zone and project combination.
+            string[] machineTypes = GetMachineTypes(Project, Zone);
+            RuntimeDefinedParameter machineTypeParam = GenerateRuntimeParameter(
+                "MachineType",
+                "The Google Compute Engine machine type to use for node in this node pool.",
+                machineTypes,
+                ParameterSetNames.ByNodeConfigValuesClusterObject,
+                ParameterSetNames.ByNodeConfigValuesClusterName);
+            dynamicParamDict.Add("MachineType", machineTypeParam);
+
+            // Gets all the valid image types of this zone and project combination.
+            string[] imageTypes = GetImageTypes(Project, Zone);
+            RuntimeDefinedParameter imageTypeParam = GenerateRuntimeParameter(
+                "ImageType",
+                "The image type to use for node in this node pool.",
+                imageTypes,
+                ParameterSetNames.ByNodeConfigValuesClusterObject,
+                ParameterSetNames.ByNodeConfigValuesClusterName);
+            dynamicParamDict.Add("ImageType", imageTypeParam);
+        }
 
         protected override void ProcessRecord()
         {
+            if (ClusterObject != null)
+            {
+                Zone = ClusterObject.Zone;
+                ClusterName = ClusterObject.Name;
+                Project = GetProjectNameFromUri(ClusterObject.SelfLink);
+            }
+
             try
             {
                 NodePool = NodePool ?? BuildNodePoolFromParams();
                 var requestBody = new CreateNodePoolRequest() { NodePool = NodePool };
                 ProjectsResource.ZonesResource.ClustersResource.NodePoolsResource.CreateRequest request =
-                    Service.Projects.Zones.Clusters.NodePools.Create(requestBody, Project, Zone, Cluster);
+                    Service.Projects.Zones.Clusters.NodePools.Create(requestBody, Project, Zone, ClusterName);
                 Operation createOperation = request.Execute();
                 NodePool createdNodePool = WaitForNodePoolCreation(createOperation);
                 WriteObject(createdNodePool);
@@ -605,7 +802,7 @@ namespace Google.PowerShell.Container
             catch (GoogleApiException apiEx) when (apiEx.HttpStatusCode == HttpStatusCode.Conflict)
             {
                 WriteResourceExistsError(
-                    exceptionMessage: $"NodePool '{NodePool.Name}' already exists in cluster '{Cluster}'"
+                    exceptionMessage: $"NodePool '{NodePool.Name}' already exists in cluster '{ClusterName}'"
                         + $"in zone '{Zone}' of project '{Project}'.",
                     errorId: "NodePoolAlreadyExists",
                     targetObject: NodePool.Name);
@@ -613,10 +810,10 @@ namespace Google.PowerShell.Container
             catch (GoogleApiException apiEx) when (apiEx.HttpStatusCode == HttpStatusCode.NotFound)
             {
                 WriteResourceExistsError(
-                    exceptionMessage: $"Cluster '{Cluster}' cannot be found in zone '{Zone}'"
+                    exceptionMessage: $"Cluster '{ClusterName}' cannot be found in zone '{Zone}'"
                         + $" of project '{Project}'.",
                     errorId: "ClusterNotFound",
-                    targetObject: Cluster);
+                    targetObject: ClusterName);
             }
         }
 
@@ -626,15 +823,192 @@ namespace Google.PowerShell.Container
         /// </summary>
         private NodePool WaitForNodePoolCreation(Operation operation)
         {
-            string activity = $"Creating NodePool '{NodePool.Name}' in cluster '{Cluster}'" +
+            string activity = $"Creating NodePool '{NodePool.Name}' in cluster '{ClusterName}'" +
                 $" in zone '{Zone}' of project '{Project}'.";
             string status = "Creating NodePool";
             WaitForClusterOperation(operation, Project, Zone, activity, status);
 
             // Returns the NodePool after it is created.
             ProjectsResource.ZonesResource.ClustersResource.NodePoolsResource.GetRequest getRequest =
-                Service.Projects.Zones.Clusters.NodePools.Get(Project, Zone, Cluster, NodePool.Name);
+                Service.Projects.Zones.Clusters.NodePools.Get(Project, Zone, ClusterName, NodePool.Name);
             return getRequest.Execute();
+        }
+
+        protected NodePool BuildNodePoolFromParams()
+        {
+            // Build the node config from parameters if user does not supply a NodeConfig object.
+            if (ParameterSetName == ParameterSetNames.ByNodeConfigValuesClusterName
+                || ParameterSetName == ParameterSetNames.ByNodeConfigValuesClusterObject)
+            {
+                NodeConfig = BuildNodeConfig();
+            }
+
+            return BuildNodePool(NodePoolName, NodeConfig, InitialNodeCount, EnableAutoUpgrade,
+                MininumNodesToScaleTo, MaximumNodesToScaleTo);
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Removes a Google Container NodePool from a Cluster.
+    /// </para>
+    /// <para type="description">
+    /// Removes a Google Container NodePool from a Cluster.
+    /// If -Project and -Zone are not specified, the cmdlets will default
+    /// to the default project and zone.
+    /// If -ClusterObject is used instead of -ClusterName, the Project and
+    /// Zone will come from the cluster object.
+    /// If a node pool object is given to -ClusterName, the cmdlet will
+    /// get Project, Zone and Cluster information from the object.
+    /// </para>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Remove-GkeCluster -ClusterName "my-cluster" `
+    ///                             -Zone "us-west1-b" `
+    ///                             -NodePoolName "my-nodepool"
+    ///   </code>
+    ///   <para>
+    ///   Removes the node pool "my-nodepool" in cluster "my-cluster" in the zone
+    ///   "us-west1-b" of the default project.
+    ///   </para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/container-engine/docs/node-pools)">
+    /// [Node Pools]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/container-engine/docs/clusters/)">
+    /// [Container Clusters]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Remove, "GkeNodePool", SupportsShouldProcess = true)]
+    public class RemoveGkeNodePoolCmdlet : GkeCmdlet
+    {
+        private class ParameterSetNames
+        {
+            public const string ByClusterObject = "ByClusterObject";
+            public const string ByClusterName = "ByClusterName";
+            public const string ByNodePoolObject = "ByNodePoolObject";
+        }
+
+        /// <summary>
+        /// <para type="description">
+        /// The project that the node pool's cluster belongs to.
+        /// This parameter defaults to the project in the Cloud SDK config.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByClusterName)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public override string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The zone that the node pool's cluster belongs to.
+        /// This parameter defaults to the project in the Cloud SDK config.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByClusterName)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
+        public string Zone { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the node pool to be removed.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(NodePool),
+            Property = nameof(Google.Apis.Container.v1.Data.NodePool.Name))]
+        [ValidateNotNullOrEmpty]
+        public string NodePoolName { get; set; }
+
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByNodePoolObject)]
+        public NodePool NodePoolObject { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the container cluster that the node pool is in.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 1,
+            ParameterSetName = ParameterSetNames.ByClusterName)]
+        [ValidateNotNullOrEmpty]
+        public string ClusterName { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The container cluster object that the node pool is in.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 1,
+            ParameterSetName = ParameterSetNames.ByClusterObject)]
+        [ValidateNotNullOrEmpty]
+        public Cluster ClusterObject { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            ProcessParams();
+
+            ProjectsResource.ZonesResource.ClustersResource.NodePoolsResource.DeleteRequest deleteRequest =
+                Service.Projects.Zones.Clusters.NodePools.Delete(Project, Zone, ClusterName, NodePoolName);
+            if (ShouldProcess($"Node pool '{NodePoolName}' in cluster '{ClusterName}' in"
+                + $" zone '{Zone}' of project '{Project}'.",
+                "Removing GKE Cluster"))
+            {
+                try
+                {
+                    Operation deleteOperation = deleteRequest.Execute();
+                    WaitForNodePoolDeletion(deleteOperation);
+                }
+                catch (GoogleApiException apiEx) when (apiEx.HttpStatusCode == HttpStatusCode.NotFound)
+                {
+                    WriteResourceMissingError(
+                        $"NodePool '{NodePoolName}' cannot be found in cluster '{ClusterName}' in zone "
+                           + $"'{Zone}' of project '{Project}'.",
+                        "ClusterNotFound",
+                        ClusterName);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Process parameters and fill out Project, Zone and ClusterName.
+        /// </summary>
+        private void ProcessParams()
+        {
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.ByNodePoolObject:
+                    Uri nodePoolLink;
+                    if (Uri.TryCreate(NodePoolName, UriKind.Absolute, out nodePoolLink)
+                        && nodePoolLink.Scheme == Uri.UriSchemeHttps)
+                    {
+                        Project = GetProjectNameFromUri(NodePoolName);
+                        Zone = GetUriPart("zones", NodePoolName);
+                        ClusterName = GetUriPart("clusters", NodePoolName);
+                        break;
+                    }
+                    throw new PSArgumentException("Cluster Object does not have SelfLink URL.");
+                case ParameterSetNames.ByClusterObject:
+                    Zone = ClusterObject.Zone;
+                    ClusterName = ClusterObject.Name;
+                    Project = GetProjectNameFromUri(ClusterObject.SelfLink);
+                    break;
+                case ParameterSetNames.ByClusterName:
+                    break;
+                default:
+                    throw UnknownParameterSetException;
+            }
+        }
+
+        /// <summary>
+        /// Wait for the node pool deletion operation to complete.
+        /// Use write progress to display the progress in the meantime.
+        /// </summary>
+        private void WaitForNodePoolDeletion(Operation operation)
+        {
+            string activity = $"Deleting node pool '{NodePoolName}' in '{ClusterName}'"
+                + $" in zone '{Zone}' of project '{Project}'.";
+            string status = "Deleting node pool";
+            WaitForClusterOperation(operation, Project, Zone, activity, status);
         }
     }
 }
