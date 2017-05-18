@@ -76,6 +76,8 @@ namespace Google.PowerShell.Container
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Google.Apis.Container.v1.Data.Cluster),
+            Property = nameof(Google.Apis.Container.v1.Data.Cluster.Name))]
         [ValidateNotNullOrEmpty]
         public string ClusterName { get; set; }
 
@@ -138,7 +140,7 @@ namespace Google.PowerShell.Container
         private IEnumerable<NodePool> GetAllNodepools(string project, string zone, string clusterName)
         {
             ProjectsResource.ZonesResource.ClustersResource.NodePoolsResource.ListRequest listRequest =
-                Service.Projects.Zones.Clusters.NodePools.List(Project, Zone, ClusterName);
+                Service.Projects.Zones.Clusters.NodePools.List(Project, Zone, clusterName);
             ListNodePoolsResponse response = listRequest.Execute();
             if (response.NodePools != null)
             {
@@ -588,7 +590,7 @@ namespace Google.PowerShell.Container
         [PropertyByTypeTransformation(TypeToTransform = typeof(Google.Apis.Container.v1.Data.Cluster),
             Property = nameof(Google.Apis.Container.v1.Data.Cluster.Name))]
         [ValidateNotNullOrEmpty]
-        public string Cluster { get; set; }
+        public string ClusterName { get; set; }
 
         protected override void ProcessRecord()
         {
@@ -597,7 +599,7 @@ namespace Google.PowerShell.Container
                 NodePool = NodePool ?? BuildNodePoolFromParams();
                 var requestBody = new CreateNodePoolRequest() { NodePool = NodePool };
                 ProjectsResource.ZonesResource.ClustersResource.NodePoolsResource.CreateRequest request =
-                    Service.Projects.Zones.Clusters.NodePools.Create(requestBody, Project, Zone, Cluster);
+                    Service.Projects.Zones.Clusters.NodePools.Create(requestBody, Project, Zone, ClusterName);
                 Operation createOperation = request.Execute();
                 NodePool createdNodePool = WaitForNodePoolCreation(createOperation);
                 WriteObject(createdNodePool);
@@ -605,7 +607,7 @@ namespace Google.PowerShell.Container
             catch (GoogleApiException apiEx) when (apiEx.HttpStatusCode == HttpStatusCode.Conflict)
             {
                 WriteResourceExistsError(
-                    exceptionMessage: $"NodePool '{NodePool.Name}' already exists in cluster '{Cluster}'"
+                    exceptionMessage: $"NodePool '{NodePool.Name}' already exists in cluster '{ClusterName}'"
                         + $"in zone '{Zone}' of project '{Project}'.",
                     errorId: "NodePoolAlreadyExists",
                     targetObject: NodePool.Name);
@@ -613,10 +615,10 @@ namespace Google.PowerShell.Container
             catch (GoogleApiException apiEx) when (apiEx.HttpStatusCode == HttpStatusCode.NotFound)
             {
                 WriteResourceExistsError(
-                    exceptionMessage: $"Cluster '{Cluster}' cannot be found in zone '{Zone}'"
+                    exceptionMessage: $"Cluster '{ClusterName}' cannot be found in zone '{Zone}'"
                         + $" of project '{Project}'.",
                     errorId: "ClusterNotFound",
-                    targetObject: Cluster);
+                    targetObject: ClusterName);
             }
         }
 
@@ -626,15 +628,124 @@ namespace Google.PowerShell.Container
         /// </summary>
         private NodePool WaitForNodePoolCreation(Operation operation)
         {
-            string activity = $"Creating NodePool '{NodePool.Name}' in cluster '{Cluster}'" +
+            string activity = $"Creating NodePool '{NodePool.Name}' in cluster '{ClusterName}'" +
                 $" in zone '{Zone}' of project '{Project}'.";
             string status = "Creating NodePool";
             WaitForClusterOperation(operation, Project, Zone, activity, status);
 
             // Returns the NodePool after it is created.
             ProjectsResource.ZonesResource.ClustersResource.NodePoolsResource.GetRequest getRequest =
-                Service.Projects.Zones.Clusters.NodePools.Get(Project, Zone, Cluster, NodePool.Name);
+                Service.Projects.Zones.Clusters.NodePools.Get(Project, Zone, ClusterName, NodePool.Name);
             return getRequest.Execute();
+        }
+    }
+
+    /// <summary>
+    /// <para type="synopsis">
+    /// Removes a Google Container NodePool from a Cluster.
+    /// </para>
+    /// <para type="description">
+    /// Removes a Google Container NodePool from a Cluster.
+    /// If -Project and -Zone are not specified, the cmdlets will default
+    /// to the default project and zone.
+    /// </para>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Remove-GkeCluster -ClusterName "my-cluster" `
+    ///                             -Zone "us-west1-b" `
+    ///                             -NodePoolName "my-nodepool"
+    ///   </code>
+    ///   <para>
+    ///   Removes the node pool "my-nodepool" in cluster "my-cluster" in the zone
+    ///   "us-west1-b" of the default project.
+    ///   </para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/container-engine/docs/node-pools)">
+    /// [Node Pools]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/container-engine/docs/clusters/)">
+    /// [Container Clusters]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Remove, "GkeNodePool", SupportsShouldProcess = true)]
+    public class RemoveGkeNodePoolCmdlet : GkeCmdlet
+    {
+        /// <summary>
+        /// <para type="description">
+        /// The project that the container node pool belong to.
+        /// This parameter defaults to the project in the Cloud SDK config.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public override string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The zone that the container node pool belong to.
+        /// This parameter defaults to the project in the Cloud SDK config.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
+        public string Zone { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the node pool to be removed.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(NodePool),
+            Property = nameof(Google.Apis.Container.v1.Data.NodePool.Name))]
+        [ValidateNotNullOrEmpty]
+        public string NodePoolName { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the container cluster that the node pool is in.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 1)]
+        [PropertyByTypeTransformation(TypeToTransform = typeof(Google.Apis.Container.v1.Data.Cluster),
+            Property = nameof(Google.Apis.Container.v1.Data.Cluster.Name))]
+        [ValidateNotNullOrEmpty]
+        public string ClusterName { get; set; }
+
+        protected override void ProcessRecord()
+        {
+            ProjectsResource.ZonesResource.ClustersResource.NodePoolsResource.DeleteRequest deleteRequest =
+                Service.Projects.Zones.Clusters.NodePools.Delete(Project, Zone, ClusterName, NodePoolName);
+            if (ShouldProcess($"Node pool '{NodePoolName}' in cluster '{ClusterName}' in"
+                + $" zone '{Zone}' of project '{Project}'.",
+                "Removing GKE Cluster"))
+            {
+                try
+                {
+                    Operation deleteOperation = deleteRequest.Execute();
+                    WaitForNodePoolDeletion(deleteOperation);
+                }
+                catch (GoogleApiException apiEx) when (apiEx.HttpStatusCode == HttpStatusCode.NotFound)
+                {
+                    WriteResourceMissingError(
+                        $"NodePool '{NodePoolName}' cannot be found in cluster '{ClusterName}' in zone "
+                           + $"'{Zone}' of project '{Project}'.",
+                        "ClusterNotFound",
+                        ClusterName);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Wait for the node pool deletion operation to complete.
+        /// Use write progress to display the progress in the meantime.
+        /// </summary>
+        private void WaitForNodePoolDeletion(Operation operation)
+        {
+            string activity = $"Deleting node pool '{NodePoolName}' in '{ClusterName}'"
+                + $" in zone '{Zone}' of project '{Project}'.";
+            string status = "Deleting node pool";
+            WaitForClusterOperation(operation, Project, Zone, activity, status);
         }
     }
 }
