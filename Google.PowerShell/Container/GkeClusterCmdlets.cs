@@ -327,18 +327,32 @@ namespace Google.PowerShell.Container
             string parameterName,
             string helpMessage,
             string[] validSet,
-            string parameterSetName = null)
+            params string[] parameterSetNames)
         {
-            ParameterAttribute paramAttribute = new ParameterAttribute()
+            List<Attribute> attributeLists = new List<Attribute>();
+
+            if (parameterSetNames.Length == 0)
             {
-                Mandatory = false,
-                HelpMessage = helpMessage
-            };
-            if (parameterSetName != null)
-            {
-                paramAttribute.ParameterSetName = parameterSetName;
+                ParameterAttribute paramAttribute = new ParameterAttribute()
+                {
+                    Mandatory = false,
+                    HelpMessage = helpMessage
+                };
+                attributeLists.Add(paramAttribute);
             }
-            List<Attribute> attributeLists = new List<Attribute>() { paramAttribute };
+            else
+            {
+                for (int i = 0; i < parameterSetNames.Length; i += 1)
+                {
+                    ParameterAttribute paramAttribute = new ParameterAttribute()
+                    {
+                        Mandatory = false,
+                        HelpMessage = helpMessage
+                    };
+                    paramAttribute.ParameterSetName = parameterSetNames[i];
+                    attributeLists.Add(paramAttribute);
+                }
+            }
 
             if (validSet.Length != 0)
             {
@@ -675,6 +689,13 @@ namespace Google.PowerShell.Container
     [Cmdlet(VerbsCommon.Add, "GkeCluster")]
     public class AddGkeClusterCmdlet : GkeNodePoolConfigCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string ByNodeConfig = "ByNodeConfig";
+            public const string ByNodeConfigValues = "ByNodeConfigValues";
+            public const string ByNodePool = "ByNodePool";
+        }
+
         /// <summary>
         /// <para type="description">
         /// Size of the disk attached to each node in the cluster, specified in GB.
@@ -922,8 +943,8 @@ namespace Google.PowerShell.Container
             RuntimeDefinedParameter machineTypeParam = GenerateRuntimeParameter(
                 parameterName: "MachineType",
                 helpMessage: "The Google Compute Engine machine type to use for node in this cluster.",
-                parameterSetName: ParameterSetNames.ByNodeConfigValues,
-                validSet: machineTypes);
+                validSet: machineTypes,
+                parameterSetNames: ParameterSetNames.ByNodeConfigValues);
             dynamicParamDict.Add("MachineType", machineTypeParam);
 
             // Gets all the valid image types of this zone and project combination.
@@ -931,8 +952,8 @@ namespace Google.PowerShell.Container
             RuntimeDefinedParameter imageTypeParam = GenerateRuntimeParameter(
                 parameterName: "ImageType",
                 helpMessage: "The image type to use for node in this cluster.",
-                parameterSetName: ParameterSetNames.ByNodeConfigValues,
-                validSet: imageTypes);
+                validSet: imageTypes,
+                parameterSetNames: ParameterSetNames.ByNodeConfigValues);
             dynamicParamDict.Add("ImageType", imageTypeParam);
         }
 

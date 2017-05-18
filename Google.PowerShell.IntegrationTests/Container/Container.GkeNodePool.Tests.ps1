@@ -54,6 +54,15 @@ Describe "Get-GkeNodePool" {
         $nodePool.Name | Should BeExactly "default-pool"
     }
 
+    It "should work with -ClusterObject" {
+        $cluster = Get-GkeCluster $clusterTwoName -Zone $clusterTwoZone
+        $nodePool = Get-GkeNodePool -ClusterObject $cluster
+        $nodePool.Name | Should BeExactly "default-pool"
+
+        $nodePool = $cluster | Get-GkeNodePool
+        $nodePool.Name | Should BeExactly "default-pool"
+    }
+
     It "should raise an error for non-existing pool" {
         { Get-GkeNodePool -NodePoolName "cluster-no-exist" -ClusterName $clusterOneName -ErrorAction Stop } |
             Should Throw "cannot be found"
@@ -187,7 +196,7 @@ Describe "Add-GkeNodePool" {
         }
     }
 
-    It "should work with -NodePool and Cluster Object" {
+    It "should work with -NodePool and -ClusterObject" {
         $nodePoolObject = New-GkeNodePool "my-pool1" -ImageType cos `
                                                -Metadata @{"key" = "value"} `
                                                -MininumNodesToScaleTo 2 `
@@ -195,8 +204,7 @@ Describe "Add-GkeNodePool" {
         $clusterObject = Get-GkeCluster $clusterTwoName -Zone $clusterTwoZone
 
         $nodePool = Add-GkeNodePool -NodePool $nodePoolObject `
-                                    -ClusterName $clusterObject `
-                                    -Zone $clusterTwoZone
+                                    -ClusterObject $clusterObject
 
         $cluster = Get-GkeCluster $clusterTwoName -Zone $clusterTwoZone
         $nodePoolOnline = $cluster.NodePools | Where Name -eq $nodePool.Name
@@ -210,7 +218,7 @@ Describe "Add-GkeNodePool" {
         }
     }
 
-    It "should work with -Label, -Preemptible and service account and pipeline" {
+    It "should work with -Label, -Preemptible, -ClusterObject and service account and pipeline and" {
         $serviceAccount = New-GceServiceAccountConfig -BigtableAdmin Full `
                                                       -CloudLogging None `
                                                       -CloudMonitoring None `
@@ -223,7 +231,8 @@ Describe "Add-GkeNodePool" {
                                                      -PreEmptible `
                                                      -ServiceAccount $serviceAccount
 
-        $nodePool = $nodePoolConfig | Add-GkeNodePool -ClusterName $clusterThreeName -Zone $clusterThreeZone
+        $clusterObject = Get-GkeCluster -ClusterName $clusterThreeName -Zone $clusterThreeZone
+        $nodePool = $nodePoolConfig | Add-GkeNodePool -ClusterObject $clusterObject
         $cluster = Get-GkeCluster $clusterThreeName -Zone $clusterThreeZone
         $nodePoolOnline = $cluster.NodePools | Where Name -eq $nodePool.Name
 
@@ -281,6 +290,38 @@ Describe "Remove-GkeNodePool" {
         Remove-GkeNodePool -ClusterName $clusterTwoName `
                           -Zone $clusterTwoZone `
                           -NodePoolName "default-pool"
+
+        { Get-GkeNodePool -Zone $clusterTwoZone `
+                          -ClusterName $clusterTwoName `
+                          -NodePoolName "default-pool" `
+                          -ErrorAction Stop } | Should Throw "cannot be found"
+    }
+
+    It "should remove node pool with node pool object" {
+        Get-GkeNodePool -Zone $clusterTwoZone `
+                        -ClusterName $clusterTwoName `
+                        -NodePoolName "default-pool" | Should Not BeNullOrEmpty
+
+        $nodePool = Get-GkeNodePool -ClusterName $clusterTwoName `
+                                    -Zone $clusterTwoZone
+        Remove-GkeNodePool -NodePoolObject $nodePool
+
+        { Get-GkeNodePool -Zone $clusterTwoZone `
+                          -ClusterName $clusterTwoName `
+                          -NodePoolName "default-pool" `
+                          -ErrorAction Stop } | Should Throw "cannot be found"
+    }
+
+    It "should remove node pool with cluster object" {
+        Get-GkeNodePool -Zone $clusterThreeZone `
+                        -ClusterName $clusterThreeName `
+                        -NodePoolName "default-pool" | Should Not BeNullOrEmpty
+
+        $clusterObject = Get-GkeCluster -ClusterName $clusterThreeName `
+                                        -Zone $clusterThreeZone
+
+        Remove-GkeNodePool -ClusterObject $clusterObject `
+                           -NodePoolname "default-pool"
 
         { Get-GkeNodePool -Zone $clusterTwoZone `
                           -ClusterName $clusterTwoName `
