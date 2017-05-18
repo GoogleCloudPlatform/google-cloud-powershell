@@ -503,7 +503,7 @@ Describe "Set-GcLogSink" {
             New-GcLogSink $sinkNameTwo -GcsBucketDestination $bucketTwo -UniqueWriterIdentity
             Start-Sleep -Seconds 1
 
-            Set-GcLogSink $sinkName -OutputVersionFormat V2 -UniqueWriterIdentity
+            Set-GcLogSink $sinkName -UniqueWriterIdentity
             Set-GcLogSink $sinkNameTwo -GcsBucketDestination $bucketTwo -UniqueWriterIdentity
             Start-Sleep -Seconds 1
 
