@@ -174,10 +174,6 @@ namespace Google.PowerShell.Container
     /// </summary>
     public abstract class GkeNodeConfigCmdlet : GkeCmdlet, IDynamicParameters
     {
-        // IAM Service used for getting roles that can be granted to a project.
-        private Lazy<ComputeService> _computeService =
-            new Lazy<ComputeService>(() => new ComputeService(GetBaseClientServiceInitializer()));
-
         // Regex that is used to check metadata key.
         private static readonly Regex s_metadataKeyRegex = new Regex("[a-zA-Z0-9-_]+");
 
@@ -271,22 +267,6 @@ namespace Google.PowerShell.Container
         public virtual SwitchParameter Preemptible { get; set; }
 
         /// <summary>
-        /// Dictionary of image types with key as as tuple of project and zone
-        /// and value as the image types available in the project's zone.
-        /// This dictionary is used for caching the various image types available in a project's zone.
-        /// </summary>
-        private static ConcurrentDictionary<Tuple<string, string>, string[]> s_imageTypesDictionary =
-            new ConcurrentDictionary<Tuple<string, string>, string[]>();
-
-        /// <summary>
-        /// Dictionary of image types with key as as tuple of project and zone
-        /// and value as the machine types available in the project's zone.
-        /// This dictionary is used for caching the various machine types available in a project's zone.
-        /// </summary>
-        private static ConcurrentDictionary<Tuple<string, string>, string[]> s_machineTypesDictionary =
-            new ConcurrentDictionary<Tuple<string, string>, string[]>();
-
-        /// <summary>
         /// This dynamic parameter dictionary is used by PowerShell to generate parameters dynamically.
         /// </summary>
         private RuntimeDefinedParameterDictionary _dynamicParameters;
@@ -318,111 +298,6 @@ namespace Google.PowerShell.Container
         /// </summary>
         protected abstract void PopulateDynamicParameter(string project, string zone,
             RuntimeDefinedParameterDictionary dynamicParamDict);
-
-        /// <summary>
-        /// Generate a RuntimeDefinedParameter based on the parameter name,
-        /// the help message and the valid set of parameter values.
-        /// </summary>
-        protected RuntimeDefinedParameter GenerateRuntimeParameter(
-            string parameterName,
-            string helpMessage,
-            string[] validSet,
-            params string[] parameterSetNames)
-        {
-            List<Attribute> attributeLists = new List<Attribute>();
-
-            if (parameterSetNames.Length == 0)
-            {
-                ParameterAttribute paramAttribute = new ParameterAttribute()
-                {
-                    Mandatory = false,
-                    HelpMessage = helpMessage
-                };
-                attributeLists.Add(paramAttribute);
-            }
-            else
-            {
-                for (int i = 0; i < parameterSetNames.Length; i += 1)
-                {
-                    ParameterAttribute paramAttribute = new ParameterAttribute()
-                    {
-                        Mandatory = false,
-                        HelpMessage = helpMessage
-                    };
-                    paramAttribute.ParameterSetName = parameterSetNames[i];
-                    attributeLists.Add(paramAttribute);
-                }
-            }
-
-            if (validSet.Length != 0)
-            {
-                var validateSetAttribute = new ValidateSetAttribute(validSet);
-                validateSetAttribute.IgnoreCase = true;
-                attributeLists.Add(validateSetAttribute);
-            }
-
-            Collection<Attribute> attributes = new Collection<Attribute>(attributeLists);
-            return new RuntimeDefinedParameter(parameterName, typeof(string), attributes);
-        }
-
-        /// <summary>
-        /// Returns all the possible image types in a given zone in a given project.
-        /// </summary>
-        protected string[] GetImageTypes(string project, string zone)
-        {
-            Tuple<string, string> key = new Tuple<string, string>(project, zone);
-            if (!s_imageTypesDictionary.ContainsKey(key))
-            {
-                try
-                {
-                    ProjectsResource.ZonesResource.GetServerconfigRequest getConfigRequest =
-                        Service.Projects.Zones.GetServerconfig(project, zone);
-                    ServerConfig config = getConfigRequest.Execute();
-
-                    s_imageTypesDictionary[key] = config.ValidImageTypes.ToArray();
-                }
-                catch
-                {
-                    // Just swallow error and don't provide tab completion for -ImageType.
-                    s_imageTypesDictionary[key] = new string[] { };
-                }
-            }
-            return s_imageTypesDictionary[key];
-        }
-
-
-        /// <summary>
-        /// Returns all the possible machine types in a given zone in a given project.
-        /// </summary>
-        protected string[] GetMachineTypes(string project, string zone)
-        {
-            Tuple<string, string> key = new Tuple<string, string>(project, zone);
-            if (!s_machineTypesDictionary.ContainsKey(key))
-            {
-                List<string> machineTypes = new List<string>();
-                try
-                {
-                    Apis.Compute.v1.MachineTypesResource.ListRequest listRequest =
-                        _computeService.Value.MachineTypes.List(project, zone);
-                    do
-                    {
-                        Apis.Compute.v1.Data.MachineTypeList response = listRequest.Execute();
-                        if (response.Items != null)
-                        {
-                            machineTypes.AddRange(response.Items.Select(machineType => machineType.Name));
-                        }
-                        listRequest.PageToken = response.NextPageToken;
-                    }
-                    while (listRequest.PageToken != null);
-                }
-                catch
-                {
-                    // Just swallow error.
-                }
-                s_machineTypesDictionary[key] = machineTypes.ToArray();
-            }
-            return s_machineTypesDictionary[key];
-        }
 
         /// <summary>
         /// Returns the machine type that the user selected.
@@ -849,7 +724,7 @@ namespace Google.PowerShell.Container
         /// <summary>
         /// <para type="description">
         /// If set, the cluster will have autoscaling enabled and this number will represent
-        /// the minimum number of nodes in the node pool that the cluster can scale to.
+        /// the maximum number of nodes in the node pool that the cluster can scale to.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfig)]
@@ -859,7 +734,7 @@ namespace Google.PowerShell.Container
         /// <summary>
         /// <para type="description">
         /// If set, the cluster will have autoscaling enabled and this number will represent
-        /// the maximum number of nodes in the node pool that the cluster can scale to.
+        /// the minimum number of nodes in the node pool that the cluster can scale to.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ByNodeConfig)]
@@ -1131,6 +1006,246 @@ namespace Google.PowerShell.Container
             cluster.Network = Network;
             cluster.Subnetwork = Subnetwork;
             cluster.ClusterIpv4Cidr = ClusterIpv4AddressRange;
+        }
+    }
+
+    public class SetGkeClusterCmdlet : GkeCmdlet, IDynamicParameters
+    {
+        private class ParameterSetNames
+        {
+            public const string UpdateNodeVersionClusterName = "UpdateNodeVersionClusterName";
+            public const string UpdateNodeVersionClusterObject = "UpdateNodeVersionClusterObject";
+
+            public const string UpdateAutoscalingClusterName = "UpdateAutoscalingClusterName";
+            public const string UpdateAutoscalingClusterObject = "UpdateAutoscalingClusterObject";
+
+            public const string UpdateAdditionalZoneClusterName = "UpdateAdditionalZoneClusterName";
+            public const string UpdateAdditionalZoneClusterObject = "UpdateAdditionalZoneClusterObject";
+
+            public const string UpdateMasterClusterName = "UpdateMasterClusterName";
+            public const string UpdateMasterClusterObject = "UpdateMasterClusterObject";
+
+            public const string UpdateMonitoringServiceClusterName = "UpdateMonitoringServiceClusterName";
+            public const string UpdateMonitoringServiceClusterObject = "UpdateMonitoringServiceClusterObject";
+
+            public const string UpdateImageTypeClusterName = "UpdateImageTypeClusterName";
+            public const string UpdateImageTypeClusterObject = "UpdateImageTypeClusterObject";
+
+            public const string AddonConfigsClusterName = "AddonConfigsClusterName";
+            public const string AddonConfigsClusterObject = "AddonConfigsClusterObject";
+        }
+
+        /// <summary>
+        /// This dynamic parameter dictionary is used by PowerShell to generate parameters dynamically.
+        /// </summary>
+        private RuntimeDefinedParameterDictionary _dynamicParameters;
+
+        /// <summary>
+        /// <para type="description">
+        /// The project that the node config belongs to.
+        /// This parameter defaults to the project in the Cloud SDK config.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
+        public override string Project { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The zone that the node config belongs to.
+        /// This parameter defaults to the project in the Cloud SDK config.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
+        public string Zone { get; set; }
+
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateNodeVersionClusterName)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateNodeVersionClusterObject)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateAutoscalingClusterName)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateAutoscalingClusterObject)]
+        public string NodePoolName { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the cluster.
+        /// Name has to start with a letter, end with a number or letter
+        /// and consists only of letters, numbers and hyphens.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0,
+            ParameterSetName = ParameterSetNames.UpdateNodeVersionClusterName)]
+        [Parameter(Mandatory = true, Position = 0,
+            ParameterSetName = ParameterSetNames.UpdateAutoscalingClusterName)]
+        [Parameter(Mandatory = true, Position = 0,
+            ParameterSetName = ParameterSetNames.UpdateAdditionalZoneClusterName)]
+        [Parameter(Mandatory = true, Position = 0,
+            ParameterSetName = ParameterSetNames.UpdateMasterClusterName)]
+        [Parameter(Mandatory = true, Position = 0,
+            ParameterSetName = ParameterSetNames.UpdateImageTypeClusterName)]
+        [Parameter(Mandatory = true, Position = 0,
+            ParameterSetName = ParameterSetNames.AddonConfigsClusterName)]
+        [Parameter(Mandatory = true, Position = 0,
+            ParameterSetName = ParameterSetNames.UpdateMonitoringServiceClusterName)]
+        [ValidatePattern("[a-zA-Z][a-zA-Z0-9-]*[a-zA-Z0-9]")]
+        public string ClusterName { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The name of the cluster that the node pool belongs to.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
+            ParameterSetName = ParameterSetNames.UpdateNodeVersionClusterObject)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
+            ParameterSetName = ParameterSetNames.UpdateAutoscalingClusterObject)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
+            ParameterSetName = ParameterSetNames.UpdateAdditionalZoneClusterObject)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
+            ParameterSetName = ParameterSetNames.UpdateMasterClusterObject)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
+            ParameterSetName = ParameterSetNames.UpdateImageTypeClusterObject)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
+            ParameterSetName = ParameterSetNames.AddonConfigsClusterObject)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
+            ParameterSetName = ParameterSetNames.UpdateMonitoringServiceClusterObject)]
+        [ValidateNotNull]
+        public Cluster ClusterObject { get; set; }
+
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateAdditionalZoneClusterName)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateImageTypeClusterObject)]
+        public string[] AdditionalZone { get; set; }
+
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.UpdateMasterClusterName)]
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.UpdateMasterClusterObject)]
+        public SwitchParameter UpdateMaster { get; set; }
+
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.AddonConfigsClusterName)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.AddonConfigsClusterObject)]
+        public bool? LoadBalancing { get; set; }
+
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.AddonConfigsClusterName)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.AddonConfigsClusterObject)]
+        public bool? HorizontalPodAutoscaling { get; set; }
+
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.UpdateMonitoringServiceClusterName)]
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.UpdateMonitoringServiceClusterObject)]
+        [ValidateSet("monitoring.googleapis.com", "none", IgnoreCase = true)]
+        public string MonitoringService { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// If set, the cluster will have autoscaling enabled and this number will represent
+        /// the maximum number of nodes in the node pool that the cluster can scale to.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.UpdateAutoscalingClusterName)]
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.UpdateAutoscalingClusterObject)]
+        public int? MaximumNodesToScaleTo { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// If set, the cluster will have autoscaling enabled and this number will represent
+        /// the minimum number of nodes in the node pool that the cluster can scale to.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateAutoscalingClusterName)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateAutoscalingClusterObject)]
+        public int? MininumNodesToScaleTo { get; set; }
+
+        /// <summary>
+        /// Generate dynamic parameter -MachineType and -ImageType based on the value of -Project
+        /// and -Zone. This will provide tab-completion for -MachineType and -ImageType parameters.
+        /// </summary>
+        public object GetDynamicParameters()
+        {
+            if (_dynamicParameters == null)
+            {
+                _dynamicParameters = new RuntimeDefinedParameterDictionary();
+
+                // Try to resolve Project variable to a string, use default value from the SDK if we fail to do so.
+                Project = GetCloudSdkSettingValue(CloudSdkSettings.CommonProperties.Project, Project);
+                // Try to resolve Zone variable to a string, use default value from the SDK if we fail to do so.
+                Zone = GetCloudSdkSettingValue(CloudSdkSettings.CommonProperties.Zone, Zone);
+
+                PopulateDynamicParameters(Project, Zone);
+            }
+
+            return _dynamicParameters;
+        }
+
+        protected void PopulateDynamicParameters(string project, string zone)
+        {
+            // Gets all the valid image types of this zone and project combination.
+            string[] imageTypes = GetImageTypes(Project, Zone);
+            RuntimeDefinedParameter imageTypeParam = GenerateRuntimeParameter(
+                parameterName: "ImageType",
+                helpMessage: "The image type to use for this node.",
+                validSet: imageTypes,
+                isMandatory: true,
+                parameterSetNames: new string[] { ParameterSetNames.UpdateImageTypeClusterName,
+                                                  ParameterSetNames.UpdateImageTypeClusterObject});
+            _dynamicParameters.Add("ImageType", imageTypeParam);
+
+            // Gets all the valid node versions this zone and project combination.
+            string[] nodeVersions = GetValidNodeVersions(Project, Zone);
+            RuntimeDefinedParameter nodeVersionParam = GenerateRuntimeParameter(
+                parameterName: "NodeVersion",
+                helpMessage: "The Kubernetes version to change the node to.",
+                validSet: imageTypes,
+                isMandatory: true,
+                parameterSetNames: new string[] { ParameterSetNames.UpdateNodeVersionClusterName,
+                                                  ParameterSetNames.UpdateNodeVersionClusterObject});
+            _dynamicParameters.Add("NodeVersion", nodeVersionParam);
+        }
+
+        protected override void ProcessRecord()
+        {
+            if (ClusterObject != null)
+            {
+                Zone = ClusterObject.Zone;
+                ClusterName = ClusterObject.Name;
+                Project = GetProjectNameFromUri(ClusterObject.SelfLink);
+            }
+
+            UpdateClusterRequest request = new UpdateClusterRequest();
+            ClusterUpdate updateBody = null;
+            switch (ParameterSetName)
+            {
+                case ParameterSetNames.AddonConfigsClusterName:
+                case ParameterSetNames.AddonConfigsClusterObject:
+                    updateBody = BuildAddonConfigs();
+                    break;
+                more parameter sets cases hereeee.
+                default:
+                    throw UnknownParameterSetException;
+            }
+            base.ProcessRecord();
+        }
+
+        private ClusterUpdate BuildAddonConfigs()
+        {
+            if (!LoadBalancing.HasValue && !HorizontalPodAutoscaling.HasValue)
+            {
+                throw new PSArgumentException(
+                    "Either -LoadBalancing or -HorizontalPodAutoscaling has to be set.");
+            }
+
+            var update = new ClusterUpdate();
+            var addons = new AddonsConfig();
+            if (LoadBalancing.HasValue)
+            {
+                addons.HttpLoadBalancing = new HttpLoadBalancing { Disabled = LoadBalancing };
+            }
+
+            if (HorizontalPodAutoscaling.HasValue)
+            {
+                addons.HorizontalPodAutoscaling =
+                    new HorizontalPodAutoscaling { Disabled = HorizontalPodAutoscaling };
+            }
+
+            update.DesiredAddonsConfig = addons;
+            return update;
         }
     }
 

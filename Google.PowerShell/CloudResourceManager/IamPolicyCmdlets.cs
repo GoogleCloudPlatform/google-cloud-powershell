@@ -178,27 +178,18 @@ namespace Google.PowerShell.CloudResourceManager
             if (_dynamicParameters == null)
             {
                 _dynamicParameters = new RuntimeDefinedParameterDictionary();
-                ParameterAttribute paramAttribute = new ParameterAttribute()
-                {
-                    Mandatory = true,
-                    HelpMessage = "Role that is assigned to the specified member."
-                };
-                List<Attribute> attributeLists = new List<Attribute>() { paramAttribute };
 
                 // Try to resolve Project variable to a string, use default value from the SDK if we fail to do so.
                 Project = GetCloudSdkSettingValue(CloudSdkSettings.CommonProperties.Project, Project);
 
                 string[] roles = GetGrantableRoles(Project);
-                // If there are no roles, do not add validate set attribute to the parameter (hence, no tab completion).
-                if (roles.Length != 0)
-                {
-                    var validateSetAttribute = new ValidateSetAttribute(roles);
-                    validateSetAttribute.IgnoreCase = true;
-                    attributeLists.Add(validateSetAttribute);
-                }
 
-                Collection<Attribute> attributes = new Collection<Attribute>(attributeLists);
-                var param = new RuntimeDefinedParameter("Role", typeof(string), attributes);
+                RuntimeDefinedParameter param = GenerateRuntimeParameter(
+                    parameterName: "Role",
+                    helpMessage: "Role that is assigned to the specified member.",
+                    validSet: roles,
+                    isMandatory: true);
+
                 _dynamicParameters.Add("Role", param);
             }
 

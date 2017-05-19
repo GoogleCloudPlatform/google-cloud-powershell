@@ -762,21 +762,23 @@ namespace Google.PowerShell.Container
             // Gets all the valid machine types of this zone and project combination.
             string[] machineTypes = GetMachineTypes(Project, Zone);
             RuntimeDefinedParameter machineTypeParam = GenerateRuntimeParameter(
-                "MachineType",
-                "The Google Compute Engine machine type to use for node in this node pool.",
-                machineTypes,
-                ParameterSetNames.ByNodeConfigValuesClusterObject,
-                ParameterSetNames.ByNodeConfigValuesClusterName);
+                parameterName: "MachineType",
+                helpMessage: "The Google Compute Engine machine type to use for node in this node pool.",
+                validSet: machineTypes,
+                isMandatory: false,
+                parameterSetNames: new string[] { ParameterSetNames.ByNodeConfigValuesClusterObject,
+                                                  ParameterSetNames.ByNodeConfigValuesClusterName });
             dynamicParamDict.Add("MachineType", machineTypeParam);
 
             // Gets all the valid image types of this zone and project combination.
             string[] imageTypes = GetImageTypes(Project, Zone);
             RuntimeDefinedParameter imageTypeParam = GenerateRuntimeParameter(
-                "ImageType",
-                "The image type to use for node in this node pool.",
-                imageTypes,
-                ParameterSetNames.ByNodeConfigValuesClusterObject,
-                ParameterSetNames.ByNodeConfigValuesClusterName);
+                parameterName: "ImageType",
+                helpMessage: "The image type to use for node in this node pool.",
+                validSet: imageTypes,
+                isMandatory: false,
+                parameterSetNames: new string[] { ParameterSetNames.ByNodeConfigValuesClusterObject,
+                                                  ParameterSetNames.ByNodeConfigValuesClusterName });
             dynamicParamDict.Add("ImageType", imageTypeParam);
         }
 

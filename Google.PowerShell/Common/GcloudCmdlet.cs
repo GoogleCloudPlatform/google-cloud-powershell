@@ -8,6 +8,7 @@ using Microsoft.PowerShell.Commands;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Management.Automation;
@@ -417,6 +418,53 @@ namespace Google.PowerShell.Common
         {
             Match match = Regex.Match(uri, $"{resourceType}/(?<value>[^/]*)");
             return match.Groups["value"].Value;
+        }
+
+        /// <summary>
+        /// Generate a RuntimeDefinedParameter based on the parameter name,
+        /// the help message and the valid set of parameter values.
+        /// </summary>
+        public RuntimeDefinedParameter GenerateRuntimeParameter(
+            string parameterName,
+            string helpMessage,
+            string[] validSet,
+            bool isMandatory = false,
+            params string[] parameterSetNames)
+        {
+            List<Attribute> attributeLists = new List<Attribute>();
+
+            if (parameterSetNames.Length == 0)
+            {
+                ParameterAttribute paramAttribute = new ParameterAttribute()
+                {
+                    Mandatory = isMandatory,
+                    HelpMessage = helpMessage
+                };
+                attributeLists.Add(paramAttribute);
+            }
+            else
+            {
+                for (int i = 0; i < parameterSetNames.Length; i += 1)
+                {
+                    ParameterAttribute paramAttribute = new ParameterAttribute()
+                    {
+                        Mandatory = false,
+                        HelpMessage = helpMessage
+                    };
+                    paramAttribute.ParameterSetName = parameterSetNames[i];
+                    attributeLists.Add(paramAttribute);
+                }
+            }
+
+            if (validSet.Length != 0)
+            {
+                var validateSetAttribute = new ValidateSetAttribute(validSet);
+                validateSetAttribute.IgnoreCase = true;
+                attributeLists.Add(validateSetAttribute);
+            }
+
+            Collection<Attribute> attributes = new Collection<Attribute>(attributeLists);
+            return new RuntimeDefinedParameter(parameterName, typeof(string), attributes);
         }
     }
 }
