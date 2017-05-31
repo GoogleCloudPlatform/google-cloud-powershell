@@ -1009,15 +1009,86 @@ namespace Google.PowerShell.Container
         }
     }
 
+    /// <summary>
+    /// <para type="synopsis">
+    /// Updates a Google Container Cluster.
+    /// </para>
+    /// <para type="description">
+    /// Updates a Google Container Cluster. Only one property can be updated at a time.
+    /// The properties are:
+    ///   1. AddonsConfig for a cluster (-LoadBalancing and -HorizontalPodAutoscaling).
+    ///   2. Additional zones for the cluster (-AdditionalZone).
+    ///   3. Version of the master, which can only be changed to the latest (-UpdateMaster).
+    ///   4. Monitoring service for a cluster (-MonitoringService).
+    ///   5. Autoscaling for a node pool in the cluster (-Min/MaximumNodesToScaleTo).
+    ///   6. Kubernetes version for nodes in a node pool in the cluster (-NodeVersion).
+    ///   7. Image type for nodes in a node pool in the cluster (-ImageType).
+    /// </para>
+    /// <para type="description">
+    /// To specify a cluster, you can supply its name to -ClusterName. If -Project and/or -Zone
+    /// are not used in this case, the cmdlet will use the default project and/or default zone.
+    /// The cmdlet also accepts a Cluster object (from Get-GkeCluster cmdlet) with -ClusterObject.
+    /// In this case, the Project and Zone will come from the cluster object itself.
+    /// </para>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Set-GkeCluster -ClusterName "my-cluster" `
+    ///                          -LoadBalancing $true
+    ///   </code>
+    ///   <para>
+    ///   Turns on load balancing for cluster "my-cluster" in the default zone and project.
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Set-GkeCluster -ClusterName "my-cluster" `
+    ///                          -Zone "asia-east1-a" `
+    ///                          -AdditionalZone "asia-east1-b", "asia-east1-c"
+    ///   </code>
+    ///   <para>
+    ///   Sets additional zones of cluster "my-cluster" in zone "asia-east1-a" to zones
+    ///   "asia-east1-b" and "asia-east1-c". This means the clusters will have nodes
+    ///   created in these zones. The primary zone ("asia-east1-a" in this case)
+    ///   will be added to the AdditionalZone array by the cmdlet.
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Set-GkeCluster -ClusterObject $clusterObject `
+    ///                          -NodePoolName "default-pool" `
+    ///                          -MaximumNodesToScaleTo 3
+    ///   </code>
+    ///   <para>
+    ///   Sets the node pool "default-pool" in the Cluster object $clusterObject
+    ///   to have autoscaling with a max nodes count of 3.
+    ///   </para>
+    /// </example>
+    /// <example>
+    ///   <code>
+    ///   PS C:\> Set-GkeCluster -ClusterName "my-cluster" `
+    ///                          -NodePoolName "default-pool" `
+    ///                          -NodeVersion "1.4.9"
+    ///   </code>
+    ///   <para>
+    ///   Sets the Kubernetes version of nodes in node pool "default-pool" in cluster
+    ///   "my-cluster" to 1.4.9. Note that the version of the nodes has to be
+    ///   less than that of the master. Otherwise, the cmdlet will throw an error.
+    ///   </para>
+    /// </example>
+    /// <para type="link" uri="(https://cloud.google.com/container-engine/docs/clusters/)">
+    /// [Container Clusters]
+    /// </para>
+    /// <para type="link" uri="(https://cloud.google.com/container-engine/docs/node-pools)">
+    /// [Node Pools]
+    /// </para>
+    /// </summary>
+    [Cmdlet(VerbsCommon.Set, "GkeCluster")]
     public class SetGkeClusterCmdlet : GkeCmdlet, IDynamicParameters
     {
         private class ParameterSetNames
         {
-            public const string UpdateNodeVersionClusterName = "UpdateNodeVersionClusterName";
-            public const string UpdateNodeVersionClusterObject = "UpdateNodeVersionClusterObject";
-
-            public const string UpdateAutoscalingClusterName = "UpdateAutoscalingClusterName";
-            public const string UpdateAutoscalingClusterObject = "UpdateAutoscalingClusterObject";
+            public const string UpdateNodePoolClusterName = "UpdateNodePoolClusterName";
+            public const string UpdateNodePoolClusterObject = "UpdateNodePoolClusterObject";
 
             public const string UpdateAdditionalZoneClusterName = "UpdateAdditionalZoneClusterName";
             public const string UpdateAdditionalZoneClusterObject = "UpdateAdditionalZoneClusterObject";
@@ -1027,9 +1098,6 @@ namespace Google.PowerShell.Container
 
             public const string UpdateMonitoringServiceClusterName = "UpdateMonitoringServiceClusterName";
             public const string UpdateMonitoringServiceClusterObject = "UpdateMonitoringServiceClusterObject";
-
-            public const string UpdateImageTypeClusterName = "UpdateImageTypeClusterName";
-            public const string UpdateImageTypeClusterObject = "UpdateImageTypeClusterObject";
 
             public const string AddonConfigsClusterName = "AddonConfigsClusterName";
             public const string AddonConfigsClusterObject = "AddonConfigsClusterObject";
@@ -1042,52 +1110,59 @@ namespace Google.PowerShell.Container
 
         /// <summary>
         /// <para type="description">
-        /// The project that the node config belongs to.
+        /// The project that the cluster belongs to.
         /// This parameter defaults to the project in the Cloud SDK config.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateNodePoolClusterName)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateAdditionalZoneClusterName)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateMasterClusterName)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.AddonConfigsClusterName)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateMonitoringServiceClusterName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public override string Project { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// The zone that the node config belongs to.
+        /// The zone that the cluster belongs to.
         /// This parameter defaults to the project in the Cloud SDK config.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateNodePoolClusterName)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateAdditionalZoneClusterName)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateMasterClusterName)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.AddonConfigsClusterName)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateMonitoringServiceClusterName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         public string Zone { get; set; }
 
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateNodeVersionClusterName)]
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateNodeVersionClusterObject)]
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateAutoscalingClusterName)]
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateAutoscalingClusterObject)]
+        /// <summary>
+        /// <para type="description">
+        /// The name of node pool in the cluster to be updated.
+        /// This parameter is mandatory if you want to update NodeVersion, Autoscaling or ImageType of a cluster.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.UpdateNodePoolClusterName)]
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = ParameterSetNames.UpdateNodePoolClusterObject)]
+        [ValidateNotNullOrEmpty]
         public string NodePoolName { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// The name of the cluster.
-        /// Name has to start with a letter, end with a number or letter
-        /// and consists only of letters, numbers and hyphens.
+        /// The name of the cluster to be updated.
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0,
-            ParameterSetName = ParameterSetNames.UpdateNodeVersionClusterName)]
-        [Parameter(Mandatory = true, Position = 0,
-            ParameterSetName = ParameterSetNames.UpdateAutoscalingClusterName)]
+            ParameterSetName = ParameterSetNames.UpdateNodePoolClusterName)]
         [Parameter(Mandatory = true, Position = 0,
             ParameterSetName = ParameterSetNames.UpdateAdditionalZoneClusterName)]
         [Parameter(Mandatory = true, Position = 0,
             ParameterSetName = ParameterSetNames.UpdateMasterClusterName)]
         [Parameter(Mandatory = true, Position = 0,
-            ParameterSetName = ParameterSetNames.UpdateImageTypeClusterName)]
-        [Parameter(Mandatory = true, Position = 0,
             ParameterSetName = ParameterSetNames.AddonConfigsClusterName)]
         [Parameter(Mandatory = true, Position = 0,
             ParameterSetName = ParameterSetNames.UpdateMonitoringServiceClusterName)]
-        [ValidatePattern("[a-zA-Z][a-zA-Z0-9-]*[a-zA-Z0-9]")]
+        [ValidateNotNullOrEmpty]
         public string ClusterName { get; set; }
 
         /// <summary>
@@ -1096,15 +1171,11 @@ namespace Google.PowerShell.Container
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
-            ParameterSetName = ParameterSetNames.UpdateNodeVersionClusterObject)]
-        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
-            ParameterSetName = ParameterSetNames.UpdateAutoscalingClusterObject)]
+            ParameterSetName = ParameterSetNames.UpdateNodePoolClusterObject)]
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
             ParameterSetName = ParameterSetNames.UpdateAdditionalZoneClusterObject)]
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
             ParameterSetName = ParameterSetNames.UpdateMasterClusterObject)]
-        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
-            ParameterSetName = ParameterSetNames.UpdateImageTypeClusterObject)]
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
             ParameterSetName = ParameterSetNames.AddonConfigsClusterObject)]
         [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true,
@@ -1112,22 +1183,50 @@ namespace Google.PowerShell.Container
         [ValidateNotNull]
         public Cluster ClusterObject { get; set; }
 
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateAdditionalZoneClusterName)]
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateImageTypeClusterObject)]
+        /// <summary>
+        /// <para type="description">
+        /// The desired list of Google Compute Engine locations in which the cluster's nodes should be located.
+        /// Changing the locations a cluster is in will result in nodes being either created or removed from
+        /// the cluster, depending on whether locations are being added or removed. This list must always include
+        /// the cluster's primary zone.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.UpdateAdditionalZoneClusterName)]
+        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.UpdateAdditionalZoneClusterObject)]
         public string[] AdditionalZone { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// If set, the cluster's master will be updated to the latest Kubernetes version.
+        /// </para>
+        /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.UpdateMasterClusterName)]
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.UpdateMasterClusterObject)]
         public SwitchParameter UpdateMaster { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// This parameter is used to enable or disable HTTP load balancing in the cluster.
+        /// </para>
+        /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.AddonConfigsClusterName)]
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.AddonConfigsClusterObject)]
         public bool? LoadBalancing { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// This parameter is used to enable or disable HorizontalPodAutoscaling in the cluster.
+        /// </para>
+        /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.AddonConfigsClusterName)]
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.AddonConfigsClusterObject)]
         public bool? HorizontalPodAutoscaling { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// This parameter is used to set the monitoring service of the cluster.
+        /// </para>
+        /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.UpdateMonitoringServiceClusterName)]
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.UpdateMonitoringServiceClusterObject)]
         [ValidateSet("monitoring.googleapis.com", "none", IgnoreCase = true)]
@@ -1135,22 +1234,26 @@ namespace Google.PowerShell.Container
 
         /// <summary>
         /// <para type="description">
-        /// If set, the cluster will have autoscaling enabled and this number will represent
-        /// the maximum number of nodes in the node pool that the cluster can scale to.
+        /// If set, a node pool in the cluster will have autoscaling enabled and this number will represent
+        /// the maximum number of nodes that the node pool can scale to.
+        /// If the cluster has more than 1 node pool, -NodePoolName is needed to determine
+        /// which node pool the autoscaling will be applied to.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.UpdateAutoscalingClusterName)]
-        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.UpdateAutoscalingClusterObject)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateNodePoolClusterName)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateNodePoolClusterObject)]
         public int? MaximumNodesToScaleTo { get; set; }
 
         /// <summary>
         /// <para type="description">
-        /// If set, the cluster will have autoscaling enabled and this number will represent
-        /// the minimum number of nodes in the node pool that the cluster can scale to.
+        /// If set, a node pool in the cluster will have autoscaling enabled and this number will represent
+        /// the minimum number of nodes that the node pool can scale to.
+        /// If the cluster has more than 1 node pool, -NodePoolName is needed to determine
+        /// which node pool the autoscaling will be applied to.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateAutoscalingClusterName)]
-        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateAutoscalingClusterObject)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateNodePoolClusterName)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.UpdateNodePoolClusterObject)]
         public int? MininumNodesToScaleTo { get; set; }
 
         /// <summary>
@@ -1180,22 +1283,24 @@ namespace Google.PowerShell.Container
             string[] imageTypes = GetImageTypes(Project, Zone);
             RuntimeDefinedParameter imageTypeParam = GenerateRuntimeParameter(
                 parameterName: "ImageType",
-                helpMessage: "The image type to use for this node.",
+                helpMessage: "The updated image type to used for a node pool in the cluster. If the cluster " +
+                    "has more than 1 node pool, -NodePoolName is needed to determine which node pool " +
+                    "the image type will be applied to.",
                 validSet: imageTypes,
-                isMandatory: true,
-                parameterSetNames: new string[] { ParameterSetNames.UpdateImageTypeClusterName,
-                                                  ParameterSetNames.UpdateImageTypeClusterObject});
+                parameterSetNames: new string[] { ParameterSetNames.UpdateNodePoolClusterName,
+                                                  ParameterSetNames.UpdateNodePoolClusterObject});
             _dynamicParameters.Add("ImageType", imageTypeParam);
 
             // Gets all the valid node versions this zone and project combination.
             string[] nodeVersions = GetValidNodeVersions(Project, Zone);
             RuntimeDefinedParameter nodeVersionParam = GenerateRuntimeParameter(
                 parameterName: "NodeVersion",
-                helpMessage: "The Kubernetes version to change the node to.",
-                validSet: imageTypes,
-                isMandatory: true,
-                parameterSetNames: new string[] { ParameterSetNames.UpdateNodeVersionClusterName,
-                                                  ParameterSetNames.UpdateNodeVersionClusterObject});
+                helpMessage: "The Kubernetes version that a node pool in the cluster will use. If the cluster " +
+                    "has more than 1 node pool, -NodePoolName is needed to determine which node pool " +
+                    "the version will be applied to.",
+                validSet: nodeVersions,
+                parameterSetNames: new string[] { ParameterSetNames.UpdateNodePoolClusterName,
+                                                  ParameterSetNames.UpdateNodePoolClusterObject});
             _dynamicParameters.Add("NodeVersion", nodeVersionParam);
         }
 
@@ -1207,23 +1312,227 @@ namespace Google.PowerShell.Container
                 ClusterName = ClusterObject.Name;
                 Project = GetProjectNameFromUri(ClusterObject.SelfLink);
             }
+            UpdateClusterRequest requestBody = BuildUpdateClusterRequest();
 
-            UpdateClusterRequest request = new UpdateClusterRequest();
-            ClusterUpdate updateBody = null;
+            ProjectsResource.ZonesResource.ClustersResource.UpdateRequest request =
+                Service.Projects.Zones.Clusters.Update(requestBody, Project, Zone, ClusterName);
+            Operation updateOperation = request.Execute();
+            Cluster updatedCluster = WaitForClusterUpdate(updateOperation);
+
+            WriteObject(updatedCluster);
+        }
+
+        /// <summary>
+        /// Wait for the cluster update operation to complete.
+        /// Use write progress to display the progress in the meantime.
+        /// </summary>
+        private Cluster WaitForClusterUpdate(Operation operation)
+        {
+            string activity = $"Updating cluster '{ClusterName}' in zone '{Zone}' of project '{Project}'.";
+            string status = "Updating cluster";
+            WaitForClusterOperation(operation, Project, Zone, activity, status);
+
+            // Returns the cluster after it is created.
+            ProjectsResource.ZonesResource.ClustersResource.GetRequest getClusterRequest =
+                Service.Projects.Zones.Clusters.Get(Project, Zone, ClusterName);
+            return getClusterRequest.Execute();
+        }
+
+        /// <summary>
+        /// Constructs an UpdateClusterRequest based on selected ParameterSet.
+        /// </summary>
+        private UpdateClusterRequest BuildUpdateClusterRequest()
+        {
+            ClusterUpdate updateBody = new ClusterUpdate();
+
             switch (ParameterSetName)
             {
                 case ParameterSetNames.AddonConfigsClusterName:
                 case ParameterSetNames.AddonConfigsClusterObject:
-                    updateBody = BuildAddonConfigs();
+                    UpdateAddonsConfig(updateBody);
                     break;
-                more parameter sets cases hereeee.
+                case ParameterSetNames.UpdateNodePoolClusterName:
+                case ParameterSetNames.UpdateNodePoolClusterObject:
+                    UpdateNodePool(updateBody);
+                    break;
+                case ParameterSetNames.UpdateAdditionalZoneClusterName:
+                case ParameterSetNames.UpdateAdditionalZoneClusterObject:
+                    UpdateAdditionalZones(updateBody);
+                    break;
+                case ParameterSetNames.UpdateMasterClusterName:
+                case ParameterSetNames.UpdateMasterClusterObject:
+                    // This will update master to the latest version.
+                    updateBody.DesiredMasterVersion = "-";
+                    break;
+                case ParameterSetNames.UpdateMonitoringServiceClusterName:
+                case ParameterSetNames.UpdateMonitoringServiceClusterObject:
+                    updateBody.DesiredMonitoringService = MonitoringService;
+                    break;
                 default:
                     throw UnknownParameterSetException;
             }
-            base.ProcessRecord();
+
+            var request = new UpdateClusterRequest() { Update = updateBody };
+            return request;
         }
 
-        private ClusterUpdate BuildAddonConfigs()
+        private Cluster GetCluster()
+        {
+            try
+            {
+                ProjectsResource.ZonesResource.ClustersResource.GetRequest getRequest =
+                    Service.Projects.Zones.Clusters.Get(Project, Zone, ClusterName);
+                Cluster cluster = getRequest.Execute();
+                return cluster;
+            }
+            catch (GoogleApiException apiEx) when (apiEx.HttpStatusCode == HttpStatusCode.NotFound)
+            {
+                throw new PSArgumentException($"Cluster '{ClusterName}' cannot be found in zone " +
+                    $"'{Zone}' of project '{Project}'.");
+            }
+        }
+
+        /// <summary>
+        /// Helper function to update a NodePool's property in the cluster.
+        /// Only 1 property (Autoscaling, NodeVersion or ImageType) can be updated
+        /// per cmdlet invocation.
+        /// </summary>
+        private void UpdateNodePool(ClusterUpdate clusterUpdate)
+        {
+            string imageType = null;
+            string nodeVersion = null;
+
+            if (_dynamicParameters.ContainsKey("ImageType"))
+            {
+                imageType = _dynamicParameters["ImageType"].Value?.ToString().ToLower();
+                if (!string.IsNullOrWhiteSpace(imageType))
+                {
+                    // Have to check that -NodeVersion and -Min/MaxNodesToScaleTo are not set
+                    // because the cmdlet only does one update.
+                    if (!string.IsNullOrWhiteSpace(nodeVersion) || MaximumNodesToScaleTo != null
+                        || MininumNodesToScaleTo != null)
+                    {
+                        throw new PSArgumentException("When -ImageType is used, -NodeVersion" +
+                            " and -Max/MinNodesToScaleTo cannot be used.");
+                    }
+                    clusterUpdate.DesiredImageType = imageType;
+                    return;
+                }
+            }
+
+            if (_dynamicParameters.ContainsKey("NodeVersion"))
+            {
+                nodeVersion = _dynamicParameters["NodeVersion"].Value?.ToString().ToLower();
+                if (!string.IsNullOrWhiteSpace(nodeVersion))
+                {
+                    // If we reach here, then it is for sure that -ImageType is either null or
+                    // empty so we don't have to check it.
+                    if (MaximumNodesToScaleTo != null || MininumNodesToScaleTo != null)
+                    {
+                        throw new PSArgumentException("When -NodeVersion is used, -ImageType" +
+                            " and -Max/MinNodesToScaleTo cannot be used.");
+                    }
+
+                    UpdateNodeVersion(clusterUpdate, nodeVersion);
+                    return;
+                }
+            }
+
+            if (MaximumNodesToScaleTo == null)
+            {
+                throw new PSArgumentException("Either -ImageType, -NodeVersion" +
+                    " or -Max/MinNodesToScaleTo should be used when -NodePoolName is used.");
+            }
+
+            UpdateAutoScaling(clusterUpdate);
+        }
+
+        /// <summary>
+        /// Helper function to set the DesiredNodeVersion in clusterUpdate
+        /// based on the string nodeVersion. This function also performs check
+        /// to make sure that the node version is less than the master version.
+        /// </summary>
+        private void UpdateNodeVersion(ClusterUpdate clusterUpdate, string nodeVersion)
+        {
+            // We have to make sure that the node version we are updating to is less than
+            // that of the master.
+            Version resolvedNodeVersion = null;
+            if (string.Compare(nodeVersion, "latest", true) != 0)
+            {
+                if (!Version.TryParse(nodeVersion, out resolvedNodeVersion))
+                {
+                    throw new PSArgumentException(
+                        $"Node version '{nodeVersion}' is not a valid version.");
+                }
+            }
+            else
+            {
+                // Find the latest version from all valid node versions.
+                string[] validNodeVersionStrings = GetValidNodeVersions(Project, Zone);
+                foreach (string validNodeVersionString in validNodeVersionStrings)
+                {
+                    Version validNodeVersion = null;
+                    if (Version.TryParse(validNodeVersionString, out validNodeVersion))
+                    {
+                        if (resolvedNodeVersion == null)
+                        {
+                            resolvedNodeVersion = validNodeVersion;
+                        }
+                        else if (resolvedNodeVersion < validNodeVersion)
+                        {
+                            resolvedNodeVersion = validNodeVersion;
+                        }
+                    }
+                }
+            }
+
+            if (resolvedNodeVersion != null)
+            {
+                Cluster cluster = GetCluster();
+                Version masterVersion = null;
+                if (Version.TryParse(cluster.CurrentMasterVersion, out masterVersion))
+                {
+                    if (masterVersion < resolvedNodeVersion)
+                    {
+                        throw new PSArgumentException("-NodeVersion cannot be greater than the" +
+                            $" master version of the node which is '{masterVersion}'.");
+                    }
+                }
+            }
+
+            clusterUpdate.DesiredNodeVersion = nodeVersion;
+        }
+
+        /// <summary>
+        /// Set DesiredLocations of the clusterUpdate.
+        /// Since the primary zone also has to be included in the additional zones,
+        /// we add that to the additional zones list if it is not already there.
+        /// </summary>
+        private void UpdateAdditionalZones(ClusterUpdate clusterUpdate)
+        {
+            List<string> additionalZones = AdditionalZone.Select(zone => zone.ToLower()).ToList();
+            if (!additionalZones.Contains(Zone.ToLower()))
+            {
+                additionalZones.Add(Zone.ToLower());
+            }
+
+            clusterUpdate.DesiredLocations = additionalZones;
+        }
+
+        /// <summary>
+        /// Set DesiredNodePoolAutoscaling of the clusterUpdate based on MaximumNodesToScaleTo and MinimumNodesToScaleTo.
+        /// </summary>
+        private void UpdateAutoScaling(ClusterUpdate clusterUpdate)
+        {
+            NodePoolAutoscaling autoscaling =
+                GkeNodePoolConfigCmdlet.BuildAutoscaling(MaximumNodesToScaleTo, MininumNodesToScaleTo);
+            clusterUpdate.DesiredNodePoolAutoscaling = autoscaling;
+        }
+
+        /// <summary>
+        /// Set DesiredAddonsConfig of the clusterUpdate based on LoadBalancing and HorizontalPodAutoscaling.
+        /// </summary>
+        private void UpdateAddonsConfig(ClusterUpdate clusterUpdate)
         {
             if (!LoadBalancing.HasValue && !HorizontalPodAutoscaling.HasValue)
             {
@@ -1231,21 +1540,19 @@ namespace Google.PowerShell.Container
                     "Either -LoadBalancing or -HorizontalPodAutoscaling has to be set.");
             }
 
-            var update = new ClusterUpdate();
             var addons = new AddonsConfig();
             if (LoadBalancing.HasValue)
             {
-                addons.HttpLoadBalancing = new HttpLoadBalancing { Disabled = LoadBalancing };
+                addons.HttpLoadBalancing = new HttpLoadBalancing { Disabled = !LoadBalancing };
             }
 
             if (HorizontalPodAutoscaling.HasValue)
             {
                 addons.HorizontalPodAutoscaling =
-                    new HorizontalPodAutoscaling { Disabled = HorizontalPodAutoscaling };
+                    new HorizontalPodAutoscaling { Disabled = !HorizontalPodAutoscaling };
             }
 
-            update.DesiredAddonsConfig = addons;
-            return update;
+            clusterUpdate.DesiredAddonsConfig = addons;
         }
     }
 

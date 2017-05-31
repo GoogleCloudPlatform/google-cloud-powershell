@@ -50,14 +50,6 @@ namespace Google.PowerShell.Container
         private static ConcurrentDictionary<Tuple<string, string>, string[]> s_validNodeVersions =
             new ConcurrentDictionary<Tuple<string, string>, string[]>();
 
-        /// <summary>
-        /// Dictionary of valid master versions with key as as tuple of project and zone
-        /// and value as the valid master versions in the project's zone.
-        /// This dictionary is used for caching the valid master versions in a project's zone.
-        /// </summary>
-        private static ConcurrentDictionary<Tuple<string, string>, string[]> s_validMasterVersions =
-            new ConcurrentDictionary<Tuple<string, string>, string[]>();
-
         public GkeCmdlet()
         {
             Service = new ContainerService(GetBaseClientServiceInitializer());

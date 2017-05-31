@@ -448,7 +448,7 @@ namespace Google.PowerShell.Common
                 {
                     ParameterAttribute paramAttribute = new ParameterAttribute()
                     {
-                        Mandatory = false,
+                        Mandatory = isMandatory,
                         HelpMessage = helpMessage
                     };
                     paramAttribute.ParameterSetName = parameterSetNames[i];

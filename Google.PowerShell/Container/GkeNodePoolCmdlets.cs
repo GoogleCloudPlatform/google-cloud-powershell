@@ -259,29 +259,7 @@ namespace Google.PowerShell.Container
 
             if (maximumNodesToScaleTo != null)
             {
-                var scaling = new NodePoolAutoscaling() { Enabled = true };
-
-                if (minimumNodesToScaleTo == null)
-                {
-                    minimumNodesToScaleTo = 1;
-                }
-
-                if (maximumNodesToScaleTo < minimumNodesToScaleTo)
-                {
-                    throw new PSArgumentException(
-                        "Maximum node count in a node pool has to be greater or equal to the minimum count.");
-                }
-
-                // No need to check maximum nodes since we know for sure at this point it will be greater or equal to this.
-                if (minimumNodesToScaleTo <= 0)
-                {
-                    throw new PSArgumentException(
-                        "Both -MaximumNodesToScaleTo and -MinimumNodesToScaleTo has to be greater than 0.");
-                }
-
-                scaling.MaxNodeCount = maximumNodesToScaleTo;
-                scaling.MinNodeCount = minimumNodesToScaleTo;
-                nodePool.Autoscaling = scaling;
+                nodePool.Autoscaling = BuildAutoscaling(maximumNodesToScaleTo, minimumNodesToScaleTo);
             }
 
             if (autoUpgrade)
@@ -291,6 +269,34 @@ namespace Google.PowerShell.Container
             }
 
             return nodePool;
+        }
+
+        internal static NodePoolAutoscaling BuildAutoscaling(int? maximumNodesToScaleTo, int? minimumNodesToScaleTo)
+        {
+            var scaling = new NodePoolAutoscaling() { Enabled = true };
+
+            if (minimumNodesToScaleTo == null)
+            {
+                minimumNodesToScaleTo = 1;
+            }
+
+            if (maximumNodesToScaleTo < minimumNodesToScaleTo)
+            {
+                throw new PSArgumentException(
+                    "Maximum node count in a node pool has to be greater or equal to the minimum count.");
+            }
+
+            // No need to check maximum nodes since we know for sure at this point it will be greater or equal to this.
+            if (minimumNodesToScaleTo <= 0)
+            {
+                throw new PSArgumentException(
+                    "Both -MaximumNodesToScaleTo and -MinimumNodesToScaleTo has to be greater than 0.");
+            }
+
+            scaling.MaxNodeCount = maximumNodesToScaleTo;
+            scaling.MinNodeCount = minimumNodesToScaleTo;
+
+            return scaling;
         }
     }
 
