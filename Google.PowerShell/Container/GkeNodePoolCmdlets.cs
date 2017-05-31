@@ -259,29 +259,7 @@ namespace Google.PowerShell.Container
 
             if (maximumNodesToScaleTo != null)
             {
-                var scaling = new NodePoolAutoscaling() { Enabled = true };
-
-                if (minimumNodesToScaleTo == null)
-                {
-                    minimumNodesToScaleTo = 1;
-                }
-
-                if (maximumNodesToScaleTo < minimumNodesToScaleTo)
-                {
-                    throw new PSArgumentException(
-                        "Maximum node count in a node pool has to be greater or equal to the minimum count.");
-                }
-
-                // No need to check maximum nodes since we know for sure at this point it will be greater or equal to this.
-                if (minimumNodesToScaleTo <= 0)
-                {
-                    throw new PSArgumentException(
-                        "Both -MaximumNodesToScaleTo and -MinimumNodesToScaleTo has to be greater than 0.");
-                }
-
-                scaling.MaxNodeCount = maximumNodesToScaleTo;
-                scaling.MinNodeCount = minimumNodesToScaleTo;
-                nodePool.Autoscaling = scaling;
+                nodePool.Autoscaling = BuildAutoscaling(maximumNodesToScaleTo, minimumNodesToScaleTo);
             }
 
             if (autoUpgrade)
@@ -291,6 +269,34 @@ namespace Google.PowerShell.Container
             }
 
             return nodePool;
+        }
+
+        internal static NodePoolAutoscaling BuildAutoscaling(int? maximumNodesToScaleTo, int? minimumNodesToScaleTo)
+        {
+            var scaling = new NodePoolAutoscaling() { Enabled = true };
+
+            if (minimumNodesToScaleTo == null)
+            {
+                minimumNodesToScaleTo = 1;
+            }
+
+            if (maximumNodesToScaleTo < minimumNodesToScaleTo)
+            {
+                throw new PSArgumentException(
+                    "Maximum node count in a node pool has to be greater or equal to the minimum count.");
+            }
+
+            // No need to check maximum nodes since we know for sure at this point it will be greater or equal to this.
+            if (minimumNodesToScaleTo <= 0)
+            {
+                throw new PSArgumentException(
+                    "Both -MaximumNodesToScaleTo and -MinimumNodesToScaleTo have to be greater than 0.");
+            }
+
+            scaling.MaxNodeCount = maximumNodesToScaleTo;
+            scaling.MinNodeCount = minimumNodesToScaleTo;
+
+            return scaling;
         }
     }
 
@@ -762,21 +768,23 @@ namespace Google.PowerShell.Container
             // Gets all the valid machine types of this zone and project combination.
             string[] machineTypes = GetMachineTypes(Project, Zone);
             RuntimeDefinedParameter machineTypeParam = GenerateRuntimeParameter(
-                "MachineType",
-                "The Google Compute Engine machine type to use for node in this node pool.",
-                machineTypes,
-                ParameterSetNames.ByNodeConfigValuesClusterObject,
-                ParameterSetNames.ByNodeConfigValuesClusterName);
+                parameterName: "MachineType",
+                helpMessage: "The Google Compute Engine machine type to use for node in this node pool.",
+                validSet: machineTypes,
+                isMandatory: false,
+                parameterSetNames: new string[] { ParameterSetNames.ByNodeConfigValuesClusterObject,
+                                                  ParameterSetNames.ByNodeConfigValuesClusterName });
             dynamicParamDict.Add("MachineType", machineTypeParam);
 
             // Gets all the valid image types of this zone and project combination.
             string[] imageTypes = GetImageTypes(Project, Zone);
             RuntimeDefinedParameter imageTypeParam = GenerateRuntimeParameter(
-                "ImageType",
-                "The image type to use for node in this node pool.",
-                imageTypes,
-                ParameterSetNames.ByNodeConfigValuesClusterObject,
-                ParameterSetNames.ByNodeConfigValuesClusterName);
+                parameterName: "ImageType",
+                helpMessage: "The image type to use for node in this node pool.",
+                validSet: imageTypes,
+                isMandatory: false,
+                parameterSetNames: new string[] { ParameterSetNames.ByNodeConfigValuesClusterObject,
+                                                  ParameterSetNames.ByNodeConfigValuesClusterName });
             dynamicParamDict.Add("ImageType", imageTypeParam);
         }
 

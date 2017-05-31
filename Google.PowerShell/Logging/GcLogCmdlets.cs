@@ -162,20 +162,11 @@ namespace Google.PowerShell.Logging
         /// </summary>
         protected RuntimeDefinedParameter GenerateResourceTypeParameter(bool mandatory)
         {
-            ParameterAttribute paramAttribute = new ParameterAttribute()
-            {
-                Mandatory = mandatory,
-                HelpMessage = "If specified, the cmdlet will filter out log entries based on the resource type."
-            };
-            var validateSetAttribute = new ValidateSetAttribute(AllResourceTypes);
-            validateSetAttribute.IgnoreCase = true;
-            Collection<Attribute> attributes =
-                new Collection<Attribute>(new Attribute[] { validateSetAttribute, paramAttribute });
-            // This parameter can now be thought of as:
-            // [Parameter(Mandatory = mandatory)]
-            // [ValidateSet(validTypeValues)]
-            // public string ResourceType { get; set; }
-            return new RuntimeDefinedParameter("ResourceType", typeof(string), attributes);
+            return GenerateRuntimeParameter(
+                parameterName: "ResourceType",
+                helpMessage: "If specified, the cmdlet will filter out log entries based on the resource type.",
+                validSet: AllResourceTypes,
+                isMandatory: mandatory);
         }
 
         /// <summary>
