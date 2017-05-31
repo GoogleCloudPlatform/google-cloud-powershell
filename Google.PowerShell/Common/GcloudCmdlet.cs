@@ -456,7 +456,7 @@ namespace Google.PowerShell.Common
                 }
             }
 
-            if (validSet.Length != 0)
+            if (validSet?.Length != 0)
             {
                 var validateSetAttribute = new ValidateSetAttribute(validSet);
                 validateSetAttribute.IgnoreCase = true;

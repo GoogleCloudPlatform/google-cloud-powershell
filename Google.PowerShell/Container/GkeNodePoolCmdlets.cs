@@ -290,7 +290,7 @@ namespace Google.PowerShell.Container
             if (minimumNodesToScaleTo <= 0)
             {
                 throw new PSArgumentException(
-                    "Both -MaximumNodesToScaleTo and -MinimumNodesToScaleTo has to be greater than 0.");
+                    "Both -MaximumNodesToScaleTo and -MinimumNodesToScaleTo have to be greater than 0.");
             }
 
             scaling.MaxNodeCount = maximumNodesToScaleTo;

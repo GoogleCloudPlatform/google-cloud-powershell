@@ -1464,7 +1464,7 @@ namespace Google.PowerShell.Container
             // We have to make sure that the node version we are updating to is less than
             // that of the master.
             Version resolvedNodeVersion = null;
-            if (string.Compare(nodeVersion, "latest", true) != 0)
+            if ("latest".Equals(nodeVersion, StringComparison.OrdinalIgnoreCase))
             {
                 if (!Version.TryParse(nodeVersion, out resolvedNodeVersion))
                 {
@@ -1478,7 +1478,7 @@ namespace Google.PowerShell.Container
                 string[] validNodeVersionStrings = GetValidNodeVersions(Project, Zone);
                 foreach (string validNodeVersionString in validNodeVersionStrings)
                 {
-                    Version validNodeVersion = null;
+                    Version validNodeVersion;
                     if (Version.TryParse(validNodeVersionString, out validNodeVersion))
                     {
                         if (resolvedNodeVersion == null)
@@ -1496,7 +1496,7 @@ namespace Google.PowerShell.Container
             if (resolvedNodeVersion != null)
             {
                 Cluster cluster = GetCluster();
-                Version masterVersion = null;
+                Version masterVersion;
                 if (Version.TryParse(cluster.CurrentMasterVersion, out masterVersion))
                 {
                     if (masterVersion < resolvedNodeVersion)

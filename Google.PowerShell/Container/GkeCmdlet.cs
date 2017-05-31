@@ -30,6 +30,7 @@ namespace Google.PowerShell.Container
         /// Dictionary of image types with key as as tuple of project and zone
         /// and value as the image types available in the project's zone.
         /// This dictionary is used for caching the various image types available in a project's zone.
+        /// TODO(quoct): Add timeout for these caches.
         /// </summary>
         private static ConcurrentDictionary<Tuple<string, string>, string[]> s_imageTypesDictionary =
             new ConcurrentDictionary<Tuple<string, string>, string[]>();
