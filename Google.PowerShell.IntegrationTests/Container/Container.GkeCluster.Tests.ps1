@@ -406,15 +406,6 @@ Describe "Add-GkeCluster" {
     }
 }
 
-# Job for updating a cluster.
-$script:clusterUpdateScriptBlock = {
-    param($cmdletPath, $setGkeClusterParameters)
-    . $cmdletPath
-    Install-GCloudCmdlets | Out-Null
-    $PSBoundParameters.Remove("cmdletPath")
-    Add-GkeCluster @setGkeClusterParameters
-}
-
 Describe "Set-GkeCluster" {
     $r = Get-Random
     $script:clusterOneName = "gcp-set-gkecluster-1-$r"
@@ -455,42 +446,31 @@ Describe "Set-GkeCluster" {
         $cluster.AddonsConfig.HorizontalPodAutoscaling.Disabled | Should BeNullOrEmpty
     }
 
-    It "should update additional zones" {
-        Set-GkeCluster -ClusterName $clusterTwoName `
-                       -Zone $clusterTwoZone `
-                       -AdditionalZone "asia-east1-b", "asia-east1-c"
-
-        $cluster = Get-GkeCluster $clusterTwoName -Zone $clusterTwoZone
-        $cluster.Locations -contains "asia-east1-a" | Should Be $true
-        $cluster.Locations -contains "asia-east1-b" | Should Be $true
-        $cluster.Locations -contains "asia-east1-c" | Should Be $true
-    }
-
     It "should work with cluster object to update node pool autoscaling" {
-        $cluster = Get-GkeCluster -ClusterName $clusterThreeName -Zone $clusterThreeZone
+        $cluster = Get-GkeCluster -ClusterName $clusterTwoName -Zone $clusterTwoZone
         Set-GkeCluster -ClusterObject $cluster `
                        -NodePoolName "default-pool" `
                        -MaximumNodesToScaleTo 3 `
                        -MininumNodesToScaleTo 2
 
-        $cluster = Get-GkeCluster -ClusterName $clusterThreeName -Zone $clusterThreeZone
+        $cluster = Get-GkeCluster -ClusterName $clusterTwoName -Zone $clusterTwoZone
         $cluster.NodePools[0].Autoscaling.MaxNodeCount | Should Be 3
         $cluster.NodePools[0].Autoscaling.MinNodeCount | Should Be 2
     }
 
     It "should work with pipeline and monitoring service" {
-        $cluster = Get-GkeCluster -ClusterName $clusterFourName -Zone $clusterFourZone
+        $cluster = Get-GkeCluster -ClusterName $clusterThreeName -Zone $clusterThreeZone
         $cluster | Set-GkeCluster -MonitoringService "none"
 
-        $cluster = Get-GkeCluster -ClusterName $clusterFourName -Zone $clusterFourZone
+        $cluster = Get-GkeCluster -ClusterName $clusterThreeName -Zone $clusterThreeZone
         $cluster.MonitoringService | Should Be "none"
     }
 
     It "should update node version" {
-        $cluster = Get-GkeCluster -ClusterName $clusterOneName
+        $cluster = Get-GkeCluster -ClusterName $clusterFourName -Zone $clusterFourZone
         $cluster | Set-GkeCluster -NodePoolName "default-pool" -NodeVersion 1.4.9
 
-        $cluster = Get-GkeCluster -ClusterName $clusterOneName
+        $cluster = Get-GkeCluster -ClusterName $clusterFourName -Zone $clusterFourZone
         $cluster.CurrentNodeVersion | Should Be "1.4.9"
     }
 

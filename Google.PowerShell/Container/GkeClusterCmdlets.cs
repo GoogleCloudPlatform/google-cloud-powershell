@@ -1277,6 +1277,13 @@ namespace Google.PowerShell.Container
             return _dynamicParameters;
         }
 
+        /// <summary>
+        /// Populate -NodeVersion and -ImageType parameters.
+        /// PowerShell doesn't seem to like it if we make these dynamic parameters the
+        /// unique and mandatory parameter in a parameter set so I have to make them
+        /// non-mandatory and have logic to separate the parameter set in
+        /// UpdateNodePool.
+        /// </summary>
         protected void PopulateDynamicParameters(string project, string zone)
         {
             // Gets all the valid image types of this zone and project combination.
