@@ -31,6 +31,9 @@ You may opt out of this collection at any time in the future by running the foll
 By installing the Cloud SDK, you accept the terms of the license.
 
 "@
+$script:gCloudInitWarning = "You will have to restart the shell and/or run 'gcloud init' " +
+    "(if you haven't run it after installing the SDK) before the module can be used."
+$script:installingSdkActivity = "Installing Google Cloud SDK"
 
 # Check and install Google Cloud SDK if it is not present. To install it non-interactively,
 # set GCLOUD_SDK_INSTALLATION_NO_PROMPT to $true.
@@ -51,50 +54,94 @@ function Install-GCloudSdk {
              " set `$env:GCLOUD_SDK_INSTALLATION_NO_PROMPT to true."
     $caption = "Installing Google Cloud SDK"
 
+    $uiQuery = "Do you want to install non-interactively? Select no to install through the interactive installer."
+    $uiCaption = "Installing Google Cloud SDK non-interactively"
+
+    $yesToAll = $false
+    $noToAll = $false
+
     if ($PSCmdlet.ShouldProcess("Google Cloud SDK", "Install")) {
         if ($noPrompt) {
-            Write-Host $GCloudSdkLicense
-
-            # We use this method of installation instead of the installer because the installer does all the installation
-            # in the background so we can't determine when it's done.
-            $cloudSdkUri = "https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.zip"
-            $zipFileLocation = Join-Path $env:TMP ([System.IO.Path]::GetRandomFileName())
-            $extractedFolder = Join-Path $env:TMP ([System.IO.Path]::GetRandomFileName())
-            $installationPath = "$env:LOCALAPPDATA\Google\Cloud SDK"
-
-            Invoke-WebRequest -Uri $cloudSdkUri -OutFile $zipFileLocation
-            Add-Type -AssemblyName System.IO.Compression.FileSystem
-
-            # This will extract it to a folder $env:APPDATA\google-cloud-sdk.
-            Write-Host "Extracting Google Cloud SDK to '$extractedFolder' ..."
-            [System.IO.Compression.ZipFile]::ExtractToDirectory($zipFileLocation, $extractedFolder)
-
-            md $installationPath | Out-Null
-            Write-Host "Moving Google Cloud SDK to '$installationPath' ..."
-            Copy-Item "$extractedFolder\google-cloud-sdk" $installationPath -Recurse -Force
-
-            # Set this to true to disable prompts.
-            $env:CLOUDSDK_CORE_DISABLE_PROMPTS = $true
-            Write-Host "Running installation script ..."
-            & "$installationPath\google-cloud-sdk\install.bat" --quiet 2>$null
-
-            $cloudBinPath = "$installationPath\google-cloud-sdk\bin"
-            $envPath = [System.Environment]::GetEnvironmentVariable("Path")
-            if (-not $envPath.Contains($cloudBinPath)) {
-                [System.Environment]::SetEnvironmentVariable("Path", "$envPath;$cloudBinPath")
-            }
+            Install-GCloudSdkSilently
         }
         else {
-            if ($PSCmdlet.ShouldContinue($query, $caption)) {
-                $cloudSdkInstaller = "https://dl.google.com/dl/cloudsdk/channels/rapid/GoogleCloudSDKInstaller.exe"
-                $installerLocation = Join-Path $env:TMP "$([System.IO.Path]::GetRandomFileName()).exe"
-                Invoke-WebRequest -Uri $cloudSdkInstaller -OutFile $installerLocation
-                & $installerLocation
-                Write-Warning "You may have to restart the shell before gcloud can be used."
+            if ($PSCmdlet.ShouldContinue($query, $caption, [ref]$yesToAll, [ref]$noToAll)) {
+                if ($PSCmdlet.ShouldContinue($uiQuery, $uiCaption, [ref]$yesToAll, [ref]$noToAll)) {
+                    Install-GCloudSdkSilently
+                    gcloud init
+                }
+                else {
+                    $cloudSdkInstaller = "https://dl.google.com/dl/cloudsdk/channels/rapid/GoogleCloudSDKInstaller.exe"
+                    $installerLocation = Join-Path $env:TMP "$([System.IO.Path]::GetRandomFileName()).exe"
+
+                    Write-Progress -Activity $installingSdkActivity `
+                                   -Status "Downloading interactive installer to $installerLocation."
+
+                    # Set this to hide the progress bar from Invoke-WebRequest, which is not very useful.
+                    $ProgressPreference = "SilentlyContinue"
+                    Invoke-WebRequest -Uri $cloudSdkInstaller -OutFile $installerLocation
+                    $ProgressPreference = "Continue"
+
+                    Write-Progress -Activity $installingSdkActivity `
+                                   -Status "Launching interactive installer. Blocking until installation is complete."
+                    Start-Process $installerLocation -Wait
+
+                    Write-Warning $gCloudInitWarning
+                    Write-Progress -Activity $installingSdkActivity -Completed
+                }
             }
         }
-        Write-Warning "Please also make sure to run 'gcloud init' before using the module."
     }
+}
+
+function Install-GCloudSdkSilently() {
+    Write-Host $GCloudSdkLicense
+
+    # We use this method of installation instead of the installer because the installer does all the installation
+    # in the background so we can't determine when it's done.
+    $cloudSdkUri = "https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.zip"
+    $zipFileLocation = Join-Path $env:TMP ([System.IO.Path]::GetRandomFileName())
+    $extractedFolder = Join-Path $env:TMP ([System.IO.Path]::GetRandomFileName())
+    $installationPath = "$env:LOCALAPPDATA\Google\Cloud SDK"
+
+    Write-Progress -Activity $installingSdkActivity `
+                   -Status "Downloading latest version of Cloud SDK to $zipFileLocation."
+
+    # Set this to hide the progress bar from Invoke-WebRequest, which is not very useful.
+    $ProgressPreference = "SilentlyContinue"
+    Invoke-WebRequest -Uri $cloudSdkUri -OutFile $zipFileLocation
+    $ProgressPreference = "Continue"
+
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+    # This will extract it to a folder $env:APPDATA\google-cloud-sdk.
+    Write-Progress -Activity $installingSdkActivity `
+                   -Status "Extracting Google Cloud SDK to '$extractedFolder' ..."
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($zipFileLocation, $extractedFolder)
+
+    if (-not (Test-Path $installationPath)) {
+        md $installationPath | Out-Null
+    }
+    Write-Progress -Activity $installingSdkActivity `
+                   -Status "Moving Google Cloud SDK to '$installationPath' ..."
+    Copy-Item "$extractedFolder\google-cloud-sdk" $installationPath -Recurse -Force
+
+    # Set this to true to disable prompts.
+    $env:CLOUDSDK_CORE_DISABLE_PROMPTS = $true
+    Write-Progress -Activity $installingSdkActivity `
+                   -Status "Running installation script ..."
+    & "$installationPath\google-cloud-sdk\install.bat" --quiet 2>$null
+
+    $cloudBinPath = "$installationPath\google-cloud-sdk\bin"
+    $envPath = [System.Environment]::GetEnvironmentVariable("Path")
+    if (-not $envPath.Contains($cloudBinPath)) {
+        [System.Environment]::SetEnvironmentVariable("Path", "$envPath;$cloudBinPath")
+    }
+
+    # We need to set this to false so user can run gcloud init after if they want.
+    $env:CLOUDSDK_CORE_DISABLE_PROMPTS = $false
+
+    Write-Progress -Activity $installingSdkActivity -Completed
 }
 
 Install-GCloudSdk
