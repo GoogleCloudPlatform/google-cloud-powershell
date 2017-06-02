@@ -54,23 +54,16 @@ function Install-GCloudSdk {
              " set `$env:GCLOUD_SDK_INSTALLATION_NO_PROMPT to true."
     $caption = "Installing Google Cloud SDK"
 
-    $uiQuery = "Do you want to install non-interactively? Select no to install through the interactive installer."
-    $uiCaption = "Installing Google Cloud SDK non-interactively"
-
-    $yesToAll = $false
-    $noToAll = $false
+    $uiQuery = "Do you want to use the interactive installer? Select no to install silently on the command line."
+    $uiCaption = "Installing Google Cloud SDK interactively"
 
     if ($PSCmdlet.ShouldProcess("Google Cloud SDK", "Install")) {
         if ($noPrompt) {
             Install-GCloudSdkSilently
         }
         else {
-            if ($PSCmdlet.ShouldContinue($query, $caption, [ref]$yesToAll, [ref]$noToAll)) {
-                if ($PSCmdlet.ShouldContinue($uiQuery, $uiCaption, [ref]$yesToAll, [ref]$noToAll)) {
-                    Install-GCloudSdkSilently
-                    gcloud init
-                }
-                else {
+            if ($PSCmdlet.ShouldContinue($query, $caption)) {
+                if ($PSCmdlet.ShouldContinue($uiQuery, $uiCaption)) {
                     $cloudSdkInstaller = "https://dl.google.com/dl/cloudsdk/channels/rapid/GoogleCloudSDKInstaller.exe"
                     $installerLocation = Join-Path $env:TMP "$([System.IO.Path]::GetRandomFileName()).exe"
 
@@ -88,6 +81,10 @@ function Install-GCloudSdk {
 
                     Write-Warning $gCloudInitWarning
                     Write-Progress -Activity $installingSdkActivity -Completed
+                }
+                else {
+                    Install-GCloudSdkSilently
+                    gcloud init
                 }
             }
         }
