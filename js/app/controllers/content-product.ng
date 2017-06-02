@@ -77,6 +77,124 @@ Set-GceInstance "instance-name" -RemoveMetadata "newKey"
 Set-GceInstance "instance-name" -RemoveTag "beta" -AddTag "alpha"</pre>  
   </div>
 
+    <!-- Container Engine -->
+  <div ng-switch-when="google-cloud-container">
+    <p>
+      Google Container Engine is a powerful cluster manager and orchestration
+      system for running your Docker containers. Container Engine schedules
+      your containers into the cluster and manages them automatically based
+      on the requirements you define (such as CPU and memory). It's built
+      on the open source Kubernetes system, giving you the flexibility to take
+      advantage of on-premises, hybrid, or public cloud infrastructure.
+    </p>
+
+    <h2>Container Clusters</h2>
+    <p>
+      You can create a cluster by first creating a <code>NodeConfig</code>
+      object with <cmdlet-ref name="New-GkeNodeConfig"></cmdlet-ref> cmdlet.
+      After that, you can pass in the <code>NodeConfig</code> object to the
+      <cmdlet-ref name="Add-GkeCluster"></cmdlet-ref> cmdlet. It will then create
+      a cluster whose node pools will have their configurations set from the
+      <code>NodeConfig</code> object.
+    </p>
+    <pre># Creates a Container Engine Node Config with image type CONTAINER_VM
+# and 20 GB disk size for each node.
+$nodeConfig = New-GkeNodeConfig -DiskSizeGb 20 `
+                                -ImageType CONTAINER_VM
+
+# Creates a cluster named "my-cluster" in the default zone of the
+# default project using config $nodeConfig and network "my-network".
+Add-GkeCluster -NodeConfig $nodeConfig `
+               -ClusterName "my-cluster" `
+               -Network "my-network"</pre>
+    <p>
+      Instead of passing in the <code>NodeConfig</code> object, you can also
+      use the parameters provided in the <cmdlet-ref name="Add-GkeCluster"></cmdlet-ref>
+      cmdlet to create a cluster (a <code>NodeConfig</code> object will
+      be created internally by the cmdlet).
+    </p>
+    <pre># Creates a cluster named "my-cluster" with description "my new cluster"
+# in the default zone of the default project using machine type
+# "n1-standard-4" for each Google Compute Engine in the cluster.
+# The cluster will use the subnetwork "my-subnetwork".
+# The cluster's nodes will have autoupgrade enabled.
+# The cluster will also autoscale its node pool to a maximum of 2 nodes.
+Add-GkeCluster -MachineType "n1-standard-4" `
+               -ClusterName "my-cluster" `
+               -Description "My new cluster" `
+               -Subnetwork "my-subnetwork" `
+               -EnableAutoUpgrade `
+               -MaximumNodesToScaleTo 2</pre>
+    <p>
+      You can update a cluster with <cmdlet-ref name="Set-GkeCluster"></cmdlet-ref>
+      cmdlet. Only one property of the cluster can be updated at a time.
+    </p>
+    <pre># Sets additional zones of cluster "my-cluster" in zone "asia-east1-a"
+# to zones "asia-east1-b" and "asia-east1-c". This means the clusters will
+# have nodes created in these zones. The primary zone
+# ("asia-east1-a" in this case) will be added to the
+# <code>AdditionalZone</code> array by the cmdlet.
+Set-GkeCluster -ClusterName "my-cluster" `
+               -Zone "asia-east1-a" `
+               -AdditionalZone "asia-east1-b", "asia-east1-c"</pre>
+    <p>
+      You can list available clusters with
+      <cmdlet-ref name="Get-GkeCluster"></cmdlet-ref> cmdlet.
+    </p>
+    <pre># Lists all container clusters in the default project.
+Get-GkeCluster
+
+# List all container clusters in zone "us-central1-a"
+# of the default project.
+Get-GkeCluster -Zone "us-central1-a"</pre>
+    <p>
+      You can remove a cluster with <cmdlet-ref name="Remove-GkeCluster"></cmdlet-ref>
+      cmdlet.
+    </p>
+    <pre># Removes the cluster "my-cluster" in zone "us-west1-b"
+# of the default project.
+Remove-GkeCluster -ClusterName "my-cluster" `
+                  -Zone "us-west1-b"</pre>
+
+    <h2>Node Pools</h2>
+    <p>
+      A node pool is a subset of machines within a cluster that all have the
+      same configuration. While all nodes in a container cluster are identical,
+      node pools let you create pools of machines within your cluster that have
+      different configurations. For example, you might create a pool of nodes
+      in your cluster that have local SSDs or larger instance sizes. Because
+      of this, node pools are useful for customizing the instance profile
+      in your cluster.
+    </p>
+    <p>
+      To add a node pool to your cluster, you can first create a
+      <code>NodePool</code> object with <cmdlet-ref name="New-GkeNodePool"></cmdlet-ref>
+      cmdlet. You can then call <cmdlet-ref name="Add-GkeNodePool"></cmdlet-ref> cmdlet
+      to add the <code>NodePool</code> object to a cluster.
+    </p>
+    <pre># Creates a node pool named "my-nodepool" with image type
+# CONTAINER_VM for each node.
+$nodePool = New-GkeNodePool -NodePoolName "my-nodepool" `
+                            -ImageType CONTAINER_VM
+
+# Adds the pool to cluster "my-cluster".
+Add-GkeNodePool -NodePool $nodePool -Cluster "my-cluster"</pre>
+    <p>
+      You can list all the node pools in a cluster with
+      <cmdlet-ref name="Get-GkeNodePool"></cmdlet-ref> cmdlet.
+    </p>
+    <pre># Lists all node pools in cluster "my-cluster" in the default project.
+Get-GkeNodePool -ClusterName "my-cluster"</pre>
+    <p>
+      You can remove a node pool from a cluster with
+      <cmdlet-ref name="Remove-GkeCluster"></cmdlet-ref> cmdlet.
+    </p>
+    <pre># Removes the node pool "my-nodepool" in cluster "my-cluster"
+# in the zone "us-west1-b" of the default project.
+Remove-GkeCluster -ClusterName "my-cluster" `
+                  -Zone "us-west1-b" `
+                  -NodePoolName "my-nodepool"</pre>
+  </div>
 
   <!-- Cloud Storage -->
   <div ng-switch-when="google-cloud-storage">
