@@ -928,6 +928,12 @@ namespace Google.PowerShell.Container
         [ValidateNotNullOrEmpty]
         public string NodePoolName { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The NodePool object to be removed. Cluster, Zone and Project will be inferred
+        /// from the object.
+        /// </para>
+        /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByNodePoolObject)]
         public NodePool NodePoolObject { get; set; }
 
