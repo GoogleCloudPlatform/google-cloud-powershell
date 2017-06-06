@@ -11,14 +11,22 @@ Describe "Get-GcLogSink" {
     $r = Get-Random
     $script:sinkName = "gcps-get-gclogsink-$r"
     $script:secondSinkName = "gcps-get-gclogsink2-$r"
-    $destination = "storage.googleapis.com/random-destination-will-do-$r"
-    $destinationTwo = "storage.googleapis.com/random-destination-will-do2-$r"
+    $script:bucketOne = "random-destination-will-do-$r"
+    $script:bucketTwo = "random-destination-will-do2-$r"
+    $destination = "storage.googleapis.com/$bucketOne"
+    $destinationTwo = "storage.googleapis.com/$bucketTwo"
     $logFilter = "this is a filter"
+    
+    # We have to create the buckets before creating the log sink.
+    New-GcsBucket $bucketOne
+    New-GcsBucket $bucketTwo
+    Start-Sleep 2
     gcloud beta logging sinks create $script:sinkName $destination --log-filter=$logFilter --quiet 2>$null
     gcloud beta logging sinks create $script:secondSinkName $destinationTwo --quiet 2>$null
     
-
     AfterAll {
+        Remove-GcsBucket $bucketOne -Force
+        Remove-GcsBucket $bucketTwo -Force
         gcloud beta logging sinks delete $sinkName --quiet 2>$null
         gcloud beta logging sinks delete $secondSinkName --quiet 2>$null
     }
@@ -115,6 +123,9 @@ Describe "New-GcLogSink" {
         $bucket = "gcloud-powershell-testing-logsink-bucket-$r"
         $sinkName = "gcps-new-gclogsink-$r"
         try {
+            New-GcsBucket $bucket
+            Start-Sleep -Seconds 1
+
             New-GcLogSink $sinkName -GcsBucketDestination $bucket -UniqueWriterIdentity
             Start-Sleep -Seconds 1
 
@@ -125,6 +136,7 @@ Describe "New-GcLogSink" {
                            -Sink $createdSink
         }
         finally {
+            Remove-GcsBucket $bucket -Force
             gcloud beta logging sinks delete $sinkName --quiet 2>$null
         }
     }
@@ -426,6 +438,10 @@ Describe "Set-GcLogSink" {
         $bucketTwo = "gcloud-powershell-testing-logsink-bucket-2-$r"
         $sinkName = "gcps-new-gclogsink-$r"
         try {
+            New-GcsBucket $bucket
+            New-GcsBucket $bucketTwo
+            Start-Sleep -Seconds 1
+
             New-GcLogSink $sinkName -GcsBucketDestination $bucket -UniqueWriterIdentity
             Start-Sleep -Seconds 1
 
@@ -439,6 +455,8 @@ Describe "Set-GcLogSink" {
                            -Sink $updatedSink 
         }
         finally {
+            Remove-GcsBucket $bucket -Force
+            Remove-GcsBucket $bucketTwo -Force
             gcloud beta logging sinks delete $sinkName --quiet 2>$null
         }
     }
@@ -498,6 +516,10 @@ Describe "Set-GcLogSink" {
         $sinkName = "gcps-new-gclogsink-$r"
         $sinkNameTwo = "gcps-new-gclogsink2-$r"
         try {
+            New-GcsBucket $bucket
+            New-GcsBucket $bucketTwo
+            Start-Sleep -Seconds 1
+
             New-GcLogSink $sinkName -GcsBucketDestination $bucket -UniqueWriterIdentity
             # Have to be a different topic because sinks with diffferent output formats cannot share destination.
             New-GcLogSink $sinkNameTwo -GcsBucketDestination $bucketTwo -UniqueWriterIdentity
@@ -520,6 +542,8 @@ Describe "Set-GcLogSink" {
                            -Sink $updatedSink
         }
         finally {
+            Remove-GcsBucket $bucket -Force
+            Remove-GcsBucket $bucketTwo -Force
             gcloud beta logging sinks delete $sinkName --quiet 2>$null
             gcloud beta logging sinks delete $sinkNameTwo --quiet 2>$null
         }
@@ -773,14 +797,23 @@ Describe "Remove-GcLogSink" {
         $r = Get-Random
         $bucket = "gcloud-powershell-testing-logsink-bucket-$r"
         $sinkName = "gcps-new-gclogsink-$r"
+
+        New-GcsBucket $bucket
+        Start-Sleep -Seconds 1
+
         New-GcLogSink $sinkName -GcsBucketDestination $bucket -UniqueWriterIdentity
         Start-Sleep -Seconds 1
 
-        $createdSink = Get-GcLogSink -Sink $sinkName
-        $createdSink | Should Not BeNullOrEmpty
+        try {
+            $createdSink = Get-GcLogSink -Sink $sinkName
+            $createdSink | Should Not BeNullOrEmpty
 
-        Remove-GcLogSink $sinkName
-        { Get-GcLogSink -Sink $sinkName -ErrorAction Stop } | Should Throw "does not exist"
+            Remove-GcLogSink $sinkName
+            { Get-GcLogSink -Sink $sinkName -ErrorAction Stop } | Should Throw "does not exist"
+        }
+        finally {
+            Remove-GcsBucket $bucket -Force
+        }
     }
 
 
@@ -789,28 +822,46 @@ Describe "Remove-GcLogSink" {
         $bucket = "gcloud-powershell-testing-logsink-bucket-$r"
         $sinkName = "gcps-new-gclogsink-$r"
         $sinkNameTwo = "gcps-new-gclogsink2-$r"
+
+        New-GcsBucket $bucket
+        Start-Sleep -Seconds 1
+
         New-GcLogSink $sinkName -GcsBucketDestination $bucket -UniqueWriterIdentity
         New-GcLogSink $sinkNameTwo -GcsBucketDestination $bucket -UniqueWriterIdentity
         Start-Sleep -Seconds 1
 
-        $createdSinks = Get-GcLogSink -Sink $sinkName, $sinkNameTwo
-        $createdSinks | Should Not BeNullOrEmpty
+        try {
+            $createdSinks = Get-GcLogSink -Sink $sinkName, $sinkNameTwo
+            $createdSinks | Should Not BeNullOrEmpty
 
-        Remove-GcLogSink $sinkName, $sinkNameTwo
-        { Get-GcLogSink -Sink $sinkName -ErrorAction Stop } | Should Throw "does not exist"
-        { Get-GcLogSink -Sink $sinkNameTwo -ErrorAction Stop } | Should Throw "does not exist"
+            Remove-GcLogSink $sinkName, $sinkNameTwo
+            { Get-GcLogSink -Sink $sinkName -ErrorAction Stop } | Should Throw "does not exist"
+            { Get-GcLogSink -Sink $sinkNameTwo -ErrorAction Stop } | Should Throw "does not exist"
+        }
+        finally {
+            Remove-GcsBucket $bucket -Force
+        }
     }
 
     It "should work for log sink object" {
         $r = Get-Random
         $bucket = "gcloud-powershell-testing-logsink-bucket-$r"
         $sinkName = "gcps-new-gclogsink-$r"
+
+        New-GcsBucket $bucket
+        Start-Sleep -Seconds 1
+
         New-GcLogSink $sinkName -GcsBucketDestination $bucket -UniqueWriterIdentity
         Start-Sleep -Seconds 1
 
         $createdSinkObject = Get-GcLogSink -Sink $sinkName
 
-        Remove-GcLogSink $createdSinkObject
-        { Get-GcLogSink -Sink $sinkName -ErrorAction Stop } | Should Throw "does not exist"
+        try {
+            Remove-GcLogSink $createdSinkObject
+            { Get-GcLogSink -Sink $sinkName -ErrorAction Stop } | Should Throw "does not exist"
+        }
+        finally {
+            Remove-GcsBucket $bucket -Force
+        }
     }
 }

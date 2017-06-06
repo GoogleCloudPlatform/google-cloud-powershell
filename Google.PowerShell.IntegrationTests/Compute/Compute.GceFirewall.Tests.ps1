@@ -55,6 +55,14 @@ Describe "New-GceFirewallProtocol" {
         $data.IPProtocol | Should Be "protocol"
     }
 
+    It "should build one with port ranges" {
+        $data = New-GceFirewallProtocol "protocol" -Port 80..443
+        $data.Ports[0] | Should Be 80-443
+
+        $data = New-GceFirewallProtocol "protocol" -Port 80-443
+        $data.Ports[0] | Should Be 80-443
+    }
+
     It "should append to pipeline" {
         $output = New-GceFirewallProtocol "protocol1" |
             New-GceFirewallProtocol "protocol2" |

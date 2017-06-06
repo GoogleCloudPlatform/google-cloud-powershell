@@ -3,6 +3,7 @@
 
 using Google.Apis.Compute.v1.Data;
 using System.Collections.Generic;
+using System.Linq;
 using System.Management.Automation;
 
 namespace Google.PowerShell.ComputeEngine
@@ -22,6 +23,16 @@ namespace Google.PowerShell.ComputeEngine
     ///     Add-GceFirewall -Project "your-project" -Name "firewall-name"
     /// </code>
     /// <para>Creates two GceFirewallProtocol objects, and sends them to the Add-GceFirewall cmdlet.</para>
+    /// </example>
+    /// <example>
+    /// <code>
+    /// New-GceFirewallProtocol tcp -Port 80..443 |
+    ///     Add-GceFirewall -Project "your-project" -Name "firewall-name"
+    /// </code>
+    /// <para>
+    /// Creates a GceFirewallProtocol object with port range 80 to 443, and sends them to
+    /// the Add-GceFirewall cmdlet.
+    /// </para>
     /// </example>
     /// <para type="link" uri="(https://cloud.google.com/compute/docs/reference/latest/firewalls#resource)">
     /// [Firewall resource definition]
@@ -51,7 +62,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <para type="description">
         /// The ports which are allowed. This parameter is only applicable for UDP or TCP protocol.
         /// Each entry must be either an integer or a range. If not specified, connections through any port are
-        /// allowed Example inputs include: "22", "80","443", and "12345-12349".
+        /// allowed. Example inputs include: "22", "80","443", "12345-12349" and "80..443".
         /// </para>
         /// </summary>
         [Parameter]
@@ -70,6 +81,11 @@ namespace Google.PowerShell.ComputeEngine
         /// </summary>
         protected override void EndProcessing()
         {
+            if (Port != null)
+            {
+                Port = Port.Select(portString => portString.Replace("..", "-")).ToList();
+            }
+
             var newData = new Firewall.AllowedData
             {
                 IPProtocol = IPProtocol,

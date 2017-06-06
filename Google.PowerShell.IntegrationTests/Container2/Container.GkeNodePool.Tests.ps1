@@ -298,16 +298,17 @@ Describe "Remove-GkeNodePool" {
     }
 
     It "should remove node pool with node pool object" {
-        Get-GkeNodePool -Zone $clusterTwoZone `
-                        -ClusterName $clusterTwoName `
+        Get-GkeNodePool -Zone $zone `
+                        -ClusterName $clusterOneName `
                         -NodePoolName "default-pool" | Should Not BeNullOrEmpty
 
-        $nodePool = Get-GkeNodePool -ClusterName $clusterTwoName `
-                                    -Zone $clusterTwoZone
+        $nodePool = Get-GkeNodePool -NodePoolName "default-pool" `
+                                    -ClusterName $clusterOneName
+
         Remove-GkeNodePool -NodePoolObject $nodePool
 
-        { Get-GkeNodePool -Zone $clusterTwoZone `
-                          -ClusterName $clusterTwoName `
+        { Get-GkeNodePool -Zone $zone `
+                          -ClusterName $clusterOneName `
                           -NodePoolName "default-pool" `
                           -ErrorAction Stop } | Should Throw "cannot be found"
     }
