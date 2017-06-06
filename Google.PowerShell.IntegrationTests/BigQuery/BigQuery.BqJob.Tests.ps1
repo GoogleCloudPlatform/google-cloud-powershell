@@ -13,7 +13,8 @@ Describe "Get-BqJob" {
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
             Set-BqSchema $table
         $table | Add-BqTableRow CSV $filename -SkipLeadingRows 1
-        $bucket = New-GcsBucket "ps_test_$r"
+        $script:bucketName = "ps_test_$r"
+        $bucket = New-GcsBucket $bucketName
         $gcspath = "gs://ps_test_$r"
     }
 
@@ -63,7 +64,7 @@ Describe "Get-BqJob" {
     }
 
     AfterAll {
-        Remove-GcsBucket "ps_test_$r" -Force
+        Remove-GcsBucket $bucketName -Force
         $test_set | Remove-BqDataset -Force
     }
 }
@@ -221,7 +222,8 @@ Describe "BqJob-Extract-Load" {
         $table = New-BqTable -Dataset $test_Set "table_$r"
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
             Set-BqSchema $table | Add-BqTableRow CSV $filename -SkipLeadingRows 1
-        $bucket = New-GcsBucket "ps_test_$r"
+        $script:bucketName = "ps_test_$r"
+        $bucket = New-GcsBucket $bucketName
         $gcspath = "gs://ps_test_$r"
     }
 
@@ -284,7 +286,7 @@ Describe "BqJob-Extract-Load" {
         $job.Status.State | Should Be "DONE"
         $job.Status.ErrorResult | Should Be $null
 
-        $file = Get-GcsObject "ps_test_$r" "basic.csv"
+        $file = Get-GcsObject $bucketName "basic.csv"
         $file | Should Not Be $null
 
         $alt_tab = $test_set | New-BqTable "basic_test_$r"
@@ -302,7 +304,7 @@ Describe "BqJob-Extract-Load" {
         $job.Status.State | Should Be "DONE"
         $job.Status.ErrorResult | Should Be $null
 
-        $file = Get-GcsObject "ps_test_$r" "basic.csv"
+        $file = Get-GcsObject $bucketName "basic.csv"
         $file | Should Not Be $null
 
         $alt_tab = $test_set | New-BqTable "complex_test_$r"
@@ -317,7 +319,7 @@ Describe "BqJob-Extract-Load" {
 
     It "should handle WriteMode correctly" {
         $table | Start-BqJob -Extract CSV "$gcspath/write.csv" -Synchronous
-        $file = Get-GcsObject "ps_test_$r" "write.csv"
+        $file = Get-GcsObject $bucketName "write.csv"
         $alt_tab = $test_set | New-BqTable "writemode_test_$r"
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" |
             New-BqSchema "Year" "INTEGER" | Set-BqSchema $alt_tab
@@ -348,7 +350,7 @@ Describe "BqJob-Extract-Load" {
 
     AfterAll {
         $test_set | Remove-BqDataset -Force
-        Remove-GcsBucket "ps_test_$r" -Force
+        Remove-GcsBucket $bucket_name -Force
     }
 }
 
@@ -362,7 +364,8 @@ Describe "Stop-BqJob" {
         $table = New-BqTable -Dataset $test_Set "table_$r"
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
             Set-BqSchema $table | Add-BqTableRow CSV $filename -SkipLeadingRows 1
-        $bucket = New-GcsBucket "ps_test_$r"
+        $script:bucketName = "ps_test_$r"
+        $bucket = New-GcsBucket $bucketName
         $gcspath = "gs://ps_test_$r"
     }
 
@@ -395,7 +398,7 @@ Describe "Stop-BqJob" {
 
     AfterAll {
         $test_set | Remove-BqDataset -Force
-        Remove-GcsBucket "ps_test_$r" -Force
+        Remove-GcsBucket $bucketName -Force
     }
 }
 

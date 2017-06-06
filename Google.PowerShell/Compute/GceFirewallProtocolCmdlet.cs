@@ -62,7 +62,7 @@ namespace Google.PowerShell.ComputeEngine
         /// <para type="description">
         /// The ports which are allowed. This parameter is only applicable for UDP or TCP protocol.
         /// Each entry must be either an integer or a range. If not specified, connections through any port are
-        /// allowed. Example inputs include: "22", "80","443", and "12345-12349".
+        /// allowed. Example inputs include: "22", "80","443", "12345-12349" and "80..443".
         /// </para>
         /// </summary>
         [Parameter]

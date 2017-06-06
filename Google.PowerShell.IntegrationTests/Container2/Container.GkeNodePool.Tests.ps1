@@ -302,8 +302,9 @@ Describe "Remove-GkeNodePool" {
                         -ClusterName $clusterOneName `
                         -NodePoolName "default-pool" | Should Not BeNullOrEmpty
 
-        $nodePool = Get-GkeNodePool -ClusterName $clusterOneName `
-                                    -Zone $zone
+        $nodePool = Get-GkeNodePool -NodePoolName "default-pool" `
+                                    -ClusterName $clusterOneName
+
         Remove-GkeNodePool -NodePoolObject $nodePool
 
         { Get-GkeNodePool -Zone $zone `
