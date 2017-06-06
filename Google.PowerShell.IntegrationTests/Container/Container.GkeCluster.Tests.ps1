@@ -246,27 +246,6 @@ Describe "Add-GkeCluster" {
     $clusterOneJob = Start-Job -ScriptBlock $clusterCreationWithoutUsingNodeConfigScriptBlock `
                                -ArgumentList @($gcloudCmdletsPath, $clusterOneParameter)
 
-    # Cluster Two creation.
-
-    # Create a network and extract out subnet that corresponds to region "us-central1".
-    $script:networkName = "test-network-$r"
-    $region = "us-central1"
-    $script:subnetName = New-NetworkAndSubnetwork $networkName $region
-
-    $script:clusterTwoName = "gcp-new-gkecluster-2-$r"
-    $script:clusterTwoZone = "us-central1-a"
-    $clusterTwoAdditionalZone = "us-central1-c"
-    $clusterTwoMachineType = "n1-standard-4"
-    $clusterTwoParameter = @{"clusterName" = $clusterTwoName;
-                             "zone" = $clusterTwoZone;
-                             "network" = $networkName;
-                             "subnetwork" = $subnetName;
-                             "additionalZone" = $clusterTwoAdditionalZone;
-                             "initialNodeCount" = 2;
-                             "machineType" = $clusterTwoMachineType }
-
-    $clusterTwoJob = Start-Job -ScriptBlock $clusterCreationWithoutUsingNodeConfigScriptBlock `
-                               -ArgumentList @($gcloudCmdletsPath, $clusterTwoParameter)
 
     # Cluster Three creation.
     $script:clusterThreeName = "gcp-new-gkecluster-3-$r"
@@ -282,6 +261,9 @@ Describe "Add-GkeCluster" {
 
     $clusterThreeJob = Start-Job -ScriptBlock $clusterCreationWithoutUsingNodeConfigScriptBlock `
                                -ArgumentList @($gcloudCmdletsPath, $clusterThreeParameter)
+
+    Wait-Job $clusterOneJob, $clusterThreeJob | Remove-Job
+    Start-Sleep -Seconds 60
 
     # For cluster with node config, the script block is having trouble converting $nodeConfig object
     # so we will just create it here (but the other clusters are being created in the background so that's ok.
@@ -305,10 +287,10 @@ Describe "Add-GkeCluster" {
     $script:clusterFiveZone = "us-east1-d"
 
     It "should work" {
-        Wait-Job $clusterOneJob | Remove-Job
         $cluster = Get-GkeCluster -ClusterName $clusterOneName
 
-        $cluster.Status | Should Be RUNNING
+        $cluster.Status -eq "RUNNING" -or $cluster.Status -eq "PROVISIONING" |
+            Should Be $true
         $cluster.LoggingService | Should Be none
         $cluster.NodeConfig.ImageType | Should Be cos
         $cluster.Description | Should Be $clusterOneDescription
@@ -316,26 +298,11 @@ Describe "Add-GkeCluster" {
         $cluster.AddonsConfig.HttpLoadBalancing.Disabled | Should Be $true
     }
 
-    It "should work with -Network, -Subnetwork, -AdditionalZone and -NumberOfNodePools" {
-        Wait-Job $clusterTwoJob | Remove-Job
-        $cluster = Get-GkeCluster -ClusterName $clusterTwoName -Zone $clusterTwoZone
-
-        $cluster.Status | Should Be RUNNING
-        $cluster.NodeConfig.MachineType | Should BeExactly $clusterTwoMachineType
-        $cluster.Zone | Should Be $clusterTwoZone
-        $cluster.Locations.Count | Should Be 2
-        $cluster.Locations -Contains $clusterTwoZone | Should Be $true
-        $cluster.Locations -Contains $clusterTwoAdditionalZone | Should Be $true
-        $cluster.Network | Should Be $networkName
-        $cluster.Subnetwork | Should Be $subnetName
-        $cluster.CurrentNodeCount -ge 2 | Should Be $true
-    }
-
     It "should work with -MasterCredential and -MaximumNodesToScale" {
-        Wait-Job $clusterThreeJob | Remove-Job
         $cluster = Get-GkeCluster -ClusterName $clusterThreeName -Zone $clusterThreeZone
 
-        $cluster.Status | Should Be RUNNING
+        $cluster.Status -eq "RUNNING" -or $cluster.Status -eq "PROVISIONING" |
+            Should Be $true
         $cluster.Zone | Should Be $clusterThreeZone
         $cluster.MasterAuth.Username | Should BeExactly $clusterThreeUsername
         $cluster.MasterAuth.Password | Should BeExactly $clusterThreePassword
@@ -352,7 +319,8 @@ Describe "Add-GkeCluster" {
     It "should work with -NodeConfig and -EnableAutoUpgrade" {
         $cluster = Get-GkeCluster -ClusterName $clusterFourName -Zone $clusterFourZone
 
-        $cluster.Status | Should Be RUNNING
+        $cluster.Status -eq "RUNNING" -or $cluster.Status -eq "PROVISIONING" |
+            Should Be $true
         $cluster.MonitoringService | Should Be none
         $cluster.NodeConfig.MachineType | Should Be $clusterFourMachineType
         $cluster.NodeConfig.Labels["Release"] | Should BeExactly "stable"
@@ -371,7 +339,8 @@ Describe "Add-GkeCluster" {
         $nodePool | Add-GkeCluster -ClusterName $clusterFiveName -Zone $clusterFiveZone
 
         $cluster = Get-GkeCluster -ClusterName $clusterFiveName -Zone $clusterFiveZone
-        $cluster.Status | Should Be RUNNING
+        $cluster.Status -eq "RUNNING" -or $cluster.Status -eq "PROVISIONING" |
+            Should Be $true
         $cluster.MonitoringService | Should Not Be none
         $cluster.NodeConfig.MachineType | Should Be $clusterFourMachineType
         $cluster.NodeConfig.Labels["Release"] | Should BeExactly "stable"
@@ -388,29 +357,28 @@ Describe "Add-GkeCluster" {
     }
 
     AfterAll {
+        Start-Sleep -Seconds 60
         $jobOne = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
                             -ArgumentList @($gcloudCmdletsPath, $clusterOneName, $zone)
-        $jobTwo = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
-                            -ArgumentList @($gcloudCmdletsPath, $clusterTwoName, $clusterTwoZone)
         $jobThree = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
                               -ArgumentList @($gcloudCmdletsPath, $clusterThreeName, $clusterThreeZone)
         $jobFour = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
                              -ArgumentList @($gcloudCmdletsPath, $clusterFourName, $clusterFourZone)
         $jobFive = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
                              -ArgumentList @($gcloudCmdletsPath, $clusterFiveName, $clusterFiveZone)
-        # Use receive job so we can see the output if there is any error.
-        Wait-Job $jobOne, $jobTwo, $jobThree, $jobFour, $jobFive | Receive-Job
-        Remove-Job $jobOne, $jobTwo, $jobThree, $jobFour, $jobFive
-        # The cluster has to be deleted before we can delete the network.
-        gcloud compute networks delete $networkName -q 2>$null
+
+        Wait-Job $jobOne, $jobThree, $jobFour, $jobFive | Remove-Job
     }
+}
+
+# Check that a cluster is running.
+function Check-Cluster($clusterName, $clusterZone) {
+    $cluster = Get-GkeCluster -ClusterName $clusterName -Zone $clusterZone
+    return $cluster.Status -eq "Running"
 }
 
 Describe "Set-GkeCluster" {
     $r = Get-Random
-    $script:clusterOneName = "gcp-set-gkecluster-1-$r"
-    $script:clusterOneZone = $zone
-
     $script:clusterTwoName = "gcp-set-gkecluster-2-$r"
     $script:clusterTwoZone = "asia-east1-a"
 
@@ -420,8 +388,8 @@ Describe "Set-GkeCluster" {
     $script:clusterFourName = "gcp-set-gkecluster-4-$r"
     $script:clusterFourZone = "us-west1-a"
 
-    $script:clusterNames = @($clusterOneName, $clusterTwoName, $clusterThreeName, $clusterFourName)
-    $script:clusterZones = @($clusterOneZone, $clusterTwoZone, $clusterThreeZone, $clusterFourZone)
+    $script:clusterNames = @($clusterTwoName, $clusterThreeName, $clusterFourName)
+    $script:clusterZones = @($clusterTwoZone, $clusterThreeZone, $clusterFourZone)
 
     $creationJobs = @()
 
@@ -435,15 +403,23 @@ Describe "Set-GkeCluster" {
     }
 
     Wait-Job $creationJobs
+    Start-Sleep -Seconds 60
 
-    It "should update addon configs" {
-        Set-GkeCluster -ClusterName $clusterOneName `
-                       -LoadBalancing $true `
-                       -HorizontalPodAutoscaling $false
-
-        $cluster = Get-GkeCluster $clusterOneName
-        $cluster.AddonsConfig.HttpLoadBalancing.Disabled | Should Be $true
-        $cluster.AddonsConfig.HorizontalPodAutoscaling.Disabled | Should BeNullOrEmpty
+    # Wait until every cluster is fully started. Wait for at most 10 minutes.
+    $counter = 0
+    for ($i = 0; $i -lt $clusterNames.Count; $i += 1) {
+        while ($true) {
+            if (-not (Check-Cluster $clusterNames[$i] $clusterZones[$i])) {
+                Start-Sleep -Seconds 30
+                $counter += 1
+                if ($counter -eq 20) {
+                    break
+                }
+            }
+            else {
+                break
+            }
+        }
     }
 
     It "should work with cluster object to update node pool autoscaling" {
@@ -475,30 +451,23 @@ Describe "Set-GkeCluster" {
     }
 
     AfterAll {
-        $jobOne = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
-                            -ArgumentList @($gcloudCmdletsPath, $clusterOneName, $zone)
         $jobTwo = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
                             -ArgumentList @($gcloudCmdletsPath, $clusterTwoName, $clusterTwoZone)
         $jobThree = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
                               -ArgumentList @($gcloudCmdletsPath, $clusterThreeName, $clusterThreeZone)
         $jobFour = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
                              -ArgumentList @($gcloudCmdletsPath, $clusterFourName, $clusterFourZone)
-        Wait-Job $jobOne, $jobTwo, $jobThree, $jobFour | Remove-Job
+        Wait-Job $jobTwo, $jobThree, $jobFour | Remove-Job
     }
 }
 
 Describe "Remove-GkeCluster" {
-    # Check that a cluster is running.
-    function Check-Cluster($clusterName, $clusterZone) {
-        $cluster = Get-GkeCluster -ClusterName $clusterName -Zone $clusterZone
-        return $cluster.Status -eq "Running"
-    }
-
     $r = Get-Random
 
     # Create the cluster in parallel.
     # Cluster One creation.
     $clusterOneName = "gcp-remove-gkecluster-$r"
+    $clusterOneZone = "asia-east1-a"
 
     $clusterTwoName = "gcp-remove-gkecluster-2-$r"
     $clusterTwoZone = "us-west1-b"
@@ -506,13 +475,9 @@ Describe "Remove-GkeCluster" {
     $clusterThreeName = "gcp-remove-gkecluster-3-$r"
     $clusterThreeZone = "europe-west1-c"
 
-    $clusterFourName = "gcp-remove-gkecluster-4-$r"
-    $clusterFourZone = "asia-east1-a"
-
-    $clusterOneParameter = @{"clusterName" = $clusterOneName}
+    $clusterOneParameter = @{"clusterName" = $clusterOneName; "zone" = $clusterOneZone}
     $clusterTwoParameter = @{"clusterName" = $clusterTwoName; "zone" = $clusterTwoZone}
     $clusterThreeParameter = @{"clusterName" = $clusterThreeName; "zone" = $clusterThreeZone}
-    $clusterFourParameter = @{"clusterName" = $clusterFourName; "zone" = $clusterFourZone}
 
     # Start creating the cluster.
     $clusterOneJob = Start-Job -ScriptBlock $clusterCreationWithoutUsingNodeConfigScriptBlock `
@@ -521,16 +486,29 @@ Describe "Remove-GkeCluster" {
                                -ArgumentList @($gcloudCmdletsPath, $clusterTwoParameter)
     $clusterThreeJob = Start-Job -ScriptBlock $clusterCreationWithoutUsingNodeConfigScriptBlock `
                                -ArgumentList @($gcloudCmdletsPath, $clusterThreeParameter)
-    $clusterFourJob = Start-Job -ScriptBlock $clusterCreationWithoutUsingNodeConfigScriptBlock `
-                               -ArgumentList @($gcloudCmdletsPath, $clusterFourParameter)
 
-    Wait-Job $clusterOneJob, $clusterTwoJob, $clusterThreeJob, $clusterFourJob | Remove-Job
+    Wait-Job $clusterOneJob, $clusterTwoJob, $clusterThreeJob | Remove-Job
+    Start-Sleep -Seconds 60
 
-    # Check that all the clusters are really created.
-    Check-Cluster $clusterOneName $zone
-    Check-Cluster $clusterTwoName $clusterTwoZone
-    Check-Cluster $clusterThreeName $clusterThreeZone
-    Check-Cluster $clusterFourName $clusterFourZone
+    $script:clusterNames = @($clusterOneName, $clusterTwoName, $clusterThreeName)
+    $script:clusterZones = @($clusterOneZone, $clusterTwoZone, $clusterThreeZone)
+
+    # Wait until every cluster is fully started. Wait for at most 10 minutes.
+    $counter = 0
+    for ($i = 0; $i -lt $clusterNames.Count; $i += 1) {
+        while ($true) {
+            if (-not (Check-Cluster $clusterNames[$i] $clusterZones[$i])) {
+                Start-Sleep -Seconds 30
+                $counter += 1
+                if ($counter -eq 20) {
+                    break
+                }
+            }
+            else {
+                break
+            }
+        }
+    }
 
     # Running jobs to remove these 3 clusters in parallel to minimize test run time.
     $removeClusterByPipelineJob = Start-Job -ScriptBlock {
@@ -556,16 +534,11 @@ Describe "Remove-GkeCluster" {
         . $cmdletPath
         Install-GCloudCmdlets | Out-Null
         Remove-GkeCluster $clusterName -Zone $clusterZone
-    } -ArgumentList @($gcloudCmdletsPath, $clusterFourName, $clusterFourZone)
+    } -ArgumentList @($gcloudCmdletsPath, $clusterOneName, $clusterOneZone)
 
     It "should not remove cluster if -WhatIf is used" {
-        Remove-GkeCluster -Name $clusterOneName -WhatIf
-        Check-Cluster $clusterOneName $zone | Should Be $true
-    }
-
-    It "should remove cluster by name" {
-        Remove-GkeCluster -Name $clusterOneName
-        { Get-GkeCluster $clusterOneName -ErrorAction Stop } | Should Throw "cannot be found"
+        Remove-GkeCluster -Name $clusterOneName -Zone $clusterOneZone -WhatIf
+        Check-Cluster $clusterOneName $clusterOneZone | Should Be $true
     }
 
     It "should remove cluster by pipeline" {
@@ -580,9 +553,9 @@ Describe "Remove-GkeCluster" {
             Should Throw "cannot be found"
     }
 
-    It "should remove cluster by -Zone" {
+    It "should remove cluster by name and -Zone" {
         Wait-Job $removeClusterWithZoneJob | Remove-Job
-        { Get-GkeCluster $clusterFourName -Zone $clusterFourZone -ErrorAction Stop } |
+        { Get-GkeCluster $clusterOneName -Zone $clusterOneZone -ErrorAction Stop } |
             Should Throw "cannot be found"
     }
 
