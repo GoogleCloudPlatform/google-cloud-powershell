@@ -8,6 +8,16 @@ Param(
     [string]$configuration = "Release"
 )
 
+# Load the list of Beta cmdlets. We'll use this list to annotate the generated website data.
+Write-Host "Loading Beta cmdlets."
+$debugCmdletsFile = Join-Path $PSScriptRoot ".\BetaCmdlets.ps1"
+Import-Module $debugCmdletsFile -Verbose:$false
+if (($cmdletsToBeExported -eq $null) -or ($cmdletsToBeExported.Length -eq 0)) {
+    Write-Warning "Unable to locate Beta cmdlets. File got renamed?"
+    return
+}
+$debugCmdletsList = $cmdletsToBeExported  # Rename variable for clarity.
+
 $script:defaultParameterSetName = "Default"
 
 # Unload the module if already loaded. (Weird things happen when debugging...)
@@ -253,22 +263,31 @@ function Collapse-ParameterDescriptions($parameters) {
     }
 }
 
+# Generate a ProductInfo object. The $isBeta flag should only be used if every cmdlet in the
+# GCP product is in Beta. Otherwise, we'll just mark individual cmdlets as beta or not.
+# TODO(chrsmith): We can do this analysis after the fact (using the $isBeta field on cmdlets)
+# so we can obviate hard-coding this here.
+function GenerateProductInfo($longName, $shortName, $isBeta = $false) {
+    return @{
+        name = $longName;
+        shortName = $shortName;
+        isBeta = $isBeta;
+        resources = @()
+    }
+}
+
 # Mapping of cmdlet prefixes to Google Cloud Platform productInfo objects.
 $productInfoLookup = @{
-    "Gcs"   = @{ name = "Google Cloud Storage";  shortName = "google-cloud-storage" ; resources = @() }
-    "Gce"   = @{ name = "Google Compute Engine"; shortName = "google-compute-engine"; resources = @() }
-    "GcSql" = @{ name = "Google Cloud SQL";      shortName = "google-cloud-sql"     ; resources = @() }
-    "Gcd"   = @{ name = "Google Cloud DNS";      shortName = "google-cloud-dns"     ; resources = @() }
-    "Gcps"  = @{ name = "Google Cloud PubSub";      shortName = "google-cloud-pubsub"     ; resources = @() }
-    "GcLog" = @{ name = "Google Cloud Logging";      shortName = "google-cloud-logging"     ; resources = @() }
-    "GcIam" = @{ name = "Google Cloud IAM";
-                   shortName = "google-cloud-iam";
-                   resources = @() }
-    "GcpProject"   = @{ name = "Google Cloud Project";
-                   shortName = "google-cloud-project";
-                   resources = @() }
-    "Gke"   = @{ name = "Google Container Engine";  shortName = "google-cloud-container" ; resources = @() }
-    "Bq"    = @{ name = "Google Cloud BigQuery";  shortName = "google-cloud-bigquery" ; resources = @() }
+    "Gcs"   = GenerateProductInfo("Google Cloud Storage", "google-cloud-storage")
+    "Gce"   = GenerateProductInfo("Google Compute Engine", "google-compute-engine")
+    "GcSql" = GenerateProductInfo("Google Cloud SQL", "google-cloud-sql")
+    "Gcd"   = GenerateProductInfo("Google Cloud DNS", "google-cloud-dns")
+    "Gcps"  = GenerateProductInfo("Google Cloud PubSub", "google-cloud-pubsub")
+    "GcLog" = GenerateProductInfo("Google Cloud Logging", "google-cloud-logging")
+    "GcIam" = GenerateProductInfo("Google Cloud IAM", "google-cloud-iam")
+    "GcpProject" = GenerateProductInfo("Google Cloud Project", "google-cloud-project")
+    "Gke"   = GenerateProductInfo("Google Container Engine", "google-cloud-container", $true)
+    "Bq"    = GenerateProductInfo("Google Cloud BigQuery", "google-cloud-bigquery")
 }
 
 # Generate a giant JSON file containing all of our cmdlet's documentation. We later write this as
@@ -290,6 +309,7 @@ ForEach ($cmdlet in $cmdlets) {
     # Generate the object to be written out.
     $docObj = @{
         "name"        = $cmdlet.Name
+        "isBeta"      = $cmdletsToBeExported.Contains($cmdlet.Name)
         "synopsis"    = $helpObj.Synopsis
         "description" = Collapse-TextArray($helpObj.Description)
         "syntax"      = New-SyntaxObjectArray($cmdletInfo)
@@ -335,6 +355,7 @@ ForEach ($cmdlet in $cmdlets) {
 }
 
 $cmdletDocOutputPath = Join-Path $PSScriptRoot "\..\website\data\cmdletsFull.json"
+mkdir (Split-Path -Parent $cmdletDocOutputPath) -Force  # Create output folder if not exists.
 Write-Host "Writing cmdlet documentation to '$cmdletDocOutputPath'."
 $allDocumentationObj |
     ConvertTo-Json -Depth 15 -Compress |
