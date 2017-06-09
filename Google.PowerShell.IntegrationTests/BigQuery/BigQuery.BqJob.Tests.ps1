@@ -64,7 +64,7 @@ Describe "Get-BqJob" {
     }
 
     AfterAll {
-        Remove-GcsBucket $bucketName -Force
+        Remove-GcsBucket $script:bucketName -Force
         $test_set | Remove-BqDataset -Force
     }
 }
@@ -350,7 +350,7 @@ Describe "BqJob-Extract-Load" {
 
     AfterAll {
         $test_set | Remove-BqDataset -Force
-        Remove-GcsBucket $bucket_name -Force
+        Remove-GcsBucket $script:bucketName -Force
     }
 }
 
@@ -398,7 +398,7 @@ Describe "Stop-BqJob" {
 
     AfterAll {
         $test_set | Remove-BqDataset -Force
-        Remove-GcsBucket $bucketName -Force
+        Remove-GcsBucket $script:bucketName -Force
     }
 }
 

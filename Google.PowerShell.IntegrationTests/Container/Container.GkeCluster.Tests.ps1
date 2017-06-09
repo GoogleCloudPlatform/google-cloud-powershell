@@ -367,7 +367,7 @@ Describe "Add-GkeCluster" {
         $jobFour = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
                              -ArgumentList @($gcloudCmdletsPath, $clusterFourName, $clusterFourZone)
 
-        Wait-Job $jobOne, $jobThree, $jobFour, $jobFive | Remove-Job
+        Wait-Job $jobOne, $jobThree, $jobFour | Remove-Job
     }
 }
 

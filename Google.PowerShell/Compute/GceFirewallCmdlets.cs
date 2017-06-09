@@ -262,6 +262,11 @@ namespace Google.PowerShell.ComputeEngine
         [Alias("Name", "Firewall")]
         public string FirewallName { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The firewall object to be removed.
+        /// </para>
+        /// </summary>
         [Parameter(ValueFromPipeline = true, Mandatory = true, ParameterSetName = ParameterSetNames.ByObject)]
         public Firewall InputObject { get; set; }
 

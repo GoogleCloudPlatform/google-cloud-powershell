@@ -922,7 +922,10 @@ namespace Google.PowerShell.Container
         /// The name of the node pool to be removed.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, Position = 0)]
+        [Parameter(Mandatory = true, Position = 0,
+            ParameterSetName = ParameterSetNames.ByClusterName)]
+        [Parameter(Mandatory = true, Position = 0,
+            ParameterSetName = ParameterSetNames.ByClusterObject)]
         [PropertyByTypeTransformation(TypeToTransform = typeof(NodePool),
             Property = nameof(Google.Apis.Container.v1.Data.NodePool.Name))]
         [ValidateNotNullOrEmpty]
@@ -935,6 +938,7 @@ namespace Google.PowerShell.Container
         /// </para>
         /// </summary>
         [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.ByNodePoolObject)]
+        [ValidateNotNull]
         public NodePool NodePoolObject { get; set; }
 
         /// <summary>
@@ -992,12 +996,13 @@ namespace Google.PowerShell.Container
             {
                 case ParameterSetNames.ByNodePoolObject:
                     Uri nodePoolLink;
-                    if (Uri.TryCreate(NodePoolName, UriKind.Absolute, out nodePoolLink)
+                    NodePoolName = NodePoolObject.Name;
+                    if (Uri.TryCreate(NodePoolObject.SelfLink, UriKind.Absolute, out nodePoolLink)
                         && nodePoolLink.Scheme == Uri.UriSchemeHttps)
                     {
-                        Project = GetProjectNameFromUri(NodePoolName);
-                        Zone = GetUriPart("zones", NodePoolName);
-                        ClusterName = GetUriPart("clusters", NodePoolName);
+                        Project = GetProjectNameFromUri(NodePoolObject.SelfLink);
+                        Zone = GetUriPart("zones", NodePoolObject.SelfLink);
+                        ClusterName = GetUriPart("clusters", NodePoolObject.SelfLink);
                         break;
                     }
                     throw new PSArgumentException("Cluster Object does not have SelfLink URL.");

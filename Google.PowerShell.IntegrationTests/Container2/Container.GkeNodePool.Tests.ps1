@@ -30,6 +30,30 @@ $clusterThreeCreationJob = Start-Job -ScriptBlock $clusterCreationScriptBlock `
 
 Wait-Job $clusterOneCreationJob, $clusterTwoCreationJob, $clusterThreeCreationJob | Remove-Job
 
+# Check that a cluster is running.
+function Check-Cluster($clusterName, $clusterZone) {
+    $cluster = Get-GkeCluster -ClusterName $clusterName -Zone $clusterZone
+    return $cluster.Status -eq "Running"
+}
+
+$clusterNames = @($clusterOneName, $clusterTwoName, $clusterThreeName)
+$clusterZones = @($zone, $clusterTwoZone, $clusterThreeZone)
+
+# Wait until every cluster is fully started. Wait for at most 10 minutes per cluster.
+# We have to wait because the cluster may be in a PROVISIONING instead of
+# RUNNING state.
+$timeOut = (Get-Date).AddMinutes(10)
+
+for ($i = 0; $i -lt $clusterNames.Count; $i += 1) {
+    while ((Get-Date) -lt $timeOut) {
+        if (-not (Check-Cluster $clusterNames[$i] $clusterZones[$i])) {
+            Start-Sleep -Seconds 30
+        }
+        else {
+            break
+        }
+    }
+}
 
 Describe "Get-GkeNodePool" {
     $additionalNodePool = "get-gkenodepool-$r"

@@ -68,7 +68,10 @@ namespace Google.PowerShell.Container
 
             while (operationStatus != ContainerOperationStatus.DONE)
             {
-                Thread.Sleep(200);
+                // We don't want to have a sleep interval too short since that will
+                // send many requests to the server and this may cause some API quotas
+                // to be hit.
+                Thread.Sleep(1000);
                 var progressRecord = new ProgressRecord(activityId, activity, status);
                 // Since we don't know how long the operation will take, we will just make the progress
                 // bar loop through.
