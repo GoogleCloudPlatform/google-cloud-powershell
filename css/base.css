@@ -227,5 +227,5 @@ a > code.cmdlet:hover {
  Unless there is a way to do this in CSS, we just hard-code it based
  on the containing element's ID. */
 #content-header .beta-label { top: -20px; }
-#cmdlet-list    .beta-label { top: -5px; }
-#left-nav       .beta-label { top: -3px; }
+#content        .beta-label { top:  -5px; }
+#left-nav       .beta-label { top:  -3px; }
