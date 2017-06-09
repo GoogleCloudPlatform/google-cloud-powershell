@@ -10,7 +10,7 @@
   <tr ng-repeat="product in contentCtrl.cmdletDocumentation.products | orderBy:'name'">
     <td>
       <a href="/google-cloud-powershell/#/{{ product.name }}/">
-        {{ product.longName }}
+        {{ product.longName }} <beta-label ng-if="product.isBeta"></beta-label>
       </a>
     </td>
   </tr>

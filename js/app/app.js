@@ -66,6 +66,18 @@
         };
     });
 
+    // Directive for adding a beta label. Alles for consistent styling across locations in
+    // the app.
+    app.directive('betaLabel', function() {
+        return {
+            restrict: 'E',
+            template: '<span class="beta-label">BETA</span>',
+            scope: {
+                name: '@'
+            }
+        };
+    });
+
     // Filter for converting a cmdletname into reference HTML, e.g. "Get-GcsObject" into
     // <a href="..."><code class="cmdlet">Get-GcsObject</code></a>. Only useful if used in
     // conjunction with ng-bind-html. See the cmdletRef directive.
