@@ -278,16 +278,16 @@ function GenerateProductInfo($longName, $shortName, $isBeta = $false) {
 
 # Mapping of cmdlet prefixes to Google Cloud Platform productInfo objects.
 $productInfoLookup = @{
-    "Gcs"   = GenerateProductInfo("Google Cloud Storage", "google-cloud-storage")
-    "Gce"   = GenerateProductInfo("Google Compute Engine", "google-compute-engine")
-    "GcSql" = GenerateProductInfo("Google Cloud SQL", "google-cloud-sql")
-    "Gcd"   = GenerateProductInfo("Google Cloud DNS", "google-cloud-dns")
-    "Gcps"  = GenerateProductInfo("Google Cloud PubSub", "google-cloud-pubsub")
-    "GcLog" = GenerateProductInfo("Google Cloud Logging", "google-cloud-logging")
-    "GcIam" = GenerateProductInfo("Google Cloud IAM", "google-cloud-iam")
-    "GcpProject" = GenerateProductInfo("Google Cloud Project", "google-cloud-project")
-    "Gke"   = GenerateProductInfo("Google Container Engine", "google-cloud-container", $true)
-    "Bq"    = GenerateProductInfo("Google Cloud BigQuery", "google-cloud-bigquery")
+    "Gcs"   = GenerateProductInfo      "Google Cloud Storage"    "google-cloud-storage"
+    "Gce"   = GenerateProductInfo      "Google Compute Engine"   "google-compute-engine"
+    "GcSql" = GenerateProductInfo      "Google Cloud SQL"        "google-cloud-sql"
+    "Gcd"   = GenerateProductInfo      "Google Cloud DNS"        "google-cloud-dns"
+    "Gcps"  = GenerateProductInfo      "Google Cloud PubSub"     "google-cloud-pubsub"
+    "GcLog" = GenerateProductInfo      "Google Cloud Logging"    "google-cloud-logging"
+    "GcIam" = GenerateProductInfo      "Google Cloud IAM"        "google-cloud-iam"
+    "GcpProject" = GenerateProductInfo "Google Cloud Project"    "google-cloud-project"
+    "Gke"   = GenerateProductInfo      "Google Container Engine" "google-cloud-container"    $true
+    "Bq"    = GenerateProductInfo      "Google Cloud BigQuery"   "google-cloud-bigquery"
 }
 
 # Generate a giant JSON file containing all of our cmdlet's documentation. We later write this as
@@ -309,7 +309,7 @@ ForEach ($cmdlet in $cmdlets) {
     # Generate the object to be written out.
     $docObj = @{
         "name"        = $cmdlet.Name
-        "isBeta"      = $cmdletsToBeExported.Contains($cmdlet.Name)
+        "isBeta"      = $debugCmdletsList.Contains($cmdlet.Name)
         "synopsis"    = $helpObj.Synopsis
         "description" = Collapse-TextArray($helpObj.Description)
         "syntax"      = New-SyntaxObjectArray($cmdletInfo)
@@ -355,7 +355,8 @@ ForEach ($cmdlet in $cmdlets) {
 }
 
 $cmdletDocOutputPath = Join-Path $PSScriptRoot "\..\website\data\cmdletsFull.json"
-mkdir (Split-Path -Parent $cmdletDocOutputPath) -Force  # Create output folder if not exists.
+# If the folder "website\data" doesn't exist, then you probably haven't initialized the
+# git submodule which points to the gh-pages branch.
 Write-Host "Writing cmdlet documentation to '$cmdletDocOutputPath'."
 $allDocumentationObj |
     ConvertTo-Json -Depth 15 -Compress |
