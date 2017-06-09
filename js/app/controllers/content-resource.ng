@@ -15,7 +15,7 @@
   <tr ng-repeat="cmdlet in contentCtrl.resourceInfo.cmdlets | orderBy:'name'">
     <td class="psr-cmdletName">
       <a href="/google-cloud-powershell/#/{{ contentCtrl.currentProduct }}/{{ contentCtrl.currentResource }}/{{ cmdlet.name }}">
-        {{ cmdlet.name }}
+        {{ cmdlet.name }} <beta-label ng-if="cmdlet.isBeta"></beta-label>
       </a>
     </td>
     <td class="psr-cmdletDescription">

@@ -10,7 +10,7 @@
           ng-class="{collapsed: !cmdletExplorerCtrl.isProductSelected(product.name), expanded: cmdletExplorerCtrl.isProductSelected(product.name)}">
       </div>
     <div class="psr-navText">
-      {{ product.longName }}
+      {{ product.longName }} <beta-label ng-if="product.isBeta"></beta-label>
     </div>
   </div>
   </a>
@@ -39,7 +39,7 @@
         <div
             class="psr-navRow level3"
             ng-class="{highlight: cmdletExplorerCtrl.isHighlighted('cmdlet', cmdlet.name), noBottomSeparator: !$last}">
-          <div class="psr-navText">{{ cmdlet.name }}</div>
+          <div class="psr-navText">{{ cmdlet.name }} <beta-label ng-if="cmdlet.isBeta"></beta-label></div>
         </div>
       </a>
     </div>

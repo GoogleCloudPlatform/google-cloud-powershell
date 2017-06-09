@@ -210,3 +210,22 @@ code.text   { color: rgba( 67, 160,  71, .87); }
 a > code.cmdlet:hover {
     text-decoration: underline;
 }
+
+/** Beta labels in their various forms. */
+
+.beta-label {
+    color: #0288d1;
+    background-color: #e1f5fe;
+    font-size: 60%;
+    padding: 2px;
+
+    position: relative;
+    left: 0px;
+}
+
+/* The label should be to the "top right" of the surrounding text.
+ Unless there is a way to do this in CSS, we just hard-code it based
+ on the containing element's ID. */
+#content-header .beta-label { top: -20px; }
+#cmdlet-list    .beta-label { top: -5px; }
+#left-nav       .beta-label { top: -3px; }

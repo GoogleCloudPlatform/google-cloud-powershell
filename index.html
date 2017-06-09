@@ -45,7 +45,7 @@
     <div id="content-container">
       <div id="content-header">
         <div class="psr-contentHeaderContainer psr-contentBlock">
-          <h1>{{ contentCtrl.contentHeader }}</p>
+          <h1>{{ contentCtrl.contentHeader }} <beta-label ng-if="contentCtrl.cmdletInfo.isBeta"></beta-label></h1>
         </div>
       </div>
       <div id="content" class="psr-contentBlock">
