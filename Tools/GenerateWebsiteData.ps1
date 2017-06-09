@@ -278,16 +278,16 @@ function GenerateProductInfo($longName, $shortName, $isBeta = $false) {
 
 # Mapping of cmdlet prefixes to Google Cloud Platform productInfo objects.
 $productInfoLookup = @{
-    "Gcs"   = GenerateProductInfo("Google Cloud Storage", "google-cloud-storage")
-    "Gce"   = GenerateProductInfo("Google Compute Engine", "google-compute-engine")
-    "GcSql" = GenerateProductInfo("Google Cloud SQL", "google-cloud-sql")
-    "Gcd"   = GenerateProductInfo("Google Cloud DNS", "google-cloud-dns")
-    "Gcps"  = GenerateProductInfo("Google Cloud PubSub", "google-cloud-pubsub")
-    "GcLog" = GenerateProductInfo("Google Cloud Logging", "google-cloud-logging")
-    "GcIam" = GenerateProductInfo("Google Cloud IAM", "google-cloud-iam")
-    "GcpProject" = GenerateProductInfo("Google Cloud Project", "google-cloud-project")
-    "Gke"   = GenerateProductInfo("Google Container Engine", "google-cloud-container", $true)
-    "Bq"    = GenerateProductInfo("Google Cloud BigQuery", "google-cloud-bigquery")
+    "Gcs"   = GenerateProductInfo      "Google Cloud Storage"    "google-cloud-storage"
+    "Gce"   = GenerateProductInfo      "Google Compute Engine"   "google-compute-engine"
+    "GcSql" = GenerateProductInfo      "Google Cloud SQL"        "google-cloud-sql"
+    "Gcd"   = GenerateProductInfo      "Google Cloud DNS"        "google-cloud-dns"
+    "Gcps"  = GenerateProductInfo      "Google Cloud PubSub"     "google-cloud-pubsub"
+    "GcLog" = GenerateProductInfo      "Google Cloud Logging"    "google-cloud-logging"
+    "GcIam" = GenerateProductInfo      "Google Cloud IAM"        "google-cloud-iam"
+    "GcpProject" = GenerateProductInfo "Google Cloud Project"    "google-cloud-project"
+    "Gke"   = GenerateProductInfo      "Google Container Engine" "google-cloud-container"    $true
+    "Bq"    = GenerateProductInfo      "Google Cloud BigQuery"   "google-cloud-bigquery"
 }
 
 # Generate a giant JSON file containing all of our cmdlet's documentation. We later write this as
