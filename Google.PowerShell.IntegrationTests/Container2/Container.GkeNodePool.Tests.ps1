@@ -39,16 +39,14 @@ function Check-Cluster($clusterName, $clusterZone) {
 $clusterNames = @($clusterOneName, $clusterTwoName, $clusterThreeName)
 $clusterZones = @($zone, $clusterTwoZone, $clusterThreeZone)
 
-# Wait until every cluster is fully started. Wait for at most 10 minutes.
-$counter = 0
+# Wait until every cluster is fully started. Wait for at most 10 minutes per cluster.
+# We have to wait because the cluster may be in a PROVISIONING instead of
+# RUNNING state.
+
 for ($i = 0; $i -lt $clusterNames.Count; $i += 1) {
-    while ($true) {
+    for ($j = 0; $j -lt 20; $j += 1) {
         if (-not (Check-Cluster $clusterNames[$i] $clusterZones[$i])) {
             Start-Sleep -Seconds 30
-            $counter += 1
-            if ($counter -eq 20) {
-                break
-            }
         }
         else {
             break
