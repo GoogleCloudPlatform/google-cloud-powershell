@@ -66,7 +66,7 @@ FormatsToProcess = 'GoogleCloudPlatform.Format.ps1xml'
 # NestedModules = @()
 
 # Functions to export from this module
-FunctionsToExport = @()
+FunctionsToExport = @('gs:')
 
 # Cmdlets to export from this module
 CmdletsToExport = '*'

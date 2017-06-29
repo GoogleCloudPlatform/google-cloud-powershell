@@ -143,3 +143,14 @@ function Install-GCloudSdkSilently() {
 
 Install-GCloudSdk
 Import-Module "$script:GCloudModulePath\Google.PowerShell.dll"
+
+function gs:() {
+    <#
+    .SYNOPSIS
+    Changes the directory to the Google Cloud Storage drive.
+    .DESCRIPTION
+    This function changes the directory to the Google Cloud Storage drive.
+    It can be called before the Google Cloud PowerShell module is imported.
+    #>
+    cd gs:
+}
