@@ -29,6 +29,7 @@ Describe "Storage Provider"{
     }
 
     It "Should change directory from function" {
+        cd gs:\
         cd c:
         gs:
         $PWD.Path | Should Be "gs:\"
