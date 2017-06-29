@@ -28,6 +28,12 @@ Describe "Storage Provider"{
         cd gs:\ 2>&1 | Should BeNullOrEmpty
     }
 
+    It "Should change directory from function" {
+        cd c:
+        gs:
+        $PWD.Path | Should Be "gs:\"
+    }
+
     It "Should make bucket" {
         cd gs:\
         Test-Path $bucketName | Should Be $false
