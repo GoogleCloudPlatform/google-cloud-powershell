@@ -10,8 +10,7 @@ Param(
 
 # Load the list of Beta cmdlets. We'll use this list to annotate the generated website data.
 Write-Host "Loading Beta cmdlets."
-$debugCmdletsFile = Join-Path $PSScriptRoot ".\BetaCmdlets.ps1"
-Import-Module $debugCmdletsFile -Verbose:$false
+$cmdletsToBeExported = & (Join-Path $PSScriptRoot "BetaCmdlets.ps1")
 if (($cmdletsToBeExported -eq $null) -or ($cmdletsToBeExported.Length -eq 0)) {
     Write-Warning "Unable to locate Beta cmdlets. File got renamed?"
     return
@@ -282,10 +281,10 @@ $productInfoLookup = @{
     "Gce"   = GenerateProductInfo      "Google Compute Engine"   "google-compute-engine"
     "GcSql" = GenerateProductInfo      "Google Cloud SQL"        "google-cloud-sql"
     "Gcd"   = GenerateProductInfo      "Google Cloud DNS"        "google-cloud-dns"
-    "Gcps"  = GenerateProductInfo      "Google Cloud PubSub"     "google-cloud-pubsub"       $true
-    "GcLog" = GenerateProductInfo      "Google Cloud Logging"    "google-cloud-logging"      $true
-    "GcIam" = GenerateProductInfo      "Google Cloud IAM"        "google-cloud-iam"          $true
-    "GcpProject" = GenerateProductInfo "Google Cloud Project"    "google-cloud-project"      $true
+    "Gcps"  = GenerateProductInfo      "Google Cloud PubSub"     "google-cloud-pubsub"
+    "GcLog" = GenerateProductInfo      "Google Cloud Logging"    "google-cloud-logging"
+    "GcIam" = GenerateProductInfo      "Google Cloud IAM"        "google-cloud-iam"
+    "GcpProject" = GenerateProductInfo "Google Cloud Project"    "google-cloud-project"
     "Gke"   = GenerateProductInfo      "Google Container Engine" "google-cloud-container"    $true
     "Bq"    = GenerateProductInfo      "Google Cloud BigQuery"   "google-cloud-bigquery"     $true
 }
