@@ -233,7 +233,7 @@ Describe "BqJob-Extract-Load" {
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | 
             New-BqSchema "Year" "INTEGER" | Set-BqSchema $alt_tab
         $job = $alt_tab | Start-BqJob -Load CSV "$gcspath/param.csv" -WriteMode WriteAppend `
-            -Encoding "ISO-8859-1" -FieldDelimiter "|" -Quote "'" `
+            -Encoding "ISO-8859-1" -FieldDelimiter "|" -Quote "'" -MaxBadRecords 3 `
             -SkipLeadingRows 2 -AllowUnknownfields -AllowJaggedRows -AllowQuotedNewlines
         $job.Configuration.Load.AllowJaggedRows | Should Be $true
         $job.Configuration.Load.AllowQuotedNewlines | Should Be $true
@@ -244,6 +244,7 @@ Describe "BqJob-Extract-Load" {
         $job.Configuration.Load.SkipLeadingRows | Should Be 2
         $job.Configuration.Load.SourceFormat.ToString() | Should Be "CSV"
         $job.Configuration.Load.WriteDisposition.ToString() | Should Be "WRITE_APPEND"
+        $job.Configuration.Load.MaxBadRecords | Should Be 3
     }
 
     It "should default Load parameters correctly" {
@@ -261,6 +262,7 @@ Describe "BqJob-Extract-Load" {
         $job.Configuration.Load.SkipLeadingRows | Should Be 0
         $job.Configuration.Load.SourceFormat.ToString() | Should Be "CSV"
         $job.Configuration.Load.WriteDisposition | Should Be $null
+        $job.Configuration.Load.MaxBadRecords | Should Be 0
     }
 
     It "should set Extract parameters correctly" {
