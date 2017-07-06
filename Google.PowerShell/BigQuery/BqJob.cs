@@ -469,6 +469,17 @@ namespace Google.PowerShell.BigQuery
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
         public SwitchParameter AllowQuotedNewlines { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The maximum number of bad records that BigQuery can ignore while
+        /// running the job. If the number of bad records exceeds this value,
+        /// an invalid error is returned in the job result.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
+        [ValidateRange(0, Int32.MaxValue)]
+        public int? MaxBadRecords { get; set; }
+
         // Extract Parameters.
 
         /// <summary>
@@ -656,7 +667,8 @@ namespace Google.PowerShell.BigQuery
                                 IgnoreUnknownValues = AllowUnknownFields,
                                 AllowJaggedRows = AllowJaggedRows,
                                 AllowQuotedNewlines = AllowQuotedNewlines,
-                                WriteDisposition = WriteMode.ToString()
+                                WriteDisposition = WriteMode.ToString(),
+                                MaxBadRecords = MaxBadRecords ?? 0
                             }
                         }
                     };
