@@ -18,7 +18,7 @@ Describe "Get-GceNetwork" {
 
     It "should list by project" {
         $networks = Get-GceNetwork
-        $networks.Count | Should Be 2
+        $networks.Count -ge 2 | Should Be $true
         ($networks | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.Network"
     }
 

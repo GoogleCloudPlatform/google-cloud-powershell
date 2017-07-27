@@ -10,6 +10,7 @@ Describe "Get-GcpsTopic" {
     $previousCount = (Get-GcpsTopic).Count
     gcloud beta pubsub topics create $script:topicName 2>$null
     gcloud beta pubsub topics create $script:secondTopicName 2>$null
+    Start-Sleep -Seconds 5
 
     AfterAll {
         gcloud beta pubsub topics delete $topicName --quiet 2>$null

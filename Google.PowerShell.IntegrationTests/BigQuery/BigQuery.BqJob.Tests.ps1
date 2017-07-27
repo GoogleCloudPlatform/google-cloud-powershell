@@ -86,8 +86,8 @@ Describe "BqJob-Query" {
         $job | Should Not Be $null
         $results = $job | Receive-BqJob
         $results.Count | Should Be 2
-        $results[0]["Author"] | Should Be "Orson Scott Card"
-        $results[1]["Year"] | Should Be 1967
+        $results[0]["Author"] | Should Be "Gabriel Marquez"
+        $results[1]["Year"] | Should Be 1985
     }
 
     It "should query a pre-loaded table with more options than ever before!" {

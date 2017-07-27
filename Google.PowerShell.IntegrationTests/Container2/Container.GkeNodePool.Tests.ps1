@@ -242,7 +242,7 @@ Describe "Add-GkeNodePool" {
         }
     }
 
-    It "should work with -Label, -Preemptible, -ClusterObject and service account and pipeline and" {
+    It "should work with -Label, -ClusterObject and service account and pipeline and" {
         $serviceAccount = New-GceServiceAccountConfig -BigtableAdmin Full `
                                                       -CloudLogging None `
                                                       -CloudMonitoring None `
@@ -252,7 +252,6 @@ Describe "Add-GkeNodePool" {
 
         $nodePoolConfig = New-GkeNodePool "my-pool2" -Metadata @{"key" = "value"} `
                                                      -Label @{"release" = "stable"} `
-                                                     -PreEmptible `
                                                      -ServiceAccount $serviceAccount
 
         $clusterObject = Get-GkeCluster -ClusterName $clusterThreeName -Zone $clusterThreeZone
@@ -264,7 +263,6 @@ Describe "Add-GkeNodePool" {
             $pool.Name | Should BeExactly "my-pool2"
             $pool.Config.Metadata["key"] | Should BeExactly "value"
             $pool.Config.Labels["release"] | Should BeExactly "stable"
-            $pool.Config.Preemptible | Should Be $true
             $pool.Config.ServiceAccount | Should Match "-compute@developer.gserviceaccount.com"
             $pool.Config.OauthScopes[0] | Should Match "bigtable.admin"
         }
