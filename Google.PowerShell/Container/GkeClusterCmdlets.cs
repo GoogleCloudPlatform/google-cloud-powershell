@@ -1466,14 +1466,6 @@ namespace Google.PowerShell.Container
             Version resolvedNodeVersion = null;
             if ("latest".Equals(nodeVersion, StringComparison.OrdinalIgnoreCase))
             {
-                if (!Version.TryParse(nodeVersion, out resolvedNodeVersion))
-                {
-                    throw new PSArgumentException(
-                        $"Node version '{nodeVersion}' is not a valid version.");
-                }
-            }
-            else
-            {
                 // Find the latest version from all valid node versions.
                 string[] validNodeVersionStrings = GetValidNodeVersions(Project, Zone);
                 foreach (string validNodeVersionString in validNodeVersionStrings)
@@ -1490,6 +1482,14 @@ namespace Google.PowerShell.Container
                             resolvedNodeVersion = validNodeVersion;
                         }
                     }
+                }
+            }
+            else
+            {
+                if (!Version.TryParse(nodeVersion, out resolvedNodeVersion))
+                {
+                    throw new PSArgumentException(
+                        $"Node version '{nodeVersion}' is not a valid version.");
                 }
             }
 
