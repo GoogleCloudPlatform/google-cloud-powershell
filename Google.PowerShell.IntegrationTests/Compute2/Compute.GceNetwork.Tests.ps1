@@ -115,4 +115,73 @@ Describe "New-GceNetwork" {
     }
 }
 
+Describe "Remove-GceNetwork" {
+    It "should work" {
+        $r = Get-Random
+        $networkName = "gcp-remove-network-$r"
+        $secondNetworkName = "gcp-remove-network2-$r"
+        $thirdNetworkName = "gcp-remove-network3-$r"
+        New-GceNetwork $networkName
+        New-GceNetwork $secondNetworkName
+        New-GceNetwork $thirdNetworkName
+
+        Get-GceNetwork -Network $networkName | Should Not BeNullOrEmpty
+        Get-GceNetwork -Network $secondNetworkName | Should Not BeNullOrEmpty
+        Get-GceNetwork -Network $thirdNetworkName | Should Not BeNullOrEmpty
+
+        # Remove a single network.
+        Remove-GceNetwork -Network $networkName
+        { Get-GceNetwork -Network $networkName -ErrorAction Stop } | Should Throw "not found"
+
+        # Remove an array of networks.
+        Remove-GceNetwork -Network $secondNetworkName, $thirdNetworkName
+        { Get-GceNetwork -Network $secondNetworkName -ErrorAction Stop } | Should Throw "not found"
+        { Get-GceNetwork -Network $thirdNetworkName -ErrorAction Stop } | Should Throw "not found"
+    }
+
+    It "should work with pipeline" {
+        $r = Get-Random
+        $networkName = "gcp-remove-network-$r"
+        New-GceNetwork $networkName
+
+        Get-GceNetwork -Network $networkName | Should Not BeNullOrEmpty
+
+        Get-GceNetwork -Network $networkName | Remove-GceNetwork
+        { Get-GceNetwork -Network $networkName -ErrorAction Stop } | Should Throw "not found"
+    }
+
+    It "should work with pipeline" {
+        $r = Get-Random
+        $networkName = "gcp-remove-network-$r"
+        New-GceNetwork -Network $networkName
+        Get-GceNetwork -Network $networkName | Should Not BeNullOrEmpty
+
+        # Remove through pipeline
+        Get-GceNetwork -Network $networkName | Remove-GceNetwork
+        { Get-GceNetwork -Network $networkName -ErrorAction Stop } | Should Throw "not found"
+    }
+
+    It "should throw error for non-existent network" {
+        { Remove-GceNetwork -Network "non-existent-network-powershell-testing" -ErrorAction Stop } |
+            Should Throw "not exist"
+    }
+
+    It "should throw error for invalid network name" {
+        { Remove-GceNetwork -Network "!!" -ErrorAction Stop } | Should Throw "Parameter validation failed"
+    }
+
+    It "should not remove network if -WhatIf is used" {
+        $r = Get-Random
+        $networkName = "gcp-remove-network-$r"
+        New-GceNetwork -Network $networkName
+        Get-GceNetwork -Network $networkName | Should Not BeNullOrEmpty
+
+        # Network should not be removed.
+        Remove-GceNetwork -Network $networkName -WhatIf
+        Get-GceNetwork -Network $networkName | Should Not BeNullOrEmpty
+
+        Remove-GceNetwork -Network $networkName
+    }
+}
+
 Reset-GCloudConfig $oldActiveConfig $configName
