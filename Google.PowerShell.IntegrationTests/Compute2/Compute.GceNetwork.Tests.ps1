@@ -26,6 +26,9 @@ Describe "Get-GceNetwork" {
         $network = Get-GceNetwork "default"
         $network.Count | Should Be 1
         ($network | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.Network"
+
+        $network = Get-GceNetwork "default", $newNetwork
+        $network.Count | Should Be 2
     }
 
     gcloud compute networks delete $newNetwork -q 2>$null
@@ -139,14 +142,16 @@ Describe "Remove-GceNetwork" {
         { Get-GceNetwork -Network $thirdNetworkName -ErrorAction Stop } | Should Throw "not found"
     }
 
-    It "should work with pipeline" {
+    It "should work with object" {
         $r = Get-Random
         $networkName = "gcp-remove-network-$r"
-        New-GceNetwork $networkName
+        $secondNetworkName = "gcp-remove-network2-$r"
+        New-GceNetwork $networkName, $secondNetworkName
 
-        Get-GceNetwork -Network $networkName | Should Not BeNullOrEmpty
+        $networks = Get-GceNetwork -Network $networkName, $secondNetworkName
+        $networks.Count | Should Not BeNullOrEmpty
 
-        Get-GceNetwork -Network $networkName | Remove-GceNetwork
+        Get-GceNetwork -Network $networkName, $secondNetworkName | Remove-GceNetwork
         { Get-GceNetwork -Network $networkName -ErrorAction Stop } | Should Throw "not found"
     }
 
