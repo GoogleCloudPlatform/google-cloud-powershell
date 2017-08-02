@@ -146,7 +146,8 @@ Describe "Remove-GceNetwork" {
         $r = Get-Random
         $networkName = "gcp-remove-network-$r"
         $secondNetworkName = "gcp-remove-network2-$r"
-        New-GceNetwork $networkName, $secondNetworkName
+        New-GceNetwork $networkName
+        New-GceNetwork $secondNetworkName
 
         $networks = Get-GceNetwork -Network $networkName, $secondNetworkName
         $networks.Count | Should Not BeNullOrEmpty
