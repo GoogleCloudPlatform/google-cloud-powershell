@@ -1241,7 +1241,7 @@ Describe "Test-GcsObject" {
     }
 
     It "should fail if the bucket is not accessible" {
-        { Test-GcsObject "asdf" "gcs-object.txt" } | Should Throw "has been disabled"
+        { Test-GcsObject "asdf" "gcs-object.txt" } | Should Throw
     }
 }
 
