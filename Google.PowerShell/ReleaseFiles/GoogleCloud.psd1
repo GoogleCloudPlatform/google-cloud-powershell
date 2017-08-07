@@ -12,7 +12,7 @@
 RootModule = 'GoogleCloud.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.0.8'
+ModuleVersion = '1.0.0.9'
 
 # ID used to uniquely identify this module
 GUID = 'e74637e6-7a4e-422d-bb9c-ca50809d78bb'

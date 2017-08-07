@@ -78,7 +78,6 @@ function CleanUp-PrivateDataAndExportVariables($moduleManifest) {
 
     $moduleManifest.Remove("PrivateData")
     $moduleManifest["VariablesToExport"] = $toBeReplaced
-    $moduleManifest["FunctionsToExport"] = @("gs:")
     $moduleManifest["AliasesToExport"] = $toBeReplaced
 }
 
