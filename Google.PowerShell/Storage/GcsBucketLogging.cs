@@ -84,9 +84,19 @@ namespace Google.PowerShell.CloudStorage
         [PropertyByTypeTransformationAttribute(Property = "Name", TypeToTransform = typeof(Bucket))]
         public string Name { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The destination bucket where the current bucket's logs should be placed.
+        /// </para>
+        /// </summary>
         [Parameter(Position = 1)]
         public string LogBucket { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// Prefix for the log object's name.
+        /// </para>
+        /// </summary>
         [Parameter(Position = 2)]
         public string LogObjectPrefix { get; set; }
 

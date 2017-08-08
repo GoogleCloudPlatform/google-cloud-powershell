@@ -39,7 +39,9 @@ Describe "Add-GceRoute" {
 
         It "should work with object" {
             # Get the existing default internet gateway route.
-            $rootRoute = Get-GceRoute | Where { $_.NextHopGateway -ne $null } | Select -First 1
+            $rootRoute = Get-GceRoute |
+                Where { $_.NextHopGateway -ne $null -and $_.Network -eq $defaultNetwork.SelfLink } |
+                Select -First 1
 
             # Change its properties so we can create a new route.
             $rootRoute.Name = $routeName

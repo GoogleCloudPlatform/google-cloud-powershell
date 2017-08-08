@@ -12,11 +12,14 @@ environment:
     - test_folder: "Storage"
     - test_folder: "Dns"
     - test_folder: "Provider"
+    - test_folder: "BigQuery"
     - test_folder: "Compute"
     - test_folder: "Compute2"
     - test_folder: "SQL"
     - test_folder: "SQL2"
     - test_folder: "SQL3"
+    - test_folder: "Container"
+    - test_folder: "Container2"
 before_build:
   - nuget restore
   - nuget install secure-file -ExcludeVersion

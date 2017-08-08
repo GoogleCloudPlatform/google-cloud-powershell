@@ -1,5 +1,6 @@
 ﻿. $PSScriptRoot\..\BigQuery\BqCmdlets.ps1
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
+$folder = Resolve-Path $PSScriptRoot
 
 Describe "Get-BqTable" {
 
@@ -271,8 +272,6 @@ Describe "Remove-BqTable" {
     }
 
     It "should delete a nonempty table as long as -Force is specified" {
-        $folder = Get-Location
-        $folder = $folder.ToString()
         $filename_csv = "$folder\classics.csv"
         $schema = New-BqSchema -Name "Title" -Type "STRING" | New-BqSchema -Name "Author" -Type "STRING" |
                   New-BqSchema -Name "Year" -Type "INTEGER" | Set-BqSchema

@@ -1,5 +1,6 @@
 ﻿. $PSScriptRoot\..\BigQuery\BqCmdlets.ps1
 $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
+$folder = Resolve-Path $PSScriptRoot
 
 Describe "Get-BqJob" {
 
@@ -7,14 +8,13 @@ Describe "Get-BqJob" {
         $r = Get-Random
         $datasetName = "pshell_testing_$r"
         $test_set = New-BqDataset $datasetName
-        $folder = Get-Location
-        $folder = $folder.ToString()
         $filename = "$folder\classics.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
             Set-BqSchema $table
         $table | Add-BqTableRow CSV $filename -SkipLeadingRows 1
-        $bucket = New-GcsBucket "ps_test_$r"
+        $script:bucketName = "ps_test_$r"
+        $bucket = New-GcsBucket $bucketName
         $gcspath = "gs://ps_test_$r"
     }
 
@@ -64,7 +64,7 @@ Describe "Get-BqJob" {
     }
 
     AfterAll {
-        Remove-GcsBucket "ps_test_$r" -Force
+        Remove-GcsBucket $script:bucketName -Force
         $test_set | Remove-BqDataset -Force
     }
 }
@@ -75,8 +75,6 @@ Describe "BqJob-Query" {
         $r = Get-Random
         $datasetName = "pshell_testing_$r"
         $test_set = New-BqDataset $datasetName
-        $folder = Get-Location
-        $folder = $folder.ToString()
         $filename = "$folder\classics.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
@@ -88,8 +86,8 @@ Describe "BqJob-Query" {
         $job | Should Not Be $null
         $results = $job | Receive-BqJob
         $results.Count | Should Be 2
-        $results[0]["Author"] | Should Be "Orson Scott Card"
-        $results[1]["Year"] | Should Be 1967
+        $results[0]["Author"] | Should Be "Gabriel Marquez"
+        $results[1]["Year"] | Should Be 1985
     }
 
     It "should query a pre-loaded table with more options than ever before!" {
@@ -146,8 +144,6 @@ Describe "BqJob-Copy" {
         $r = Get-Random
         $datasetName = "pshell_testing_$r"
         $test_set = New-BqDataset $datasetName
-        $folder = Get-Location
-        $folder = $folder.ToString()
         $filename = "$folder\classics.csv"
         $filename_other = "$folder\otherschema.csv"
 
@@ -222,13 +218,12 @@ Describe "BqJob-Extract-Load" {
         $r = Get-Random
         $datasetName = "pshell_testing_$r"
         $test_set = New-BqDataset $datasetName
-        $folder = Get-Location
-        $folder = $folder.ToString()
         $filename = "$folder\classics.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
             Set-BqSchema $table | Add-BqTableRow CSV $filename -SkipLeadingRows 1
-        $bucket = New-GcsBucket "ps_test_$r"
+        $script:bucketName = "ps_test_$r"
+        $bucket = New-GcsBucket $bucketName
         $gcspath = "gs://ps_test_$r"
     }
 
@@ -238,7 +233,7 @@ Describe "BqJob-Extract-Load" {
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | 
             New-BqSchema "Year" "INTEGER" | Set-BqSchema $alt_tab
         $job = $alt_tab | Start-BqJob -Load CSV "$gcspath/param.csv" -WriteMode WriteAppend `
-            -Encoding "ISO-8859-1" -FieldDelimiter "|" -Quote "'" `
+            -Encoding "ISO-8859-1" -FieldDelimiter "|" -Quote "'" -MaxBadRecords 3 `
             -SkipLeadingRows 2 -AllowUnknownfields -AllowJaggedRows -AllowQuotedNewlines
         $job.Configuration.Load.AllowJaggedRows | Should Be $true
         $job.Configuration.Load.AllowQuotedNewlines | Should Be $true
@@ -249,6 +244,7 @@ Describe "BqJob-Extract-Load" {
         $job.Configuration.Load.SkipLeadingRows | Should Be 2
         $job.Configuration.Load.SourceFormat.ToString() | Should Be "CSV"
         $job.Configuration.Load.WriteDisposition.ToString() | Should Be "WRITE_APPEND"
+        $job.Configuration.Load.MaxBadRecords | Should Be 3
     }
 
     It "should default Load parameters correctly" {
@@ -266,6 +262,7 @@ Describe "BqJob-Extract-Load" {
         $job.Configuration.Load.SkipLeadingRows | Should Be 0
         $job.Configuration.Load.SourceFormat.ToString() | Should Be "CSV"
         $job.Configuration.Load.WriteDisposition | Should Be $null
+        $job.Configuration.Load.MaxBadRecords | Should Be 0
     }
 
     It "should set Extract parameters correctly" {
@@ -291,7 +288,7 @@ Describe "BqJob-Extract-Load" {
         $job.Status.State | Should Be "DONE"
         $job.Status.ErrorResult | Should Be $null
 
-        $file = Get-GcsObject "ps_test_$r" "basic.csv"
+        $file = Get-GcsObject $bucketName "basic.csv"
         $file | Should Not Be $null
 
         $alt_tab = $test_set | New-BqTable "basic_test_$r"
@@ -309,7 +306,7 @@ Describe "BqJob-Extract-Load" {
         $job.Status.State | Should Be "DONE"
         $job.Status.ErrorResult | Should Be $null
 
-        $file = Get-GcsObject "ps_test_$r" "basic.csv"
+        $file = Get-GcsObject $bucketName "basic.csv"
         $file | Should Not Be $null
 
         $alt_tab = $test_set | New-BqTable "complex_test_$r"
@@ -324,7 +321,7 @@ Describe "BqJob-Extract-Load" {
 
     It "should handle WriteMode correctly" {
         $table | Start-BqJob -Extract CSV "$gcspath/write.csv" -Synchronous
-        $file = Get-GcsObject "ps_test_$r" "write.csv"
+        $file = Get-GcsObject $bucketName "write.csv"
         $alt_tab = $test_set | New-BqTable "writemode_test_$r"
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" |
             New-BqSchema "Year" "INTEGER" | Set-BqSchema $alt_tab
@@ -355,7 +352,7 @@ Describe "BqJob-Extract-Load" {
 
     AfterAll {
         $test_set | Remove-BqDataset -Force
-        $bucket.Name | Remove-GcsBucket -Force
+        Remove-GcsBucket $script:bucketName -Force
     }
 }
 
@@ -365,13 +362,12 @@ Describe "Stop-BqJob" {
         $r = Get-Random
         $datasetName = "pshell_testing_$r"
         $test_set = New-BqDataset $datasetName
-        $folder = Get-Location
-        $folder = $folder.ToString()
         $filename = "$folder\classics_large.csv"
         $table = New-BqTable -Dataset $test_Set "table_$r"
         New-BqSchema "Title" "STRING" | New-BqSchema "Author" "STRING" | New-BqSchema "Year" "INTEGER" | 
             Set-BqSchema $table | Add-BqTableRow CSV $filename -SkipLeadingRows 1
-        $bucket = New-GcsBucket "ps_test_$r"
+        $script:bucketName = "ps_test_$r"
+        $bucket = New-GcsBucket $bucketName
         $gcspath = "gs://ps_test_$r"
     }
 
@@ -404,6 +400,7 @@ Describe "Stop-BqJob" {
 
     AfterAll {
         $test_set | Remove-BqDataset -Force
+        Remove-GcsBucket $script:bucketName -Force
     }
 }
 
