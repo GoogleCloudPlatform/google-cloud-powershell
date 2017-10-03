@@ -7,9 +7,9 @@ $r = Get-Random
 # and deleting instances.
 $instance = "test-inst$r"
 
-Describe "Get-GcSqlSslCert" {
-    gcloud sql instances create $instance --quiet 2>$null
+Add-GcSqlInstance $instance
 
+Describe "Get-GcSqlSslCert" {
     It "should get a reasonable list response when no sslcerts exist" {
         $certs = Get-GcSqlSslCert $instance
         $certs.Count | Should Be 0
@@ -107,7 +107,7 @@ Describe "Reset-GcSqlSslConfig" {
     }
 }
 
-gcloud sql instances delete $instance --quiet 2>$null
+Remove-GcSqlInstance $instance
 
 Describe "Add-GcSqlSslEphemeral" {
     $instance = "ephem-test$r"
@@ -126,7 +126,7 @@ Describe "Add-GcSqlSslEphemeral" {
         { Add-GcSqlSslEphemeral $instance "no" } | Should Throw "Provided public key was in an invalid or unsupported format. [400]"
     }
 
-    Remove-GcSqlInstance  $instance
+    Remove-GcSqlInstance $instance
 }
 
 Reset-GCloudConfig $oldActiveConfig $configName

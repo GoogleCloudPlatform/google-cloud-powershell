@@ -8,11 +8,11 @@ Describe "Get-GcSqlInstance" {
         # A random number is used to avoid collisions with the speed of creating
         # and deleting instances.
         $instance = "test-inst$r"
-        gcloud sql instances create $instance --quiet 2>$null
+        Add-GcSqlInstance $instance
     }
 
     AfterAll {
-        gcloud sql instances delete $instance --quiet 2>$null
+        Remove-GcSqlInstance $instance
     }
 
     It "should get a reasonable list response" {
@@ -134,7 +134,7 @@ Describe "Remove-GcSqlInstance" {
         # and deleting instances.
         $instance = "test-inst$r"
         try {
-            gcloud sql instances create $instance --quiet 2>$null
+            Add-GcSqlInstance $instance
             $instances = Get-GcSqlInstance
             ($instances.Name -contains $instance) | Should Be true
         }
@@ -151,7 +151,7 @@ Describe "Remove-GcSqlInstance" {
         # and deleting instances.
         $instance = "test-inst$r"
         try {
-            gcloud sql instances create $instance --quiet 2>$null
+            Add-GcSqlInstance $instance
             $instances = Get-GcSqlInstance
             ($instances.Name -contains $instance) | Should Be true
         }

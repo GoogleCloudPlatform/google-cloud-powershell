@@ -11,7 +11,7 @@ Describe "Restart-GcSqlInstance" {
         $r = Get-Random
         $instance = "test-inst$r"
         try {
-            gcloud sql instances create $instance --quiet 2>$null
+            Add-GcSqlInstance $instance
             Restart-GcSqlInstance -Instance $instance
 
             $operations = Get-GcSqlOperation -Instance $instance
@@ -31,7 +31,7 @@ Describe "Restart-GcSqlInstance" {
         $r = Get-Random
         $instance = "test-inst$r"
         try {
-            gcloud sql instances create $instance --quiet 2>$null
+            Add-GcSqlInstance $instance
             Get-GcSqlInstance -Name $instance | Restart-GcSqlInstance
 
             $operations = Get-GcSqlOperation -Instance $instance
@@ -50,14 +50,15 @@ Describe "Restart-GcSqlInstance" {
         $nonDefaultProject = "asdf"
         $defaultProject = "gcloud-powershell-testing"
 
+        # A random number is used to avoid collisions with the speed of creating and deleting instances.
+        $r = Get-Random
+        $instance = "test-inst$r"
+
         try {
             # Set gcloud config to a non-default project (not gcloud-powershell-testing)
             gcloud config set project $nonDefaultProject 2>$null
 
-             # A random number is used to avoid collisions with the speed of creating and deleting instances.
-            $r = Get-Random
-            $instance = "test-inst$r"
-            gcloud sql instances create $instance --project $defaultProject --quiet 2>$null
+            Add-GcSqlInstance $instance -Project $defaultProject
             Get-GcSqlInstance -Project $defaultProject -Name $instance | Restart-GcSqlInstance
 
             $operations = Get-GcSqlOperation -Project $defaultProject -Instance $instance
@@ -233,13 +234,13 @@ Describe "Update-GcSqlInstance" {
     BeforeAll {
         # A random number is used to avoid collisions with the speed of creating and deleting instances.
         $r = Get-Random
-        $instance = "test-inst$r"
+        $script:instance = "test-inst$r"
 
         gcloud sql instances create $instance --tier "db-n1-standard-1" --activation-policy "ALWAYS" --quiet 2>$null
     }
   
     AfterAll {
-        gcloud sql instances delete $instance --quiet 2>$null
+        gcloud sql instances delete $script:instance --quiet 2>$null
     }
 
     It "should patch even if nothing changes" {

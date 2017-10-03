@@ -111,13 +111,13 @@ Describe "Get-GkeCluster" {
 
 Describe "New-GkeNodeConfig" {
     It "should work with -ImageType" {
-        $nodeConfig = New-GkeNodeConfig -ImageType container_vm
-        $nodeConfig.ImageType | Should BeExactly container_vm
+        $nodeConfig = New-GkeNodeConfig -ImageType COS
+        $nodeConfig.ImageType | Should BeExactly COS
     }
 
     It "should work with -MachineType" {
-        $nodeConfig = New-GkeNodeConfig -ImageType container_vm -MachineType n1-standard-1
-        $nodeConfig.ImageType | Should BeExactly container_vm
+        $nodeConfig = New-GkeNodeConfig -ImageType UBUNTU -MachineType n1-standard-1
+        $nodeConfig.ImageType | Should BeExactly UBUNTU
         $nodeConfig.MachineType | Should BeExactly n1-standard-1
     }
 
@@ -444,10 +444,10 @@ Describe "Set-GkeCluster" {
 
     It "should update node version" {
         $cluster = Get-GkeCluster -ClusterName $clusterFourName -Zone $clusterFourZone
-        $cluster | Set-GkeCluster -NodePoolName "default-pool" -NodeVersion 1.4.9
+        $cluster | Set-GkeCluster -NodePoolName "default-pool" -NodeVersion 1.6.7
 
         $cluster = Get-GkeCluster -ClusterName $clusterFourName -Zone $clusterFourZone
-        $cluster.CurrentNodeVersion | Should Be "1.4.9"
+        $cluster.CurrentNodeVersion | Should Be "1.6.7"
     }
 
     AfterAll {

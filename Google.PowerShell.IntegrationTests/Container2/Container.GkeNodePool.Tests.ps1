@@ -95,16 +95,16 @@ Describe "Get-GkeNodePool" {
 
 Describe "New-GkeNodePool" {
     It "should work with -ImageType" {
-        $nodePool = New-GkeNodePool "my-pool" -ImageType container_vm
+        $nodePool = New-GkeNodePool "my-pool" -ImageType COS
         $nodePool.Name | Should BeExactly "my-pool"
-        $nodePool.Config.ImageType | Should BeExactly container_vm
+        $nodePool.Config.ImageType | Should BeExactly COS
     }
 
     It "should work with -MachineType" {
-        $nodePool = New-GkeNodePool "my-pool3" -ImageType container_vm `
+        $nodePool = New-GkeNodePool "my-pool3" -ImageType UBUNTU `
                                               -MachineType n1-standard-1
         $nodePool.Name | Should BeExactly "my-pool3"
-        $nodePool.Config.ImageType | Should BeExactly container_vm
+        $nodePool.Config.ImageType | Should BeExactly UBUNTU
         $nodePool.Config.MachineType | Should BeExactly n1-standard-1
     }
 
@@ -205,7 +205,7 @@ Describe "New-GkeNodePool" {
 
 Describe "Add-GkeNodePool" {
     It "should work with -ImageType, -MachineType and -DiskSizeGb" {
-        $nodePool = Add-GkeNodePool "my-pool" -ImageType container_vm `
+        $nodePool = Add-GkeNodePool "my-pool" -ImageType COS `
                                               -MachineType n1-standard-1 `
                                               -DiskSizeGb 20 `
                                               -ClusterName $clusterOneName
@@ -214,7 +214,7 @@ Describe "Add-GkeNodePool" {
 
         ForEach($pool in @($nodePool, $nodePoolOnline)) {
             $pool.Name | Should BeExactly "my-pool"
-            $pool.Config.ImageType | Should Match CONTAINER_VM
+            $pool.Config.ImageType | Should Match COS
             $pool.Config.MachineType | Should BeExactly n1-standard-1
             $pool.Config.DiskSizeGb | Should Be 20
         }
