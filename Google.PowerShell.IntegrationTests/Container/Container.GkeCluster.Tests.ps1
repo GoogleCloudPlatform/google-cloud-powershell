@@ -111,13 +111,13 @@ Describe "Get-GkeCluster" {
 
 Describe "New-GkeNodeConfig" {
     It "should work with -ImageType" {
-        $nodeConfig = New-GkeNodeConfig -ImageType COS
-        $nodeConfig.ImageType | Should BeExactly COS
+        $nodeConfig = New-GkeNodeConfig -ImageType cos
+        $nodeConfig.ImageType | Should BeExactly cos
     }
 
     It "should work with -MachineType" {
-        $nodeConfig = New-GkeNodeConfig -ImageType UBUNTU -MachineType n1-standard-1
-        $nodeConfig.ImageType | Should BeExactly UBUNTU
+        $nodeConfig = New-GkeNodeConfig -ImageType ubuntu -MachineType n1-standard-1
+        $nodeConfig.ImageType | Should BeExactly ubuntu
         $nodeConfig.MachineType | Should BeExactly n1-standard-1
     }
 

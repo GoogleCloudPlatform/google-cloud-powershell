@@ -95,16 +95,16 @@ Describe "Get-GkeNodePool" {
 
 Describe "New-GkeNodePool" {
     It "should work with -ImageType" {
-        $nodePool = New-GkeNodePool "my-pool" -ImageType COS
+        $nodePool = New-GkeNodePool "my-pool" -ImageType cos
         $nodePool.Name | Should BeExactly "my-pool"
-        $nodePool.Config.ImageType | Should BeExactly COS
+        $nodePool.Config.ImageType | Should BeExactly cos
     }
 
     It "should work with -MachineType" {
-        $nodePool = New-GkeNodePool "my-pool3" -ImageType UBUNTU `
+        $nodePool = New-GkeNodePool "my-pool3" -ImageType ubuntu `
                                               -MachineType n1-standard-1
         $nodePool.Name | Should BeExactly "my-pool3"
-        $nodePool.Config.ImageType | Should BeExactly UBUNTU
+        $nodePool.Config.ImageType | Should BeExactly ubuntu
         $nodePool.Config.MachineType | Should BeExactly n1-standard-1
     }
 
