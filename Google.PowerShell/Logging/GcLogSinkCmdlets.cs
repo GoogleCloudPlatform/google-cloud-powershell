@@ -144,10 +144,6 @@ namespace Google.PowerShell.Logging
         [ValidateNotNullOrEmpty]
         public string SinkName { get; set; }
 
-        // Don't expose After and Before as parameters since they are deprecated.
-        public override DateTime? After { get => base.After; set => base.After = value; }
-        public override DateTime? Before { get => base.Before; set => base.Before = value; }
-
         /// <summary>
         /// <para type="description">
         /// The name of the Google Cloud Storage bucket that the sink will export the log entries to.
@@ -225,6 +221,16 @@ namespace Google.PowerShell.Logging
                 after: null,
                 otherFilter: Filter);
 
+            if (Before.HasValue)
+            {
+                WriteWarning("-Before parameter is deprecated for GcLogSink cmdlets.");
+            }
+
+            if (After.HasValue)
+            {
+                WriteWarning("-After parameter is deprecated for GcLogSink cmdlets.");
+            }
+
             LoggingBaseServiceRequest<LogSink> request = GetRequest(logSink);
 
             try
@@ -274,15 +280,6 @@ namespace Google.PowerShell.Logging
     ///   This command creates a sink name "my-sink" that exports every log entry in the log "my-log" in the
     ///   project "my-project" to the Google Cloud BigQuery dataset "my_dataset" (also in the project "my-project").
     ///   The identity of the writer of the logs will be cloud-logs@system.gserviceaccount.com.
-    ///   </para>
-    /// </example>
-    /// <example>
-    ///   <code>
-    ///   PS C:\> New-GcLogSink -SinkName "my-sink" -PubSubTopicDestination "my_dataset" -ResourceType "gce_instance" -After [DateTime]::Now().AddDays(1)
-    ///   </code>
-    ///   <para>
-    ///   This command creates a sink name "my-sink" that exports every log entry of the resource type "gce_instance" that is created the next day
-    ///   onwards to the Google Cloud PubSub topic "my-topic". The identity of the writer of the logs will be cloud-logs@system.gserviceaccount.com.
     ///   </para>
     /// </example>
     /// <example>
@@ -342,15 +339,6 @@ namespace Google.PowerShell.Logging
     ///   <para>
     ///   This command changes the destination of the sink name "my-sink" in the project "my-project" to the big query dataset "my_dataset".
     ///   The sink will now only export log from "my-log".
-    ///   </para>
-    /// </example>
-    /// <example>
-    ///   <code>
-    ///   PS C:\> Set-GcLogSink -SinkName "my-sink" -PubSubTopicDestination "my_dataset" -ResourceType "gce_instance" -After [DateTime]::Now().AddDays(1)
-    ///   </code>
-    ///   <para>
-    ///   This command changes the destination of the sink name "my-sink" to the Google Cloud PubSub topic "my-topic".
-    ///   The sink will now only export log entries that have resource type "gce_instance" and that occur 1 day from now.
     ///   </para>
     /// </example>
     /// <example>
