@@ -144,6 +144,10 @@ namespace Google.PowerShell.Logging
         [ValidateNotNullOrEmpty]
         public string SinkName { get; set; }
 
+        // Don't expose After and Before as parameters since they are deprecated.
+        public override DateTime? After { get => base.After; set => base.After = value; }
+        public override DateTime? Before { get => base.Before; set => base.Before = value; }
+
         /// <summary>
         /// <para type="description">
         /// The name of the Google Cloud Storage bucket that the sink will export the log entries to.
@@ -220,16 +224,6 @@ namespace Google.PowerShell.Logging
                 before: null,
                 after: null,
                 otherFilter: Filter);
-
-            if (Before.HasValue)
-            {
-                logSink.EndTime = XmlConvert.ToString(Before.Value, XmlDateTimeSerializationMode.Local);
-            }
-
-            if (After.HasValue)
-            {
-                logSink.StartTime = XmlConvert.ToString(After.Value, XmlDateTimeSerializationMode.Local);
-            }
 
             LoggingBaseServiceRequest<LogSink> request = GetRequest(logSink);
 
@@ -420,17 +414,27 @@ namespace Google.PowerShell.Logging
         {
             string formattedSinkName = PrefixProjectToSinkName(SinkName, Project);
 
-            // If destinations are not given, we still have to set the destination to the existing log sink destination.
-            // Otherwise, the API will throw error.
-            if (GcsBucketDestination == null && BigQueryDataSetDestination == null && PubSubTopicDestination == null)
+            bool destinationNotSpecified = GcsBucketDestination == null
+                && BigQueryDataSetDestination == null && PubSubTopicDestination == null;
+
+            // First checks whether the sink exists or not.
+            try
             {
-                try
+                ProjectsResource.SinksResource.GetRequest getRequest = Service.Projects.Sinks.Get(formattedSinkName);
+                LogSink existingSink = getRequest.Execute();
+
+                // If destinations are not given, we still have to set the destination to the existing log sink destination.
+                // Otherwise, the API will throw error.
+                if (destinationNotSpecified)
                 {
-                    ProjectsResource.SinksResource.GetRequest getRequest = Service.Projects.Sinks.Get(formattedSinkName);
-                    LogSink existingSink = getRequest.Execute();
                     logSink.Destination = existingSink.Destination;
                 }
-                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+            {
+                // If log sink does not exist to begin with, then we at least need a destination for the sink.
+                // So simply throws a terminating error if we don't have that.
+                if (destinationNotSpecified)
                 {
                     // Here we throw terminating error because the cmdlet cannot proceed without a valid sink.
                     string exceptionMessage = $"Sink '{SinkName}' does not exist in project '{Project}'." +
@@ -442,6 +446,14 @@ namespace Google.PowerShell.Logging
                         SinkName);
                     ThrowTerminatingError(errorRecord);
                 }
+
+                // Otherwise, returns a create request to create the log sink.
+                ProjectsResource.SinksResource.CreateRequest createRequest = Service.Projects.Sinks.Create(logSink, $"projects/{Project}");
+                if (UniqueWriterIdentity.IsPresent)
+                {
+                    createRequest.UniqueWriterIdentity = UniqueWriterIdentity.ToBool();
+                }
+                return createRequest;
             }
 
             ProjectsResource.SinksResource.UpdateRequest updateRequest = Service.Projects.Sinks.Update(logSink, formattedSinkName);

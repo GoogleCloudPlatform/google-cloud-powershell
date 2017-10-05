@@ -22,6 +22,7 @@ Describe "Start-GcSqlReplica" {
             $operations[0].Status | Should Match "DONE"
             $operations[0].Error | Should Match ""
             $operations[1].OperationType | Should Match "CREATE_REPLICA"
+        }
         finally {
             gcloud sql instances delete $replica --quiet 2>$null
         }
