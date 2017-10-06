@@ -223,12 +223,12 @@ namespace Google.PowerShell.Logging
 
             if (Before.HasValue)
             {
-                logSink.EndTime = XmlConvert.ToString(Before.Value, XmlDateTimeSerializationMode.Local);
+                WriteWarning("-Before parameter is deprecated for GcLogSink cmdlets.");
             }
 
             if (After.HasValue)
             {
-                logSink.StartTime = XmlConvert.ToString(After.Value, XmlDateTimeSerializationMode.Local);
+                WriteWarning("-After parameter is deprecated for GcLogSink cmdlets.");
             }
 
             LoggingBaseServiceRequest<LogSink> request = GetRequest(logSink);
@@ -280,15 +280,6 @@ namespace Google.PowerShell.Logging
     ///   This command creates a sink name "my-sink" that exports every log entry in the log "my-log" in the
     ///   project "my-project" to the Google Cloud BigQuery dataset "my_dataset" (also in the project "my-project").
     ///   The identity of the writer of the logs will be cloud-logs@system.gserviceaccount.com.
-    ///   </para>
-    /// </example>
-    /// <example>
-    ///   <code>
-    ///   PS C:\> New-GcLogSink -SinkName "my-sink" -PubSubTopicDestination "my_dataset" -ResourceType "gce_instance" -After [DateTime]::Now().AddDays(1)
-    ///   </code>
-    ///   <para>
-    ///   This command creates a sink name "my-sink" that exports every log entry of the resource type "gce_instance" that is created the next day
-    ///   onwards to the Google Cloud PubSub topic "my-topic". The identity of the writer of the logs will be cloud-logs@system.gserviceaccount.com.
     ///   </para>
     /// </example>
     /// <example>
@@ -352,15 +343,6 @@ namespace Google.PowerShell.Logging
     /// </example>
     /// <example>
     ///   <code>
-    ///   PS C:\> Set-GcLogSink -SinkName "my-sink" -PubSubTopicDestination "my_dataset" -ResourceType "gce_instance" -After [DateTime]::Now().AddDays(1)
-    ///   </code>
-    ///   <para>
-    ///   This command changes the destination of the sink name "my-sink" to the Google Cloud PubSub topic "my-topic".
-    ///   The sink will now only export log entries that have resource type "gce_instance" and that occur 1 day from now.
-    ///   </para>
-    /// </example>
-    /// <example>
-    ///   <code>
     ///   PS C:\> Set-GcLogSink -SinkName "my-sink" -Filter 'textPayload = "textPayload"' -UniqueWriterIdentity
     ///   </code>
     ///   <para>
@@ -420,17 +402,27 @@ namespace Google.PowerShell.Logging
         {
             string formattedSinkName = PrefixProjectToSinkName(SinkName, Project);
 
-            // If destinations are not given, we still have to set the destination to the existing log sink destination.
-            // Otherwise, the API will throw error.
-            if (GcsBucketDestination == null && BigQueryDataSetDestination == null && PubSubTopicDestination == null)
+            bool destinationNotSpecified = GcsBucketDestination == null
+                && BigQueryDataSetDestination == null && PubSubTopicDestination == null;
+
+            // First checks whether the sink exists or not.
+            try
             {
-                try
+                ProjectsResource.SinksResource.GetRequest getRequest = Service.Projects.Sinks.Get(formattedSinkName);
+                LogSink existingSink = getRequest.Execute();
+
+                // If destinations are not given, we still have to set the destination to the existing log sink destination.
+                // Otherwise, the API will throw error.
+                if (destinationNotSpecified)
                 {
-                    ProjectsResource.SinksResource.GetRequest getRequest = Service.Projects.Sinks.Get(formattedSinkName);
-                    LogSink existingSink = getRequest.Execute();
                     logSink.Destination = existingSink.Destination;
                 }
-                catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+            {
+                // If log sink does not exist to begin with, then we at least need a destination for the sink.
+                // So simply throws a terminating error if we don't have that.
+                if (destinationNotSpecified)
                 {
                     // Here we throw terminating error because the cmdlet cannot proceed without a valid sink.
                     string exceptionMessage = $"Sink '{SinkName}' does not exist in project '{Project}'." +
@@ -442,6 +434,14 @@ namespace Google.PowerShell.Logging
                         SinkName);
                     ThrowTerminatingError(errorRecord);
                 }
+
+                // Otherwise, returns a create request to create the log sink.
+                ProjectsResource.SinksResource.CreateRequest createRequest = Service.Projects.Sinks.Create(logSink, $"projects/{Project}");
+                if (UniqueWriterIdentity.IsPresent)
+                {
+                    createRequest.UniqueWriterIdentity = UniqueWriterIdentity.ToBool();
+                }
+                return createRequest;
             }
 
             ProjectsResource.SinksResource.UpdateRequest updateRequest = Service.Projects.Sinks.Update(logSink, formattedSinkName);

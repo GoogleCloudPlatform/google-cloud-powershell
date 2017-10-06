@@ -256,7 +256,7 @@ namespace Google.PowerShell.Logging
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
-        public DateTime? Before { get; set; }
+        public virtual DateTime? Before { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -264,7 +264,7 @@ namespace Google.PowerShell.Logging
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
-        public DateTime? After { get; set; }
+        public virtual DateTime? After { get; set; }
 
         /// <summary>
         /// <para type="description">

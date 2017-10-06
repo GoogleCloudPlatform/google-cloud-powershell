@@ -130,7 +130,7 @@ Describe "Get-GcLogEntry" {
         $jsonLogEntry = $logEntries | Where-Object { $null -ne $_.JsonPayload }
         $jsonLogEntry.JsonPayload["Key"] | Should BeExactly "Value"
 
-        $logEntries = Get-GcLogEntry -Filter "logName=`"projects/$project/logs/non-existinglog`"" -LogName $logName
+        $logEntries = Get-GcLogEntry -Filter "logName=`"projects/$project/logs/non-existinglog`""
         $logEntries | Should BeNullOrEmpty
     }
 }

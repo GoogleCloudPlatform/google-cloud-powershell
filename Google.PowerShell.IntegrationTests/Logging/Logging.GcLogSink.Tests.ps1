@@ -88,8 +88,6 @@ Describe "New-GcLogSink" {
         [string]$destination,
         [string]$outputVersionFormat,
         [string]$writerIdentity,
-        [DateTime]$startTime,
-        [DateTime]$endTime,
         [Google.Apis.Logging.v2.Data.LogSink]$sink)
     {
         $sink | Should Not BeNullOrEmpty
@@ -101,20 +99,6 @@ Describe "New-GcLogSink" {
         # Only checks for writer identity if it is provided.
         if (-not [string]::IsNullOrWhiteSpace($writerIdentity)) {
             $sink.WriterIdentity | Should BeExactly $writerIdentity
-        }
-
-        if ($null -eq $startTime) {
-            $sink.StartTime | Should BeNullOrEmpty
-        }
-        else {
-            [DateTime]$sink.StartTime | Should Be $startTime
-        }
-
-        if ($null -eq $endTime) {
-            $sink.EndTime | Should BeNullOrEmpty
-        }
-        else {
-            [DateTime]$sink.EndTime | Should Be $endTime
         }
     }
 
@@ -208,51 +192,6 @@ Describe "New-GcLogSink" {
         finally {
             gcloud beta logging sinks delete $sinkName --quiet 2>$null
             gcloud beta logging sinks delete $sinkNameTwo --quiet 2>$null
-        }
-    }
-
-
-    It "should work with -Before and -After" {
-        $r = Get-Random
-        $pubsubTopic = "gcloud-powershell-pubsub-topic-testing-$r"
-        $sinkName = "gcps-new-gclogsink-$r"
-        $secondSinkName = "gcps-new-gclogsink2-$r"
-        $thirdSinkName = "gcps-new-gclogsink3-$r"
-        $logName = "gcps-new-gclogsink-log-$r"
-        try {
-            $firstTime = ([DateTime]::Now).AddMinutes(4)
-            $secondTime = $firstTime.AddMinutes(4)
-            New-GcLogSink $sinkName -PubSubTopicDestination $pubsubTopic -Before $firstTime
-            New-GcLogSink $secondSinkName -PubSubTopicDestination $pubsubTopic -After $secondTime
-            New-GcLogSink $thirdSinkName -PubSubTopicDestination $pubsubTopic -Before $secondTime -After $firstTime
-            Start-Sleep -Seconds 1
-
-            $createdSink = Get-GcLogSink -Sink $sinkName
-            Test-GcLogSink -Name $sinkName `
-                           -Destination "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic" `
-                           -OutputVersionFormat "V2" `
-                           -EndTime $firstTime `
-                           -Sink $createdSink
-
-            $createdSink = Get-GcLogSink -Sink $secondSinkName
-            Test-GcLogSink -Name $secondSinkName `
-                           -Destination "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic" `
-                           -OutputVersionFormat "V2" `
-                           -StartTime $secondTime `
-                           -Sink $createdSink
-
-            $createdSink = Get-GcLogSink -Sink $thirdSinkName
-            Test-GcLogSink -Name $thirdSinkName `
-                           -Destination "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic" `
-                           -OutputVersionFormat "V2" `
-                           -StartTime $firstTime `
-                           -EndTime $secondTime `
-                           -Sink $createdSink
-        }
-        finally {
-            gcloud beta logging sinks delete $sinkName --quiet 2>$null
-            gcloud beta logging sinks delete $secondSinkName --quiet 2>$null
-            gcloud beta logging sinks delete $thirdSinkName --quiet 2>$null
         }
     }
 
@@ -402,8 +341,6 @@ Describe "Set-GcLogSink" {
         [string]$destination,
         [string]$outputVersionFormat,
         [string]$writerIdentity,
-        [DateTime]$startTime,
-        [DateTime]$endTime,
         [Google.Apis.Logging.v2.Data.LogSink]$sink)
     {
         $sink | Should Not BeNullOrEmpty
@@ -415,20 +352,6 @@ Describe "Set-GcLogSink" {
         # Only checks for writer identity if it is provided.
         if (-not [string]::IsNullOrWhiteSpace($writerIdentity)) {
             $sink.WriterIdentity | Should BeExactly $writerIdentity
-        }
-
-        if ($null -eq $startTime) {
-            $sink.StartTime | Should BeNullOrEmpty
-        }
-        else {
-            [DateTime]$sink.StartTime | Should Be $startTime
-        }
-
-        if ($null -eq $endTime) {
-            $sink.EndTime | Should BeNullOrEmpty
-        }
-        else {
-            [DateTime]$sink.EndTime | Should Be $endTime
         }
     }
 
@@ -584,57 +507,6 @@ Describe "Set-GcLogSink" {
         }
     }
 
-    It "should work with -Before and -After" {
-        $r = Get-Random
-        $pubsubTopic = "gcloud-powershell-pubsub-topic-testing-$r"
-        $sinkName = "gcps-new-gclogsink-$r"
-        $secondSinkName = "gcps-new-gclogsink2-$r"
-        $thirdSinkName = "gcps-new-gclogsink3-$r"
-        $logName = "gcps-new-gclogsink-log-$r"
-        try {
-            $firstTime = ([DateTime]::Now).AddMinutes(4)
-            $secondTime = $firstTime.AddMinutes(4)
-            New-GcLogSink $sinkName -PubSubTopicDestination $pubsubTopic -Before $firstTime
-            New-GcLogSink $secondSinkName -PubSubTopicDestination $pubsubTopic -After $secondTime
-            New-GcLogSink $thirdSinkName -PubSubTopicDestination $pubsubTopic -Before $secondTime -After $firstTime
-            Start-Sleep -Seconds 1
-
-            $thirdTime = $firstTime.AddMinutes(8)
-            $fourthTime = $firstTime.AddMinutes(12)
-            Set-GcLogSink $sinkName -PubSubTopicDestination $pubsubTopic -Before $thirdTime
-            Set-GcLogSink $secondSinkName -After $fourthTime
-            Set-GcLogSink $thirdSinkName -PubSubTopicDestination $pubsubTopic -Before $fourthTime -After $thirdTime
-            Start-Sleep -Seconds 1
-
-            $updatedSink = Get-GcLogSink -Sink $sinkName
-            Test-GcLogSink -Name $sinkName `
-                           -Destination "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic" `
-                           -OutputVersionFormat "V2" `
-                           -EndTime $thirdTime `
-                           -Sink $updatedSink
-
-            $updatedSink = Get-GcLogSink -Sink $secondSinkName
-            Test-GcLogSink -Name $secondSinkName `
-                           -Destination "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic" `
-                           -OutputVersionFormat "V2" `
-                           -StartTime $fourthTime `
-                           -Sink $updatedSink
-
-            $updatedSink = Get-GcLogSink -Sink $thirdSinkName
-            Test-GcLogSink -Name $thirdSinkName `
-                           -Destination "pubsub.googleapis.com/projects/$project/topics/$pubsubTopic" `
-                           -OutputVersionFormat "V2" `
-                           -StartTime $thirdTime `
-                           -EndTime $fourthTime `
-                           -Sink $updatedSink
-        }
-        finally {
-            gcloud beta logging sinks delete $sinkName --quiet 2>$null
-            gcloud beta logging sinks delete $secondSinkName --quiet 2>$null
-            gcloud beta logging sinks delete $thirdSinkName --quiet 2>$null
-        }
-    }
-
     It "should work with -LogName" {
         $r = Get-Random
         $sinkName = "gcps-new-gclogsink-$r"
@@ -644,8 +516,9 @@ Describe "Set-GcLogSink" {
         $textPayload = "This is a message with $r."
         try {
             New-GcLogSink $sinkName -PubSubTopicDestination $pubsubTopicWithPermission -LogName $logName
+            Start-Sleep -Seconds 10
             New-GcpsSubscription -Subscription $subscriptionName -Topic $pubsubTopicWithPermission
-            Start-Sleep -Seconds 2
+            Start-Sleep -Seconds 10
 
             # Change the log name filter of the sink.
             Set-GcLogSink $sinkName -LogName $secondLogName
@@ -658,7 +531,7 @@ Describe "Set-GcLogSink" {
             # Write a different entry to a different log (we should not get this).
             New-GcLogEntry -LogName $logName -TextPayload "You should not get this."
             # We need to sleep before getting the message to account for the delay before the log is exported to the topic.
-            Start-Sleep -Seconds 20
+            Start-Sleep -Seconds 30
 
             $message = Get-GcpsMessage -Subscription $subscriptionName -AutoAck
             $messageJson = ConvertFrom-Json $message.Data
@@ -684,8 +557,9 @@ Describe "Set-GcLogSink" {
         $secondFilter = "textPayload=`"$textPayload`""
         try {
             New-GcLogSink $sinkName -PubSubTopicDestination $pubsubTopicWithPermission -LogName $logName -Filter $filter
+            Start-Sleep -Seconds 10
             New-GcpsSubscription -Subscription $subscriptionName -Topic $pubsubTopicWithPermission
-            Start-Sleep -Seconds 2
+            Start-Sleep -Seconds 10
 
             # We need to sleep before creating the log entry to account for the time the logsink
             # and the subscription is created.
@@ -698,16 +572,6 @@ Describe "Set-GcLogSink" {
                            -WriterIdentity $script:cloudLogServiceAccount `
                            -OutputVersionFormat "V2" `
                            -Sink $createdSink
-
-            New-GcLogEntry -LogName $logName -TextPayload $textPayload
-            New-GcLogEntry -LogName $logName -TextPayload $secondTextPayload
-            # We need to sleep before getting the message to account for the delay before the log is exported to the topic.
-            Start-Sleep -Seconds 20
-
-            $message = Get-GcpsMessage -Subscription $subscriptionName -AutoAck
-            $messageJson = ConvertFrom-Json $message.Data
-            $messageJson.LogName | Should Match $logName
-            $messageJson.TextPayload | Should BeExactly $textPayload
         }
         finally {
             gcloud beta logging sinks delete $sinkName --quiet 2>$null
@@ -726,8 +590,9 @@ Describe "Set-GcLogSink" {
         $errorPayload = "This is a message with severity error."
         try {
             New-GcLogSink $sinkName -PubSubTopicDestination $pubsubTopicWithPermission -LogName $logName -Severity Error
+            Start-Sleep -Seconds 10
             New-GcpsSubscription -Subscription $subscriptionName -Topic $pubsubTopicWithPermission
-            Start-Sleep -Seconds 2
+            Start-Sleep -Seconds 10
 
             Set-GcLogSink $sinkName -LogName $logName -Severity Info
 
@@ -741,18 +606,6 @@ Describe "Set-GcLogSink" {
                            -WriterIdentity $script:cloudLogServiceAccount `
                            -OutputVersionFormat "V2" `
                            -Sink $createdSink
-
-            New-GcLogEntry -LogName $logName -TextPayload $debugPayload -Severity Debug
-            New-GcLogEntry -LogName $logName -TextPayload $infoPayload -Severity Info
-            New-GcLogEntry -LogName $logName -TextPayload $errorPayload -Severity Error
-            # We need to sleep before getting the message to account for the delay before the log is exported to the topic.
-            Start-Sleep -Seconds 20
-
-            $message = Get-GcpsMessage -Subscription $subscriptionName -AutoAck
-            $messageJson = ConvertFrom-Json $message.Data
-            $messageJson.LogName | Should Match $logName
-            $messageJson.TextPayload | Should BeExactly $infoPayload
-            $messageJson.Severity | Should BeExactly INFO
         }
         finally {
             gcloud beta logging sinks delete $sinkName --quiet 2>$null

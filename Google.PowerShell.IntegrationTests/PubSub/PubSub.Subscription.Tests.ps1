@@ -307,6 +307,7 @@ Describe "Get-GcpsSubscription" {
             New-GcpsSubscription -Subscription $subscriptionName4 -Topic $topicName2
             New-GcpsSubscription -Subscription $subscriptionName5 -Topic $topicName2
             New-GcpsSubscription -Subscription $subscriptionName6 -Topic $topicName2
+            Start-Sleep -Seconds 5
 
             $subscriptions = Get-GcpsSubscription -Topic $topicName -Subscription $subscriptionName
             $subscriptions.Name | Should Match $subscriptionName
@@ -430,6 +431,8 @@ Describe "Set-GcpsSubscriptionConfig" {
                                  -Topic $topicName `
                                  -PushEndpoint $endpoint
 
+            Start-Sleep -Seconds 5
+
             $subscription = Get-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
             Set-GcpsSubscriptionConfig -Subscription $subscription -PullConfig
 
@@ -459,6 +462,8 @@ Describe "Set-GcpsSubscriptionConfig" {
             
             # Set all subscriptions of topic $topicName to pull config.
             Get-GcpsSubscription -Topic $topicName | Set-GcpsSubscriptionConfig -PullConfig
+
+            Start-Sleep -Seconds 5
 
             $subscriptions = Get-GcpsSubscription -Topic $topicName
             $subscriptions | ForEach-Object { $_.PushConfig.PushEndpoint | Should BeNullOrEmpty }
