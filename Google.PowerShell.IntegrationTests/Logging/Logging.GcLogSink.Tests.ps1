@@ -130,6 +130,9 @@ Describe "New-GcLogSink" {
         $dataset = "gcloud_powershell_testing_dataset_$r"
         $sinkName = "gcps-new-gclogsink-$r"
         try {
+            New-BqDataset $dataset
+            Start-Sleep -Seconds 2
+
             New-GcLogSink $sinkName -BigQueryDataSetDestination $dataset
             Start-Sleep -Seconds 1
 
@@ -141,6 +144,7 @@ Describe "New-GcLogSink" {
                            -WriterIdentity $script:cloudLogServiceAccount
         }
         finally {
+            Remove-BqDataset $dataset
             gcloud beta logging sinks delete $sinkName --quiet 2>$null
         }
     }
@@ -390,6 +394,10 @@ Describe "Set-GcLogSink" {
         $datasetTwo = "gcloud_powershell_testing_dataset_two_$r"
         $sinkName = "gcps-new-gclogsink-$r"
         try {
+            New-BqDataset $dataset
+            New-BqDataset $datasetTwo
+            Start-Sleep -Seconds 1
+
             New-GcLogSink $sinkName -BigQueryDataSetDestination $dataset
             Start-Sleep -Seconds 1
 
@@ -404,6 +412,8 @@ Describe "Set-GcLogSink" {
                            -WriterIdentity $script:cloudLogServiceAccount
         }
         finally {
+            Remove-BqDataset $dataset
+            Remove-BqDataset $datasetTwo
             gcloud beta logging sinks delete $sinkName --quiet 2>$null
         }
     }

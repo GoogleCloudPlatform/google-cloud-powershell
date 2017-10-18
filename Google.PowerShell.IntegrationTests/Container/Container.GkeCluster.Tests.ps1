@@ -385,11 +385,8 @@ Describe "Set-GkeCluster" {
     $script:clusterThreeName = "gcp-set-gkecluster-3-$r"
     $script:clusterThreeZone = "europe-west1-b"
 
-    $script:clusterFourName = "gcp-set-gkecluster-4-$r"
-    $script:clusterFourZone = "us-west1-a"
-
-    $script:clusterNames = @($clusterTwoName, $clusterThreeName, $clusterFourName)
-    $script:clusterZones = @($clusterTwoZone, $clusterThreeZone, $clusterFourZone)
+    $script:clusterNames = @($clusterTwoName, $clusterThreeName)
+    $script:clusterZones = @($clusterTwoZone, $clusterThreeZone)
 
     $creationJobs = @()
 
@@ -442,22 +439,12 @@ Describe "Set-GkeCluster" {
         $cluster.MonitoringService | Should Be "none"
     }
 
-    It "should update node version" {
-        $cluster = Get-GkeCluster -ClusterName $clusterFourName -Zone $clusterFourZone
-        $cluster | Set-GkeCluster -NodePoolName "default-pool" -NodeVersion 1.6.7
-
-        $cluster = Get-GkeCluster -ClusterName $clusterFourName -Zone $clusterFourZone
-        $cluster.CurrentNodeVersion | Should Be "1.6.7"
-    }
-
     AfterAll {
         $jobTwo = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
                             -ArgumentList @($gcloudCmdletsPath, $clusterTwoName, $clusterTwoZone)
         $jobThree = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
                               -ArgumentList @($gcloudCmdletsPath, $clusterThreeName, $clusterThreeZone)
-        $jobFour = Start-Job -ScriptBlock $clusterDeletionScriptBlock `
-                             -ArgumentList @($gcloudCmdletsPath, $clusterFourName, $clusterFourZone)
-        Wait-Job $jobTwo, $jobThree, $jobFour | Remove-Job
+        Wait-Job $jobTwo, $jobThree | Remove-Job
     }
 }
 
