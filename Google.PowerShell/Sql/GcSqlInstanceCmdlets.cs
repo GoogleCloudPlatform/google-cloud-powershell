@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Management.Automation;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace Google.PowerShell.Sql
@@ -617,21 +618,22 @@ namespace Google.PowerShell.Sql
             public Apis.Storage.v1.Data.Object UploadLocalFile(string filePath, string bucketName)
             {
                 string fileName = "toImport";
-                Stream contentStream = new FileStream(filePath, FileMode.Open);
-                Apis.Storage.v1.Data.Object newGcsObject = new Apis.Storage.v1.Data.Object
+                using (Stream contentStream = new FileStream(filePath, FileMode.Open))
                 {
-                    Bucket = bucketName,
-                    Name = fileName,
-                    ContentType = "application/octet-stream"
-                };
-                ObjectsResource.InsertMediaUpload insertReq = _bucketService.Objects.Insert(
-                    newGcsObject, bucketName, contentStream, "application/octet-stream");
-                var finalProgress = insertReq.Upload();
-                if (finalProgress.Exception != null)
-                {
-                    throw finalProgress.Exception;
+                    Apis.Storage.v1.Data.Object newGcsObject = new Apis.Storage.v1.Data.Object
+                    {
+                        Bucket = bucketName,
+                        Name = fileName,
+                        ContentType = "application/octet-stream"
+                    };
+                    ObjectsResource.InsertMediaUpload insertReq = _bucketService.Objects.Insert(
+                        newGcsObject, bucketName, contentStream, "application/octet-stream");
+                    var finalProgress = insertReq.Upload();
+                    if (finalProgress.Exception != null)
+                    {
+                        throw finalProgress.Exception;
+                    }
                 }
-                contentStream.Close();
 
                 return _bucketService.Objects.Get(bucketName, fileName).Execute();
             }
@@ -1525,7 +1527,7 @@ namespace Google.PowerShell.Sql
                 if (entry.Key.StartsWith("Backup"))
                 {
                     param = Regex.Replace(param, @"^Backup", string.Empty);
-                    var prop = newSettings.BackupConfiguration.GetType().GetProperty(param);
+                    var prop = newSettings.BackupConfiguration.GetType().GetTypeInfo().GetProperty(param);
                     prop.SetValue(newSettings.BackupConfiguration, entry.Value);
                 }
                 else if (entry.Key.StartsWith("IpConfig"))
@@ -1535,7 +1537,7 @@ namespace Google.PowerShell.Sql
                     {
                         param = "AuthorizedNetworks";
                     }
-                    var prop = newSettings.IpConfiguration.GetType().GetProperty(param);
+                    var prop = newSettings.IpConfiguration.GetType().GetTypeInfo().GetProperty(param);
                     prop.SetValue(newSettings.IpConfiguration, entry.Value);
                 }
                 else if (entry.Key.StartsWith("LocationPreference"))
@@ -1549,7 +1551,7 @@ namespace Google.PowerShell.Sql
                     {
                         param = "FollowGaeApplication";
                     }
-                    var prop = newSettings.LocationPreference.GetType().GetProperty(param);
+                    var prop = newSettings.LocationPreference.GetType().GetTypeInfo().GetProperty(param);
                     prop.SetValue(newSettings.LocationPreference, entry.Value);
                 }
                 else if (entry.Key.StartsWith("MaintenanceWindow"))
@@ -1559,7 +1561,7 @@ namespace Google.PowerShell.Sql
                         newSettings.MaintenanceWindow = new MaintenanceWindow();
                     }
                     param = Regex.Replace(param, @"^MaintenanceWindow", string.Empty);
-                    var prop = newSettings.MaintenanceWindow.GetType().GetProperty(param);
+                    var prop = newSettings.MaintenanceWindow.GetType().GetTypeInfo().GetProperty(param);
                     prop.SetValue(newSettings.MaintenanceWindow, entry.Value);
                 }
                 else
@@ -1584,7 +1586,7 @@ namespace Google.PowerShell.Sql
                     }
                     else
                     {
-                        var prop = newSettings.GetType().GetProperty(param);
+                        var prop = newSettings.GetType().GetTypeInfo().GetProperty(param);
                         prop.SetValue(newSettings, entry.Value);
                     }
                 }
