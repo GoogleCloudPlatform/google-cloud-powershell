@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2005
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Google.PowerShell", "Google.PowerShell\Google.PowerShell.csproj", "{D338C5D3-5FC3-408F-9F7F-D53E7B213505}"
 EndProject
@@ -27,6 +27,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{31BC29EB
 		Tools\RunCodeFormatter.ps1 = Tools\RunCodeFormatter.ps1
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Google.PowerShell.DotnetCore", "Google.PowerShell.DotnetCore\Google.PowerShell.DotnetCore.csproj", "{44B9CEBD-807E-4640-A1E4-2F5E49CE1BB9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,11 +47,18 @@ Global
 		{57F97FF1-C33E-49DC-9759-12468FCC8D16}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{57F97FF1-C33E-49DC-9759-12468FCC8D16}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{57F97FF1-C33E-49DC-9759-12468FCC8D16}.Release|Any CPU.Build.0 = Release|Any CPU
+		{44B9CEBD-807E-4640-A1E4-2F5E49CE1BB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44B9CEBD-807E-4640-A1E4-2F5E49CE1BB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{44B9CEBD-807E-4640-A1E4-2F5E49CE1BB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44B9CEBD-807E-4640-A1E4-2F5E49CE1BB9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{31BC29EB-08CC-4060-B64A-189B0E908A73} = {A9C63839-C794-4DBF-A72C-052BCB9CE71E}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6BBE012C-F1BF-45F5-8C5C-BEFFC2CAFAFA}
 	EndGlobalSection
 EndGlobal
