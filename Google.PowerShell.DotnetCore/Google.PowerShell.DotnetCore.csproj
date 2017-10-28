@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\Google.PowerShell\Common\*.cs;..\Google.PowerShell\Compute\*.cs;..\Google.PowerShell\Dns\*.cs;..\Google.PowerShell\Properties\*.cs;..\Google.PowerShell\Provider\*.cs;..\Google.PowerShell\Sql\*.cs;..\Google.PowerShell\Storage\*.cs;..\Google.PowerShell\Logging\*.cs;..\Google.PowerShell\PubSub\*.cs;..\Google.PowerShell\BigQuery\*.cs" Exclude="bin\**;obj\**;**\*.xproj;packages\**" />
+    <Compile Include="..\Google.PowerShell\**\*.cs" Exclude="..\**\bin\**;..\**\obj\**;**\*.xproj;packages\**;..\Google.PowerShell\CloudResourceManager\IamPolicyCmdlets.cs;..\Google.PowerShell\Container\*" />
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Linux' ">
