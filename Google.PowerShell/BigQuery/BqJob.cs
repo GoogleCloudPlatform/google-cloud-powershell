@@ -6,6 +6,7 @@ using Google.Apis.Bigquery.v2.Data;
 using Google.PowerShell.Common;
 using System;
 using System.Net;
+using System.Linq;
 using System.Management.Automation;
 using Google.Cloud.BigQuery.V2;
 using System.Collections.Generic;
@@ -571,7 +572,7 @@ namespace Google.PowerShell.BigQuery
             {
                 try
                 {
-                    var options = new CreateQueryJobOptions
+                    var options = new QueryOptions
                     {
                         UseLegacySql = UseLegacySql,
                         Priority = Priority,
@@ -579,7 +580,7 @@ namespace Google.PowerShell.BigQuery
                         DefaultDataset = DefaultDataset
                     };
 
-                    BigQueryJob bqr = Client.CreateQueryJob(QueryString, options);
+                    BigQueryJob bqr = Client.CreateQueryJob(QueryString, null, options);
                     return bqr.Resource;
                 }
                 catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Forbidden)
@@ -829,7 +830,7 @@ namespace Google.PowerShell.BigQuery
                 {
                     throw new Exception("Server response came back as null.");
                 }
-                WriteObject(result.GetRows(), true);
+                WriteObject(result, true);
             }
             catch (Exception ex)
             {

@@ -998,7 +998,7 @@ namespace Google.PowerShell.Container
                     Uri nodePoolLink;
                     NodePoolName = NodePoolObject.Name;
                     if (Uri.TryCreate(NodePoolObject.SelfLink, UriKind.Absolute, out nodePoolLink)
-                        && nodePoolLink.Scheme == Uri.UriSchemeHttps)
+                        && nodePoolLink.Scheme == "https")
                     {
                         Project = GetProjectNameFromUri(NodePoolObject.SelfLink);
                         Zone = GetUriPart("zones", NodePoolObject.SelfLink);
