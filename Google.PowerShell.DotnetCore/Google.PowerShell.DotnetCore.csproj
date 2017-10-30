@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\Google.PowerShell\**\*.cs" Exclude="..\**\bin\**;..\**\obj\**;**\*.xproj;packages\**;..\Google.PowerShell\CloudResourceManager\IamPolicyCmdlets.cs;..\Google.PowerShell\Container\*" />
+    <Compile Include="..\Google.PowerShell\**\*.cs" Exclude="..\**\bin\**;..\**\obj\**;**\*.xproj;packages\**" />
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Linux' ">
@@ -30,20 +30,42 @@
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
     <PackageReference Include="System.Management.Automation" Version="6.0.0-alpha17" />
-    <PackageReference Include="Google.Api.Gax" Version="1.0.0-beta12" />
-    <PackageReference Include="Google.Api.Gax.Rest" Version="1.0.0-beta12" />
-    <PackageReference Include="Google.Apis" Version="1.20.0" />
-    <PackageReference Include="Google.Apis.Auth" Version="1.20.0" />
-    <PackageReference Include="Google.Apis.Compute.v1" Version="1.20.0.748" />
-    <PackageReference Include="Google.Apis.Core" Version="1.20.0" />
-    <PackageReference Include="Google.Apis.Dns.v1" Version="1.20.0.760" />
-    <PackageReference Include="Google.Apis.SQLAdmin.v1beta4" Version="1.20.0.741" />
-    <PackageReference Include="Google.Apis.Storage.v1" Version="1.20.0.753" />
-    <PackageReference Include="Google.Apis.CloudResourceManager.v1" Version="1.20.0.762" />
-    <PackageReference Include="Google.Apis.Logging.v2" Version="1.20.0.760" />
-    <PackageReference Include="Google.Apis.Pubsub.v1" Version="1.20.0.754" />
-    <PackageReference Include="Google.Apis.Bigquery.v2" Version="1.20.0.667" />
-    <PackageReference Include="Google.Cloud.BigQuery.V2" Version="1.0.0-beta09" />
+    <PackageReference Include="Google.Api.Gax" Version="2.1.0" />
+    <PackageReference Include="Google.Api.Gax.Rest" Version="2.1.0" />
+    <PackageReference Include="Google.Apis" Version="1.29.1" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.29.1" />
+    <PackageReference Include="Google.Apis.Compute.v1" Version="1.29.1.981" />
+    <PackageReference Include="Google.Apis.Core" Version="1.29.1" />
+    <PackageReference Include="Google.Apis.Dns.v1" Version="1.29.1.1001" />
+    <PackageReference Include="Google.Apis.SQLAdmin.v1beta4" Version="1.29.1.949" />
+    <PackageReference Include="Google.Apis.Storage.v1" Version="1.29.1.958" />
+    <PackageReference Include="Google.Apis.CloudResourceManager.v1" Version="1.29.1.1000" />
+    <PackageReference Include="Google.Apis.Logging.v2" Version="1.29.1.999" />
+    <PackageReference Include="Google.Apis.Pubsub.v1" Version="1.29.1.991" />
+    <PackageReference Include="Google.Apis.Bigquery.v2" Version="1.29.1.990" />
+    <PackageReference Include="Google.Apis.Iam.v1" Version="1.29.1.995" />
+    <PackageReference Include="Google.Apis.Container.v1" Version="1.29.1.988" />
+    <PackageReference Include="Google.Cloud.BigQuery.V2" Version="1.0.0-beta18" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="ReleaseFiles\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\Google.PowerShell\ReleaseFiles\AppendPsModulePath.ps1" Link="ReleaseFiles\AppendPsModulePath.ps1" />
+    <None Include="..\Google.PowerShell\ReleaseFiles\BootstrapCloudToolsForPowerShell.ps1" Link="ReleaseFiles\BootstrapCloudToolsForPowerShell.ps1" />
+    <None Include="..\Google.PowerShell\ReleaseFiles\GoogleCloud.psd1" Link="ReleaseFiles\GoogleCloud.psd1">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Google.PowerShell\ReleaseFiles\GoogleCloud.psm1" Link="ReleaseFiles\GoogleCloud.psm1">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Google.PowerShell\ReleaseFiles\GoogleCloudPlatform.Format.ps1xml" Link="ReleaseFiles\GoogleCloudPlatform.Format.ps1xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Google.PowerShell\ReleaseFiles\GoogleCloudPowerShell.psd1" Link="ReleaseFiles\GoogleCloudPowerShell.psd1" />
+    <None Include="..\Google.PowerShell\ReleaseFiles\PatchFromGcs.ps1" Link="ReleaseFiles\PatchFromGcs.ps1" />
   </ItemGroup>
 
 </Project>

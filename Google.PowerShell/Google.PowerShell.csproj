@@ -38,75 +38,59 @@
       <HintPath>..\packages\BouncyCastle.1.8.1\lib\BouncyCastle.Crypto.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Google.Api.Gax">
-      <HintPath>..\packages\Google.Api.Gax.1.0.0-beta12\lib\net45\Google.Api.Gax.dll</HintPath>
+    <Reference Include="Google.Api.Gax, Version=2.1.0.0, Culture=neutral, PublicKeyToken=3ec5ea7f18953e47, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Api.Gax.2.1.0\lib\net45\Google.Api.Gax.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Api.Gax.Rest">
-      <HintPath>..\packages\Google.Api.Gax.Rest.1.0.0-beta12\lib\net45\Google.Api.Gax.Rest.dll</HintPath>
+    <Reference Include="Google.Api.Gax.Rest, Version=2.1.0.0, Culture=neutral, PublicKeyToken=3ec5ea7f18953e47, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Api.Gax.Rest.2.1.0\lib\net45\Google.Api.Gax.Rest.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Apis, Version=1.20.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Apis.1.20.0\lib\net45\Google.Apis.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Google.Apis, Version=1.29.1.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.1.29.1\lib\net45\Google.Apis.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Apis.Auth, Version=1.20.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Apis.Auth.1.20.0\lib\net45\Google.Apis.Auth.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Google.Apis.Auth, Version=1.29.1.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.Auth.1.29.1\lib\net45\Google.Apis.Auth.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Apis.Auth.PlatformServices, Version=1.20.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Apis.Auth.1.20.0\lib\net45\Google.Apis.Auth.PlatformServices.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Google.Apis.Auth.PlatformServices, Version=1.29.1.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.Auth.1.29.1\lib\net45\Google.Apis.Auth.PlatformServices.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Apis.Bigquery.v2, Version=1.20.0.667, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Apis.Bigquery.v2.1.20.0.667\lib\net45\Google.Apis.Bigquery.v2.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Google.Apis.Bigquery.v2, Version=1.29.1.990, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.Bigquery.v2.1.29.1.990\lib\net45\Google.Apis.Bigquery.v2.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Apis.CloudResourceManager.v1, Version=1.20.0.762, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Apis.CloudResourceManager.v1.1.20.0.762\lib\net45\Google.Apis.CloudResourceManager.v1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Google.Apis.CloudResourceManager.v1, Version=1.29.1.1000, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.CloudResourceManager.v1.1.29.1.1000\lib\net45\Google.Apis.CloudResourceManager.v1.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Apis.Compute.v1, Version=1.20.0.748, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Apis.Compute.v1.1.20.0.748\lib\net45\Google.Apis.Compute.v1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Google.Apis.Compute.v1, Version=1.29.1.981, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.Compute.v1.1.29.1.981\lib\net45\Google.Apis.Compute.v1.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Apis.Container.v1, Version=1.20.0.662, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Apis.Container.v1.1.20.0.662\lib\net45\Google.Apis.Container.v1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Google.Apis.Container.v1, Version=1.29.1.988, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.Container.v1.1.29.1.988\lib\net45\Google.Apis.Container.v1.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Apis.Core, Version=1.20.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Apis.Core.1.20.0\lib\net45\Google.Apis.Core.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Google.Apis.Core, Version=1.29.1.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.Core.1.29.1\lib\net45\Google.Apis.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Apis.Dns.v1, Version=1.20.0.760, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Apis.Dns.v1.1.20.0.760\lib\net45\Google.Apis.Dns.v1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Google.Apis.Dns.v1, Version=1.29.1.1001, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.Dns.v1.1.29.1.1001\lib\net45\Google.Apis.Dns.v1.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Apis.Iam.v1, Version=1.20.0.756, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Apis.Iam.v1.1.20.0.756\lib\net45\Google.Apis.Iam.v1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Google.Apis.Iam.v1, Version=1.29.1.995, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.Iam.v1.1.29.1.995\lib\net45\Google.Apis.Iam.v1.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Apis.Logging.v2, Version=1.20.0.760, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Apis.Logging.v2.1.20.0.760\lib\net45\Google.Apis.Logging.v2.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Google.Apis.Logging.v2, Version=1.29.1.999, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.Logging.v2.1.29.1.999\lib\net45\Google.Apis.Logging.v2.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Apis.PlatformServices, Version=1.20.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Apis.1.20.0\lib\net45\Google.Apis.PlatformServices.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Google.Apis.PlatformServices, Version=1.29.1.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.1.29.1\lib\net45\Google.Apis.PlatformServices.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Apis.Pubsub.v1, Version=1.20.0.754, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Apis.Pubsub.v1.1.20.0.754\lib\net45\Google.Apis.Pubsub.v1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Google.Apis.Pubsub.v1, Version=1.29.1.991, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.Pubsub.v1.1.29.1.991\lib\net45\Google.Apis.Pubsub.v1.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Apis.SQLAdmin.v1beta4, Version=1.20.0.741, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Apis.SQLAdmin.v1beta4.1.20.0.741\lib\net45\Google.Apis.SQLAdmin.v1beta4.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Google.Apis.SQLAdmin.v1beta4, Version=1.29.1.949, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.SQLAdmin.v1beta4.1.29.1.949\lib\net45\Google.Apis.SQLAdmin.v1beta4.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Apis.Storage.v1, Version=1.20.0.753, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Apis.Storage.v1.1.20.0.753\lib\net45\Google.Apis.Storage.v1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Google.Apis.Storage.v1, Version=1.29.1.958, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.Storage.v1.1.29.1.958\lib\net45\Google.Apis.Storage.v1.dll</HintPath>
     </Reference>
     <Reference Include="Google.Cloud.BigQuery.V2, Version=1.0.0.0, Culture=neutral, PublicKeyToken=185c282632e132a0, processorArchitecture=MSIL">
-      <HintPath>..\packages\Google.Cloud.BigQuery.V2.1.0.0-beta09\lib\net45\Google.Cloud.BigQuery.V2.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\Google.Cloud.BigQuery.V2.1.0.0-beta18\lib\net45\Google.Cloud.BigQuery.V2.dll</HintPath>
     </Reference>
     <Reference Include="log4net, Version=2.0.7.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\packages\log4net.2.0.7\lib\net45-full\log4net.dll</HintPath>
@@ -124,9 +108,8 @@
       <HintPath>..\packages\Microsoft.Bcl.Async.1.0.168\lib\net40\Microsoft.Threading.Tasks.Extensions.Desktop.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.10.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

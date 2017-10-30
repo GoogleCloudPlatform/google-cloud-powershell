@@ -228,7 +228,7 @@ Describe "Add-BqTableRow" {
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
         { $table | Add-BqTableRow CSV $filename_csv -SkipLeadingRows 1 `
-            -WriteMode WriteIfEmpty } | Should Throw "404"
+            -WriteMode WriteIfEmpty } | Should Throw "Already Exists"
     }
 
     It "should handle write disposition WriteTruncate" {

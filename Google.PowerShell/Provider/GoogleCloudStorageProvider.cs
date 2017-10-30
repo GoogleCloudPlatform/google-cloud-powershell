@@ -1086,7 +1086,8 @@ namespace Google.PowerShell.CloudStorage
 
         private static IEnumerable<Project> ListAllProjects()
         {
-            ProjectsResource.ListRequest request = ResourceService.Projects.List();
+            Google.Apis.CloudResourceManager.v1.ProjectsResource.ListRequest request =
+                ResourceService.Projects.List();
             do
             {
                 ListProjectsResponse projects = request.Execute();
