@@ -830,7 +830,7 @@ namespace Google.PowerShell.BigQuery
                 {
                     throw new Exception("Server response came back as null.");
                 }
-                WriteObject(result.GetRowsAsync().ToEnumerable(), true);
+                WriteObject(result, true);
             }
             catch (Exception ex)
             {
