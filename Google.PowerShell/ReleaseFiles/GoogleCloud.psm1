@@ -1,4 +1,6 @@
-﻿$script:GCloudModule = $ExecutionContext.SessionState.Module
+﻿param()
+
+$script:GCloudModule = $ExecutionContext.SessionState.Module
 $script:GCloudModulePath = $script:GCloudModule.ModuleBase
 $script:GCloudSdkLicense = @"
 The Google Cloud SDK and its source code are licensed under Apache
@@ -48,10 +50,10 @@ function Install-GCloudSdk {
     }
 
     Write-Host "Google Cloud SDK is not found in PATH. The SDK is required to run the module."
-    $noPrompt = $env:GCLOUD_SDK_INSTALLATION_NO_PROMPT -eq $true
+    $noPrompt = $env:GCLOUD_SDK_INSTALLATION_NO_PROMPT -eq $true -or $args -match "-?quiet"
 
     $query = "Do you want to install Google Cloud SDK? If you want to force the installation without prompt," +
-             " set `$env:GCLOUD_SDK_INSTALLATION_NO_PROMPT to true."
+             " set `$env:GCLOUD_SDK_INSTALLATION_NO_PROMPT to true or add '-quiet' to Import-Module -ArgumentList."
     $caption = "Installing Google Cloud SDK"
 
     $uiQuery = "Do you want to use the interactive installer? Select no to install silently on the command line."
