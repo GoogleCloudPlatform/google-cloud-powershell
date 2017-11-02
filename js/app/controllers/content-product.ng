@@ -224,7 +224,7 @@ New-GcsBucket -Project $project -Name "&lt;your-bucket-name&gt;"</pre>
 $bucket = "&lt;your-bucket-name&gt;"
 
 # List all objects in a GCS bucket.
-Find-GcsObject -Bucket $bucket
+Get-GcsObject -Bucket $bucket
 
 # Upload a file to the bucket in a "test" folder,
 # renames it in passing from "test-file.png" to "test.png"
