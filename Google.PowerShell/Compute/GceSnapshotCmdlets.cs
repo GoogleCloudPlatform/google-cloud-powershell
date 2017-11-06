@@ -98,6 +98,16 @@ namespace Google.PowerShell.Compute
         [Parameter]
         public string Description { get; set; }
 
+        /// <summary>
+        /// If set, the snapshot created will be a Windows Volume Shadow Copy Service
+        /// (VSS) snapshot. See:
+        /// https://cloud.google.com/compute/docs/instances/windows/creating-windows-persistent-disk-snapshot?hl=en_US
+        /// for more details.
+        /// </summary>
+        [Parameter]
+        [Alias("VSS")]
+        public SwitchParameter GuestFlush { get; set; }
+
         protected override void ProcessRecord()
         {
             string diskName;
@@ -124,6 +134,11 @@ namespace Google.PowerShell.Compute
                 Description = Description,
                 Name = Name ?? $"{diskName}-{DateTime.UtcNow.ToString("yyyyMMddHHmmss\\z")}"
             };
+
+            DisksResource.CreateSnapshotRequest request =
+                Service.Disks.CreateSnapshot(body, project, zone, diskName);
+            request.GuestFlush = true;
+
             Operation operation = Service.Disks.CreateSnapshot(body, project, zone, diskName).Execute();
             AddZoneOperation(project, zone, operation, () =>
             {
