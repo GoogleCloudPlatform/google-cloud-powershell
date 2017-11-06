@@ -105,6 +105,7 @@ namespace Google.PowerShell.Compute
         /// for more details.
         /// </summary>
         [Parameter]
+        [Alias("VSS")]
         public SwitchParameter GuestFlush { get; set; }
 
         protected override void ProcessRecord()
