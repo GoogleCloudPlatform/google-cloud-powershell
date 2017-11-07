@@ -123,10 +123,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\ConfigDefaultAttributeTest.cs" />
+    <Compile Include="Common\GoogleApiMockExtensions.cs" />
     <Compile Include="Common\PropertyByTypeTransformationAttributeTest.cs" />
     <Compile Include="Common\GCloudCmdletTests.cs" />
     <Compile Include="Common\CloudSdkSettingsTests.cs" />
     <Compile Include="Common\MeasurementServiceProtocolTests.cs" />
+    <Compile Include="Common\PsCmdletsTests.cs" />
     <Compile Include="Common\TestActiveUserConfig.cs" />
     <Compile Include="Common\TestAuthenticateWithSdkCredentialsExecutor.cs" />
     <Compile Include="Common\TestTokenResponse.cs" />
