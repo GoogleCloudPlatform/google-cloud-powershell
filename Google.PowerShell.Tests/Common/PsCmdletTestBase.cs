@@ -1,11 +1,10 @@
-﻿using System.Management.Automation.Runspaces;
-using Google.PowerShell.Tests.Compute;
-using Moq;
-using NUnit.Framework;
+﻿using NUnit.Framework;
+using System.Management.Automation.Runspaces;
 
 namespace Google.PowerShell.Tests.Common
 {
-    public class PsCmdletsTests
+    [TestFixture]
+    public class PsCmdletTestBase
     {
         protected readonly RunspaceConfiguration Config = RunspaceConfiguration.Create();
         protected Pipeline Pipeline;
@@ -13,7 +12,6 @@ namespace Google.PowerShell.Tests.Common
         [SetUp]
         public void BeforeEach()
         {
-            TestableAddGceSnapshotCmdlet.ComputeServiceMock.Reset();
             Runspace rs = RunspaceFactory.CreateRunspace(Config);
             rs.Open();
             Pipeline = rs.CreatePipeline();

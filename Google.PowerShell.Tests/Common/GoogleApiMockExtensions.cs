@@ -1,3 +1,7 @@
+using Google.Apis.Http;
+using Google.Apis.Requests;
+using Google.Apis.Services;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -5,12 +9,9 @@ using System.Linq.Expressions;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Google.Apis.Http;
-using Google.Apis.Requests;
-using Google.Apis.Services;
-using Moq;
 
-namespace Google.PowerShell.Tests.Common {
+namespace Google.PowerShell.Tests.Common
+{
     public static class GoogleApiMockExtensions
     {
         /// <summary>
@@ -43,8 +44,7 @@ namespace Google.PowerShell.Tests.Common {
             Mock<TRequest> requestMock =
                 GetRequestMock<TRequest, TResponse>(requestExpression, clientServiceMock.Object);
             resourceMock.Setup(requestExpression).Returns(requestMock.Object);
-            clientServiceMock.Setup(c => c.DeserializeResponse<TResponse>(It.IsAny<HttpResponseMessage>()))
-                .Returns(response);
+            clientServiceMock.Setup(c => c.DeserializeResponse<TResponse>(It.IsAny<HttpResponseMessage>())).Returns(response);
             return requestMock;
         }
 

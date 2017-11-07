@@ -128,13 +128,14 @@
     <Compile Include="Common\GCloudCmdletTests.cs" />
     <Compile Include="Common\CloudSdkSettingsTests.cs" />
     <Compile Include="Common\MeasurementServiceProtocolTests.cs" />
-    <Compile Include="Common\PsCmdletsTests.cs" />
+    <Compile Include="Common\PsCmdletTestBase.cs" />
     <Compile Include="Common\TestActiveUserConfig.cs" />
     <Compile Include="Common\TestAuthenticateWithSdkCredentialsExecutor.cs" />
     <Compile Include="Common\TestTokenResponse.cs" />
     <Compile Include="Common\TestGCloudWrapper.cs" />
     <Compile Include="Common\TestProcessUtils.cs" />
     <Compile Include="Compute\AddSnapshotTests.cs" />
+    <Compile Include="Compute\GceCmdletTestBase.cs" />
     <Compile Include="Compute\InstanceMetadataConverterTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Provider\CacheItemTest.cs" />
