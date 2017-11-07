@@ -18,7 +18,7 @@ namespace Google.PowerShell.ComputeEngine
     public abstract class GceCmdlet : GCloudCmdlet
     {
         // The Servcie for the Google Compute API
-        public ComputeService Service { get; }
+        public virtual ComputeService Service { get; }
 
         // The value of the progress bar when being used as a spinner. If the operation does not give valid
         // percent complete feedback, this spinner will move from 0 to 99 and then repeat.
@@ -142,7 +142,7 @@ namespace Google.PowerShell.ComputeEngine
             }
             else
             {
-                percentComplete = (int)op.Progress;
+                percentComplete = (int) op.Progress;
             }
             ProgressRecord record = new ProgressRecord(activityId, activity, statusDescription)
             {

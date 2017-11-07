@@ -1365,7 +1365,7 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
-        /// A Google Cloud Storage object to read from. Can be obtained with Get-GcsObject or Find-GcsObject.
+        /// A Google Cloud Storage object to read from. Can be obtained with Get-GcsObject.
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true, ValueFromPipeline = true)]

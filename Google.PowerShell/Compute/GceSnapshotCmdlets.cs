@@ -40,7 +40,7 @@ namespace Google.PowerShell.Compute
     [OutputType(typeof(Snapshot))]
     public class AddGceSnapshotCmdlet : GceConcurrentCmdlet
     {
-        private class ParamterSetNames
+        private static class ParamterSetNames
         {
             public const string FromDisk = "FromDisk";
             public const string FromDiskName = "FromDiskName";
@@ -98,6 +98,16 @@ namespace Google.PowerShell.Compute
         [Parameter]
         public string Description { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// Create an application consistent snapshot by informing the OS to prepare for the snapshot process.
+        /// Currently only supported on Windows instances using the Volume Shadow Copy Service (VSS).
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [Alias("VSS")]
+        public SwitchParameter GuestFlush { get; set; } = false;
+
         protected override void ProcessRecord()
         {
             string diskName;
@@ -119,12 +129,17 @@ namespace Google.PowerShell.Compute
                     throw UnknownParameterSetException;
             }
 
-            Snapshot body = new Snapshot
+            var body = new Snapshot
             {
                 Description = Description,
-                Name = Name ?? $"{diskName}-{DateTime.UtcNow.ToString("yyyyMMddHHmmss\\z")}"
+                Name = Name ?? $"{diskName}-{DateTime.UtcNow:yyyyMMddHHmmss\\z}"
             };
-            Operation operation = Service.Disks.CreateSnapshot(body, project, zone, diskName).Execute();
+            DisksResource.CreateSnapshotRequest request = Service.Disks.CreateSnapshot(body, project, zone, diskName);
+            if (GuestFlush)
+            {
+                request.GuestFlush = true;
+            }
+            Operation operation = request.Execute();
             AddZoneOperation(project, zone, operation, () =>
             {
                 WriteObject(Service.Snapshots.Get(project, body.Name).Execute());
