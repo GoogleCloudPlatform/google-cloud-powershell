@@ -1,14 +1,9 @@
 ﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using NUnit.Framework;
 using Google.PowerShell.Common;
+using NUnit.Framework;
+using System;
 
 namespace Google.PowerShell.Tests.Common
 {
@@ -17,7 +12,7 @@ namespace Google.PowerShell.Tests.Common
     {
         private InMemoryCmdletResultReporter _reporter;
 
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void SetUpFixture()
         {
             _reporter = new InMemoryCmdletResultReporter();
@@ -48,7 +43,7 @@ namespace Google.PowerShell.Tests.Common
                 _reporter.ReportFailure("cmdlet", parameterSet, projectNumber, i);
                 Assert.IsTrue(_reporter.ContainsEvent("cmdlet", parameterSet, projectNumber, i));
 
-                Assert.IsFalse(_reporter.ContainsEvent("cmdlet", parameterSet, projectNumber, - 1));
+                Assert.IsFalse(_reporter.ContainsEvent("cmdlet", parameterSet, projectNumber, -1));
             }
         }
 

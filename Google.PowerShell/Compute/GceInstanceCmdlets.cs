@@ -1008,7 +1008,7 @@ namespace Google.PowerShell.ComputeEngine
     /// Sets various attributes of a VM instance.
     /// </para>
     /// <para type="description">
-    /// With this cmdlet, you can update metadata, attach and detach disks, add and remove acces configs,
+    /// With this cmdlet, you can update metadata, attach and detach disks, add and remove access configs,
     /// or add and remove tags.
     /// </para>
     /// <example>
@@ -1053,7 +1053,7 @@ namespace Google.PowerShell.ComputeEngine
     [OutputType(typeof(Instance))]
     public class SetGceInstanceCmdlet : GceConcurrentCmdlet
     {
-        private class ParameterSetNames
+        private static class ParameterSetNames
         {
             public const string AccessConfig = "AccessConfig";
             public const string Disk = "Disk";

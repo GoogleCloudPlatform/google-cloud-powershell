@@ -1,9 +1,8 @@
 ﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
-using NUnit.Framework;
 using Google.PowerShell.Common;
-using Newtonsoft.Json.Linq;
+using NUnit.Framework;
 using System;
 using System.Threading;
 
@@ -93,7 +92,7 @@ namespace Google.PowerShell.Tests.Common
             Assert.IsNotNull(userConfig.SentinelFile, "Config returned should have a sentinel file.");
             Assert.IsNotNull(userConfig.UserToken, "Config returned should have a user token.");
             Assert.IsFalse(userConfig.UserToken.IsExpired, "Config returned should have an unexpired user token.");
-            Assert.IsNotNullOrEmpty(userConfig.UserToken.AccessToken, "Config returned should have an access token.");
+            Assert.That(userConfig.UserToken.AccessToken, Is.Not.Null.And.Not.Empty, "Config returned should have an access token.");
         }
 
         /// <summary>
@@ -133,7 +132,7 @@ namespace Google.PowerShell.Tests.Common
 
             Assert.IsNotNull(activeToken, "GetActiveUserToken should return a user token.");
             Assert.IsFalse(activeToken.IsExpired, "GetActiveUserToken should not return an expired token.");
-            Assert.IsNotNullOrEmpty(activeToken.AccessToken, "GetActiveUserToken should return a token with access token.");
+            Assert.That(activeToken.AccessToken, Is.Not.Null.And.Not.Empty, "GetActiveUserToken should return a token with access token.");
         }
 
         /// <summary>

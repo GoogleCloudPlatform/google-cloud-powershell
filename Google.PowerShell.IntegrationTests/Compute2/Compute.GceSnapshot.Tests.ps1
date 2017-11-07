@@ -38,6 +38,12 @@ Describe "Add-GceSnapshot" {
         $snapshot | Should Not BeNullOrEmpty
         { Get-GceSnapshot $snapshot.Name } | Should Not Throw
     }
+
+    It "should work with -GuestFlush" {
+        $snapshot = Add-GceSnapShot $diskName -GuestFlush
+        $snapshot | Should Not BeNullOrEmpty
+        { Get-GceSnapshot $snapshot.Name } | Should Not Throw
+    }
     
     Remove-GceDisk $disk
     Get-GceSnapshot | Remove-GceSnapshot
