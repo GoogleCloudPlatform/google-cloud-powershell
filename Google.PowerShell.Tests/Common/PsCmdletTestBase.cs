@@ -3,8 +3,11 @@ using System.Management.Automation.Runspaces;
 
 namespace Google.PowerShell.Tests.Common
 {
+    /// <summary>
+    /// Abstract base class for running unit tests on PSCmdlets.
+    /// </summary>
     [TestFixture]
-    public class PsCmdletTestBase
+    public abstract class PsCmdletTestBase
     {
         protected readonly RunspaceConfiguration Config = RunspaceConfiguration.Create();
         protected Pipeline Pipeline;

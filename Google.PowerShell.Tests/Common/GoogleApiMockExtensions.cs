@@ -1,3 +1,17 @@
+// Copyright 2017 Google Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+//     http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 using Google.Apis.Http;
 using Google.Apis.Requests;
 using Google.Apis.Services;
@@ -12,6 +26,9 @@ using System.Threading.Tasks;
 
 namespace Google.PowerShell.Tests.Common
 {
+    /// <summary>
+    /// A set of extention methods for to help when mocking google api services.
+    /// </summary>
     public static class GoogleApiMockExtensions
     {
         /// <summary>
@@ -33,6 +50,16 @@ namespace Google.PowerShell.Tests.Common
             return resourceMock;
         }
 
+        /// <summary>
+        /// Sets up a reqest.
+        /// </summary>
+        /// <typeparam name="TResource">The type of resource creating the request.</typeparam>
+        /// <typeparam name="TRequest">The type of the request to make.</typeparam>
+        /// <typeparam name="TResponse">The type of the responce.</typeparam>
+        /// <param name="resourceMock">The mock of the resource that makes the request.</param>
+        /// <param name="requestExpression">The expression of the request. Uses Moq.It functions for wildcards.</param>
+        /// <param name="response">The responce the request should receive.</param>
+        /// <returns>The mock of the request object. Useful for verification.</returns>
         public static Mock<TRequest> SetupRequest<TResource, TRequest, TResponse>(
             this Mock<TResource> resourceMock,
             Expression<Func<TResource, TRequest>> requestExpression,
@@ -47,6 +74,17 @@ namespace Google.PowerShell.Tests.Common
             clientServiceMock.Setup(c => c.DeserializeResponse<TResponse>(It.IsAny<HttpResponseMessage>())).Returns(response);
             return requestMock;
         }
+
+        /// <summary>
+        /// Sets up a reqest.
+        /// </summary>
+        /// <typeparam name="TResource">The type of resource creating the request.</typeparam>
+        /// <typeparam name="TRequest">The type of the request to make.</typeparam>
+        /// <typeparam name="TResponse">The type of the responce.</typeparam>
+        /// <param name="resourceMock">The mock of the resource that makes the request.</param>
+        /// <param name="requestExpression">The expression of the request. Uses Moq.It functions for wildcards.</param>
+        /// <param name="response">A function returning responce the request should receive.</param>
+        /// <returns>The mock of the request object. Useful for verification.</returns>
 
         public static Mock<TRequest> SetupRequest<TResource, TRequest, TResponse>(
             this Mock<TResource> resourceMock,

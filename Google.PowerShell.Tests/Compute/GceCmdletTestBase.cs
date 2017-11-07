@@ -1,3 +1,17 @@
+// Copyright 2017 Google Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+//     http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 using Google.Apis.Compute.v1;
 using Google.Apis.Compute.v1.Data;
 using Google.PowerShell.Tests.Common;
@@ -6,10 +20,16 @@ using NUnit.Framework;
 
 namespace Google.PowerShell.Tests.Compute
 {
+    /// <summary>
+    /// Abstract base class for running unit tests on GceCmdlets.
+    /// </summary>
     [TestFixture]
-    public class GceCmdletTestBase : PsCmdletTestBase
+    public abstract class GceCmdletTestBase : PsCmdletTestBase
     {
-        protected readonly Operation DoneOperation = new Operation
+        /// <summary>
+        /// A completed operation.
+        /// </summary>
+        protected Operation DoneOperation { get; } = new Operation
         {
             Name = "doneOperation",
             Status = "DONE",
@@ -17,6 +37,9 @@ namespace Google.PowerShell.Tests.Compute
             Description = "mock operation"
         };
 
+        /// <summary>
+        /// The mock of the compute service. Reset before every test.
+        /// </summary>
         public static Mock<ComputeService> ServiceMock { get; } = new Mock<ComputeService>();
 
         [SetUp]
