@@ -99,14 +99,14 @@ namespace Google.PowerShell.Compute
         public string Description { get; set; }
 
         /// <summary>
-        /// <para type="description">
-        /// Create an application consistent snapshot by informing the OS to prepare for the snapshot process.
-        /// Currently only supported on Windows instances using the Volume Shadow Copy Service (VSS).
-        /// </para>
+        /// If set, the snapshot created will be a Windows Volume Shadow Copy Service
+        /// (VSS) snapshot. See:
+        /// https://cloud.google.com/compute/docs/instances/windows/creating-windows-persistent-disk-snapshot?hl=en_US
+        /// for more details.
         /// </summary>
         [Parameter]
         [Alias("VSS")]
-        public SwitchParameter GuestFlush { get; set; } = false;
+        public SwitchParameter GuestFlush { get; set; }
 
         protected override void ProcessRecord()
         {
