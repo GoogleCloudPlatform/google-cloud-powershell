@@ -99,10 +99,12 @@ namespace Google.PowerShell.Compute
         public string Description { get; set; }
 
         /// <summary>
+        /// <para type="description">
         /// If set, the snapshot created will be a Windows Volume Shadow Copy Service
         /// (VSS) snapshot. See:
         /// https://cloud.google.com/compute/docs/instances/windows/creating-windows-persistent-disk-snapshot?hl=en_US
         /// for more details.
+        /// </para>
         /// </summary>
         [Parameter]
         [Alias("VSS")]
