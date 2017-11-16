@@ -32,6 +32,9 @@ Import-Module (Join-Path $projectRoot "third_party\ArchiveCmdlets\Microsoft.Powe
 $slnFile = Join-Path $projectRoot "gcloud-powershell.sln"
 $binDir = Join-Path $projectRoot "Google.PowerShell\bin\"
 $configDir = Join-Path $binDir $configuration
+$coreClrDir = Join-Path $projectRoot "Google.PowerShell.DotnetCore"
+$coreClrCsProjFile = Join-Path $coreClrDir "Google.PowerShell.DotnetCore.csproj"
+$coreClrConfigDir = Join-Path $coreClrDir "bin\Release\netstandard1.6\publish"
 
 # Folders where the build artifacts are stored, the things to be packaged up.
 $packageDir = Join-Path $binDir "Packaged"
@@ -107,7 +110,7 @@ $assemblyInfoContent = $assemblyInfoContent -replace "Version\(`"[0-9\.]*`"\)", 
 $assemblyInfoContent | Out-File -Encoding utf8 -FilePath $assemblyInfoFile -NoNewline
 
 # Build the project.
-Write-Host -ForegroundColor Cyan "*** Building the project ***"
+Write-Host -ForegroundColor Cyan "*** Building the full CLR version of the project ***"
 
 $msbuild = "c:\Program Files (x86)\MSBuild\14.0\Bin\MSBuild.exe"
 & $msbuild @($slnFile, "/t:Clean,Build", "/p:Configuration=$configuration")
@@ -117,8 +120,18 @@ if (-Not (Test-Path $configDir)) {
     Exit
 }
 
+Write-Host -ForegroundColor Cyan "*** Building the core CLR version of the project ***"
+
+dotnet clean $coreClrCsProjFile
+dotnet publish $coreClrCsProjFile --configuration $configuration
+
+if (-Not (Test-Path $coreClrConfigDir)) {
+    Write-Error "Build results for CORE CLR not found."
+    Exit
+}
+
 # Get all cmdlets available in GoogleCloud module.
-$googlePowerShellAssemblyPath = Resolve-Path (Join-Path $configDir GoogleCloud.psd1)
+$googlePowerShellAssemblyPath = Resolve-Path (Join-Path $configDir Google.PowerShell.dll)
 $getCmdletsScriptBlock = {
     param($modulePath)
     Import-Module $modulePath | Out-Null
@@ -168,27 +181,48 @@ New-ModuleManifestFromDict -Path "$gcpsDir\GoogleCloudPowerShell.psd1" -Manifest
 Write-Host -ForegroundColor Cyan "*** Packaging the bits ***"
 
 New-Item -ItemType Directory $powerShellDir
-Copy-Item -Recurse $configDir $powerShellDir
 
-# The binaries are in a folder named "$configuration". Move them to GoogleCloud\$normalizedVersion folder
-# and GoogleCloudBeta\$normalizedVersion for the beta cmdlets.
-$moduleDir = Join-Path $powerShellDir $configuration
+# The full CLR binaries are in a folder named "$configuration".
+# Move them to GoogleCloud\$normalizedVersion\fullclr folder
+# and GoogleCloudBeta\$normalizedVersion\fullclr for the beta cmdlets.
+# For core CLR binaries, we do the same thing but with coreclr
+# instead of fullclr in the path.
 $googleCloudDir = Join-Path $powerShellDir "GoogleCloud\$normalizedVersion"
+$googleCloudFullClrDir = Join-Path $googleCloudDir "fullclr"
+$googleCloudCoreClrDir = Join-Path $googleCloudDir "coreclr"
 $googleCloudBetaDir = Join-Path $powerShellDir "GoogleCloudBeta\$normalizedVersion"
+$googleCloudFullClrBetaDir = Join-Path $googleCloudBetaDir "fullclr"
+$googleCloudCoreClrBetaDir = Join-Path $googleCloudBetaDir "coreclr"
 New-Item -ItemType Directory $googleCloudDir
+New-Item -ItemType Directory $googleCloudFullClrDir
+New-Item -ItemType Directory $googleCloudCoreClrDir
 New-Item -ItemType Directory $googleCloudBetaDir
+New-Item -ItemType Directory $googleCloudFullClrBetaDir
+New-Item -ItemType Directory $googleCloudCoreClrBetaDir
+
+$powerShellScriptFiles = "*.psd1", "*.psm1", "*.ps1", "*.ps1xml"
 
 if ($configuration -eq "Debug")
 {
-    Copy-Item -Recurse "$moduleDir\*" $googleCloudDir
-    Copy-Item -Recurse "$moduleDir\*" $googleCloudBetaDir
+    Copy-Item -Recurse "$configDir\*" $googleCloudDir -Include $powerShellScriptFiles
+    Copy-Item -Recurse "$configDir\*" $googleCloudFullClrDir -Exclude $powerShellScriptFiles
+    Copy-Item -Recurse "$coreClrConfigDir\Google.*" $googleCloudCoreClrDir -Exclude $powerShellScriptFiles
+
+    Copy-Item -Recurse "$configDir\*" $googleCloudBetaDir -Include $powerShellScriptFiles
+    Copy-Item -Recurse "$configDir\*" $googleCloudFullClrBetaDir -Exclude $powerShellScriptFiles
+    Copy-Item -Recurse "$coreClrConfigDir\Google.*" $googleCloudCoreClrBetaDir -Exclude $powerShellScriptFiles
 }
 else
 {
-    Copy-Item -Recurse "$moduleDir\*" $googleCloudDir -Exclude '*.pdb'
-    Copy-Item -Recurse "$moduleDir\*" $googleCloudBetaDir -Exclude '*.pdb'
+    $fileToExclude = $powerShellScriptFiles + "*.pdb"
+    Copy-Item -Recurse "$configDir\*" $googleCloudDir -Include $powerShellScriptFiles
+    Copy-Item -Recurse "$configDir\*" $googleCloudFullClrDir -Exclude $fileToExclude
+    Copy-Item -Recurse "$coreClrConfigDir\Google.*" $googleCloudCoreClrDir -Exclude $fileToExclude
+
+    Copy-Item -Recurse "$configDir\*" $googleCloudBetaDir -Include $powerShellScriptFiles
+    Copy-Item -Recurse "$configDir\*" $googleCloudFullClrBetaDir -Exclude $fileToExclude
+    Copy-Item -Recurse "$coreClrConfigDir\Google.*" $googleCloudCoreClrBetaDir -Exclude $fileToExclude
 }
-Remove-Item -Recurse $moduleDir -Force
 
 # For the beta module, edit and rename the module manifest file.
 $betaGCloudManifestPath = Join-Path $googleCloudBetaDir "GoogleCloud.psd1"
@@ -216,13 +250,15 @@ function ConfirmExists($relativePath) {
 }
 
 ConfirmExists "PowerShell\GoogleCloud\$normalizedVersion\GoogleCloud.psd1"
-ConfirmExists "PowerShell\GoogleCloud\$normalizedVersion\Google.PowerShell.dll"
+ConfirmExists "PowerShell\GoogleCloud\$normalizedVersion\fullclr\Google.PowerShell.dll"
+ConfirmExists "PowerShell\GoogleCloud\$normalizedVersion\coreclr\Google.PowerShell.dll"
 ConfirmExists "PowerShell\GoogleCloud\$normalizedVersion\GoogleCloud.psm1"
 ConfirmExists "PowerShell\GoogleCloud\$normalizedVersion\BootstrapCloudToolsForPowerShell.ps1"
 ConfirmExists "GoogleCloudPowerShell\GoogleCloudPowerShell.psd1"
 ConfirmExists "PowerShell\GoogleCloudBeta\$normalizedVersion\GoogleCloudBeta.psd1"
 ConfirmExists "PowerShell\GoogleCloudBeta\$normalizedVersion\GoogleCloud.psm1"
-ConfirmExists "PowerShell\GoogleCloudBeta\$normalizedVersion\Google.PowerShell.dll"
+ConfirmExists "PowerShell\GoogleCloudBeta\$normalizedVersion\fullclr\Google.PowerShell.dll"
+ConfirmExists "PowerShell\GoogleCloudBeta\$normalizedVersion\coreclr\Google.PowerShell.dll"
 ConfirmExists "PowerShell\GoogleCloudBeta\$normalizedVersion\BootstrapCloudToolsForPowerShell.ps1"
 
 Write-Host -ForegroundColor Cyan "*** Compressing ***"

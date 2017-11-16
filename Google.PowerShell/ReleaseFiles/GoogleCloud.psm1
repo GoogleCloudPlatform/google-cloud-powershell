@@ -1,6 +1,4 @@
-﻿param()
-
-$script:GCloudModule = $ExecutionContext.SessionState.Module
+﻿$script:GCloudModule = $ExecutionContext.SessionState.Module
 $script:GCloudModulePath = $script:GCloudModule.ModuleBase
 $script:GCloudSdkLicense = @"
 The Google Cloud SDK and its source code are licensed under Apache
@@ -37,6 +35,20 @@ $script:gCloudInitWarning = "You will have to restart the shell and/or run 'gclo
     "(if you haven't run it after installing the SDK) before the module can be used."
 $script:installingSdkActivity = "Installing Google Cloud SDK"
 
+# This function returns true if we are running PowerShell on Windows.
+function IsWindows() {
+    if ($PSVersionTable.PSEdition -ne "Core") {
+        return $true
+    }
+
+    if ([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform(
+        [System.Runtime.InteropServices.OSPlatform]::Windows)) {
+        return $true
+    }
+
+    return $false
+}
+
 # Check and install Google Cloud SDK if it is not present. To install it non-interactively,
 # set GCLOUD_SDK_INSTALLATION_NO_PROMPT to $true.
 function Install-GCloudSdk {
@@ -66,23 +78,7 @@ function Install-GCloudSdk {
         else {
             if ($PSCmdlet.ShouldContinue($query, $caption)) {
                 if ($PSCmdlet.ShouldContinue($uiQuery, $uiCaption)) {
-                    $cloudSdkInstaller = "https://dl.google.com/dl/cloudsdk/channels/rapid/GoogleCloudSDKInstaller.exe"
-                    $installerLocation = Join-Path $env:TMP "$([System.IO.Path]::GetRandomFileName()).exe"
-
-                    Write-Progress -Activity $installingSdkActivity `
-                                   -Status "Downloading interactive installer to $installerLocation."
-
-                    # Set this to hide the progress bar from Invoke-WebRequest, which is not very useful.
-                    $ProgressPreference = "SilentlyContinue"
-                    Invoke-WebRequest -Uri $cloudSdkInstaller -OutFile $installerLocation
-                    $ProgressPreference = "Continue"
-
-                    Write-Progress -Activity $installingSdkActivity `
-                                   -Status "Launching interactive installer. Blocking until installation is complete."
-                    Start-Process $installerLocation -Wait
-
-                    Write-Warning $gCloudInitWarning
-                    Write-Progress -Activity $installingSdkActivity -Completed
+                    Install-GCloudSdkInteractively
                 }
                 else {
                     Install-GCloudSdkSilently
@@ -93,8 +89,42 @@ function Install-GCloudSdk {
     }
 }
 
+function Install-GCloudSdkInteractively() {
+    if (IsWindows) {
+        $cloudSdkInstaller = "https://dl.google.com/dl/cloudsdk/channels/rapid/GoogleCloudSDKInstaller.exe"
+        $installerLocation = Join-Path $env:TMP "$([System.IO.Path]::GetRandomFileName()).exe"
+
+        Write-Progress -Activity $installingSdkActivity `
+                        -Status "Downloading interactive installer to $installerLocation."
+
+        # Set this to hide the progress bar from Invoke-WebRequest, which is not very useful.
+        $ProgressPreference = "SilentlyContinue"
+        Invoke-WebRequest -Uri $cloudSdkInstaller -OutFile $installerLocation
+        $ProgressPreference = "Continue"
+
+        Write-Progress -Activity $installingSdkActivity `
+                        -Status "Launching interactive installer. Blocking until installation is complete."
+        Start-Process $installerLocation -Wait
+        Write-Progress -Activity $installingSdkActivity -Completed
+    }
+    else {
+        curl https://sdk.cloud.google.com | bash
+    }
+    Write-Warning $gCloudInitWarning
+}
+
 function Install-GCloudSdkSilently() {
     Write-Host $GCloudSdkLicense
+
+    if (-not (IsWindows)) {
+        curl https://sdk.cloud.google.com | bash -s -- --disable-prompts
+        $cloudBinPath = "$HOME\google-cloud-sdk\bin"
+        $envPath = [System.Environment]::GetEnvironmentVariable("PATH")
+        if (-not $envPath.Contains($cloudBinPath)) {
+            [System.Environment]::SetEnvironmentVariable("PATH", "$($envPath):$cloudBinPath")
+        }
+        return
+    }
 
     # We use this method of installation instead of the installer because the installer does all the installation
     # in the background so we can't determine when it's done.
@@ -144,7 +174,15 @@ function Install-GCloudSdkSilently() {
 }
 
 Install-GCloudSdk
-Import-Module "$script:GCloudModulePath\Google.PowerShell.dll"
+
+# Import either .NET Core or .NET Full version of the module based on
+# the edition of PowerShell.
+if ($PSVersionTable.PSEdition -eq "Core") {
+    Import-Module "$script:GCloudModulePath\coreclr\Google.PowerShell.dll"
+}
+else {
+    Import-Module "$script:GCloudModulePath\fullclr\Google.PowerShell.dll"
+}
 
 function gs:() {
     <#

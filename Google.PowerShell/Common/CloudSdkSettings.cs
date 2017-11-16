@@ -1,13 +1,12 @@
 ﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
-using Newtonsoft.Json.Linq;
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
+#if CORECLR
+using System.Runtime.InteropServices;
+#endif
 
 namespace Google.PowerShell.Common
 {
@@ -54,7 +53,7 @@ namespace Google.PowerShell.Common
 
         /// <summary>Name of the file containing the anonymous client ID.</summary>
         private const string ClientIDFileName = ".metricsUUID";
-        
+
         // Prevent instantiation. Should just be a static utility class.
         private CloudSdkSettings() { }
 
@@ -141,15 +140,41 @@ namespace Google.PowerShell.Common
         }
 
         /// <summary>
+        /// True if the module is run on Windows. This is a cache
+        /// for IsWindows property.
+        /// </summary>
+        private static bool? s_isWindows;
+
+        /// <summary>True if the module is run on Windows.</summary>
+        public static bool IsWindows
+        {
+            get
+            {
+                if (!s_isWindows.HasValue)
+                {
+                    // RuntimeInformation.IsOSPlatform is only available on .NET Core.
+#if !CORECLR
+                    s_isWindows = true;
+#else
+                    s_isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+#endif
+                }
+
+                return s_isWindows.Value;
+            }
+        }
+
+        /// <summary>
         /// Returns the folder that contains Cloud SDK Config.
         /// </summary>
         private static string GetCloudSdkFolder()
         {
-#if !UNIX
-            return Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
-#else
+            if (IsWindows)
+            {
+                return Environment.GetEnvironmentVariable(AppdataEnvironmentVariable);
+            }
+
             return Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".config");
-#endif
         }
     }
 }
