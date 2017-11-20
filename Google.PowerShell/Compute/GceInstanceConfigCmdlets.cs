@@ -58,7 +58,22 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(Position = 1)]
         [PropertyByTypeTransformation(TypeToTransform = typeof(MachineType),
             Property = nameof(Apis.Compute.v1.Data.MachineType.SelfLink))]
-        public override string MachineType { get; set; } = "n1-standard-1";
+        public override string MachineType { get; set; }
+
+        /// <summary>
+        /// Number of vCPUs used for a custom machine type.
+        /// This has to be used together with CustomMemory.
+        /// </summary>
+        [Parameter]
+        public override int? CustomCpu { get; set; }
+
+        /// <summary>
+        /// Total amount of memory used for a custom machine type.
+        /// This has to be used together with CustomCpu.
+        /// The amount of memory is in MB.
+        /// </summary>
+        [Parameter]
+        public override int? CustomMemory { get; set; }
 
         /// <summary>
         /// <para type="description">
