@@ -31,14 +31,14 @@ namespace Google.PowerShell.ComputeEngine
         /// Number of vCPUs used for a custom machine type.
         /// This has to be used together with CustomMemory.
         /// </summary>
-        public abstract int? CustomCpu { get; set; }
+        public abstract int CustomCpu { get; set; }
 
         /// <summary>
         /// Total amount of memory used for a custom machine type.
         /// This has to be used together with CustomCpu.
         /// The amount of memory is in MB.
         /// </summary>
-        public abstract int? CustomMemory { get; set; }
+        public abstract int CustomMemory { get; set; }
 
         /// <summary>
         /// Enables instances to send and receive packets for IP addresses other than their own. Switch on if
@@ -211,27 +211,9 @@ namespace Google.PowerShell.ComputeEngine
         /// <returns></returns>
         protected string BuildMachineType()
         {
-            if (string.IsNullOrWhiteSpace(MachineType) && !CustomCpu.HasValue
-                && !CustomMemory.HasValue)
-            {
-                return "n1-standard-1";
-            }
-
             if (!string.IsNullOrWhiteSpace(MachineType))
             {
-                if (CustomCpu.HasValue || CustomMemory.HasValue)
-                {
-                    throw new PSArgumentException(
-                        "-CustomMemory or -CustomCpu cannot be used with -MachineType.");
-                }
                 return MachineType;
-            }
-
-            if ((CustomCpu.HasValue && !CustomMemory.HasValue)
-                || (!CustomCpu.HasValue && CustomMemory.HasValue))
-            {
-                throw new PSArgumentException(
-                    "-CustomMemory and -CustomCpu must be used together.");
             }
 
             if (CustomCpu < 1 || (CustomCpu > 1 && CustomCpu % 2 != 0))
@@ -245,11 +227,6 @@ namespace Google.PowerShell.ComputeEngine
             }
 
             double memoryPerCpu = (double)CustomMemory/(double)CustomCpu;
-
-            if (memoryPerCpu < 0.9 * AmountOfMbInGb)
-            {
-                throw new PSArgumentException("Amount of custom memory per vCPUs must be greater than 921.6MB (0.9GB).");
-            }
 
             if (memoryPerCpu < 6.5 * AmountOfMbInGb)
             {
@@ -279,7 +256,7 @@ namespace Google.PowerShell.ComputeEngine
                     CanIpForward = CanIpForward,
                     Description = Description,
                     Disks = BuildAttachedDisks(),
-                    MachineType = MachineType,
+                    MachineType = BuildMachineType(),
                     Metadata = InstanceMetadataPSConverter.BuildMetadata(Metadata),
                     NetworkInterfaces = new List<NetworkInterface> { BuildNetworkInterfaces() },
                     Scheduling = new Scheduling

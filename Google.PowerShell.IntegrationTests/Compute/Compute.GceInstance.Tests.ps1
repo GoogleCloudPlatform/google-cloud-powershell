@@ -166,15 +166,6 @@ Describe "New-GceInstanceConfig" {
         $instanceConfig.MachineType | Should Be "custom-2-2048"
     }
 
-    It "should error out for -CustomMemory and -CustomCpu" {
-        { New-GceInstanceConfig -Name $instance -Disk $attachedDisk `
-                              -MachineType "f1-micro" `
-                              -CustomCpu 2 -CustomMemory 2048 } | Should Throw "cannot be used with -MachineType"
-
-        { New-GceInstanceConfig -Name $instance -Disk $attachedDisk `
-                              -CustomCpu 2 } | Should Throw "-CustomCpu must be used together"
-    }
-
     $persistantDisk = New-GceDisk "test-new-instanceconfig-$r" $image
 
     It "should attach disk" {

@@ -36,10 +36,17 @@ namespace Google.PowerShell.ComputeEngine
     /// [Instance resource definition]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.New, "GceInstanceConfig")]
+    [Cmdlet(VerbsCommon.New, "GceInstanceConfig",
+        DefaultParameterSetName = ParameterSetNames.ByValues)]
     [OutputType(typeof(Instance))]
     public class NewGceInstanceConfigCmdlet : GceInstanceDescriptionCmdlet
     {
+        private class ParameterSetNames
+        {
+            public const string ByValues = "ByValues";
+            public const string ByValuesCustomMachine = "ByValuesCustomMachine";
+        }
+
         /// <summary>
         /// <para type="description">
         /// The name of the instance. The name must be 1-63 characters long and
@@ -55,7 +62,7 @@ namespace Google.PowerShell.ComputeEngine
         /// Get-GceMachineType. Defaults to "n1-standard-1".
         /// </para>
         /// </summary>
-        [Parameter(Position = 1)]
+        [Parameter(Position = 1, ParameterSetName = ParameterSetNames.ByValues)]
         [PropertyByTypeTransformation(TypeToTransform = typeof(MachineType),
             Property = nameof(Apis.Compute.v1.Data.MachineType.SelfLink))]
         public override string MachineType { get; set; }
@@ -64,16 +71,18 @@ namespace Google.PowerShell.ComputeEngine
         /// Number of vCPUs used for a custom machine type.
         /// This has to be used together with CustomMemory.
         /// </summary>
-        [Parameter]
-        public override int? CustomCpu { get; set; }
+        [Parameter(Mandatory = true,
+            ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
+        public override int CustomCpu { get; set; }
 
         /// <summary>
         /// Total amount of memory used for a custom machine type.
         /// This has to be used together with CustomCpu.
         /// The amount of memory is in MB.
         /// </summary>
-        [Parameter]
-        public override int? CustomMemory { get; set; }
+        [Parameter(Mandatory = true,
+            ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
+        public override int CustomMemory { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -228,6 +237,11 @@ namespace Google.PowerShell.ComputeEngine
 
         protected override void ProcessRecord()
         {
+            if (ParameterSetName == ParameterSetNames.ByValues
+                && string.IsNullOrEmpty(MachineType))
+            {
+                MachineType = "n1-standard-1";
+            }
             WriteObject(BuildInstance());
         }
     }
