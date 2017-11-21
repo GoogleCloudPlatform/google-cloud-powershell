@@ -135,6 +135,8 @@
     <Compile Include="Common\TestGCloudWrapper.cs" />
     <Compile Include="Common\TestProcessUtils.cs" />
     <Compile Include="Compute\AddSnapshotTests.cs" />
+    <Compile Include="Compute\AddGceInstanceCmdletTests.cs" />
+    <Compile Include="Compute\NewGceInstanceConfigCmdletTests.cs" />
     <Compile Include="Compute\GceCmdletTestBase.cs" />
     <Compile Include="Compute\InstanceMetadataConverterTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

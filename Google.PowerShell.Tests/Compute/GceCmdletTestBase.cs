@@ -14,6 +14,7 @@
 
 using Google.Apis.Compute.v1;
 using Google.Apis.Compute.v1.Data;
+using Google.PowerShell.ComputeEngine;
 using Google.PowerShell.Tests.Common;
 using Moq;
 using NUnit.Framework;
@@ -40,7 +41,19 @@ namespace Google.PowerShell.Tests.Compute
         /// <summary>
         /// The mock of the compute service. Reset before every test.
         /// </summary>
-        public static Mock<ComputeService> ServiceMock { get; } = new Mock<ComputeService>();
+        protected static Mock<ComputeService> ServiceMock { get; } = new Mock<ComputeService>();
+
+        [OneTimeSetUp]
+        public void BeforeAll()
+        {
+            GceCmdlet.DefaultComputeService = ServiceMock.Object;
+        }
+
+        [OneTimeTearDown]
+        public void AfterAll()
+        {
+            GceCmdlet.DefaultComputeService = null;
+        }
 
         [SetUp]
         public new void BeforeEach()
