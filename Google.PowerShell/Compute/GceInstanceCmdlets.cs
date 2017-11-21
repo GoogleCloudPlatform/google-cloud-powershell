@@ -608,7 +608,7 @@ namespace Google.PowerShell.ComputeEngine
             switch (ParameterSetName)
             {
                 case ParameterSetNames.ByValues:
-                    if (!string.IsNullOrEmpty(MachineType))
+                    if (string.IsNullOrEmpty(MachineType))
                     {
                         MachineType = "n1-standard-1";
                     }
