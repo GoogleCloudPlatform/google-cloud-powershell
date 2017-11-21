@@ -160,6 +160,12 @@ Describe "New-GceInstanceConfig" {
         $instanceConfig.NetworkInterfaces.NetworkIP | Should BeExactly $address
     }
 
+    It "should accept -CustomMemory and -CustomCpu" {
+        $instanceConfig = New-GceInstanceConfig -Name $instance -Disk $attachedDisk `
+                                                -CustomCpu 2 -CustomMemory 2048
+        $instanceConfig.MachineType | Should Be "custom-2-2048"
+    }
+
     $persistantDisk = New-GceDisk "test-new-instanceconfig-$r" $image
 
     It "should attach disk" {
@@ -192,6 +198,22 @@ Describe "Add-GceInstance" {
             Add-GceInstance -Project $project -Zone $zone -Instance $instanceConfig
             $runningInstance = Get-GceInstance -Project $project -Zone $zone -Name $instance
             $runningInstance.Name | Should Be $instance
+        }
+        finally {
+            Remove-GceInstance $instance -Project $project -Zone $zone -ErrorAction SilentlyContinue
+        }
+    }
+
+    It "should work with -CustomCpu and -CustomMemory" {
+        $r = Get-Random
+        $instance = "gcps-instance-create-$r"
+        $instanceConfig = New-GceInstanceConfig -Name $instance -DiskImage $image -CustomCpu 2 -CustomMemory 2048
+
+        try {
+            Add-GceInstance -Project $project -Zone $zone -Instance $instanceConfig
+            $runningInstance = Get-GceInstance -Project $project -Zone $zone -Name $instance
+            $runningInstance.Name | Should Be $instance
+            $runningInstance.MachineType | Should Match "custom-2-2048"
         }
         finally {
             Remove-GceInstance $instance -Project $project -Zone $zone -ErrorAction SilentlyContinue

@@ -171,7 +171,8 @@ namespace Google.PowerShell.ComputeEngine
     /// [Instance Template resource definition]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Add, "GceInstanceTemplate", DefaultParameterSetName = ParameterSetNames.ByValues)]
+    [Cmdlet(VerbsCommon.Add, "GceInstanceTemplate",
+        DefaultParameterSetName = ParameterSetNames.ByValues)]
     [OutputType(typeof(InstanceTemplate))]
     public class AddGceInstanceTemplateCmdlet : GceTemplateDescriptionCmdlet
     {
@@ -179,6 +180,7 @@ namespace Google.PowerShell.ComputeEngine
         {
             public const string FromObject = "FromObject";
             public const string ByValues = "ByValues";
+            public const string ByValuesCustomMachine = "ByValuesCustomMachine";
         }
 
         /// <summary>
@@ -206,6 +208,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(Position = 0, Mandatory = true, ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
         public override string Name { get; set; }
 
         /// <summary>
@@ -214,7 +217,24 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(Position = 1, ParameterSetName = ParameterSetNames.ByValues)]
-        public override string MachineType { get; set; } = "n1-standard-1";
+        public override string MachineType { get; set; }
+
+        /// <summary>
+        /// Number of vCPUs used for a custom machine type.
+        /// This has to be used together with CustomMemory.
+        /// </summary>
+        [Parameter(Mandatory = true,
+            ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
+        public override int CustomCpu { get; set; }
+
+        /// <summary>
+        /// Total amount of memory used for a custom machine type.
+        /// This has to be used together with CustomCpu.
+        /// The amount of memory is in MB.
+        /// </summary>
+        [Parameter(Mandatory = true,
+            ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
+        public override int CustomMemory { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -224,6 +244,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
         public override SwitchParameter CanIpForward { get; set; }
 
         /// <summary>
@@ -232,6 +253,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
         public override string Description { get; set; }
 
         /// <summary>
@@ -240,6 +262,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
         public override Image BootDiskImage { get; set; }
 
 
@@ -250,6 +273,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
         public override Disk[] ExtraDisk { get; set; }
 
         /// <summary>
@@ -259,6 +283,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
         public override AttachedDisk[] Disk { get; set; }
 
         /// <summary>
@@ -267,6 +292,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
         public override IDictionary Metadata { get; set; }
 
         /// <summary>
@@ -276,6 +302,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
         [PropertyByTypeTransformation(Property = nameof(Apis.Compute.v1.Data.Network.SelfLink),
             TypeToTransform = typeof(Network))]
         public override string Network { get; set; }
@@ -286,6 +313,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Region)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Region))]
         public override string Region { get; set; }
@@ -296,6 +324,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
         [ValidateNotNullOrEmpty]
         public override string Subnetwork { get; set; }
 
@@ -305,6 +334,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
         public override SwitchParameter NoExternalIp { get; set; }
 
         /// <summary>
@@ -313,6 +343,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
         public override SwitchParameter Preemptible { get; set; }
 
         /// <summary>
@@ -321,6 +352,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
         public override bool AutomaticRestart { get; set; } = true;
 
         /// <summary>
@@ -329,6 +361,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
         public override SwitchParameter TerminateOnMaintenance { get; set; }
 
         /// <summary>
@@ -337,6 +370,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
         public override ServiceAccount[] ServiceAccount { get; set; }
 
         /// <summary>
@@ -345,6 +379,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
         public override string[] Tag { get; set; }
 
         protected override void ProcessRecord()
@@ -356,6 +391,13 @@ namespace Google.PowerShell.ComputeEngine
                     instanceTemplate = Object;
                     break;
                 case ParameterSetNames.ByValues:
+                    if (string.IsNullOrEmpty(MachineType))
+                    {
+                        MachineType = "n1-standard-1";
+                    }
+                    instanceTemplate = BuildInstanceTemplate();
+                    break;
+                case ParameterSetNames.ByValuesCustomMachine:
                     instanceTemplate = BuildInstanceTemplate();
                     break;
                 default:

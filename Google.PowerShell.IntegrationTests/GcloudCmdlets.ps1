@@ -16,6 +16,14 @@ function Install-GcloudCmdlets() {
     # the data to production instead of debugging server.
     $env:DISABLE_POWERSHELL_ANALYTICS = "TRUE"
 
+    # Copy all the assemblies file into fullclr folder since that is what
+    # the psd1 file is expecting.
+    $fullClrFolder = Join-Path $dll.PSParentPath fullclr
+    if (-not (Test-Path $fullClrFolder)) {
+        mkdir $fullClrFolder
+        Copy-Item "$($dll.PSParentPath)\*" $fullClrFolder -Include *.pdb, *.xml, *.dll
+    }
+
     # Import the GoogleCloud.psd1 in the folder of the latest dll.
     Join-Path $dll.PSParentPath GoogleCloud.psd1 | Import-Module
 }

@@ -28,6 +28,19 @@ namespace Google.PowerShell.ComputeEngine
         public abstract string MachineType { get; set; }
 
         /// <summary>
+        /// Number of vCPUs used for a custom machine type.
+        /// This has to be used together with CustomMemory.
+        /// </summary>
+        public abstract int CustomCpu { get; set; }
+
+        /// <summary>
+        /// Total amount of memory used for a custom machine type.
+        /// This has to be used together with CustomCpu.
+        /// The amount of memory is in MB.
+        /// </summary>
+        public abstract int CustomMemory { get; set; }
+
+        /// <summary>
         /// Enables instances to send and receive packets for IP addresses other than their own. Switch on if
         /// this instance will be used as an IP gateway or it will be set as the next-hop in a Route
         /// resource.
@@ -191,6 +204,41 @@ namespace Google.PowerShell.ComputeEngine
         }
 
         /// <summary>
+        /// Creates a machine type string. Most of the logic is for the
+        /// custom machine case where -CustomMemory or -CustomCpu is used.
+        /// If nothing is supplied, use "n1-standard-1" as default.
+        /// </summary>
+        /// <returns></returns>
+        protected string BuildMachineType()
+        {
+            if (!string.IsNullOrWhiteSpace(MachineType))
+            {
+                return MachineType;
+            }
+
+            if (CustomCpu < 1 || (CustomCpu > 1 && CustomCpu % 2 != 0))
+            {
+                throw new PSArgumentException("Number of custom vCPUs must be positive and be either 1 or even.");
+            }
+
+            if (CustomMemory < 0 || CustomMemory % 256 != 0)
+            {
+                throw new PSArgumentException("Total custom memory must be positive and a multiple of 256.");
+            }
+
+            double memoryPerCpu = (double)CustomMemory/(double)CustomCpu;
+
+            if (memoryPerCpu < 6.5 * AmountOfMbInGb)
+            {
+                return $"custom-{CustomCpu}-{CustomMemory}";
+            }
+            else
+            {
+                return $"custom-{CustomCpu}-{CustomMemory}-ext";
+            }
+        }
+
+        /// <summary>
         /// Builds an InstanceTemplate from parameter values.
         /// </summary>
         /// <returns>
@@ -208,7 +256,7 @@ namespace Google.PowerShell.ComputeEngine
                     CanIpForward = CanIpForward,
                     Description = Description,
                     Disks = BuildAttachedDisks(),
-                    MachineType = MachineType,
+                    MachineType = BuildMachineType(),
                     Metadata = InstanceMetadataPSConverter.BuildMetadata(Metadata),
                     NetworkInterfaces = new List<NetworkInterface> { BuildNetworkInterfaces() },
                     Scheduling = new Scheduling
@@ -225,6 +273,8 @@ namespace Google.PowerShell.ComputeEngine
                 }
             };
         }
+
+        private static readonly int AmountOfMbInGb = 1024;
     }
 
     /// <summary>
@@ -295,7 +345,7 @@ namespace Google.PowerShell.ComputeEngine
                 CanIpForward = CanIpForward,
                 Description = Description,
                 Disks = BuildAttachedDisks(),
-                MachineType = MachineType,
+                MachineType = BuildMachineType(),
                 Metadata = InstanceMetadataPSConverter.BuildMetadata(Metadata),
                 NetworkInterfaces = new List<NetworkInterface> { BuildNetworkInterfaces() },
                 Scheduling = new Scheduling
