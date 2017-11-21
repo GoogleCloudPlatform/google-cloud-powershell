@@ -1,4 +1,18 @@
-﻿using Newtonsoft.Json.Linq;
+﻿// Copyright 2017 Google Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -42,7 +56,7 @@ namespace Google.PowerShell.Common
         /// <summary>
         /// Cache of the current active user config.
         /// </summary>
-        private static ActiveUserConfig s_activeUserConfig;
+        internal static ActiveUserConfig ActiveConfig { private get; set; }
 
         /// <summary>
         /// Lock to help prevents race condition when modifying the cache.
@@ -59,13 +73,13 @@ namespace Google.PowerShell.Common
             CancellationToken cancellationToken = default(CancellationToken),
             bool refreshConfig = false)
         {
-            if (s_activeUserConfig != null && !refreshConfig)
+            if (ActiveConfig != null && !refreshConfig)
             {
                 // Check that finger print has not changed.
-                string newFingerPrint = s_activeUserConfig.GetCurrentConfigurationFingerPrint();
-                if (s_activeUserConfig.CachedFingerPrint == newFingerPrint)
+                string newFingerPrint = ActiveConfig.GetCurrentConfigurationFingerPrint();
+                if (ActiveConfig.CachedFingerPrint == newFingerPrint)
                 {
-                    return s_activeUserConfig;
+                    return ActiveConfig;
                 }
             }
 
@@ -75,8 +89,8 @@ namespace Google.PowerShell.Common
             {
                 string activeConfigJson = await GCloudWrapper.GetActiveConfig();
                 cancellationToken.ThrowIfCancellationRequested();
-                s_activeUserConfig = new ActiveUserConfig(activeConfigJson);
-                return s_activeUserConfig;
+                ActiveConfig = new ActiveUserConfig(activeConfigJson);
+                return ActiveConfig;
             }
             finally
             {

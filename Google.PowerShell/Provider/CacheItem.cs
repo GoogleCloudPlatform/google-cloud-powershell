@@ -1,5 +1,16 @@
-﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
-// Licensed under the Apache License Version 2.0.
+﻿// Copyright 2015-2017 Google Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using System;
 
@@ -17,6 +28,7 @@ namespace Google.PowerShell.Provider
         private readonly TimeSpan _cacheLifetime;
         private T _value;
         private readonly Func<T> _update;
+        internal Func<DateTimeOffset> DateTimeOffsetNow = () => DateTimeOffset.Now;
 
         /// <summary>
         /// Get the value after applying the default update function
@@ -35,7 +47,7 @@ namespace Google.PowerShell.Provider
         /// </summary>
         public bool CacheOutOfDate()
         {
-            return DateTimeOffset.Now > _lastUpdate + _cacheLifetime;
+            return DateTimeOffsetNow() > _lastUpdate + _cacheLifetime;
         }
 
         /// <summary>
@@ -49,7 +61,7 @@ namespace Google.PowerShell.Provider
             if (CacheOutOfDate() && updateFunc != null)
             {
                 _value = updateFunc();
-                _lastUpdate = DateTimeOffset.Now;
+                _lastUpdate = DateTimeOffsetNow();
             }
             return _value;
         }

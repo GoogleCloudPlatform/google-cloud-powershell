@@ -1,5 +1,16 @@
-﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
-// Licensed under the Apache License Version 2.0.
+﻿// Copyright 2015-2017 Google Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 using Google.Apis.Compute.v1;
 using Google.Apis.Compute.v1.Data;
@@ -18,20 +29,16 @@ namespace Google.PowerShell.ComputeEngine
     public abstract class GceCmdlet : GCloudCmdlet
     {
         // The Servcie for the Google Compute API
-        public virtual ComputeService Service { get; }
+        protected ComputeService Service => _service.Value;
+
+        internal static ComputeService DefaultComputeService { private get; set; }
 
         // The value of the progress bar when being used as a spinner. If the operation does not give valid
         // percent complete feedback, this spinner will move from 0 to 99 and then repeat.
         private int _spinnerValue = 0;
 
-        protected GceCmdlet() : this(null)
-        {
-        }
-
-        protected GceCmdlet(ComputeService service)
-        {
-            Service = service ?? new ComputeService(GetBaseClientServiceInitializer());
-        }
+        private readonly Lazy<ComputeService> _service = new Lazy<ComputeService>(() => DefaultComputeService ??
+            new ComputeService(GetBaseClientServiceInitializer()));
 
         /// <summary>
         /// Waits for the provided zone operation to complete. This way cmdlets can return newly
