@@ -68,17 +68,21 @@ namespace Google.PowerShell.ComputeEngine
         public override string MachineType { get; set; }
 
         /// <summary>
+        /// <para type="description">
         /// Number of vCPUs used for a custom machine type.
         /// This has to be used together with CustomMemory.
+        /// </para>
         /// </summary>
         [Parameter(Mandatory = true,
             ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
         public override int CustomCpu { get; set; }
 
         /// <summary>
+        /// <para type="description">
         /// Total amount of memory used for a custom machine type.
         /// This has to be used together with CustomCpu.
         /// The amount of memory is in MB.
+        /// </para>
         /// </summary>
         [Parameter(Mandatory = true,
             ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
