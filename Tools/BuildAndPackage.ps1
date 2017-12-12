@@ -135,7 +135,7 @@ $googlePowerShellAssemblyPath = Resolve-Path (Join-Path $configDir Google.PowerS
 $getCmdletsScriptBlock = {
     param($modulePath)
     Import-Module $modulePath | Out-Null
-    (Get-Module GoogleCloud).ExportedCmdlets.Keys
+    (Get-Module Google.PowerShell).ExportedCmdlets.Keys
 }
 $job = Start-Job -ScriptBlock $getCmdletsScriptBlock -ArgumentList $googlePowerShellAssemblyPath
 $cmdletsList = $job | Wait-Job | Receive-Job
@@ -206,22 +206,22 @@ if ($configuration -eq "Debug")
 {
     Copy-Item -Recurse "$configDir\*" $googleCloudDir -Include $powerShellScriptFiles
     Copy-Item -Recurse "$configDir\*" $googleCloudFullClrDir -Exclude $powerShellScriptFiles
-    Copy-Item -Recurse "$coreClrConfigDir\Google.*" $googleCloudCoreClrDir -Exclude $powerShellScriptFiles
+    Copy-Item -Recurse "$coreClrConfigDir\*" $googleCloudCoreClrDir -Exclude $powerShellScriptFiles
 
     Copy-Item -Recurse "$configDir\*" $googleCloudBetaDir -Include $powerShellScriptFiles
     Copy-Item -Recurse "$configDir\*" $googleCloudFullClrBetaDir -Exclude $powerShellScriptFiles
-    Copy-Item -Recurse "$coreClrConfigDir\Google.*" $googleCloudCoreClrBetaDir -Exclude $powerShellScriptFiles
+    Copy-Item -Recurse "$coreClrConfigDir\*" $googleCloudCoreClrBetaDir -Exclude $powerShellScriptFiles
 }
 else
 {
     $fileToExclude = $powerShellScriptFiles + "*.pdb"
     Copy-Item -Recurse "$configDir\*" $googleCloudDir -Include $powerShellScriptFiles
     Copy-Item -Recurse "$configDir\*" $googleCloudFullClrDir -Exclude $fileToExclude
-    Copy-Item -Recurse "$coreClrConfigDir\Google.*" $googleCloudCoreClrDir -Exclude $fileToExclude
+    Copy-Item -Recurse "$coreClrConfigDir\*" $googleCloudCoreClrDir -Exclude $fileToExclude
 
     Copy-Item -Recurse "$configDir\*" $googleCloudBetaDir -Include $powerShellScriptFiles
     Copy-Item -Recurse "$configDir\*" $googleCloudFullClrBetaDir -Exclude $fileToExclude
-    Copy-Item -Recurse "$coreClrConfigDir\Google.*" $googleCloudCoreClrBetaDir -Exclude $fileToExclude
+    Copy-Item -Recurse "$coreClrConfigDir\*" $googleCloudCoreClrBetaDir -Exclude $fileToExclude
 }
 
 # For the beta module, edit and rename the module manifest file.
