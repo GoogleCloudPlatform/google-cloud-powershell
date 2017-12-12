@@ -107,11 +107,11 @@ namespace Google.PowerShell.Tests.Common
         /// <returns>The mock of the request object. Useful for verification.</returns>
 
         public static Mock<TRequest> SetupRequest<TResource, TRequest, TResponse>(
-        this Mock<TResource> resourceMock,
-        Expression<Func<TResource, TRequest>> requestExpression,
-        Func<Task<TResponse>> response)
-        where TRequest : ClientServiceRequest<TResponse>
-        where TResource : class
+            this Mock<TResource> resourceMock,
+            Expression<Func<TResource, TRequest>> requestExpression,
+            Func<Task<TResponse>> response)
+            where TRequest : ClientServiceRequest<TResponse>
+            where TResource : class
         {
             Mock<IClientService> clientServiceMock = GetClientServiceMock();
             Mock<TRequest> requestMock =
