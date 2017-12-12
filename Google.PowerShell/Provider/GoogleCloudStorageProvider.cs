@@ -1,4 +1,4 @@
-// Copyright 2015-2016 Google Inc. All Rights Reserved.
+// Copyright 2015-2017 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
 using Google.Apis.CloudResourceManager.v1;
@@ -6,8 +6,8 @@ using Google.Apis.CloudResourceManager.v1.Data;
 using Google.Apis.Storage.v1;
 using Google.Apis.Storage.v1.Data;
 using Google.Apis.Upload;
+using Google.PowerShell.CloudStorage;
 using Google.PowerShell.Common;
-using Google.PowerShell.Provider;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -22,8 +22,9 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Object = Google.Apis.Storage.v1.Data.Object;
+using ProjectListRequest = Google.Apis.CloudResourceManager.v1.ProjectsResource.ListRequest;
 
-namespace Google.PowerShell.CloudStorage
+namespace Google.PowerShell.Provider
 {
     /// <summary>
     /// A powershell provider that connects to Google Cloud Storage.
@@ -247,7 +248,7 @@ namespace Google.PowerShell.CloudStorage
 
             public string RelativePathToChild(string childObjectPath)
             {
-                if (!childObjectPath.StartsWith(ObjectPath ?? ""))
+                if (!childObjectPath.StartsWith(ObjectPath ?? "", StringComparison.Ordinal))
                 {
                     throw new InvalidOperationException($"{childObjectPath} does not start with {ObjectPath}");
                 }
@@ -286,7 +287,7 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// Reports on the usage of the provider.
         /// </summary>
-        private static IReportCmdletResults TelemetryReporter = NewTelemetryReporter();
+        private static readonly IReportCmdletResults s_telemetryReporter = NewTelemetryReporter();
 
         internal const string ProviderName = "GoogleCloudStorage";
 
@@ -353,13 +354,13 @@ namespace Google.PowerShell.CloudStorage
         /// </summary>
         protected override bool ItemExists(string path)
         {
-            var gcsPath = GcsPath.Parse(path);
+            GcsPath gcsPath = GcsPath.Parse(path);
             switch (gcsPath.Type)
             {
                 case GcsPath.GcsPathType.Drive:
                     return true;
                 case GcsPath.GcsPathType.Bucket:
-                    Dictionary<string, Bucket> bucketDict = null;
+                    Dictionary<string, Bucket> bucketDict;
                     // If the bucket cache is not initialized, then don't bother initializing it
                     // because that will cause a long wait time and we may not even know whether
                     // the user needs to use all the other buckets right away. Also, we should not
@@ -373,7 +374,7 @@ namespace Google.PowerShell.CloudStorage
 
                     try
                     {
-                        var bucket = Service.Buckets.Get(gcsPath.Bucket).Execute();
+                        Bucket bucket = Service.Buckets.Get(gcsPath.Bucket).Execute();
                         if (bucketDict != null)
                         {
                             bucketDict[bucket.Name] = bucket;
@@ -401,7 +402,7 @@ namespace Google.PowerShell.CloudStorage
         /// <returns>True if the item at the path is a container.</returns>
         protected override bool IsItemContainer(string path)
         {
-            var gcsPath = GcsPath.Parse(path);
+            GcsPath gcsPath = GcsPath.Parse(path);
             switch (gcsPath.Type)
             {
                 case GcsPath.GcsPathType.Drive:
@@ -421,7 +422,7 @@ namespace Google.PowerShell.CloudStorage
         /// <returns>True if the container contains items.</returns>
         protected override bool HasChildItems(string path)
         {
-            var gcsPath = GcsPath.Parse(path);
+            GcsPath gcsPath = GcsPath.Parse(path);
             switch (gcsPath.Type)
             {
                 case GcsPath.GcsPathType.Drive:
@@ -440,7 +441,7 @@ namespace Google.PowerShell.CloudStorage
         /// <param name="path">The path of the item to get.</param>
         protected override void GetItem(string path)
         {
-            var gcsPath = GcsPath.Parse(path);
+            GcsPath gcsPath = GcsPath.Parse(path);
             switch (gcsPath.Type)
             {
                 case GcsPath.GcsPathType.Drive:
@@ -457,7 +458,7 @@ namespace Google.PowerShell.CloudStorage
                 default:
                     throw new InvalidOperationException($"Unknown Path Type {gcsPath.Type}");
             }
-            TelemetryReporter.ReportSuccess(
+            s_telemetryReporter.ReportSuccess(
                 nameof(GoogleCloudStorageProvider),
                 nameof(GetItem),
                 CloudSdkSettings.GetDefaultProject());
@@ -493,10 +494,10 @@ namespace Google.PowerShell.CloudStorage
         /// <param name="returnContainers">The names of the children of the container.</param>
         protected override void GetChildNames(string path, ReturnContainers returnContainers)
         {
-            var gcsPath = GcsPath.Parse(path);
+            GcsPath gcsPath = GcsPath.Parse(path);
             if (gcsPath.Type == GcsPath.GcsPathType.Drive)
             {
-                Action<Bucket> writeBucket = (bucket) => WriteItemObject(GetChildName(bucket.Name), bucket.Name, true);
+                Action<Bucket> writeBucket = bucket => WriteItemObject(GetChildName(bucket.Name), bucket.Name, true);
                 PerformActionOnBucketAndOptionallyUpdateCache(writeBucket);
             }
             else
@@ -509,7 +510,7 @@ namespace Google.PowerShell.CloudStorage
                     WriteItemObject(childName, childGcsPath.ToString().TrimEnd('/'), isContainer);
                 }
             }
-            TelemetryReporter.ReportSuccess(
+            s_telemetryReporter.ReportSuccess(
                 nameof(GoogleCloudStorageProvider),
                 nameof(GetChildNames),
                 CloudSdkSettings.GetDefaultProject());
@@ -556,12 +557,11 @@ namespace Google.PowerShell.CloudStorage
         /// <param name="recurse">If true, get all descendents of the container, not just immediate children.</param>
         protected override void GetChildItems(string path, bool recurse)
         {
-            var gcsPath = GcsPath.Parse(path);
+            GcsPath gcsPath = GcsPath.Parse(path);
             switch (gcsPath.Type)
             {
                 case GcsPath.GcsPathType.Drive:
-                    Action<Bucket> actionOnBuckets = (bucket) => GetChildItemBucketHelper(bucket, recurse);
-                    PerformActionOnBucketAndOptionallyUpdateCache((bucket) => GetChildItemBucketHelper(bucket, recurse));
+                    PerformActionOnBucketAndOptionallyUpdateCache(bucket => GetChildItemBucketHelper(bucket, recurse));
                     break;
                 case GcsPath.GcsPathType.Bucket:
                 case GcsPath.GcsPathType.Object:
@@ -582,7 +582,7 @@ namespace Google.PowerShell.CloudStorage
                 default:
                     throw new InvalidOperationException($"Unknown Path Type {gcsPath.Type}");
             }
-            TelemetryReporter.ReportSuccess(
+            s_telemetryReporter.ReportSuccess(
                 nameof(GoogleCloudStorageProvider),
                 nameof(GetChildItems),
                 CloudSdkSettings.GetDefaultProject());
@@ -602,11 +602,11 @@ namespace Google.PowerShell.CloudStorage
                 return;
             }
             bool newFolder = itemTypeName == "Directory";
-            if (newFolder && !path.EndsWith("/"))
+            if (newFolder && !path.EndsWith("/", StringComparison.Ordinal))
             {
                 path += "/";
             }
-            var gcsPath = GcsPath.Parse(path);
+            GcsPath gcsPath = GcsPath.Parse(path);
             switch (gcsPath.Type)
             {
                 case GcsPath.GcsPathType.Drive:
@@ -625,7 +625,7 @@ namespace Google.PowerShell.CloudStorage
                     throw new InvalidOperationException($"Unknown Path Type {gcsPath.Type}");
             }
             BucketModels.Clear();
-            TelemetryReporter.ReportSuccess(
+            s_telemetryReporter.ReportSuccess(
                 nameof(GoogleCloudStorageProvider),
                 nameof(NewItem),
                 CloudSdkSettings.GetDefaultProject());
@@ -633,7 +633,7 @@ namespace Google.PowerShell.CloudStorage
 
         protected override object NewItemDynamicParameters(string path, string itemTypeName, object newItemValue)
         {
-            var gcsPath = GcsPath.Parse(path);
+            GcsPath gcsPath = GcsPath.Parse(path);
             switch (gcsPath.Type)
             {
                 case GcsPath.GcsPathType.Drive:
@@ -666,8 +666,8 @@ namespace Google.PowerShell.CloudStorage
                 path = path.TrimEnd(directorySeparator) + directorySeparator;
                 copyPath = copyPath.TrimEnd(directorySeparator) + directorySeparator;
             }
-            var gcsPath = GcsPath.Parse(path);
-            var gcsCopyPath = GcsPath.Parse(copyPath);
+            GcsPath gcsPath = GcsPath.Parse(path);
+            GcsPath gcsCopyPath = GcsPath.Parse(copyPath);
             if (recurse)
             {
                 IEnumerable<Object> children = ListChildren(gcsPath, true);
@@ -698,7 +698,7 @@ namespace Google.PowerShell.CloudStorage
                 WriteItemObject(response, copyPath, gcsCopyPath.Type != GcsPath.GcsPathType.Object);
             }
             BucketModels.Clear();
-            TelemetryReporter.ReportSuccess(
+            s_telemetryReporter.ReportSuccess(
                 nameof(GoogleCloudStorageProvider),
                 nameof(CopyItem),
                 CloudSdkSettings.GetDefaultProject());
@@ -717,7 +717,7 @@ namespace Google.PowerShell.CloudStorage
         /// <returns>A content reader of the contents of a given object.</returns>
         public IContentReader GetContentReader(string path)
         {
-            var gcsPath = GcsPath.Parse(path);
+            GcsPath gcsPath = GcsPath.Parse(path);
             if (gcsPath.ObjectPath == null)
             {
                 throw new InvalidOperationException($"Can not get the contents of a {gcsPath.Type}");
@@ -725,10 +725,10 @@ namespace Google.PowerShell.CloudStorage
 
             Object gcsObject = Service.Objects.Get(gcsPath.Bucket, gcsPath.ObjectPath).Execute();
 
-            var stream = Service.HttpClient.GetStreamAsync(gcsObject.MediaLink).Result;
+            Stream stream = Service.HttpClient.GetStreamAsync(gcsObject.MediaLink).Result;
             IContentReader contentReader = new GcsStringReader(stream);
 
-            TelemetryReporter.ReportSuccess(
+            s_telemetryReporter.ReportSuccess(
                 nameof(GoogleCloudStorageProvider),
                 nameof(GetContentReader),
                 CloudSdkSettings.GetDefaultProject());
@@ -751,22 +751,22 @@ namespace Google.PowerShell.CloudStorage
         /// <returns>The writer.</returns>
         public IContentWriter GetContentWriter(string path)
         {
-            var gcsPath = GcsPath.Parse(path);
-            Object body = new Object
+            GcsPath gcsPath = GcsPath.Parse(path);
+            var body = new Object
             {
                 Name = gcsPath.ObjectPath,
                 Bucket = gcsPath.Bucket
             };
             var inputStream = new AnonymousPipeServerStream(PipeDirection.Out);
             var outputStream = new AnonymousPipeClientStream(PipeDirection.In, inputStream.ClientSafePipeHandle);
-            var contentType = ((GcsGetContentWriterDynamicParameters) DynamicParameters).ContentType ?? GcsCmdlet.UTF8TextMimeType;
+            string contentType = ((GcsGetContentWriterDynamicParameters) DynamicParameters).ContentType ?? GcsCmdlet.UTF8TextMimeType;
             ObjectsResource.InsertMediaUpload request =
                 Service.Objects.Insert(body, gcsPath.Bucket, outputStream, contentType);
             request.UploadAsync();
             IContentWriter contentWriter = new GcsContentWriter(inputStream);
             // Force the bucket models to refresh with the potentially new object.
             BucketModels.Clear();
-            TelemetryReporter.ReportSuccess(
+            s_telemetryReporter.ReportSuccess(
                 nameof(GoogleCloudStorageProvider),
                 nameof(GetContentWriter),
                 CloudSdkSettings.GetDefaultProject());
@@ -788,22 +788,21 @@ namespace Google.PowerShell.CloudStorage
             {
                 return;
             }
-            var gcsPath = GcsPath.Parse(path);
-            Object body = new Object
+            GcsPath gcsPath = GcsPath.Parse(path);
+            var body = new Object
             {
                 Name = gcsPath.ObjectPath,
                 Bucket = gcsPath.Bucket
             };
             var memoryStream = new MemoryStream();
-            var contentType = GcsCmdlet.UTF8TextMimeType;
             ObjectsResource.InsertMediaUpload request =
-                Service.Objects.Insert(body, gcsPath.Bucket, memoryStream, contentType);
+                Service.Objects.Insert(body, gcsPath.Bucket, memoryStream, GcsCmdlet.UTF8TextMimeType);
             IUploadProgress response = request.Upload();
             if (response.Exception != null)
             {
                 throw response.Exception;
             }
-            TelemetryReporter.ReportSuccess(
+            s_telemetryReporter.ReportSuccess(
                 nameof(GoogleCloudStorageProvider),
                 nameof(ClearContent),
                 CloudSdkSettings.GetDefaultProject());
@@ -826,7 +825,7 @@ namespace Google.PowerShell.CloudStorage
             {
                 return;
             }
-            var gcsPath = GcsPath.Parse(path);
+            GcsPath gcsPath = GcsPath.Parse(path);
             switch (gcsPath.Type)
             {
                 case GcsPath.GcsPathType.Drive:
@@ -859,7 +858,7 @@ namespace Google.PowerShell.CloudStorage
                 default:
                     throw new InvalidOperationException($"Unknown Path Type {gcsPath.Type}");
             }
-            TelemetryReporter.ReportSuccess(
+            s_telemetryReporter.ReportSuccess(
                 nameof(GoogleCloudStorageProvider),
                 nameof(RemoveItem),
                 CloudSdkSettings.GetDefaultProject());
@@ -878,7 +877,7 @@ namespace Google.PowerShell.CloudStorage
             }
             if (recurse)
             {
-                foreach (var childObject in ListChildren(gcsPath, true))
+                foreach (Object childObject in ListChildren(gcsPath, true))
                 {
                     Service.Objects.Delete(childObject.Bucket, childObject.Name).Execute();
                 }
@@ -905,7 +904,7 @@ namespace Google.PowerShell.CloudStorage
         private void DeleteObjects(GcsPath gcsPath)
         {
             string bucketName = gcsPath.Bucket;
-            List<Task<string>> deleteTasks = new List<Task<string>>();
+            var deleteTasks = new List<Task<string>>();
 
             ObjectsResource.ListRequest request = Service.Objects.List(bucketName);
             do
@@ -975,7 +974,7 @@ namespace Google.PowerShell.CloudStorage
         private Object NewObject(GcsPath gcsPath, NewGcsObjectDynamicParameters dynamicParameters, Stream contentStream)
         {
 
-            Object newGcsObject = new Object
+            var newGcsObject = new Object
             {
                 Bucket = gcsPath.Bucket,
                 Name = gcsPath.ObjectPath,
@@ -1000,9 +999,9 @@ namespace Google.PowerShell.CloudStorage
         {
             if (dynamicParams.Project == null)
             {
-                var property = dynamicParams.GetType().GetTypeInfo().GetProperty(nameof(Project));
-                ConfigPropertyNameAttribute configPropertyName =
-                    property.GetCustomAttribute<ConfigPropertyNameAttribute>();
+                PropertyInfo property = dynamicParams.GetType().GetTypeInfo().GetProperty(nameof(Project));
+                // ReSharper disable once AssignNullToNotNullAttribute
+                var configPropertyName = property.GetCustomAttribute<ConfigPropertyNameAttribute>();
                 configPropertyName.SetObjectConfigDefault(property, dynamicParams);
             }
 
@@ -1035,7 +1034,7 @@ namespace Google.PowerShell.CloudStorage
             ObjectsResource.ListRequest request = Service.Objects.List(gcsPath.Bucket);
             request.Projection = ObjectsResource.ListRequest.ProjectionEnum.Full;
             request.Prefix = gcsPath.ObjectPath;
-            if (!string.IsNullOrEmpty(request.Prefix) && !request.Prefix.EndsWith("/"))
+            if (!string.IsNullOrEmpty(request.Prefix) && !request.Prefix.EndsWith("/", StringComparison.Ordinal))
             {
                 request.Prefix = request.Prefix + "/";
             }
@@ -1098,8 +1097,7 @@ namespace Google.PowerShell.CloudStorage
 
         private static IEnumerable<Project> ListAllProjects()
         {
-            Google.Apis.CloudResourceManager.v1.ProjectsResource.ListRequest request =
-                ResourceService.Projects.List();
+            ProjectListRequest request = ResourceService.Projects.List();
             do
             {
                 ListProjectsResponse projects = request.Execute();
@@ -1148,8 +1146,8 @@ namespace Google.PowerShell.CloudStorage
         /// <returns>Returns a dictionary where key is bucket name and value is the bucket.</returns>
         private Dictionary<string, Bucket> UpdateBucketCacheAndPerformActionOnBucket(Action<Bucket> action)
         {
-            BlockingCollection<Bucket> bucketCollections = new BlockingCollection<Bucket>();
-            ConcurrentDictionary<string, Bucket> bucketDict = new ConcurrentDictionary<string, Bucket>();
+            var bucketCollections = new BlockingCollection<Bucket>();
+            var bucketDict = new ConcurrentDictionary<string, Bucket>();
 
             // If we don't do these steps in a new thread, it will block until the task array (taskWithActions)
             // is created and this may take a while if there are lots of projects.
@@ -1159,7 +1157,7 @@ namespace Google.PowerShell.CloudStorage
                 // In each of these tasks, the buckets will be added to the blocking collection bucketCollections.
                 IEnumerable<Task> taskWithActions = projects.Select(project => ListBucketsAsync(project, bucketCollections));
                 // Once all the tasks are done, we signal to the blocking collection that there is nothing to be added.
-                Task.Factory.ContinueWhenAll(taskWithActions.ToArray(), result => { bucketCollections.CompleteAdding(); });
+                Task.Factory.ContinueWhenAll(taskWithActions.ToArray(), result => bucketCollections.CompleteAdding());
             });
 
             // bucketCollections.IsCompleted is true if CompleteAdding is called.

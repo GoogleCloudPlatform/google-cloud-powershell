@@ -16,7 +16,7 @@ using Google.Apis.CloudResourceManager.v1;
 using Google.Apis.CloudResourceManager.v1.Data;
 using Google.Apis.Storage.v1;
 using Google.Apis.Storage.v1.Data;
-using Google.PowerShell.CloudStorage;
+using Google.PowerShell.Provider;
 using Google.PowerShell.Tests.Common;
 using Moq;
 using NUnit.Framework;
