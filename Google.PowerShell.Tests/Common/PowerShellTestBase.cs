@@ -22,11 +22,11 @@ namespace Google.PowerShell.Tests.Common
     /// Abstract base class for running unit tests on PSCmdlets.
     /// </summary>
     [TestFixture]
-    public abstract class PsCmdletTestBase
+    public abstract class PowerShellTestBase
     {
         protected const string FakeRegionName = "fake-region";
         protected const string FakeZoneName = "fake-zone";
-        protected const string FakeProjectName = "fake-project";
+        protected const string FakeProjectId = "fake-project";
         private static readonly string s_fakeConfigJson = $@"{{
             'configuration': {{
                 'active_configuration': 'testing',
@@ -38,7 +38,7 @@ namespace Google.PowerShell.Tests.Common
                     'core': {{
                         'account': 'testing@google.com',
                         'disable_usage_reporting': 'False',
-                        'project': '{FakeProjectName}'
+                        'project': '{FakeProjectId}'
                     }}
                 }}
             }},

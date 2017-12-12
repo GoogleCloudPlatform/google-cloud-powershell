@@ -83,6 +83,26 @@ namespace Google.PowerShell.Tests.Common
         /// <typeparam name="TResponse">The type of the responce.</typeparam>
         /// <param name="resourceMock">The mock of the resource that makes the request.</param>
         /// <param name="requestExpression">The expression of the request. Uses Moq.It functions for wildcards.</param>
+        /// <param name="response">The responce the request should receive.</param>
+        /// <returns>The mock of the request object. Useful for verification.</returns>
+        public static Mock<TRequest> SetupRequest<TResource, TRequest, TResponse>(
+            this Mock<TResource> resourceMock,
+            Expression<Func<TResource, TRequest>> requestExpression,
+            TResponse response)
+            where TRequest : ClientServiceRequest<TResponse>
+            where TResource : class
+        {
+            return resourceMock.SetupRequest(requestExpression, Task.FromResult(response));
+        }
+
+        /// <summary>
+        /// Sets up a reqest.
+        /// </summary>
+        /// <typeparam name="TResource">The type of resource creating the request.</typeparam>
+        /// <typeparam name="TRequest">The type of the request to make.</typeparam>
+        /// <typeparam name="TResponse">The type of the responce.</typeparam>
+        /// <param name="resourceMock">The mock of the resource that makes the request.</param>
+        /// <param name="requestExpression">The expression of the request. Uses Moq.It functions for wildcards.</param>
         /// <param name="response">A function returning responce the request should receive.</param>
         /// <returns>The mock of the request object. Useful for verification.</returns>
 

@@ -20,7 +20,6 @@ using NUnit.Framework;
 using System;
 using System.Collections.ObjectModel;
 using System.Management.Automation;
-using System.Threading.Tasks;
 
 namespace Google.PowerShell.Tests.Compute
 {
@@ -38,12 +37,12 @@ namespace Google.PowerShell.Tests.Compute
             Mock<DisksResource> diskResourceMock = ServiceMock.Resource(s => s.Disks);
             Mock<DisksResource.CreateSnapshotRequest> requestMock = diskResourceMock.SetupRequest(
                 d => d.CreateSnapshot(
-                    It.Is<Snapshot>(s => s.Name.StartsWith(diskName, StringComparison.Ordinal)), FakeProjectName, FakeZoneName,
+                    It.Is<Snapshot>(s => s.Name.StartsWith(diskName, StringComparison.Ordinal)), FakeProjectId, FakeZoneName,
                     diskName),
-                Task.FromResult(DoneOperation));
+                DoneOperation);
             var snapshotResult = new Snapshot();
             ServiceMock.Resource(s => s.Snapshots).SetupRequest(
-                s => s.Get(It.IsAny<string>(), It.IsAny<string>()), Task.FromResult(snapshotResult));
+                s => s.Get(It.IsAny<string>(), It.IsAny<string>()), snapshotResult);
 
             Pipeline.Commands.AddScript($"Add-GceSnapShot -DiskName {diskName}");
             Collection<PSObject> results = Pipeline.Invoke();
@@ -58,10 +57,10 @@ namespace Google.PowerShell.Tests.Compute
         {
             Mock<DisksResource.CreateSnapshotRequest> requestMock = ServiceMock.Resource(s => s.Disks).SetupRequest(
                 d => d.CreateSnapshot(It.IsAny<Snapshot>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()),
-                Task.FromResult(DoneOperation));
+                DoneOperation);
             var snapshotResult = new Snapshot();
             ServiceMock.Resource(s => s.Snapshots).SetupRequest(
-                s => s.Get(It.IsAny<string>(), It.IsAny<string>()), Task.FromResult(snapshotResult));
+                s => s.Get(It.IsAny<string>(), It.IsAny<string>()), snapshotResult);
 
             Pipeline.Commands.AddScript("Add-GceSnapShot -DiskName diskname -VSS");
             Collection<PSObject> results = Pipeline.Invoke();

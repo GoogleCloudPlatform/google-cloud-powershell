@@ -11,6 +11,7 @@ using System.IO;
 using System.Management.Automation;
 using System.Net;
 using System.Text;
+using Google.PowerShell.Provider;
 using static Google.Apis.Storage.v1.ObjectsResource.InsertMediaUpload;
 
 namespace Google.PowerShell.CloudStorage

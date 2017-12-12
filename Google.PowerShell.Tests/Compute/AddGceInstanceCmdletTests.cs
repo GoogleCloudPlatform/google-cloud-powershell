@@ -20,7 +20,6 @@ using NUnit.Framework;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Management.Automation;
-using System.Threading.Tasks;
 
 namespace Google.PowerShell.Tests.Compute
 {
@@ -35,10 +34,10 @@ namespace Google.PowerShell.Tests.Compute
             Mock<InstancesResource> instances = ServiceMock.Resource(s => s.Instances);
             instances.SetupRequest(
                 i => i.Insert(It.IsAny<Instance>(), It.IsAny<string>(), It.IsAny<string>()),
-                Task.FromResult(DoneOperation));
+                DoneOperation);
             instances.SetupRequest(
                 i => i.Get(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()),
-                Task.FromResult(new Instance { Name = mockedResultName }));
+                new Instance { Name = mockedResultName });
 
             Pipeline.Commands.AddScript(
                 $"Add-GceInstance -Name instance-name -Disk ${psDiskVar} -CustomCpu 2 -CustomMemory 2048");
@@ -47,7 +46,7 @@ namespace Google.PowerShell.Tests.Compute
             instances.Verify(
                 resource => resource.Insert(
                     It.Is<Instance>(i => i.MachineType == $"zones/{FakeZoneName}/machineTypes/custom-2-2048"),
-                    FakeProjectName, FakeZoneName),
+                    FakeProjectId, FakeZoneName),
                 Times.Once);
             var instance = (Instance) results.Single().BaseObject;
             Assert.AreEqual(mockedResultName, instance.Name);
