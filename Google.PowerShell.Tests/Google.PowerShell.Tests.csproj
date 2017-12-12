@@ -56,6 +56,9 @@
     <Reference Include="Google.Apis.Bigquery.v2, Version=1.29.1.990, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
       <HintPath>..\packages\Google.Apis.Bigquery.v2.1.29.1.990\lib\net45\Google.Apis.Bigquery.v2.dll</HintPath>
     </Reference>
+    <Reference Include="Google.Apis.CloudResourceManager.v1, Version=1.29.1.1000, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>..\packages\Google.Apis.CloudResourceManager.v1.1.29.1.1000\lib\net45\Google.Apis.CloudResourceManager.v1.dll</HintPath>
+    </Reference>
     <Reference Include="Google.Apis.Compute.v1, Version=1.29.1.981, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
       <HintPath>..\packages\Google.Apis.Compute.v1.1.29.1.981\lib\net45\Google.Apis.Compute.v1.dll</HintPath>
     </Reference>
@@ -128,7 +131,7 @@
     <Compile Include="Common\GCloudCmdletTests.cs" />
     <Compile Include="Common\CloudSdkSettingsTests.cs" />
     <Compile Include="Common\MeasurementServiceProtocolTests.cs" />
-    <Compile Include="Common\PsCmdletTestBase.cs" />
+    <Compile Include="Common\PowerShellTestBase.cs" />
     <Compile Include="Common\TestActiveUserConfig.cs" />
     <Compile Include="Common\TestAuthenticateWithSdkCredentialsExecutor.cs" />
     <Compile Include="Common\TestTokenResponse.cs" />
@@ -141,6 +144,8 @@
     <Compile Include="Compute\InstanceMetadataConverterTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Provider\CacheItemTest.cs" />
+    <Compile Include="Provider\GoogleCloudStorageProviderTests.cs" />
+    <Compile Include="Storage\GcsCmdletTestBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config">

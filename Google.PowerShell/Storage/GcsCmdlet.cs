@@ -10,7 +10,7 @@ using System.Collections.Generic;
 namespace Google.PowerShell.CloudStorage
 {
     /// <summary>
-    /// Base class for Google Cloud Storage-based cmdlets. 
+    /// Base class for Google Cloud Storage-based cmdlets.
     /// </summary>
     public abstract class GcsCmdlet : GCloudCmdlet
     {
@@ -27,7 +27,9 @@ namespace Google.PowerShell.CloudStorage
         /// <summary>
         /// The storage service.
         /// </summary>
-        public StorageService Service { get; } = new StorageService(GetBaseClientServiceInitializer());
+        public StorageService Service { get; } = DefaultStorageService ?? new StorageService(GetBaseClientServiceInitializer());
+
+        internal static StorageService DefaultStorageService { private get; set; }
 
         /// <summary>
         /// Constructs the media URL of an object from its bucket and name. This does not include the generation

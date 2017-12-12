@@ -12,41 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Google.Apis.Compute.v1;
-using Google.Apis.Compute.v1.Data;
+using Google.Apis.Storage.v1;
+using Google.PowerShell.CloudStorage;
 using Google.PowerShell.ComputeEngine;
 using Google.PowerShell.Tests.Common;
 using Moq;
 using NUnit.Framework;
 
-namespace Google.PowerShell.Tests.Compute
+namespace Google.PowerShell.Tests.Storage
 {
     /// <summary>
     /// Abstract base class for running unit tests on GceCmdlets.
     /// </summary>
     [TestFixture]
-    public abstract class GceCmdletTestBase : PowerShellTestBase
+    public abstract class GcsCmdletTestBase : PowerShellTestBase
     {
-        /// <summary>
-        /// A completed operation.
-        /// </summary>
-        protected Operation DoneOperation { get; } = new Operation
-        {
-            Name = "doneOperation",
-            Status = "DONE",
-            Id = 0,
-            Description = "mock operation"
-        };
-
         /// <summary>
         /// The mock of the compute service. Reset before every test.
         /// </summary>
-        protected static Mock<ComputeService> ServiceMock { get; } = new Mock<ComputeService>();
+        protected static Mock<StorageService> ServiceMock { get; } = new Mock<StorageService>();
 
         [OneTimeSetUp]
         public void BeforeAll()
         {
-            GceCmdlet.DefaultComputeService = ServiceMock.Object;
+            GcsCmdlet.DefaultStorageService = ServiceMock.Object;
         }
 
         [OneTimeTearDown]

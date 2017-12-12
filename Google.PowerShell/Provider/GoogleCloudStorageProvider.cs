@@ -255,16 +255,21 @@ namespace Google.PowerShell.CloudStorage
             }
         }
 
+        private static readonly Lazy<StorageService> s_serviceLazy = new Lazy<StorageService>(GetNewService);
+        private static readonly Lazy<CloudResourceManagerService> s_resourceServiceLazy = new Lazy<CloudResourceManagerService>(() =>
+            new CloudResourceManagerService(GCloudCmdlet.GetBaseClientServiceInitializer()));
+
         /// <summary>
         /// The Google Cloud Storage service.
         /// </summary>
-        private static StorageService Service { get; } = GetNewService();
+        private static StorageService Service => DefaultStorageService ?? s_serviceLazy.Value;
+        internal static StorageService DefaultStorageService { private get; set; }
 
         /// <summary>
         /// This service is used to get all the accessible projects.
         /// </summary>
-        private static CloudResourceManagerService ResourceService { get; } =
-            new CloudResourceManagerService(GCloudCmdlet.GetBaseClientServiceInitializer());
+        private static CloudResourceManagerService ResourceService => DefaultResourceService ?? s_resourceServiceLazy.Value;
+        internal static CloudResourceManagerService DefaultResourceService { private get; set; }
 
         /// <summary>
         /// Maps the name of a bucket to a cache of data about the objects in that bucket.
@@ -283,7 +288,7 @@ namespace Google.PowerShell.CloudStorage
         /// </summary>
         private static IReportCmdletResults TelemetryReporter = NewTelemetryReporter();
 
-        private const string ProviderName = "GoogleCloudStorage";
+        internal const string ProviderName = "GoogleCloudStorage";
 
         /// <summary>
         /// A random number generator for progress bar ids.
@@ -442,25 +447,7 @@ namespace Google.PowerShell.CloudStorage
                     WriteItemObject(PSDriveInfo, path, true);
                     break;
                 case GcsPath.GcsPathType.Bucket:
-                    Dictionary<string, Bucket> bucketDict = null;
-                    Bucket bucket;
-                    // If the bucket cache is not initialized, then don't bother initializing it
-                    // because that will cause a long wait time and we may not even know whether
-                    // the user needs to use all the other buckets right away. Also, we should not
-                    // refresh the whole cache right at this instance (which is why we call
-                    // GetValueWithoutUpdate) for the same reason.
-                    bucketDict = BucketCache.GetLastValueWithoutUpdate();
-                    if (bucketDict != null && bucketDict.ContainsKey(gcsPath.Bucket))
-                    {
-                        bucket = bucketDict[gcsPath.Bucket];
-                        break;
-                    }
-
-                    bucket = Service.Buckets.Get(gcsPath.Bucket).Execute();
-                    if (bucketDict != null)
-                    {
-                        bucketDict[bucket.Name] = bucket;
-                    }
+                    Bucket bucket = GetBucket(gcsPath);
                     WriteItemObject(bucket, path, true);
                     break;
                 case GcsPath.GcsPathType.Object:
@@ -474,6 +461,29 @@ namespace Google.PowerShell.CloudStorage
                 nameof(GoogleCloudStorageProvider),
                 nameof(GetItem),
                 CloudSdkSettings.GetDefaultProject());
+        }
+
+        private static Bucket GetBucket(GcsPath gcsPath)
+        {
+            // If the bucket cache is not initialized, then don't bother initializing it
+            // because that will cause a long wait time and we may not even know whether
+            // the user needs to use all the other buckets right away. Also, we should not
+            // refresh the whole cache right at this instance (which is why we call
+            // GetValueWithoutUpdate) for the same reason.
+            Dictionary<string, Bucket> bucketDict = BucketCache.GetLastValueWithoutUpdate();
+            if (bucketDict != null && bucketDict.ContainsKey(gcsPath.Bucket))
+            {
+                return bucketDict[gcsPath.Bucket];
+            }
+            else
+            {
+                Bucket bucket = Service.Buckets.Get(gcsPath.Bucket).Execute();
+                if (bucketDict != null)
+                {
+                    bucketDict[bucket.Name] = bucket;
+                }
+                return bucket;
+            }
         }
 
         /// <summary>
@@ -602,11 +612,11 @@ namespace Google.PowerShell.CloudStorage
                 case GcsPath.GcsPathType.Drive:
                     throw new InvalidOperationException("Use New-PSDrive to create a new drive.");
                 case GcsPath.GcsPathType.Bucket:
-                    Bucket newBucket = NewBucket(gcsPath, (NewGcsBucketDynamicParameters)DynamicParameters);
+                    Bucket newBucket = NewBucket(gcsPath, (NewGcsBucketDynamicParameters) DynamicParameters);
                     WriteItemObject(newBucket, path, true);
                     break;
                 case GcsPath.GcsPathType.Object:
-                    var dynamicParameters = (NewGcsObjectDynamicParameters)DynamicParameters;
+                    var dynamicParameters = (NewGcsObjectDynamicParameters) DynamicParameters;
                     Stream contentStream = GetContentStream(newItemValue, dynamicParameters);
                     Object newObject = NewObject(gcsPath, dynamicParameters, contentStream);
                     WriteItemObject(newObject, path, newFolder);
@@ -649,7 +659,7 @@ namespace Google.PowerShell.CloudStorage
             {
                 return;
             }
-            var dyanmicParameters = (GcsCopyItemDynamicParameters)DynamicParameters;
+            var dyanmicParameters = (GcsCopyItemDynamicParameters) DynamicParameters;
             if (recurse)
             {
                 char directorySeparator = Path.DirectorySeparatorChar;
@@ -749,7 +759,7 @@ namespace Google.PowerShell.CloudStorage
             };
             var inputStream = new AnonymousPipeServerStream(PipeDirection.Out);
             var outputStream = new AnonymousPipeClientStream(PipeDirection.In, inputStream.ClientSafePipeHandle);
-            var contentType = ((GcsGetContentWriterDynamicParameters)DynamicParameters).ContentType ?? GcsCmdlet.UTF8TextMimeType;
+            var contentType = ((GcsGetContentWriterDynamicParameters) DynamicParameters).ContentType ?? GcsCmdlet.UTF8TextMimeType;
             ObjectsResource.InsertMediaUpload request =
                 Service.Objects.Insert(body, gcsPath.Bucket, outputStream, contentType);
             request.UploadAsync();
@@ -1061,27 +1071,29 @@ namespace Google.PowerShell.CloudStorage
         private static async Task ListBucketsAsync(Project project, BlockingCollection<Bucket> collections)
         {
             // Using a new service on every request here ensures they can all be handled at the same time.
-            BucketsResource.ListRequest request = GetNewService().Buckets.List(project.ProjectId);
-            var allBuckets = new List<Bucket>();
-            try
+            using (StorageService service = DefaultStorageService ?? GetNewService())
             {
-                do
+                BucketsResource.ListRequest request = service.Buckets.List(project.ProjectId);
+                try
                 {
-                    Buckets buckets = await request.ExecuteAsync();
-                    if (buckets.Items != null)
+                    do
                     {
-                        foreach (Bucket bucket in buckets.Items)
+                        Buckets buckets = await request.ExecuteAsync();
+                        if (buckets.Items != null)
                         {
-                            // BlockingCollecton does not have AddRange so we have to add each item individually.
-                            collections.Add(bucket);
+                            foreach (Bucket bucket in buckets.Items)
+                            {
+                                // BlockingCollecton does not have AddRange so we have to add each item individually.
+                                collections.Add(bucket);
+                            }
                         }
-                    }
-                    request.PageToken = buckets.NextPageToken;
-                } while (request.PageToken != null);
+                        request.PageToken = buckets.NextPageToken;
+                    } while (request.PageToken != null);
+                }
+                // Swallow any GoogleApiException when listing a bucket for projects, otherwise, if user has an
+                // erroneous project, this will stop the execution of Get-ChildItem for other projects.
+                catch (GoogleApiException) { }
             }
-            // Swallow any GoogleApiException when listing a bucket for projects, otherwise, if user has an
-            // erroneous project, this will stop the execution of Get-ChildItem for other projects.
-            catch (GoogleApiException) { }
         }
 
         private static IEnumerable<Project> ListAllProjects()
@@ -1117,7 +1129,7 @@ namespace Google.PowerShell.CloudStorage
             if (!BucketCache.CacheOutOfDate())
             {
                 Dictionary<string, Bucket> bucketDict = BucketCache.GetLastValueWithoutUpdate();
-                foreach(Bucket bucket in bucketDict.Values)
+                foreach (Bucket bucket in bucketDict.Values)
                 {
                     actionOnBucket(bucket);
                 }
