@@ -41,7 +41,7 @@ namespace Google.PowerShell.Tests.Storage
         [OneTimeTearDown]
         public void AfterAll()
         {
-            GceCmdlet.DefaultComputeService = null;
+            GceCmdlet.OptionalComputeService = null;
         }
 
         [SetUp]

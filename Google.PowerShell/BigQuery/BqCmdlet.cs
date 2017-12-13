@@ -19,14 +19,14 @@ namespace Google.PowerShell.BigQuery
         public BigqueryService Service => _service.Value;
         public BigQueryClient Client => _client.Value;
 
-        internal static BigqueryService DefaultBigQueryService { private get; set; }
-        internal static BigQueryClient DefaultBigQueryClient { private get; set; }
+        internal static BigqueryService OptionalBigQueryService { private get; set; }
+        internal static BigQueryClient OptionalBigQueryClient { private get; set; }
 
         public BqCmdlet()
         {
-            _service = new Lazy<BigqueryService>(() => DefaultBigQueryService ??
+            _service = new Lazy<BigqueryService>(() => OptionalBigQueryService ??
                 new BigqueryService(GetBaseClientServiceInitializer()));
-            _client = new Lazy<BigQueryClient>(() => DefaultBigQueryClient ??
+            _client = new Lazy<BigQueryClient>(() => OptionalBigQueryClient ??
                 BigQueryClient.Create(Project));
         }
 

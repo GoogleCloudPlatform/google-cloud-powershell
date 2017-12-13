@@ -42,15 +42,15 @@ namespace Google.PowerShell.Tests.Provider
                 new ProviderConfigurationEntry(
                     GoogleCloudStorageProvider.ProviderName, typeof(GoogleCloudStorageProvider), null));
 
-            GoogleCloudStorageProvider.DefaultStorageService = _serviceMock.Object;
-            GoogleCloudStorageProvider.DefaultResourceService = _resourceServiceMock.Object;
+            GoogleCloudStorageProvider.OptionalStorageService = _serviceMock.Object;
+            GoogleCloudStorageProvider.OptionalResourceService = _resourceServiceMock.Object;
         }
 
         [OneTimeTearDown]
         public void AfterAll()
         {
-            GoogleCloudStorageProvider.DefaultStorageService = null;
-            GoogleCloudStorageProvider.DefaultResourceService = null;
+            GoogleCloudStorageProvider.OptionalStorageService = null;
+            GoogleCloudStorageProvider.OptionalResourceService = null;
         }
 
         [SetUp]

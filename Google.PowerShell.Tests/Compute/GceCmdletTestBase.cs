@@ -46,13 +46,13 @@ namespace Google.PowerShell.Tests.Compute
         [OneTimeSetUp]
         public void BeforeAll()
         {
-            GceCmdlet.DefaultComputeService = ServiceMock.Object;
+            GceCmdlet.OptionalComputeService = ServiceMock.Object;
         }
 
         [OneTimeTearDown]
         public void AfterAll()
         {
-            GceCmdlet.DefaultComputeService = null;
+            GceCmdlet.OptionalComputeService = null;
         }
 
         [SetUp]

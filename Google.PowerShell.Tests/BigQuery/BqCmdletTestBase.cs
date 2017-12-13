@@ -41,15 +41,15 @@ namespace Google.PowerShell.Tests.BigQuery
         [OneTimeSetUp]
         public void BeforeAll()
         {
-            BqCmdlet.DefaultBigQueryService = ServiceMock.Object;
-            BqCmdlet.DefaultBigQueryClient = ClientMock.Object;
+            BqCmdlet.OptionalBigQueryService = ServiceMock.Object;
+            BqCmdlet.OptionalBigQueryClient = ClientMock.Object;
         }
 
         [OneTimeTearDown]
         public void AfterAll()
         {
-            BqCmdlet.DefaultBigQueryService = null;
-            BqCmdlet.DefaultBigQueryClient = null;
+            BqCmdlet.OptionalBigQueryService = null;
+            BqCmdlet.OptionalBigQueryClient = null;
         }
 
         [SetUp]
