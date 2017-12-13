@@ -125,6 +125,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BigQuery\BqCmdletTestBase.cs" />
+    <Compile Include="BigQuery\StartBqJobTests.cs" />
     <Compile Include="Common\ConfigDefaultAttributeTest.cs" />
     <Compile Include="Common\GoogleApiMockExtensions.cs" />
     <Compile Include="Common\PropertyByTypeTransformationAttributeTest.cs" />

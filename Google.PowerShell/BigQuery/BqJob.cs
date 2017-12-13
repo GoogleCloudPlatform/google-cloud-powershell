@@ -383,6 +383,7 @@ namespace Google.PowerShell.BigQuery
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoCopy)]
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
+        [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoQuery)]
         public WriteDisposition? WriteMode { get; set; }
 
         // Load Parameters.
@@ -577,11 +578,12 @@ namespace Google.PowerShell.BigQuery
                         UseLegacySql = UseLegacySql,
                         Priority = Priority,
                         DestinationTable = Destination,
-                        DefaultDataset = DefaultDataset
+                        DefaultDataset = DefaultDataset,
+                        WriteDisposition = WriteMode
                     };
 
                     BigQueryJob bqr = Client.CreateQueryJob(QueryString, null, options);
-                    return bqr.Resource;
+                    return bqr?.Resource;
                 }
                 catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Forbidden)
                 {

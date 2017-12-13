@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc. All Rights Reserved.
+﻿// Copyright 2017 Google Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,42 +12,51 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Google.Apis.Storage.v1;
-using Google.PowerShell.CloudStorage;
-using Google.PowerShell.ComputeEngine;
+using Google.Apis.Bigquery.v2;
+using Google.Cloud.BigQuery.V2;
+using Google.PowerShell.BigQuery;
 using Google.PowerShell.Tests.Common;
 using Moq;
 using NUnit.Framework;
 
-namespace Google.PowerShell.Tests.Storage
+namespace Google.PowerShell.Tests.BigQuery
 {
     /// <summary>
-    /// Abstract base class for running unit tests on GceCmdlets.
+    /// Abstract base class for running unit tests on BqCmdlets.
     /// </summary>
     [TestFixture]
-    public abstract class GcsCmdletTestBase : PowerShellTestBase
+    public abstract class BqCmdletTestBase : PowerShellTestBase
     {
         /// <summary>
-        /// The mock of the compute service. Reset before every test.
+        /// The mock of the BigQueryService. Reset before every test.
         /// </summary>
-        protected static Mock<StorageService> ServiceMock { get; } = new Mock<StorageService>();
+        protected static Mock<BigqueryService> ServiceMock { get; } = new Mock<BigqueryService>();
+
+        /// <summary>
+        /// The mock of the BigQueryClient. Reset before every test.
+        /// </summary>
+        protected static Mock<BigQueryClient> ClientMock { get; } = new Mock<BigQueryClient>();
+
 
         [OneTimeSetUp]
         public void BeforeAll()
         {
-            GcsCmdlet.DefaultStorageService = ServiceMock.Object;
+            BqCmdlet.OptionalBigQueryService = ServiceMock.Object;
+            BqCmdlet.OptionalBigQueryClient = ClientMock.Object;
         }
 
         [OneTimeTearDown]
         public void AfterAll()
         {
-            GceCmdlet.OptionalComputeService = null;
+            BqCmdlet.OptionalBigQueryService = null;
+            BqCmdlet.OptionalBigQueryClient = null;
         }
 
         [SetUp]
         public new void BeforeEach()
         {
             ServiceMock.Reset();
+            ClientMock.Reset();
         }
     }
 }

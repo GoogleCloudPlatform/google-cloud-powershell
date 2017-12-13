@@ -31,13 +31,13 @@ namespace Google.PowerShell.ComputeEngine
         // The Servcie for the Google Compute API
         protected ComputeService Service => _service.Value;
 
-        internal static ComputeService DefaultComputeService { private get; set; }
+        internal static ComputeService OptionalComputeService { private get; set; }
 
         // The value of the progress bar when being used as a spinner. If the operation does not give valid
         // percent complete feedback, this spinner will move from 0 to 99 and then repeat.
         private int _spinnerValue = 0;
 
-        private readonly Lazy<ComputeService> _service = new Lazy<ComputeService>(() => DefaultComputeService ??
+        private readonly Lazy<ComputeService> _service = new Lazy<ComputeService>(() => OptionalComputeService ??
             new ComputeService(GetBaseClientServiceInitializer()));
 
         /// <summary>

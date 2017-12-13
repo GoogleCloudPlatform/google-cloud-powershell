@@ -19,10 +19,15 @@ namespace Google.PowerShell.BigQuery
         public BigqueryService Service => _service.Value;
         public BigQueryClient Client => _client.Value;
 
+        internal static BigqueryService OptionalBigQueryService { private get; set; }
+        internal static BigQueryClient OptionalBigQueryClient { private get; set; }
+
         public BqCmdlet()
         {
-            _service = new Lazy<BigqueryService>(() => new BigqueryService(GetBaseClientServiceInitializer()));
-            _client = new Lazy<BigQueryClient>(() => BigQueryClient.Create(Project));
+            _service = new Lazy<BigqueryService>(() => OptionalBigQueryService ??
+                new BigqueryService(GetBaseClientServiceInitializer()));
+            _client = new Lazy<BigQueryClient>(() => OptionalBigQueryClient ??
+                BigQueryClient.Create(Project));
         }
 
         // String value of DataFormats.JSON that is taken by the rest API.

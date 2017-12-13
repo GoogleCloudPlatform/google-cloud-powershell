@@ -263,14 +263,14 @@ namespace Google.PowerShell.Provider
         /// <summary>
         /// The Google Cloud Storage service.
         /// </summary>
-        private static StorageService Service => DefaultStorageService ?? s_serviceLazy.Value;
-        internal static StorageService DefaultStorageService { private get; set; }
+        private static StorageService Service => OptionalStorageService ?? s_serviceLazy.Value;
+        internal static StorageService OptionalStorageService { private get; set; }
 
         /// <summary>
         /// This service is used to get all the accessible projects.
         /// </summary>
-        private static CloudResourceManagerService ResourceService => DefaultResourceService ?? s_resourceServiceLazy.Value;
-        internal static CloudResourceManagerService DefaultResourceService { private get; set; }
+        private static CloudResourceManagerService ResourceService => OptionalResourceService ?? s_resourceServiceLazy.Value;
+        internal static CloudResourceManagerService OptionalResourceService { private get; set; }
 
         /// <summary>
         /// Maps the name of a bucket to a cache of data about the objects in that bucket.
@@ -1070,7 +1070,7 @@ namespace Google.PowerShell.Provider
         private static async Task ListBucketsAsync(Project project, BlockingCollection<Bucket> collections)
         {
             // Using a new service on every request here ensures they can all be handled at the same time.
-            using (StorageService service = DefaultStorageService ?? GetNewService())
+            using (StorageService service = OptionalStorageService ?? GetNewService())
             {
                 BucketsResource.ListRequest request = service.Buckets.List(project.ProjectId);
                 try
