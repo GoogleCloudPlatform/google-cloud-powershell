@@ -204,24 +204,24 @@ $powerShellScriptFiles = "*.psd1", "*.psm1", "*.ps1", "*.ps1xml"
 
 if ($configuration -eq "Debug")
 {
-    Copy-Item -Recurse "$configDir\*" $googleCloudDir -Include $powerShellScriptFiles
-    Copy-Item -Recurse "$configDir\*" $googleCloudFullClrDir -Exclude $powerShellScriptFiles
-    Copy-Item -Recurse "$coreClrConfigDir\*" $googleCloudCoreClrDir -Exclude $powerShellScriptFiles
+    Copy-Item -Recurse "$configDir\*.*" $googleCloudDir -Include $powerShellScriptFiles
+    Copy-Item -Recurse "$configDir\*.*" $googleCloudFullClrDir -Exclude $powerShellScriptFiles
+    Copy-Item -Recurse "$coreClrConfigDir\*.*" $googleCloudCoreClrDir -Exclude $powerShellScriptFiles
 
-    Copy-Item -Recurse "$configDir\*" $googleCloudBetaDir -Include $powerShellScriptFiles
-    Copy-Item -Recurse "$configDir\*" $googleCloudFullClrBetaDir -Exclude $powerShellScriptFiles
-    Copy-Item -Recurse "$coreClrConfigDir\*" $googleCloudCoreClrBetaDir -Exclude $powerShellScriptFiles
+    Copy-Item -Recurse "$configDir\*.*" $googleCloudBetaDir -Include $powerShellScriptFiles
+    Copy-Item -Recurse "$configDir\*.*" $googleCloudFullClrBetaDir -Exclude $powerShellScriptFiles
+    Copy-Item -Recurse "$coreClrConfigDir\*.*" $googleCloudCoreClrBetaDir -Exclude $powerShellScriptFiles
 }
 else
 {
     $fileToExclude = $powerShellScriptFiles + "*.pdb"
-    Copy-Item -Recurse "$configDir\*" $googleCloudDir -Include $powerShellScriptFiles
-    Copy-Item -Recurse "$configDir\*" $googleCloudFullClrDir -Exclude $fileToExclude
-    Copy-Item -Recurse "$coreClrConfigDir\*" $googleCloudCoreClrDir -Exclude $fileToExclude
+    Copy-Item -Recurse "$configDir\*.*" $googleCloudDir -Include $powerShellScriptFiles
+    Copy-Item -Recurse "$configDir\*.*" $googleCloudFullClrDir -Exclude $fileToExclude
+    Copy-Item -Recurse "$coreClrConfigDir\*.*" $googleCloudCoreClrDir -Exclude $fileToExclude
 
-    Copy-Item -Recurse "$configDir\*" $googleCloudBetaDir -Include $powerShellScriptFiles
-    Copy-Item -Recurse "$configDir\*" $googleCloudFullClrBetaDir -Exclude $fileToExclude
-    Copy-Item -Recurse "$coreClrConfigDir\*" $googleCloudCoreClrBetaDir -Exclude $fileToExclude
+    Copy-Item -Recurse "$configDir\*.*" $googleCloudBetaDir -Include $powerShellScriptFiles
+    Copy-Item -Recurse "$configDir\*.*" $googleCloudFullClrBetaDir -Exclude $fileToExclude
+    Copy-Item -Recurse "$coreClrConfigDir\*.*" $googleCloudCoreClrBetaDir -Exclude $fileToExclude
 }
 
 # For the beta module, edit and rename the module manifest file.
