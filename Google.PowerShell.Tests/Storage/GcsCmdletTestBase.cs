@@ -14,7 +14,6 @@
 
 using Google.Apis.Storage.v1;
 using Google.PowerShell.CloudStorage;
-using Google.PowerShell.ComputeEngine;
 using Google.PowerShell.Tests.Common;
 using Moq;
 using NUnit.Framework;
@@ -41,7 +40,7 @@ namespace Google.PowerShell.Tests.Storage
         [OneTimeTearDown]
         public void AfterAll()
         {
-            GceCmdlet.OptionalComputeService = null;
+            GcsCmdlet.DefaultStorageService = null;
         }
 
         [SetUp]
