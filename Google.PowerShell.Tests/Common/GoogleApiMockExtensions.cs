@@ -51,7 +51,33 @@ namespace Google.PowerShell.Tests.Common
         }
 
         /// <summary>
-        /// Sets up a reqest.
+        /// Sets up a request that will throw an exception when executed.
+        /// </summary>
+        /// <typeparam name="TResource">The type of resource creating the request.</typeparam>
+        /// <typeparam name="TRequest">The type of the request to make.</typeparam>
+        /// <typeparam name="TResponse">The type of the responce.</typeparam>
+        /// <param name="resourceMock">The mock of the resource that makes the request.</param>
+        /// <param name="requestExpression">The expression of the request. Uses Moq.It functions for wildcards.</param>
+        /// <param name="exception">The exception the request will throw when executed.</param>
+        /// <returns>The mock of the request object. Useful for verification.</returns>
+        public static Mock<TRequest> SetupRequestError<TResource, TRequest, TResponse>(
+            this Mock<TResource> resourceMock,
+            Expression<Func<TResource, TRequest>> requestExpression,
+            Exception exception)
+            where TRequest : ClientServiceRequest<TResponse>
+            where TResource : class
+        {
+            Mock<IClientService> clientServiceMock = GetClientServiceMock();
+            Mock<TRequest> requestMock =
+                GetRequestMock<TRequest, TResponse>(requestExpression, clientServiceMock.Object);
+            resourceMock.Setup(requestExpression).Returns(requestMock.Object);
+            clientServiceMock.Setup(c => c.DeserializeResponse<TResponse>(It.IsAny<HttpResponseMessage>()))
+                .Throws(exception);
+            return requestMock;
+        }
+
+        /// <summary>
+        /// Sets up a request.
         /// </summary>
         /// <typeparam name="TResource">The type of resource creating the request.</typeparam>
         /// <typeparam name="TRequest">The type of the request to make.</typeparam>
@@ -76,7 +102,7 @@ namespace Google.PowerShell.Tests.Common
         }
 
         /// <summary>
-        /// Sets up a reqest.
+        /// Sets up a request.
         /// </summary>
         /// <typeparam name="TResource">The type of resource creating the request.</typeparam>
         /// <typeparam name="TRequest">The type of the request to make.</typeparam>
@@ -96,7 +122,7 @@ namespace Google.PowerShell.Tests.Common
         }
 
         /// <summary>
-        /// Sets up a reqest.
+        /// Sets up a request.
         /// </summary>
         /// <typeparam name="TResource">The type of resource creating the request.</typeparam>
         /// <typeparam name="TRequest">The type of the request to make.</typeparam>
