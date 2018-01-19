@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Management.Automation;
+using System.Net;
 using System.Threading;
 
 namespace Google.PowerShell.Compute
@@ -382,11 +383,22 @@ namespace Google.PowerShell.Compute
             }
             InstanceGroupManagersResource.InsertRequest request =
                 Service.InstanceGroupManagers.Insert(manager, Project, Zone);
-            Operation operation = request.Execute();
-            AddZoneOperation(Project, Zone, operation, () =>
+            try
             {
-                WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, manager.Name));
-            });
+                Operation operation = request.Execute();
+                AddZoneOperation(Project, Zone, operation, () =>
+                {
+                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, manager.Name));
+                });
+            }
+            catch (GoogleApiException apiEx) when (apiEx.HttpStatusCode == HttpStatusCode.Conflict)
+            {
+                WriteResourceExistsError(
+                    exceptionMessage: $"Instance Group '{Name}' already exists " +
+                      $"in zone '{Zone}' of project '{Project}'",
+                    errorId: "InstanceAlreadyExists",
+                    targetObject: manager);
+            }
         }
 
         private List<NamedPort> BuildNamedPorts()

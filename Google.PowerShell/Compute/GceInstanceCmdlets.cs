@@ -9,6 +9,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace Google.PowerShell.ComputeEngine
@@ -630,11 +631,21 @@ namespace Google.PowerShell.ComputeEngine
 
             instance.MachineType = GetMachineTypeUrl(instance.MachineType);
             InstancesResource.InsertRequest request = Service.Instances.Insert(instance, Project, Zone);
-            Operation operation = request.Execute();
-            AddZoneOperation(Project, Zone, operation, () =>
+            try
             {
-                WriteObject(Service.Instances.Get(Project, Zone, instance.Name).Execute());
-            });
+                Operation operation = request.Execute();
+                AddZoneOperation(Project, Zone, operation, () =>
+                {
+                    WriteObject(Service.Instances.Get(Project, Zone, instance.Name).Execute());
+                });
+            }
+            catch (GoogleApiException apiEx) when (apiEx.HttpStatusCode == HttpStatusCode.Conflict)
+            {
+                WriteResourceExistsError(
+                    exceptionMessage: $"Instance '{Name}' already exists in zone '{Zone}' of project '{Project}'",
+                    errorId: "InstanceAlreadyExists",
+                    targetObject: instance);
+            }
         }
 
         private string GetMachineTypeUrl(string machineType)
