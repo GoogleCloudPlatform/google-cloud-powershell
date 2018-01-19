@@ -77,14 +77,7 @@ namespace Google.PowerShell.Tests.Compute
 
             // An error should be thrown (if it is a terminating error,
             // we wouldn't even reach this point).
-            Assert.AreEqual(Pipeline.Error.Count, 1);
-
-            // Verify that the call is made.
-            instances.Verify(
-                resource => resource.Insert(
-                    It.IsAny<Instance>(),
-                    FakeProjectId, FakeZoneName),
-                Times.Once);
+            TestErrorRecord(ErrorCategory.ResourceExists);
         }
 
         /// <summary>
@@ -109,14 +102,7 @@ namespace Google.PowerShell.Tests.Compute
 
             // An error should be thrown (if it is a terminating error,
             // we wouldn't even reach this point).
-            Assert.AreEqual(Pipeline.Error.Count, 1);
-
-            // Verify that the call is made.
-            instances.Verify(
-                resource => resource.Insert(
-                    It.IsAny<InstanceGroupManager>(),
-                    FakeProjectId, FakeZoneName),
-                Times.Once);
+            TestErrorRecord(ErrorCategory.ResourceExists);
         }
 
         [Test]

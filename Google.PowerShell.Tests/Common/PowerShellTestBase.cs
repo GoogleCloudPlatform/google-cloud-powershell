@@ -14,6 +14,8 @@
 
 using Google.PowerShell.Common;
 using NUnit.Framework;
+using System.Collections.ObjectModel;
+using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 
 namespace Google.PowerShell.Tests.Common
@@ -68,6 +70,22 @@ namespace Google.PowerShell.Tests.Common
         {
             Pipeline.Dispose();
             Pipeline.Runspace.Dispose();
+        }
+
+        /// <summary>
+        /// Helper function to test that there is an error
+        /// in the pipeline with record category recordCategory.
+        /// </summary>
+        /// <param name="recordCategory">
+        /// The expected category of the errorRecord in the pipeline.
+        /// </param>
+        protected void TestErrorRecord(ErrorCategory recordCategory)
+        {
+            Collection<object> errorRecords = Pipeline.Error.ReadToEnd();
+            Assert.AreEqual(errorRecords.Count, 1);
+            ErrorRecord errorRecord = (errorRecords[0] as PSObject)?.BaseObject as ErrorRecord;
+            Assert.IsNotNull(errorRecord);
+            Assert.AreEqual(errorRecord.CategoryInfo.Category, ErrorCategory.ResourceExists);
         }
     }
 }
