@@ -5,13 +5,13 @@ using Google.Apis.Download;
 using Google.Apis.Storage.v1;
 using Google.Apis.Storage.v1.Data;
 using Google.PowerShell.Common;
+using Google.PowerShell.Provider;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Management.Automation;
 using System.Net;
 using System.Text;
-using Google.PowerShell.Provider;
 using static Google.Apis.Storage.v1.ObjectsResource.InsertMediaUpload;
 
 namespace Google.PowerShell.CloudStorage
@@ -618,12 +618,8 @@ namespace Google.PowerShell.CloudStorage
                 }
                 catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
                 {
-                    ErrorRecord errorRecord = new ErrorRecord(
-                        new ItemNotFoundException($"Storage object '{ObjectName}' does not exist."),
-                        "ObjectNotFound",
-                        ErrorCategory.ObjectNotFound,
-                        ObjectName);
-                    ThrowTerminatingError(errorRecord);
+                    string message = $"Storage object '{ObjectName}' does not exist.";
+                    WriteResourceMissingError(message, "ObjectNotFound", ObjectName);
                 }
             }
             else

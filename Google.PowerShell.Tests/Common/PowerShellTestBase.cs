@@ -83,9 +83,9 @@ namespace Google.PowerShell.Tests.Common
         {
             Collection<object> errorRecords = Pipeline.Error.ReadToEnd();
             Assert.AreEqual(errorRecords.Count, 1);
-            ErrorRecord errorRecord = (errorRecords[0] as PSObject)?.BaseObject as ErrorRecord;
+            var errorRecord = (errorRecords[0] as PSObject)?.BaseObject as ErrorRecord;
             Assert.IsNotNull(errorRecord);
-            Assert.AreEqual(errorRecord.CategoryInfo.Category, ErrorCategory.ResourceExists);
+            Assert.AreEqual(errorRecord.CategoryInfo.Category, recordCategory);
         }
     }
 }

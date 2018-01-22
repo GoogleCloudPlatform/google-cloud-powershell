@@ -148,6 +148,7 @@
     <Compile Include="Provider\CacheItemTest.cs" />
     <Compile Include="Provider\GoogleCloudStorageProviderTests.cs" />
     <Compile Include="Storage\GcsCmdletTestBase.cs" />
+    <Compile Include="Storage\GetGcsObjectCmdletTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config">
