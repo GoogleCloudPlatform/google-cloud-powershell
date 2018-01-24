@@ -429,7 +429,7 @@ namespace Google.PowerShell.BigQuery
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoExtract)]
-        public string FieldDelimiter { get; set; } = ",";
+        public string FieldDelimiter { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -437,7 +437,7 @@ namespace Google.PowerShell.BigQuery
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
-        public string Quote { get; set; } = "\"";
+        public string Quote { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -445,7 +445,7 @@ namespace Google.PowerShell.BigQuery
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.DoLoad)]
-        public int SkipLeadingRows { get; set; }
+        public int? SkipLeadingRows { get; set; }
 
         /// <summary>
         /// <para type="description">

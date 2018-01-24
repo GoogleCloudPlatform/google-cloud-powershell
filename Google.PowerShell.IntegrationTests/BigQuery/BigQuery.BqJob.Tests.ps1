@@ -256,10 +256,10 @@ Describe "BqJob-Extract-Load" {
         $job.Configuration.Load.AllowJaggedRows | Should Be $false
         $job.Configuration.Load.AllowQuotedNewlines | Should Be $false
         $job.Configuration.Load.Encoding | Should Be "UTF-8"
-        $job.Configuration.Load.FieldDelimiter | Should Be ","
+        $job.Configuration.Load.FieldDelimiter | Should BeNullOrEmpty
         $job.Configuration.Load.IgnoreUnknownValues | Should Be $false
-        $job.Configuration.Load.Quote | Should Be """"
-        $job.Configuration.Load.SkipLeadingRows | Should Be 0
+        $job.Configuration.Load.Quote | Should BeNullOrEmpty
+        $job.Configuration.Load.SkipLeadingRows | Should BeNullOrEmpty
         $job.Configuration.Load.SourceFormat.ToString() | Should Be "CSV"
         $job.Configuration.Load.WriteDisposition | Should Be $null
         $job.Configuration.Load.MaxBadRecords | Should Be 0
@@ -279,7 +279,7 @@ Describe "BqJob-Extract-Load" {
         $job.Configuration.Extract.Compression | Should Be "NONE"
         $job.Configuration.Extract.DestinationFormat.ToString() | Should Be "CSV"
         $job.Configuration.Extract.DestinationUri | Should Be "$gcspath/otherparam.csv"
-        $job.Configuration.Extract.FieldDelimiter | Should Be ","
+        $job.Configuration.Extract.FieldDelimiter | Should BeNullOrEmpty
         $job.Configuration.Extract.PrintHeader | Should Be $true
     }
 
