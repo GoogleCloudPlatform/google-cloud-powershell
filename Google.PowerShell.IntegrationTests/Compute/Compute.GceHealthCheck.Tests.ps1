@@ -30,7 +30,7 @@ Describe "Add-GceHealthCheck" {
 
         It "should set defaults" {
             $healthCheck = Add-GceHealthCheck $healthCheckName
-            ($healthCheck | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.HttpHealthCheck
+            ($healthCheck | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.HttpHealthCheck }
             $healthCheck.Name | Should Be $healthCheckName
             $healthCheck.Port | Should Be 80
             $healthCheck.RequestPath | Should Be "/"
@@ -44,7 +44,7 @@ Describe "Add-GceHealthCheck" {
             $healthCheck = Add-GceHealthCheck $healthCheckName -Description "Test Description" `
                 -HostHeader "google.com" -Port 50 -RequestPath "/some/path" -CheckInterval "0:0:2" `
                 -Timeout "0:0:2" -HealthyThreshold 3 -UnhealthyThreshold 3 -Https
-            ($healthCheck | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.HttpsHealthCheck
+            ($healthCheck | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.HttpsHealthCheck }
             $healthCheck.Name | Should Be $healthCheckName
             $healthCheck.Port | Should Be 50
             $healthCheck.Host | Should Be "google.com"
@@ -60,7 +60,7 @@ Describe "Add-GceHealthCheck" {
             $initHealthCheck = $httpHealthCheckType.GetConstructor(@()).Invoke(@())
             $initHealthCheck.Name = $healthCheckName
             $healthCheck = $initHealthCheck | Add-GceHealthCheck
-            ($healthCheck | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.HttpHealthCheck
+            ($healthCheck | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.HttpHealthCheck }
             $healthCheck.Name | Should Be $healthCheckName
             $healthCheck.Port | Should Be 80
             $healthCheck.RequestPath | Should Be "/"
@@ -74,7 +74,7 @@ Describe "Add-GceHealthCheck" {
             $initHealthCheck = $httpsHealthCheckType.GetConstructor(@()).Invoke(@())
             $initHealthCheck.Name = $healthCheckName
             $healthCheck = $initHealthCheck | Add-GceHealthCheck
-            ($healthCheck | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.HttpsHealthCheck
+            ($healthCheck | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.HttpsHealthCheck }
             $healthCheck.Name | Should Be $healthCheckName
             $healthCheck.Port | Should Be 443
             $healthCheck.RequestPath | Should Be "/"
@@ -123,26 +123,26 @@ Describe "Get-GceHealthCheck" {
         It "should get all HTTP" {
             $httpChecks = Get-GceHealthCheck -Http
             $httpChecks.Count | Should Be 2
-            ($httpChecks | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.HttpHealthCheck
+            ($httpChecks | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.HttpHealthCheck }
         }
 
         It "should get all HTTPS" {
             $httpChecks = Get-GceHealthCheck -Https
             $httpChecks.Count | Should Be 1
-            ($httpChecks | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.HttpsHealthCheck
+            ($httpChecks | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.HttpsHealthCheck }
         }
 
         It "should get both HTTP and HTTPS of name" {
             $healthChecks = Get-GceHealthCheck $healthCheckName
             $healthChecks.Count | Should Be 2
-            $healthChecks.Name | Should Be $healthCheckName
+            $healthChecks.Name | ForEach-Object { $_ | Should Be $healthCheckName }
         }
 
         It "should get HTTP by name" {
             $healthCheck = Get-GceHealthCheck $healthCheckName -Http
             $healthCheck.Count | Should Be 1
             $healthCheck.Name | Should Be $healthCheckName
-            ($healthCheck | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.HttpHealthCheck
+            ($healthCheck | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.HttpHealthCheck }
         }
     }
 }
@@ -226,26 +226,26 @@ Describe "Set-GceHealthCheck" {
         } | Set-GceHealthCheck
 
         $healthChecks.Count | Should Be 2
-        $healthChecks.Name | Should Be $healthCheckName
-        $healthChecks.Port | Should Be 50
-        $healthChecks.Host | Should Be "google.com"
-        $healthChecks.RequestPath | Should Be "/some/path"
-        $healthChecks.CheckIntervalSec | Should Be 2
-        $healthChecks.TimeoutSec | Should Be 2
-        $healthChecks.HealthyThreshold | Should Be 3
-        $healthChecks.UnhealthyThreshold | Should Be 3
+        $healthChecks.Name | ForEach-Object { $_ | Should Be $healthCheckName }
+        $healthChecks.Port | ForEach-Object { $_ | Should Be 50 }
+        $healthChecks.Host | ForEach-Object { $_ | Should Be "google.com" }
+        $healthChecks.RequestPath | ForEach-Object { $_ | Should Be "/some/path" }
+        $healthChecks.CheckIntervalSec | ForEach-Object { $_ | Should Be 2 }
+        $healthChecks.TimeoutSec | ForEach-Object { $_ | Should Be 2 }
+        $healthChecks.HealthyThreshold | ForEach-Object { $_ | Should Be 3 }
+        $healthChecks.UnhealthyThreshold | ForEach-Object { $_ | Should Be 3 }
 
         $healthChecks = Get-GceHealthCheck $healthCheckName
 
         $healthChecks.Count | Should Be 2
-        $healthChecks.Name | Should Be $healthCheckName
-        $healthChecks.Port | Should Be 50
-        $healthChecks.Host | Should Be "google.com"
-        $healthChecks.RequestPath | Should Be "/some/path"
-        $healthChecks.CheckIntervalSec | Should Be 2
-        $healthChecks.TimeoutSec | Should Be 2
-        $healthChecks.HealthyThreshold | Should Be 3
-        $healthChecks.UnhealthyThreshold | Should Be 3
+        $healthChecks.Name | ForEach-Object { $_ | Should Be $healthCheckName }
+        $healthChecks.Port | ForEach-Object { $_ | Should Be 50 }
+        $healthChecks.Host | ForEach-Object { $_ | Should Be "google.com" }
+        $healthChecks.RequestPath | ForEach-Object { $_ | Should Be "/some/path" }
+        $healthChecks.CheckIntervalSec | ForEach-Object { $_ | Should Be 2 }
+        $healthChecks.TimeoutSec | ForEach-Object { $_ | Should Be 2 }
+        $healthChecks.HealthyThreshold | ForEach-Object { $_ | Should Be 3 }
+        $healthChecks.UnhealthyThreshold | ForEach-Object { $_ | Should Be 3 }
     }
 }
 

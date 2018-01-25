@@ -25,13 +25,13 @@ Describe "Get-GceUrlMap" {
     It "should get all maps" {
         $maps = Get-GceUrlMap
         $maps.Count - $previousAllCount | Should Be 2
-        ($maps | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.UrlMap
+        ($maps | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.UrlMap }
     }
 
     It "should get url map by name" {
         $map = Get-GceUrlMap $urlMapName1
         $map.Count | Should Be 1
-        ($map | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.UrlMap
+        ($map | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.UrlMap }
     }
     
     gcloud compute url-maps delete $urlMapName1 -q 2>$null

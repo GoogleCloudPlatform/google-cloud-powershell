@@ -19,13 +19,13 @@ Describe "Get-GceNetwork" {
     It "should list by project" {
         $networks = Get-GceNetwork
         $networks.Count -ge 2 | Should Be $true
-        ($networks | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.Network"
+        ($networks | Get-Member).TypeName | ForEach-Object { $_ | Should Be "Google.Apis.Compute.v1.Data.Network" }
     }
 
     It "should get by name" {
         $network = Get-GceNetwork "default"
         $network.Count | Should Be 1
-        ($network | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.Network"
+        ($network | Get-Member).TypeName | ForEach-Object { $_ | Should Be "Google.Apis.Compute.v1.Data.Network" }
 
         $network = Get-GceNetwork "default", $newNetwork
         $network.Count | Should Be 2

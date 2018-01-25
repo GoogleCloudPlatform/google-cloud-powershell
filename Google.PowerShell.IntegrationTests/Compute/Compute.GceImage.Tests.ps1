@@ -78,7 +78,7 @@ Describe "Get-GceImage" {
         $images = Get-GceImage
         # Check that we get at least one image for each default project.
         $defaultProjects | %{ ($images.SelfLink -match $_).Count } | Should BeGreaterThan 0
-        $images.Deprecated | Should BeNullOrEmpty
+        $images.Deprecated | ForEach-Object { $_ | Should BeNullOrEmpty }
     }
 
     It "should include deprecated images from project" {
@@ -92,14 +92,14 @@ Describe "Get-GceImage" {
 
     It "should get all project images" {
         $images = Get-GceImage -Project $project
-        ($images | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Image
+        ($images | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.Image }
         $images.Count | Should Be 2
         $images.SourceDisk | Should Match $diskName
     }
 
     It "should get by name" {
         $image = Get-GceImage $imageName1 -Project $project
-        ($image | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Image
+        ($image | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.Image }
         $image.Count | Should Be 1
         $image.Name | Should Be $imageName1
         $image.SourceDisk | Should Match $diskName
@@ -107,7 +107,7 @@ Describe "Get-GceImage" {
 
     It "should get by name with pipeline" {
         $image = $imageName1 | Get-GceImage -Project $project
-        ($image | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Image
+        ($image | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.Image }
         $image.Count | Should Be 1
         $image.Name | Should Be $imageName1
         $image.SourceDisk | Should Match $diskName
@@ -115,7 +115,7 @@ Describe "Get-GceImage" {
 
     It "should get by family" {
         $image = Get-GceImage -Family $familyName -Project $project
-        ($image | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Image
+        ($image | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.Image }
         $image.Count | Should Be 1
         $image.Name | Should Be $imageName2
         $image.SourceDisk | Should Match $diskName

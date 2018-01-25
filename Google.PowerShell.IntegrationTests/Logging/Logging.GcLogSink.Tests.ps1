@@ -517,7 +517,7 @@ Describe "Set-GcLogSink" {
         }
     }
 
-    It "should work with -LogName" {
+    It "should work with -LogName" -Skip {
         $r = Get-Random
         $sinkName = "gcps-new-gclogsink-$r"
         $logName = "gcps-new-gclogsink-log-$r"

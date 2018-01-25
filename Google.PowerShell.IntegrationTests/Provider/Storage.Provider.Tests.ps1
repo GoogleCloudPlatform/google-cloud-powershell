@@ -40,9 +40,9 @@ Describe "Storage Provider"{
         Test-Path $bucketName | Should Be $false
         mkdir $bucketName
         Test-Path $bucketName | Should Be $true
-        $bucket = Get-Item $bucketName
-        ($bucket | Get-Member).TypeName | Should Be Google.Apis.Storage.v1.Data.Bucket
-        $bucket.Name | Should Be $bucketName
+        $buckets = Get-Item $bucketName
+        ($buckets | Get-Member).TypeName | Should Be Google.Apis.Storage.v1.Data.Bucket
+        $buckets.Name | ForEach-Object { $_ | Should Be $bucketName }
     }
 
     It "Should move current directory to bucket" {
@@ -127,7 +127,7 @@ Describe "Storage Provider"{
         $files.Count | Should Be 2
         ($files.Name -match $fileName).Count | Should Be 1
         ($files.Name -match $cpFileName).Count | Should Be 1
-        cat $fileName, $cpFileName | Should Be $content2
+        cat $fileName, $cpFileName | ForEach-Object { $_ | Should Be $content2 }
     }
 
     It "Should delete file" {
@@ -191,7 +191,7 @@ Describe "Storage Provider"{
         # Confirm we get an error when attempting to cd into an illegal bucket.
         $cdErrors = (cd gs:\asdf 2>&1)
         $cdErrors.Count | Should Be 1
-        ($cdErrors | gm).TypeName | Should Be "System.Management.Automation.ErrorRecord"
+        ($cdErrors | gm).TypeName | ForEach-Object { $_ | Should Be "System.Management.Automation.ErrorRecord" }
     }
 
     # TODO(jimwp): Add test to ensure we are not bypassing access controls.

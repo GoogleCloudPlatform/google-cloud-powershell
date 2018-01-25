@@ -23,13 +23,13 @@ Describe "Get-GceBackendService" {
     It "should get all maps" {
         $maps = Get-GceBackendService
         $maps.Count -ge 2 | Should Be $true
-        ($maps | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.BackendService
+        ($maps | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.BackendService }
     }
 
     It "should get url map by name" {
         $map = Get-GceBackendService $serviceName1
         $map.Count | Should Be 1
-        ($map | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.BackendService
+        ($map | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.BackendService }
         $map.Name | Should Be $serviceName1
     }
     

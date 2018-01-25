@@ -17,26 +17,26 @@ Describe "Get-GceMachineType" {
     It "should list by project" {
         $machineTypes = Get-GceMachineType
         $machineTypes.Count | Should BeGreaterThan 1
-        ($machineTypes | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.MachineType"
-        $machineTypes.SelfLink | Should Match $project
-        ($machineTypes.Zone -ne $zone) | Should Not BeNullOrEmpty
+        ($machineTypes | Get-Member).TypeName | ForEach-Object { $_ | Should Be "Google.Apis.Compute.v1.Data.MachineType" }
+        $machineTypes.SelfLink | ForEach-Object { $_ | Should Match $project }
+        ($machineTypes.Zone -ne $zone) | ForEach-Object { $_ | Should Not BeNullOrEmpty }
     }
 
     It "should list by zone" {
         $machineTypes = Get-GceMachineType -Zone $zone
         $machineTypes.Count | Should BeGreaterThan 1
-        ($machineTypes | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.MachineType"
-        $machineTypes.SelfLink | Should Match $project
-        $machineTypes.Zone | Should Be $zone
+        ($machineTypes | Get-Member).TypeName | ForEach-Object { $_ | Should Be "Google.Apis.Compute.v1.Data.MachineType" }
+        $machineTypes.SelfLink | ForEach-Object { $_ | Should Match $project }
+        $machineTypes.Zone | ForEach-Object { $_ | Should Be $zone }
     }
 
     It "should get by name" {
         $machineType = Get-GceMachineType "f1-micro"
         $machineType.Count | Should Be 1
-        ($machineType | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.MachineType"
+        ($machineType | Get-Member).TypeName | ForEach-Object { $_ | Should Be "Google.Apis.Compute.v1.Data.MachineType" }
         $machineType.SelfLink | Should Match $project
-        $machineType.Zone | Should Be $zone
-        $machineType.Name | Should Be "f1-micro"
+        $machineType.Zone | ForEach-Object { $_ | Should Be $zone }
+        $machineType.Name | ForEach-Object { $_ | Should Be "f1-micro" }
     }
 }
 

@@ -39,7 +39,7 @@ Describe "Get-GceTargetPool"{
         It "should get proxy by protocol" {
             $proxy = Get-GceTargetProxy -Http
             $proxy.Count - $previousHttpCount | Should Be 2
-            ($proxy | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.TargetHttpProxy
+            ($proxy | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.TargetHttpProxy }
             $proxy = Get-GceTargetProxy -Https
             $proxy.Count - $previousHttpsCount | Should Be 0
             $proxies = Get-GceTargetProxy -Http -Https
@@ -49,11 +49,11 @@ Describe "Get-GceTargetPool"{
         It "should get proxies by name" {
             $proxy = Get-GceTargetProxy $httpProxyName
             $proxy.Count | Should Be 1
-            ($proxy | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.TargetHttpProxy
+            ($proxy | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.TargetHttpProxy }
             $proxy.Name | Should Be $httpProxyName
             $proxy = Get-GceTargetProxy $httpsProxyName
             $proxy.Count | Should Be 1
-            ($proxy | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.TargetHttpProxy
+            ($proxy | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.TargetHttpProxy }
             $proxy.Name | Should Be $httpsProxyName
         }
 

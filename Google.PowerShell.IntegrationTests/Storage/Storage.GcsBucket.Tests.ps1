@@ -74,13 +74,13 @@ Describe "Get-GcsBucket" {
     It "should list all buckets in a project" {
         $buckets = Get-GcsBucket -Project $project
         $buckets | Should Not BeNullOrEmpty
-        ($buckets | Get-Member).TypeName | Should Be Google.Apis.Storage.v1.Data.Bucket
+        ($buckets | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Storage.v1.Data.Bucket }
     }
 
     It "should list all buckets in the default project" {
         $buckets = Get-GcsBucket
         $buckets | Should Not BeNullOrEmpty
-        ($buckets | Get-Member).TypeName | Should Be Google.Apis.Storage.v1.Data.Bucket
+        ($buckets | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Storage.v1.Data.Bucket }
     }
 
     It "should give access errors as appropriate" {

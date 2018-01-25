@@ -34,45 +34,45 @@ Describe "Get-GceManagedInstanceGroup" {
     It "should get the groups of the project" {
         $groups = Get-GceManagedInstanceGroup
         $groups.Count | Should Be 3
-        ($groups | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.InstanceGroupManager"
-        $groups.Name | Should Match "test-get-managed-instance-group-"
+        ($groups | Get-Member).TypeName | ForEach-Object { $_ | Should Be "Google.Apis.Compute.v1.Data.InstanceGroupManager" }
+        $groups.Name | ForEach-Object { $_ | Should Match "test-get-managed-instance-group-" }
     }
 
     It "should get the groups of a zone" {
         $groups = Get-GceManagedInstanceGroup -Zone "us-central1-f"
         $groups.Count | Should Be 2
-        ($groups | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.InstanceGroupManager"
-        $groups.Name | Should Match "test-get-managed-instance-group-"
-        $groups.Name | Should Not Match $groupName3
+        ($groups | Get-Member).TypeName | ForEach-Object { $_ | Should Be "Google.Apis.Compute.v1.Data.InstanceGroupManager" }
+        $groups.Name | ForEach-Object { $_ | Should Match "test-get-managed-instance-group-" }
+        $groups.Name | ForEach-Object { $_ | Should Not Match $groupName3 }
     }
 
     It "should get 1 group by name" {
         $group = Get-GceManagedInstanceGroup $groupName1
         $group.Count | Should Be 1
-        ($group | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.InstanceGroupManager"
-        $group.Name | Should Be $groupName1
+        ($group | Get-Member).TypeName | ForEach-Object { $_ | Should Be "Google.Apis.Compute.v1.Data.InstanceGroupManager" }
+        $group.Name | ForEach-Object { $_ | Should Be $groupName1 }
     }
 
     It "should get 1 group by uri" {
         $uri = (Get-GceManagedInstanceGroup $groupName1).SelfLink
         $group = Get-GceManagedInstanceGroup -Uri $uri
         $group.Count | Should Be 1
-        ($group | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.InstanceGroupManager"
-        $group.Name | Should Be $groupName1
+        ($group | Get-Member).TypeName | ForEach-Object { $_ | Should Be "Google.Apis.Compute.v1.Data.InstanceGroupManager" }
+        $group.Name | ForEach-Object { $_ | Should Be $groupName1 }
     }
 
     It "should get 1 group by object" {
         $group = (Get-GceManagedInstanceGroup $groupName1) | Get-GceManagedInstanceGroup
         $group.Count | Should Be 1
-        ($group | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.InstanceGroupManager"
-        $group.Name | Should Be $groupName1
+        ($group | Get-Member).TypeName | ForEach-Object { $_ | Should Be "Google.Apis.Compute.v1.Data.InstanceGroupManager" }
+        $group.Name | ForEach-Object { $_ | Should Be $groupName1 }
     }
 
     It "should get instance status" {
         $instances = Get-GceManagedInstanceGroup $groupName1 -InstanceStatus
-        ($instances | Get-Member).Typename | Should Be "Google.Apis.Compute.v1.Data.ManagedInstance"
-        $instances.CurrentAction | Should Not BeNullOrEmpty
-        $instances.Instance | Should Match $groupName1
+        ($instances | Get-Member).Typename | ForEach-Object { $_ | Should Be "Google.Apis.Compute.v1.Data.ManagedInstance" }
+        $instances.CurrentAction | ForEach-Object { $_ | Should Not BeNullOrEmpty }
+        $instances.Instance | ForEach-Object { $_ | Should Match $groupName1 }
     }
 
     Get-GceManagedInstanceGroup | Remove-GceManagedInstanceGroup

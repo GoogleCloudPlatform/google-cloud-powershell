@@ -136,7 +136,7 @@ Describe "Get-GceAddress" {
 
     It "should get all address of project, including both global and region specific" {
         $addresses = Get-GceAddress
-        ($addresses | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Address
+        ($addresses | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.Address }
         $addresses.Count | Should Be 5
         ($addresses.Name -eq $addressName1).Count | Should Be 1
         ($addresses.Name -eq $globalAddressName1).Count | Should Be 1
@@ -145,7 +145,7 @@ Describe "Get-GceAddress" {
 
     It "should get all region addresses" {
         $addresses = Get-GceAddress -Region "us-central1"
-        ($addresses | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Address
+        ($addresses | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.Address }
         $addresses.Count | Should Be 2
         ($addresses.Name -eq $addressName1).Count | Should Be 1
         $addresses.Name | Should Not Be $addressName3
@@ -163,7 +163,7 @@ Describe "Get-GceAddress" {
 
     It "should get region address by name" {
         $address = Get-GceAddress $addressName1
-        ($address | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Address
+        ($address | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.Address }
         $address.Count | Should Be 1
         $address.Name | Should Be $addressName1
         $address.AddressValue | Should Not BeNullOrEmpty
@@ -172,7 +172,7 @@ Describe "Get-GceAddress" {
 
     It "should get all global addresses of project" {
         $addresses = Get-GceAddress -Global
-        ($addresses | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Address
+        ($addresses | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.Address }
         $addresses.Count | Should Be 2
         ($addresses.Name -eq $globalAddressName1).Count | Should Be 1
         $addresses.AddressValue | Should Not BeNullOrEmpty
@@ -181,7 +181,7 @@ Describe "Get-GceAddress" {
 
     It "should get global address by name" {
         $address = Get-GceAddress $globalAddressName2 -Global
-        ($address | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Address
+        ($address | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.Address }
         $address.Count | Should Be 1
         $address.Name | Should Be $globalAddressName2
         $address.AddressValue | Should Not BeNullOrEmpty

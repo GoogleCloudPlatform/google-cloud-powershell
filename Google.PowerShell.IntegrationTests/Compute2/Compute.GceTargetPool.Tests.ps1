@@ -27,20 +27,20 @@ Describe "Get-GceTargetPool"{
         It "should get all rules" {
             $rules = Get-GceTargetPool
             $rules.Count -$previousAllAcount | Should Be 2
-            ($rules | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.TargetPool
+            ($rules | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.TargetPool }
         }
         
         It "should get region rule" {
             $rules = Get-GceTargetPool -Region asia-east1
             $rules.Count - $previousRegionAcount | Should Be 1
-            ($rules | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.TargetPool
+            ($rules | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.TargetPool }
             $rules.Name | Should Be $poolName2
         }
 
         It "should get region rule by name" {
             $rules = Get-GceTargetPool $poolName1
             $rules.Count | Should Be 1
-            ($rules | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.TargetPool
+            ($rules | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.TargetPool }
             $rules.Name | Should Be $poolName1
         }
 

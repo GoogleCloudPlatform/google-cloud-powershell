@@ -38,34 +38,34 @@ Describe "Get-GceForwardingRule"{
         It "should get all rules" {
             $rules = Get-GceForwardingRule
             $rules.Count - $previousAllCount | Should Be 3
-            ($rules | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.ForwardingRule
+            ($rules | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.ForwardingRule }
         }
 
         It "should get global rule" {
             $rules = Get-GceForwardingRule -Global
             $rules.Count - $previousGlobalCount | Should Be 1
-            ($rules | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.ForwardingRule
+            ($rules | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.ForwardingRule }
             $rules.Name | Should Be $globalRuleName
         }
 
         It "should get region rule" {
             $rules = Get-GceForwardingRule -Region asia-east1
             $rules.Count -$previousAsiaEastCount | Should Be 1
-            ($rules | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.ForwardingRule
+            ($rules | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.ForwardingRule }
             $rules.Name | Should Be $regionRuleName2
         }
 
         It "should get region rule by name" {
             $rules = Get-GceForwardingRule $regionRuleName1
             $rules.Count | Should Be 1
-            ($rules | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.ForwardingRule
+            ($rules | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.ForwardingRule }
             $rules.Name | Should Be $regionRuleName1
         }
 
         It "should get global rule by name" {
             $rules = Get-GceForwardingRule $globalRuleName -Global
             $rules.Count | Should Be 1
-            ($rules | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.ForwardingRule
+            ($rules | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.ForwardingRule }
             $rules.Name | Should Be $globalRuleName
         }
 

@@ -28,9 +28,9 @@ Describe "Get-GceInstance" {
 
     It "should get one" {
         $result = Get-GceInstance $instance
-        ($result | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.Instance"
-        $result.Name | Should Be $instance
-        $result.Kind | Should Be "compute#instance"
+        ($result | Get-Member).TypeName | ForEach-Object { $_ | Should Be "Google.Apis.Compute.v1.Data.Instance" }
+        $result.Name | ForEach-Object { $_ | Should Be $instance }
+        $result.Kind | ForEach-Object { $_ | Should Be "compute#instance" }
     }
 
     It "should use the pipeline" {
@@ -41,8 +41,8 @@ Describe "Get-GceInstance" {
     It "should get only zone" {
         $zoneInstances = Get-GceInstance -Zone $zone
         $zoneInstances.Length | Should Be 2
-        $zoneInstances.Kind | Should Be "compute#instance"
-        $zoneInstances.Zone | Should Match $zone
+        $zoneInstances.Kind | ForEach-Object { $_ | Should Be "compute#instance" }
+        $zoneInstances.Zone | ForEach-Object { $_ | Should Match $zone }
     }
 
     It "should list all instances in a project" {
@@ -61,9 +61,9 @@ Describe "Get-GceInstance" {
         $instanceObj.Zone = "projects/$project/zones/$zone"
         $instanceObj.SelfLink = "projects/$project/zones/$zone/instances/$instance"
         $result = Get-GceInstance $instanceObj
-        ($result | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.Instance"
-        $result.Name | Should Be $instance
-        $result.Kind | Should Be "compute#instance"
+        ($result | Get-Member).TypeName | ForEach-Object { $_ | Should Be "Google.Apis.Compute.v1.Data.Instance" }
+        $result.Name | ForEach-Object { $_ | Should Be $instance }
+        $result.Kind | ForEach-Object { $_ | Should Be "compute#instance" }
     }
 
     # Test that the PropertyByTypeTransformationAttribute works the way we think
@@ -96,7 +96,7 @@ Describe "Get-GceInstance" {
         Wait-GceManagedInstanceGroup $groupName
         $instances = Get-GceInstance $group
         $instances.Count | Should Be 2
-        ($instances | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.Instance"
+        ($instances | Get-Member).TypeName | ForEach-Object { $_ | Should Be "Google.Apis.Compute.v1.Data.Instance" }
     }
 
     $group | Remove-GceManagedInstanceGroup

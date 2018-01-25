@@ -51,7 +51,7 @@ Describe "Get-GceFirewall" {
 Describe "New-GceFirewallProtocol" {
     It "should build one" {
         $data = New-GceFirewallProtocol "protocol"
-        ($data | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.Firewall+AllowedData"
+        ($data | Get-Member).TypeName | ForEach-Object { $_ | Should Be "Google.Apis.Compute.v1.Data.Firewall+AllowedData" }
         $data.IPProtocol | Should Be "protocol"
     }
 
@@ -68,7 +68,7 @@ Describe "New-GceFirewallProtocol" {
             New-GceFirewallProtocol "protocol2" |
             New-GceFirewallProtocol "protocol3" -Port "5"
         $output.Count | Should Be 3
-        ($output | Get-Member).TypeName | Should Be "Google.Apis.Compute.v1.Data.Firewall+AllowedData"
+        ($output | Get-Member).TypeName | ForEach-Object { $_ | Should Be "Google.Apis.Compute.v1.Data.Firewall+AllowedData" }
         $output[2].Ports | Should Be "5"
     }
 }

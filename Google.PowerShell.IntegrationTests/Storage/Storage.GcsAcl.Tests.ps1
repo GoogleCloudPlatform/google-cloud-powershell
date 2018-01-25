@@ -147,17 +147,6 @@ Describe "Add-GcsBucketAcl" {
         { Add-GcsBucketAcl -Name $bucketName -Role Reader -Domain example.thisdomaincannottrulyexist } |
             Should Throw "Could not find domain"
     }
-
-    It "should work for valid domain" {
-        $addedAcl = Add-GcsBucketAcl -Name $bucketName -Role Owner -Domain $domain
-        $acl = Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "domain-$domain"} | Select -First 1
-        CompareAcl $addedAcl $acl | Should Be $true
-
-        # Test that the newly created object doesn't have the ACL we just added. This is because we
-        # modified the ACLs for the Bucket but not the default ACLs applied to every new object created in this bucket.
-        $objectAcl = (New-GcsObject -Bucket $bucketName -ObjectName "test-object-$r" -Value "blah" -Force).Acl
-        ($objectAcl | Where-Object {$_.Entity -match "domain-$domain"}) | Should BeNullOrEmpty
-    }
 }
 
 Describe "Remove-GcsBucketAcl" {
@@ -336,12 +325,6 @@ Describe "Add-GcsObjectAcl" {
     It "should throw error for wrong domain" {
         { Add-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName -Role Reader -Domain example.thisdomaincannottrulyexist } |
             Should Throw "Could not find domain"
-    }
-
-    It "should work for valid domain" {
-        $addedAcl = Add-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName -Role Owner -Domain $domain
-        $acl = Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName | Where-Object {$_.Entity -match "domain-$domain"} | Select -First 1
-        CompareAcl $addedAcl $acl | Should Be $true
     }
 }
 
@@ -535,16 +518,6 @@ Describe "Add-GcsDefaultObjectAcl" {
     It "should throw error for wrong domain" {
         { Add-GcsDefaultObjectAcl -Name $bucketName -Role Reader -Domain example.thisdomaincannottrulyexist } |
             Should Throw "Could not find domain"
-    }
-
-    It "should work for valid domain" {
-        $addedAcl = Add-GcsDefaultObjectAcl -Name $bucketName -Role Owner -Domain $domain
-        $acl = Get-GcsDefaultObjectAcl -Name $bucketName | Where-Object {$_.Entity -match "domain-$domain"} | Select -First 1
-        CompareAcl $addedAcl $acl | Should Be $true
-
-        # Test that the newly created object has the ACL we just add.
-        $objectAcl = (New-GcsObject -Bucket $bucketName -ObjectName "test-object-$r" -Value "blah" -Force).Acl
-        ($objectAcl | Where-Object {$_.Entity -match "domain-$domain" -and $_.Role -eq "Owner"}) | Should Not BeNullOrEmpty
     }
 }
 

@@ -21,7 +21,7 @@ Describe "Add-GceSnapshot" {
 
     It "should work with disk name" {
         $snapshot = Add-GceSnapshot $diskName -Name $snapshotName -Description "for testing $r"
-        ($snapshot | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Snapshot
+        ($snapshot | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.Snapshot }
         $snapshot.Name | Should Be $snapshotName
         $snapshot.Description | Should Be "for testing $r"
         { Get-GceSnapshot $snapshot.Name } | Should Not Throw
@@ -73,7 +73,7 @@ Describe "Get-GceSnapshot" {
 
     It "should get all project snapshots" {
         $snapshots = Get-GceSnapshot
-        ($snapshots | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Snapshot
+        ($snapshots | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.Snapshot }
         $snapshots.Count | Should Be 2
         ($snapshosts.Name -eq $snapshotName).Count | Should Be 1
         ($snapshosts.Name -eq $snapshotName2).Count | Should Be 1

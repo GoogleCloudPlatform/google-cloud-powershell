@@ -128,13 +128,13 @@ Describe "Get-GceRoute" {
         $routes = Get-GceRoute
         # The one we created, plus the default internet gateway route plus subnetwork (region) routes.
         $routes.Count | Should Be ($defaultRouteCount + 1)
-        ($routes | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Route
+        ($routes | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.Route }
     }
 
     It "should get by name" {
         $route = Get-GceRoute $routeName
         $route.Count | Should Be 1
-        ($route | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Route
+        ($route | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.Route }
         $route.Priority | Should Be 9001
         $route.DestRange | Should Be $allIps
         $route.NextHopGateway | Should Match "global/gateways/default-internet-gateway"
@@ -142,7 +142,7 @@ Describe "Get-GceRoute" {
 
     It "should get by name with pipeline" {
         $route = $routeName | Get-GceRoute
-        ($route | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Route
+        ($route | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.Route }
         $route.Count | Should Be 1
         $route.Priority | Should Be 9001
         $route.DestRange | Should Be $allIps
