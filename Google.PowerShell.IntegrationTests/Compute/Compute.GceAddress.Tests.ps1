@@ -149,12 +149,12 @@ Describe "Get-GceAddress" {
         $addresses.Count | Should Be 2
         ($addresses.Name -eq $addressName1).Count | Should Be 1
         $addresses.Name | Should Not Be $addressName3
-        $addresses.AddressValue | Should Not BeNullOrEmpty
+        $addresses.AddressValue | ForEach-Object { $_ | Should Not BeNullOrEmpty }
         $addresses.Region | Should Match "us-central1"
 
         # Try with non-default region.
         $address = Get-GceAddress -Region "us-east1"
-        ($address | Get-Member).TypeName | Should Be Google.Apis.Compute.v1.Data.Address
+        ($address | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.Address }
         $address.Count | Should Be 1
         $address.Name | Should Be $addressName3
         $address.AddressValue | Should Not BeNullOrEmpty
@@ -175,8 +175,8 @@ Describe "Get-GceAddress" {
         ($addresses | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Compute.v1.Data.Address }
         $addresses.Count | Should Be 2
         ($addresses.Name -eq $globalAddressName1).Count | Should Be 1
-        $addresses.AddressValue | Should Not BeNullOrEmpty
-        $addresses.Region | Should BeNullOrEmpty
+        $addresses.AddressValue | ForEach-Object { $_ | Should Not BeNullOrEmpty }
+        $addresses.Region | ForEach-Object { $_ | Should BeNullOrEmpty }
     }
 
     It "should get global address by name" {
