@@ -21,14 +21,14 @@ Describe "Get-GcLogSink" {
     New-GcsBucket $bucketOne
     New-GcsBucket $bucketTwo
     Start-Sleep 2
-    gcloud beta logging sinks create $script:sinkName $destination --log-filter=$logFilter --quiet 2>$null
-    gcloud beta logging sinks create $script:secondSinkName $destinationTwo --quiet 2>$null
+    gcloud logging sinks create $script:sinkName $destination --log-filter=$logFilter --quiet 2>$null
+    gcloud logging sinks create $script:secondSinkName $destinationTwo --quiet 2>$null
     
     AfterAll {
         Remove-GcsBucket $bucketOne -Force
         Remove-GcsBucket $bucketTwo -Force
-        gcloud beta logging sinks delete $sinkName --quiet 2>$null
-        gcloud beta logging sinks delete $secondSinkName --quiet 2>$null
+        gcloud logging sinks delete $sinkName --quiet 2>$null
+        gcloud logging sinks delete $secondSinkName --quiet 2>$null
     }
 
     It "should work without any parameters" {
@@ -121,7 +121,7 @@ Describe "New-GcLogSink" {
         }
         finally {
             Remove-GcsBucket $bucket -Force
-            gcloud beta logging sinks delete $sinkName --quiet 2>$null
+            gcloud logging sinks delete $sinkName --quiet 2>$null
         }
     }
 
@@ -145,7 +145,7 @@ Describe "New-GcLogSink" {
         }
         finally {
             Remove-BqDataset $dataset
-            gcloud beta logging sinks delete $sinkName --quiet 2>$null
+            gcloud logging sinks delete $sinkName --quiet 2>$null
         }
     }
 
@@ -165,7 +165,7 @@ Describe "New-GcLogSink" {
                            -WriterIdentity $script:cloudLogServiceAccount
         }
         finally {
-            gcloud beta logging sinks delete $sinkName --quiet 2>$null
+            gcloud logging sinks delete $sinkName --quiet 2>$null
         }
     }
 
@@ -194,8 +194,8 @@ Describe "New-GcLogSink" {
                            -Sink $createdSink
         }
         finally {
-            gcloud beta logging sinks delete $sinkName --quiet 2>$null
-            gcloud beta logging sinks delete $sinkNameTwo --quiet 2>$null
+            gcloud logging sinks delete $sinkName --quiet 2>$null
+            gcloud logging sinks delete $sinkNameTwo --quiet 2>$null
         }
     }
 
@@ -211,7 +211,7 @@ Describe "New-GcLogSink" {
             New-GcpsSubscription -Subscription $subscriptionName -Topic $pubsubTopicWithPermission
             # We need to sleep before creating the log entry to account for the time the logsink
             # and the subscription is created.
-            Start-Sleep -Seconds 20
+            Start-Sleep -Seconds 30
 
             $createdSink = Get-GcLogSink -Sink $sinkName
             Test-GcLogSink -Name $sinkName `
@@ -225,7 +225,7 @@ Describe "New-GcLogSink" {
             # Write a different entry to a different log (we should not get this).
             New-GcLogEntry -LogName $secondLogName -TextPayload "You should not get this."
             # We need to sleep before getting the message to account for the delay before the log is exported to the topic.
-            Start-Sleep -Seconds 20
+            Start-Sleep -Seconds 30
 
             $message = Get-GcpsMessage -Subscription $subscriptionName -AutoAck
             $messageJson = ConvertFrom-Json $message.Data
@@ -233,7 +233,7 @@ Describe "New-GcLogSink" {
             $messageJson.TextPayload | Should BeExactly $textPayload
         }
         finally {
-            gcloud beta logging sinks delete $sinkName --quiet 2>$null
+            gcloud logging sinks delete $sinkName --quiet 2>$null
             Remove-GcpsSubscription -Subscription $subscriptionName -ErrorAction SilentlyContinue
             Remove-GcLog $logName -ErrorAction SilentlyContinue
             Remove-GcLog $secondLogName -ErrorAction SilentlyContinue
@@ -253,7 +253,7 @@ Describe "New-GcLogSink" {
             New-GcpsSubscription -Subscription $subscriptionName -Topic $pubsubTopicWithPermission
             # We need to sleep before creating the log entry to account for the time the logsink
             # and the subscription is created.
-            Start-Sleep -Seconds 20
+            Start-Sleep -Seconds 30
 
             $createdSink = Get-GcLogSink -Sink $sinkName
             Test-GcLogSink -Name $sinkName `
@@ -265,7 +265,7 @@ Describe "New-GcLogSink" {
             New-GcLogEntry -LogName $logName -TextPayload $textPayload
             New-GcLogEntry -LogName $logName -TextPayload $secondTextPayload
             # We need to sleep before getting the message to account for the delay before the log is exported to the topic.
-            Start-Sleep -Seconds 20
+            Start-Sleep -Seconds 30
 
             $message = Get-GcpsMessage -Subscription $subscriptionName -AutoAck
             $messageJson = ConvertFrom-Json $message.Data
@@ -273,7 +273,7 @@ Describe "New-GcLogSink" {
             $messageJson.TextPayload | Should BeExactly $secondTextPayload
         }
         finally {
-            gcloud beta logging sinks delete $sinkName --quiet 2>$null
+            gcloud logging sinks delete $sinkName --quiet 2>$null
             Remove-GcpsSubscription -Subscription $subscriptionName -ErrorAction SilentlyContinue
             Remove-GcLog $logName -ErrorAction SilentlyContinue
         }
@@ -292,7 +292,7 @@ Describe "New-GcLogSink" {
             New-GcpsSubscription -Subscription $subscriptionName -Topic $pubsubTopicWithPermission
             # We need to sleep before creating the log entry to account for the time the logsink
             # and the subscription is created.
-            Start-Sleep -Seconds 20
+            Start-Sleep -Seconds 30
 
             $createdSink = Get-GcLogSink -Sink $sinkName
             Test-GcLogSink -Name $sinkName `
@@ -305,7 +305,7 @@ Describe "New-GcLogSink" {
             New-GcLogEntry -LogName $logName -TextPayload $infoPayload -Severity Info
             New-GcLogEntry -LogName $logName -TextPayload $errorPayload -Severity Error
             # We need to sleep before getting the message to account for the delay before the log is exported to the topic.
-            Start-Sleep -Seconds 20
+            Start-Sleep -Seconds 30
 
             $message = Get-GcpsMessage -Subscription $subscriptionName -AutoAck
             $messageJson = ConvertFrom-Json $message.Data
@@ -314,7 +314,7 @@ Describe "New-GcLogSink" {
             $messageJson.Severity | Should BeExactly ERROR
         }
         finally {
-            gcloud beta logging sinks delete $sinkName --quiet 2>$null
+            gcloud logging sinks delete $sinkName --quiet 2>$null
             Remove-GcpsSubscription -Subscription $subscriptionName -ErrorAction SilentlyContinue
             Remove-GcLog $logName -ErrorAction SilentlyContinue
         }
@@ -334,7 +334,7 @@ Describe "New-GcLogSink" {
                 Should Throw "already exists"
         }
         finally {
-            gcloud beta logging sinks delete $sinkName --quiet 2>$null
+            gcloud logging sinks delete $sinkName --quiet 2>$null
         }
     }
 }
@@ -384,7 +384,7 @@ Describe "Set-GcLogSink" {
         finally {
             Remove-GcsBucket $bucket -Force
             Remove-GcsBucket $bucketTwo -Force
-            gcloud beta logging sinks delete $sinkName --quiet 2>$null
+            gcloud logging sinks delete $sinkName --quiet 2>$null
         }
     }
 
@@ -414,7 +414,7 @@ Describe "Set-GcLogSink" {
         finally {
             Remove-BqDataset $dataset
             Remove-BqDataset $datasetTwo
-            gcloud beta logging sinks delete $sinkName --quiet 2>$null
+            gcloud logging sinks delete $sinkName --quiet 2>$null
         }
     }
 
@@ -438,7 +438,7 @@ Describe "Set-GcLogSink" {
                            -WriterIdentity $script:cloudLogServiceAccount
         }
         finally {
-            gcloud beta logging sinks delete $sinkName --quiet 2>$null
+            gcloud logging sinks delete $sinkName --quiet 2>$null
         }
     }
 
@@ -477,8 +477,8 @@ Describe "Set-GcLogSink" {
         finally {
             Remove-GcsBucket $bucket -Force
             Remove-GcsBucket $bucketTwo -Force
-            gcloud beta logging sinks delete $sinkName --quiet 2>$null
-            gcloud beta logging sinks delete $sinkNameTwo --quiet 2>$null
+            gcloud logging sinks delete $sinkName --quiet 2>$null
+            gcloud logging sinks delete $sinkNameTwo --quiet 2>$null
         }
     }
 
@@ -513,7 +513,7 @@ Describe "Set-GcLogSink" {
                            -Sink $secondUpdatedSink
         }
         finally {
-            gcloud beta logging sinks delete $sinkName --quiet 2>$null
+            gcloud logging sinks delete $sinkName --quiet 2>$null
         }
     }
 
@@ -549,7 +549,7 @@ Describe "Set-GcLogSink" {
             $messageJson.TextPayload | Should BeExactly $textPayload
         }
         finally {
-            gcloud beta logging sinks delete $sinkName --quiet 2>$null
+            gcloud logging sinks delete $sinkName --quiet 2>$null
             Remove-GcpsSubscription -Subscription $subscriptionName -ErrorAction SilentlyContinue
             Remove-GcLog $logName -ErrorAction SilentlyContinue
             Remove-GcLog $secondLogName -ErrorAction SilentlyContinue
@@ -584,7 +584,7 @@ Describe "Set-GcLogSink" {
                            -Sink $createdSink
         }
         finally {
-            gcloud beta logging sinks delete $sinkName --quiet 2>$null
+            gcloud logging sinks delete $sinkName --quiet 2>$null
             Remove-GcpsSubscription -Subscription $subscriptionName -ErrorAction SilentlyContinue
             Remove-GcLog $logName -ErrorAction SilentlyContinue
         }
@@ -618,7 +618,7 @@ Describe "Set-GcLogSink" {
                            -Sink $createdSink
         }
         finally {
-            gcloud beta logging sinks delete $sinkName --quiet 2>$null
+            gcloud logging sinks delete $sinkName --quiet 2>$null
             Remove-GcpsSubscription -Subscription $subscriptionName -ErrorAction SilentlyContinue
             Remove-GcLog $logName -ErrorAction SilentlyContinue
         }
@@ -639,7 +639,7 @@ Describe "Set-GcLogSink" {
                            -WriterIdentity $script:cloudLogServiceAccount
         }
         finally {
-            gcloud beta logging sinks delete $sinkName --quiet 2>$null
+            gcloud logging sinks delete $sinkName --quiet 2>$null
         }
     }
 

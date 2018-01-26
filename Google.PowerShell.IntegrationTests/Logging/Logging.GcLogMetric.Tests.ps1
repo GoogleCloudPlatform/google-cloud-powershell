@@ -20,13 +20,13 @@ Describe "Get-GcLogMetric" {
     $logFilterTwo = "this is another filter"
     $description = "This is the first description"
     $descriptionTwo = "This is the second description"
-    gcloud beta logging metrics create $script:metricName --description=$description --log-filter=$logFilter --quiet 2>$null
-    gcloud beta logging metrics create $script:metricNameTwo --description=$descriptionTwo --log-filter=$logFilterTwo --quiet 2>$null
+    gcloud logging metrics create $script:metricName --description=$description --log-filter=$logFilter --quiet 2>$null
+    gcloud logging metrics create $script:metricNameTwo --description=$descriptionTwo --log-filter=$logFilterTwo --quiet 2>$null
     
 
     AfterAll {
-        gcloud beta logging metrics delete $metricName --quiet 2>$null
-        gcloud beta logging metrics delete $metricNameTwo --quiet 2>$null
+        gcloud logging metrics delete $metricName --quiet 2>$null
+        gcloud logging metrics delete $metricNameTwo --quiet 2>$null
     }
 
     It "should work without any parameters" {
@@ -88,7 +88,7 @@ Describe "New-GcLogMetric" {
             }
         }
         finally {
-            gcloud beta logging metrics delete $metricName --quiet 2>$null
+            gcloud logging metrics delete $metricName --quiet 2>$null
         }
     }
 
@@ -119,8 +119,8 @@ Describe "New-GcLogMetric" {
             }
         }
         finally {
-            gcloud beta logging metrics delete $metricName --quiet 2>$null
-            gcloud beta logging metrics delete $metricNameTwo --quiet 2>$null
+            gcloud logging metrics delete $metricName --quiet 2>$null
+            gcloud logging metrics delete $metricNameTwo --quiet 2>$null
         }
     }
 
@@ -139,7 +139,7 @@ Describe "New-GcLogMetric" {
             }
         }
         finally {
-            gcloud beta logging metrics delete $metricName --quiet 2>$null
+            gcloud logging metrics delete $metricName --quiet 2>$null
         }
     }
 
@@ -159,7 +159,7 @@ Describe "New-GcLogMetric" {
             }
         }
         finally {
-            gcloud beta logging metrics delete $metricName --quiet 2>$null
+            gcloud logging metrics delete $metricName --quiet 2>$null
         }
     }
 
@@ -179,7 +179,7 @@ Describe "New-GcLogMetric" {
             }
         }
         finally {
-            gcloud beta logging metrics delete $metricName --quiet 2>$null
+            gcloud logging metrics delete $metricName --quiet 2>$null
         }
     }
 
@@ -200,7 +200,7 @@ Describe "New-GcLogMetric" {
             }
         }
         finally {
-            gcloud beta logging metrics delete $metricName --quiet 2>$null
+            gcloud logging metrics delete $metricName --quiet 2>$null
         }
     }
 
@@ -235,8 +235,8 @@ Describe "New-GcLogMetric" {
             }
         }
         finally {
-            gcloud beta logging metrics delete $metricName --quiet 2>$null
-            gcloud beta logging metrics delete $metricNameTwo --quiet 2>$null
+            gcloud logging metrics delete $metricName --quiet 2>$null
+            gcloud logging metrics delete $metricNameTwo --quiet 2>$null
         }
     }
 
@@ -250,7 +250,7 @@ Describe "New-GcLogMetric" {
                 Should Throw "already exists."
         }
         finally {
-            gcloud beta logging metrics delete $metricName --quiet 2>$null
+            gcloud logging metrics delete $metricName --quiet 2>$null
         }
     }
 
@@ -263,7 +263,7 @@ Describe "New-GcLogMetric" {
                 Should Throw "Cannot construct filter"
         }
         finally {
-            gcloud beta logging metrics delete $metricName --quiet 2>$null
+            gcloud logging metrics delete $metricName --quiet 2>$null
         }
     }
 }
@@ -288,7 +288,7 @@ Describe "Set-GcLogMetric" {
             }
         }
         finally {
-            gcloud beta logging metrics delete $metricName --quiet 2>$null
+            gcloud logging metrics delete $metricName --quiet 2>$null
         }
     }
 
@@ -322,8 +322,8 @@ Describe "Set-GcLogMetric" {
             }
         }
         finally {
-            gcloud beta logging metrics delete $metricName --quiet 2>$null
-            gcloud beta logging metrics delete $metricNameTwo --quiet 2>$null
+            gcloud logging metrics delete $metricName --quiet 2>$null
+            gcloud logging metrics delete $metricNameTwo --quiet 2>$null
         }
     }
 
@@ -344,7 +344,7 @@ Describe "Set-GcLogMetric" {
             }
         }
         finally {
-            gcloud beta logging metrics delete $metricName --quiet 2>$null
+            gcloud logging metrics delete $metricName --quiet 2>$null
         }
     }
 
@@ -366,7 +366,7 @@ Describe "Set-GcLogMetric" {
             }
         }
         finally {
-            gcloud beta logging metrics delete $metricName --quiet 2>$null
+            gcloud logging metrics delete $metricName --quiet 2>$null
         }
     }
 
@@ -389,7 +389,7 @@ Describe "Set-GcLogMetric" {
             }
         }
         finally {
-            gcloud beta logging metrics delete $metricName --quiet 2>$null
+            gcloud logging metrics delete $metricName --quiet 2>$null
         }
     }
 
@@ -412,7 +412,7 @@ Describe "Set-GcLogMetric" {
             }
         }
         finally {
-            gcloud beta logging metrics delete $metricName --quiet 2>$null
+            gcloud logging metrics delete $metricName --quiet 2>$null
         }
     }
 
@@ -451,8 +451,8 @@ Describe "Set-GcLogMetric" {
             }
         }
         finally {
-            gcloud beta logging metrics delete $metricName --quiet 2>$null
-            gcloud beta logging metrics delete $metricNameTwo --quiet 2>$null
+            gcloud logging metrics delete $metricName --quiet 2>$null
+            gcloud logging metrics delete $metricNameTwo --quiet 2>$null
         }
     }
 
@@ -472,7 +472,7 @@ Describe "Set-GcLogMetric" {
             }
         }
         finally {
-            gcloud beta logging metrics delete $metricName --quiet 2>$null
+            gcloud logging metrics delete $metricName --quiet 2>$null
         }
     }
 
@@ -484,7 +484,7 @@ Describe "Set-GcLogMetric" {
             { Set-GcLogMetric $metricName } | Should Throw "Cannot construct filter"
         }
         finally {
-            gcloud beta logging metrics delete $metricName --quiet 2>$null
+            gcloud logging metrics delete $metricName --quiet 2>$null
         }
     }
 }

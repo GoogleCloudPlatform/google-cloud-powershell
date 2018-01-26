@@ -11,21 +11,21 @@ Describe "Get-GcLogEntry" {
     $secondTextPayload = "Second test entry"
     $jsonPayload = "{\`"Key\`":\`"Value\`"}"
     $timeBeforeCreatingLogs = [DateTime]::Now
-    gcloud beta logging write $logName $textPayload --severity=ALERT 2>$null
-    gcloud beta logging write $logName $jsonPayload --severity=INFO --payload-type=json 2>$null
-    gcloud beta logging write $secondLogName $secondTextPayload --severity=ALERT 2>$null
-    gcloud beta logging write $secondLogName $jsonPayload --severity=INFO --payload-type=json 2>$null
+    gcloud logging write $logName $textPayload --severity=ALERT 2>$null
+    gcloud logging write $logName $jsonPayload --severity=INFO --payload-type=json 2>$null
+    gcloud logging write $secondLogName $secondTextPayload --severity=ALERT 2>$null
+    gcloud logging write $secondLogName $jsonPayload --severity=INFO --payload-type=json 2>$null
     # We add 2 minutes to account for delay in log creation
     $timeAfterCreatingLogs = [DateTime]::Now.AddMinutes(2)
 
     AfterAll {
-        gcloud beta logging logs delete $logName --quiet 2>$null
+        gcloud logging logs delete $logName --quiet 2>$null
         $logs = Get-GcLogEntry -LogName $logName
         if ($null -ne $logs)
         {
             Write-Host "Log $logName is not deleted."
         }
-        gcloud beta logging logs delete $secondLogName --quiet 2>$null
+        gcloud logging logs delete $secondLogName --quiet 2>$null
         $logs = Get-GcLogEntry -LogName $secondLogName
         if ($null -ne $logs)
         {
@@ -95,7 +95,7 @@ Describe "Get-GcLogEntry" {
         $gceInstanceLogEntries = Get-GcLogEntry -ResourceType gce_instance | Select -First 2
         $gceInstanceLogEntries.Resource | ForEach-Object { $_.Type | Should BeExactly gce_instance }
 
-        # The gcloud beta logging write uses global resource type.
+        # The gcloud logging write uses global resource type.
         $globalResourceTypeLogEntries = Get-GcLogEntry -ResourceType global -LogName $logName
         $globalResourceTypeLogEntries.Count | Should Be 2
         $globalResourceTypeLogEntries[0].Resource.Type | Should BeExactly global
@@ -143,7 +143,7 @@ Describe "New-GcLogEntry" {
         $textPayload = "This is a log entry"
         try {
             New-GcLogEntry -TextPayload $textPayload -LogName $logName
-            Start-Sleep -Seconds 5
+            Start-Sleep -Seconds 15
             (Get-GcLogEntry -LogName $logName).TextPayload | Should BeExactly $textPayload
 
             # Create a JSON entry in the same log, the cmdlet should write to the same log.
@@ -158,7 +158,7 @@ Describe "New-GcLogEntry" {
             $proto = @{ "@type" = "type.googleapis.com/google.cloud.audit.AuditLog";
                         "serviceName" = "cloudresourcemanager.googleapis.com" }
             New-GcLogEntry -ProtoPayload $proto -LogName $logName
-            Start-Sleep -Seconds 5
+            Start-Sleep -Seconds 15
             $logEntries = Get-GcLogEntry -LogName $logName
             $logEntries.Count | Should Be 3
             $protoLogEntry = $logEntries | Where-Object { $null -ne $_.ProtoPayload }
@@ -166,7 +166,7 @@ Describe "New-GcLogEntry" {
             $protoLogEntry.ProtoPayload["serviceName"] | Should BeExactly $proto["serviceName"]
         }
         finally {
-            gcloud beta logging logs delete $logName --quiet 2>$null
+            gcloud logging logs delete $logName --quiet 2>$null
         }
     }
 
@@ -183,22 +183,22 @@ Describe "New-GcLogEntry" {
                     "serviceName" = "www.cloudresourcemanager.googleapis.com" }
         try {
             New-GcLogEntry -TextPayload @($firstTextPayload, $secondTextPayload) -LogName $logName
-            Start-Sleep -Seconds 5
+            Start-Sleep -Seconds 15
             $logEntriesPayloads = (Get-GcLogEntry -LogName $logName).TextPayload
             $logEntriesPayloads.Count | Should Be 2
 
             New-GcLogEntry -JsonPayload @($firstJsonPayload, $secondJsonPayload) -LogName $logName
-            Start-Sleep -Seconds 5
+            Start-Sleep -Seconds 15
             $logEntriesJsonPayloads = Get-GcLogEntry -LogName $logName | Where-Object { $null -ne $_.JsonPayload }
             $logEntriesJsonPayloads.Count | Should Be 2
 
             New-GcLogEntry -ProtoPayload @($firstProtoPayload, $secondProtoPayload) -LogName $logName
-            Start-Sleep -Seconds 5
+            Start-Sleep -Seconds 15
             $logEntriesProtoPayloads = Get-GcLogEntry -LogName $logName | Where-Object { $null -ne $_.ProtoPayload }
             $logEntriesProtoPayloads.Count | Should Be 2
         }
         finally {
-            gcloud beta logging logs delete $logName --quiet 2>$null
+            gcloud logging logs delete $logName --quiet 2>$null
         }
     }
 
@@ -210,16 +210,16 @@ Describe "New-GcLogEntry" {
 
         try {
             $textPayload | New-GcLogEntry -LogName $logName
-            Start-Sleep -Seconds 5
+            Start-Sleep -Seconds 15
             (Get-GcLogEntry -LogName $logName).TextPayload | Should BeExactly $textPayload
 
             $jsonPayload | New-GcLogEntry -LogName $logName
-            Start-Sleep -Seconds 5
+            Start-Sleep -Seconds 15
             $logEntriesJsonPayload = Get-GcLogEntry -LogName $logName | Where-Object { $null -ne $_.JsonPayload }
             $logEntriesJsonPayload.JsonPayload["Key"] | Should BeExactly "Value"
         }
         finally {
-            gcloud beta logging logs delete $logName --quiet 2>$null
+            gcloud logging logs delete $logName --quiet 2>$null
         }
     }
 
@@ -233,7 +233,7 @@ Describe "New-GcLogEntry" {
 
         try {
             New-GcLogEntry -LogName $logName -MonitoredResource $monitoredResource -TextPayload $textPayload
-            Start-Sleep -Seconds 5
+            Start-Sleep -Seconds 15
             $logEntry = Get-GcLogEntry -LogName $logName
             $logEntry.TextPayload | Should BeExactly $textPayload
             $logEntry.Resource.Type | Should BeExactly $resourceType
@@ -241,7 +241,7 @@ Describe "New-GcLogEntry" {
             $logEntry.Resource.Labels["database_id"] | Should BeExactly $resourceLabels["database_id"]
         }
         finally {
-            gcloud beta logging logs delete $logName --quiet 2>$null
+            gcloud logging logs delete $logName --quiet 2>$null
         }
     }
 }
@@ -262,7 +262,7 @@ Describe "Get-GcLog" {
         try {
             New-GcLogEntry -LogName $logName -TextPayload $textPayload
             New-GcLogEntry -LogName $logName2 -TextPayload $textPayload
-            Start-Sleep -Seconds 5
+            Start-Sleep -Seconds 15
 
             $logs = Get-GcLog
             $logs -contains $logFullName| Should Be $true
@@ -273,8 +273,8 @@ Describe "Get-GcLog" {
             $logs -contains $logFullName2 | Should Be $true
         }
         finally {
-            gcloud beta logging logs delete $logName --quiet 2>$null
-            gcloud beta logging logs delete $logName2 --quiet 2>$null
+            gcloud logging logs delete $logName --quiet 2>$null
+            gcloud logging logs delete $logName2 --quiet 2>$null
         }
     }
 }
@@ -305,12 +305,12 @@ Describe "Remove-GcLog" {
         $textPayload = "This is the text payload."
         New-GcLogEntry -LogName $logName -TextPayload $textPayload
         New-GcLogEntry -LogName $logNameTwo -TextPayload $textPayload
-        Start-Sleep -Seconds 5
+        Start-Sleep -Seconds 15
         (Get-GcLogEntry -LogName $logName) | Should Not BeNullOrEmpty
         (Get-GcLogEntry -LogName $logNameTwo) | Should Not BeNullOrEmpty
         Remove-GcLog -LogName $logName
         Remove-GcLog -LogName $logNameTwo
-        Start-Sleep -Seconds 5
+        Start-Sleep -Seconds 15
         (Get-GcLogEntry -LogName $logName) | Should BeNullOrEmpty
         (Get-GcLogEntry -LogName $logNameTwo) | Should BeNullOrEmpty
     }
