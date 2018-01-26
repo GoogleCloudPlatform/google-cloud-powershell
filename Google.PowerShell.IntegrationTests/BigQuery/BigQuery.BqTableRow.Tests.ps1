@@ -172,6 +172,7 @@ Describe "Add-BqTableRow" {
                  Set-BqSchema $table
     }
 
+    <#
     It "should properly consume a well formed CSV file" {
         $table | Add-BqTableRow CSV $filename_csv -SkipLeadingRows 1
         $table = Get-BqTable $table
@@ -182,14 +183,14 @@ Describe "Add-BqTableRow" {
         $table | Add-BqTableRow JSON $filename_json 
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
-    }
+    }#>
 
     It "should properly consume a well formed AVRO file" {
         $table | Add-BqTableRow AVRO $filename_avro 
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
     }
-
+    <#
     It "should properly reject an invalid CSV file" {
         { $table | Add-BqTableRow CSV $filename_broken_csv -SkipLeadingRows 1 } | Should Throw "contained errors"
     }
@@ -251,7 +252,7 @@ Describe "Add-BqTableRow" {
         $table | Add-BqTableRow JSON $filename_broken_JSON -AllowUnknownFields
         $table = Get-BqTable $table
         $table.NumRows | Should Be 10
-    }
+    }#>
 
     AfterAll {
         $test_set | Remove-BqDataset -Force

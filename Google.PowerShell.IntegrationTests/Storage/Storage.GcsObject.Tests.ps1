@@ -234,7 +234,7 @@ Describe "New-GcsObject" {
         $newObj.Name | Should BeExactly $objectName
 
         # Confirm we won't clobber
-        { New-GcsObject $bucket $objectName -File $tempFile } `
+        { New-GcsObject $bucket $objectName -File $tempFile -ErrorAction Stop } `
             | Should Throw "Storage object '$objectName' already exists"
 
         # Confirm -Force works
@@ -561,7 +561,7 @@ Describe "Get-GcsObject" {
     }
 
     It "should fail for non existing objects" {
-        { Get-GcsObject -Bucket $bucket -ObjectName "file-404.txt" } | Should Throw "'file-404.txt' does not exist"
+        { Get-GcsObject -Bucket $bucket -ObjectName "file-404.txt" -ErrorAction Stop } | Should Throw "'file-404.txt' does not exist"
     }
 
     It "should support getting all objects in a bucket" {
@@ -780,7 +780,7 @@ Describe "Remove-GcsObject" {
     It "should work" {
         Add-TestFile $bucket "testfile.txt"
         Remove-GcsObject $bucket "testfile.txt"
-        { Get-GcsObject $bucket "testfile.txt" } | Should Throw "'testfile.txt' does not exist"
+        { Get-GcsObject $bucket "testfile.txt" -ErrorAction Stop } | Should Throw "'testfile.txt' does not exist"
     }
 
     It "should work in GCS Provider location" {
@@ -789,14 +789,14 @@ Describe "Remove-GcsObject" {
         try {
             cd "gs:\$bucket"
             Remove-GcsObject -ObjectName "testfile.txt"
-            { Get-GcsObject -ObjectName "testfile.txt" } | Should Throw "'testfile.txt' does not exist"
+            { Get-GcsObject -ObjectName "testfile.txt" -ErrorAction Stop } | Should Throw "'testfile.txt' does not exist"
 
             $anotherFolder = "anotherFolder"
             mkdir $anotherFolder
             cd $anotherFolder
             New-GcsObject -ObjectName "Test"
             Remove-GcsObject -ObjectName "Test"
-            { Get-GcsObject -ObjectName "Test" } | Should Throw "does not exist"
+            { Get-GcsObject -ObjectName "Test" -ErrorAction Stop } | Should Throw "does not exist"
             cd ..
         }
         finally {

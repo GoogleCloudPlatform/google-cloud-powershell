@@ -206,15 +206,6 @@ Describe "Remove-GcsBucketAcl" {
         $groupAcl = Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "group-$groupEmail"}
         $groupAcl | Should BeNullOrEmpty
     }
-
-    It "should work for domain" {
-        Add-GcsBucketAcl -Name $bucketName -Role Owner -Domain $domain
-        $domainAcl = Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "domain-$domain"}
-        $domainAcl | Should Not BeNullOrEmpty
-        Remove-GcsBucketAcl -Name $bucketName -Domain $domain
-        $domainAcl = Get-GcsBucketAcl -Name $bucketName | Where-Object {$_.Entity -match "domain-$domain"}
-        $domainAcl | Should BeNullOrEmpty
-    }
 }
 
 Describe "Get-GcsObjectAcl" {
@@ -386,15 +377,6 @@ Describe "Remove-GcsObjectAcl" {
         Remove-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName -Group $groupEmail
         $groupAcl = Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName | Where-Object {$_.Entity -match "group-$groupEmail"}
         $groupAcl | Should BeNullOrEmpty
-    }
-
-    It "should work for domain" {
-        Add-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName -Role Owner -Domain $domain
-        $domainAcl = Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName | Where-Object {$_.Entity -match "domain-$domain"}
-        $domainAcl | Should Not BeNullOrEmpty
-        Remove-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName -Domain $domain
-        $domainAcl = Get-GcsObjectAcl -Bucket $bucketName -ObjectName $objectName | Where-Object {$_.Entity -match "domain-$domain"}
-        $domainAcl | Should BeNullOrEmpty
     }
 }
 
@@ -595,19 +577,6 @@ Describe "Remove-GcsDefaultObjectAcl" {
         # Test that the newly created object doesn't have the ACL we just add.
         $objectAcl = (New-GcsObject -Bucket $bucketName -ObjectName "test-object-$r" -Value "blah" -Force).Acl
         ($objectAcl | Where-Object {$_.Entity -match "group-$groupEmail" -and $_.Role -eq "Owner"}) | Should BeNullOrEmpty
-    }
-
-    It "should work for domain" {
-        Add-GcsDefaultObjectAcl -Name $bucketName -Role Owner -Domain $domain
-        $domainAcl = Get-GcsDefaultObjectAcl -Name $bucketName | Where-Object {$_.Entity -match "domain-$domain"}
-        $domainAcl | Should Not BeNullOrEmpty
-        Remove-GcsDefaultObjectAcl -Name $bucketName -Domain $domain
-        $domainAcl = Get-GcsDefaultObjectAcl -Name $bucketName | Where-Object {$_.Entity -match "domain-$domain"}
-        $domainAcl | Should BeNullOrEmpty
-
-        # Test that the newly created object doesn't have the ACL we just add.
-        $objectAcl = (New-GcsObject -Bucket $bucketName -ObjectName "test-object-$r" -Value "blah" -Force).Acl
-        ($objectAcl | Where-Object {$_.Entity -match "domain-$domain" -and $_.Role -eq "Owner"}) | Should BeNullOrEmpty
     }
 }
 

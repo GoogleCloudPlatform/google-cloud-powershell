@@ -41,7 +41,7 @@ Describe "Storage Provider"{
         mkdir $bucketName
         Test-Path $bucketName | Should Be $true
         $buckets = Get-Item $bucketName
-        ($buckets | Get-Member).TypeName | Should Be Google.Apis.Storage.v1.Data.Bucket
+        ($buckets | Get-Member).TypeName | ForEach-Object { $_ | Should Be Google.Apis.Storage.v1.Data.Bucket }
         $buckets.Name | ForEach-Object { $_ | Should Be $bucketName }
     }
 

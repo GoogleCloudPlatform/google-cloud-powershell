@@ -638,6 +638,8 @@ Describe "Send-GcpsAck" {
         try {
             New-GcpsTopic -Topic $topicName
             New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+            Start-Sleep -Seconds 5
+
             $messageOne = New-GcpsMessage -Data $testData
             $messageTwo = New-GcpsMessage -Attributes $attributes
             $messageThree = New-GcpsMessage -Attributes $attributes -Data $testData
@@ -678,6 +680,8 @@ Describe "Send-GcpsAck" {
         try {
             New-GcpsTopic -Topic $topicName
             New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+            Start-Sleep -Seconds 5
+
             $publishedMessage = Publish-GcpsMessage -Data $testData -Topic $topicName
             $subscriptionMessage = Get-GcpsMessage -Subscription $subscriptionName
 
@@ -701,6 +705,7 @@ Describe "Send-GcpsAck" {
         try {
             New-GcpsTopic -Topic $topicName
             New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+            Start-Sleep -Seconds 5
 
             { Send-GcpsAck -Subscription $subscriptionName -AckId "Invalid Ack" -ErrorAction Stop } | Should Throw "invalid ack ID"
             { Send-GcpsAck -Subscription $subscriptionName -AckId "!!" -ErrorAction Stop } | Should Throw "invalid ack ID"
@@ -720,6 +725,8 @@ Describe "Send-GcpsAck" {
         try {
             New-GcpsTopic -Topic $topicName
             New-GcpsSubscription -Subscription $subscriptionName -Topic $topicName
+            Start-Sleep -Seconds 5
+
             $publishedMessage = Publish-GcpsMessage -Data $testData -Topic $topicName
             $subscriptionMessage = Get-GcpsMessage -Subscription $subscriptionName
 
