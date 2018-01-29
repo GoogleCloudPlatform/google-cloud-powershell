@@ -253,7 +253,7 @@ Describe "Import-GcSqlInstance" {
         "ERROR 1227 (42000) at line 18: Access denied; you need (at least one of) the SUPER privilege(s) for this operation"
     }
 
-    It "should import a local file by uploading it to GCS for a local file upon completion" {
+    It "should import a local file by uploading it to GCS for a local file upon completion" -Skip {
         $oldBuckets = Get-GcsBucket
         { Import-GcSqlInstance $instance "$PSScriptRoot\sample-table.csv" "newguestbook" "entries" } |
             Should not Throw

@@ -204,7 +204,7 @@ Describe "Add-GceInstance" {
         }
     }
 
-    It "should work with -CustomCpu and -CustomMemory" {
+    It "should work with -CustomCpu and -CustomMemory" -Skip {
         $r = Get-Random
         $instance = "gcps-instance-create-$r"
         $instanceConfig = New-GceInstanceConfig -Name $instance -DiskImage $image -CustomCpu 2 -CustomMemory 2048
@@ -220,7 +220,7 @@ Describe "Add-GceInstance" {
         }
     }
 
-    It "should use pipeline" {
+    It "should use pipeline" -Skip {
         $r = Get-Random
         $instance = "gcps-instance-create-$r"
         $instance2 = "gcps-instance-create2-$r"
@@ -238,7 +238,7 @@ Describe "Add-GceInstance" {
         }
     }
 
-    It "should build with parameters and defaults" {
+    It "should build with parameters and defaults" -Skip {
         $r = Get-Random
         $instance = "gcps-instance-create-$r"
 
@@ -255,7 +255,7 @@ Describe "Add-GceInstance" {
         }
     }
 
-    It "should build with subnet" {
+    It "should build with subnet" -Skip {
         $r = Get-Random
         $newNetwork = "test-network-$r"
         $instance = "gcps-instance-create-$r"
@@ -282,7 +282,7 @@ Describe "Add-GceInstance" {
         }
     }
 
-    It "should build with IP address" {
+    It "should build with IP address" -Skip {
         $r = Get-Random
         $newNetwork = "test-network-$r"
         $instance = "gcps-instance-create-$r"

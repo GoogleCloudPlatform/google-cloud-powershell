@@ -252,6 +252,8 @@ Describe "Add-GkeCluster" {
     $script:clusterTwoZone = "europe-west1-b"
     $clusterTwoUsername = Get-Random
     $clusterTwoPassword = Get-Random
+    # Password have to be 12 characters.
+    $clusterTwoPass = "$clusterTwoPassword$clusterTwoPassword"
     $clusterTwoParameter = @{"clusterName" = $clusterTwoName;
                                "zone" = $clusterTwoZone;
                                "clusterUsername" = $clusterTwoUsername;

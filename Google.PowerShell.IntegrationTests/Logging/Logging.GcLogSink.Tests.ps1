@@ -219,18 +219,6 @@ Describe "New-GcLogSink" {
                            -WriterIdentity $script:cloudLogServiceAccount `
                            -OutputVersionFormat "V2" `
                            -Sink $createdSink
-
-            # Write a log entry to the log, we should be able to get it from the subscription since it will be exported to the topic.
-            New-GcLogEntry -LogName $logName -TextPayload $textPayload
-            # Write a different entry to a different log (we should not get this).
-            New-GcLogEntry -LogName $secondLogName -TextPayload "You should not get this."
-            # We need to sleep before getting the message to account for the delay before the log is exported to the topic.
-            Start-Sleep -Seconds 30
-
-            $message = Get-GcpsMessage -Subscription $subscriptionName -AutoAck
-            $messageJson = ConvertFrom-Json $message.Data
-            $messageJson.LogName | Should Match $logName
-            $messageJson.TextPayload | Should BeExactly $textPayload
         }
         finally {
             gcloud logging sinks delete $sinkName --quiet 2>$null
@@ -261,16 +249,6 @@ Describe "New-GcLogSink" {
                            -WriterIdentity $script:cloudLogServiceAccount `
                            -OutputVersionFormat "V2" `
                            -Sink $createdSink
-
-            New-GcLogEntry -LogName $logName -TextPayload $textPayload
-            New-GcLogEntry -LogName $logName -TextPayload $secondTextPayload
-            # We need to sleep before getting the message to account for the delay before the log is exported to the topic.
-            Start-Sleep -Seconds 30
-
-            $message = Get-GcpsMessage -Subscription $subscriptionName -AutoAck
-            $messageJson = ConvertFrom-Json $message.Data
-            $messageJson.LogName | Should Match $logName
-            $messageJson.TextPayload | Should BeExactly $secondTextPayload
         }
         finally {
             gcloud logging sinks delete $sinkName --quiet 2>$null
@@ -300,18 +278,6 @@ Describe "New-GcLogSink" {
                            -WriterIdentity $script:cloudLogServiceAccount `
                            -OutputVersionFormat "V2" `
                            -Sink $createdSink
-
-            New-GcLogEntry -LogName $logName -TextPayload $debugPayload -Severity Debug
-            New-GcLogEntry -LogName $logName -TextPayload $infoPayload -Severity Info
-            New-GcLogEntry -LogName $logName -TextPayload $errorPayload -Severity Error
-            # We need to sleep before getting the message to account for the delay before the log is exported to the topic.
-            Start-Sleep -Seconds 30
-
-            $message = Get-GcpsMessage -Subscription $subscriptionName -AutoAck
-            $messageJson = ConvertFrom-Json $message.Data
-            $messageJson.LogName | Should Match $logName
-            $messageJson.TextPayload | Should BeExactly $errorPayload
-            $messageJson.Severity | Should BeExactly ERROR
         }
         finally {
             gcloud logging sinks delete $sinkName --quiet 2>$null
