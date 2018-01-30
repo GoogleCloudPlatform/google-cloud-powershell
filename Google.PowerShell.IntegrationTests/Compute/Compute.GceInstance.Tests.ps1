@@ -509,7 +509,7 @@ Describe "Set-GceInstance" {
 
     }
 
-    It "should change AccessConfigs" {
+    It "should change AccessConfigs" -Skip {
 
         # Find the existing values
         $instanceObj = Get-GceInstance -Project $project -Zone $zone2 $instance
