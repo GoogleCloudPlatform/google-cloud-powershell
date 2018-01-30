@@ -26,7 +26,7 @@ Describe "Get-GceInstanceTemplate" {
 
     It "should get one" {
         $template = Get-GceInstanceTemplate $name
-        ($template | gm).TypeName | Should Be "Google.Apis.Compute.v1.Data.InstanceTemplate"
+        ($template | gm).TypeName | ForEach-Object { $_ | Should Be "Google.Apis.Compute.v1.Data.InstanceTemplate" }
         $template.Count | Should Be 1
         $template.Name | Should Be $name
         $template.Properties.MachineType | Should Be $machineType

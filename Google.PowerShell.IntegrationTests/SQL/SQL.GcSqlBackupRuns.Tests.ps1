@@ -13,12 +13,12 @@ Describe "Get-GcSqlBackupRun" {
         $backups.Length | Should BeGreaterThan 0
     }
 
-    It "shouldn't need the project parameter if configuration is set up correctly" {
+    It "shouldn't need the project parameter if configuration is set up correctly" -Skip {
         $backups = Get-GcSqlBackupRun $instance
         $backups.Length | Should BeGreaterThan 0
     }
 
-    It "should get a reasonable response for a specific backupRun" {
+    It "should get a reasonable response for a specific backupRun" -Skip {
         # An existing backupRun is used to prevent having to update this test every
         # time the specified backup is changed/removed.
         $existingBackup = Get-GcSqlBackupRun $instance | Select-Object -first 1

@@ -68,7 +68,7 @@ Describe "Add-GcSqlInstance" {
         }
     }
     
-    It "should be able to make a default with just a name" {
+    It "should be able to make a default with just a name" -Skip {
         $r = Get-Random
         # A random number is used to avoid collisions with the speed of creating
         # and deleting instances.
@@ -85,7 +85,7 @@ Describe "Add-GcSqlInstance" {
         }
     }
 
-    It "should be able to reflect custom settings" {
+    It "should be able to reflect custom settings" -Skip {
         $r = Get-Random
         # A random number is used to avoid collisions with the speed of creating
         # and deleting instances.
@@ -145,7 +145,7 @@ Describe "Remove-GcSqlInstance" {
         ($instances.Name -contains $instance) | Should Be false
     }
 
-    It "should be able to take a pipelined Instance" {
+    It "should be able to take a pipelined Instance" -Skip {
         $r = Get-Random
         # A random number is used to avoid collisions with the speed of creating
         # and deleting instances.
@@ -263,7 +263,7 @@ Describe "Import-GcSqlInstance" {
         $oldBuckets.Count | Should Be $newBuckets.Count
     }
 
-    It "should delete the bucket for a local file upon a file error" {
+    It "should delete the bucket for a local file upon a file error" -Skip {
         $oldBuckets = Get-GcsBucket
         { Import-GcSqlInstance $instance "$PSScriptRoot\filenotexist" "newguestbook" "entries" } | 
         Should Throw "Could not find file '$PSScriptRoot\filenotexist'"
@@ -271,7 +271,7 @@ Describe "Import-GcSqlInstance" {
         $oldBuckets.Count | Should Be $newBuckets.Count
     }
 
-    It "should delete the bucket for a local file upon a instance error" {
+    It "should delete the bucket for a local file upon a instance error" -Skip {
         $oldBuckets = Get-GcsBucket
         { Import-GcSqlInstance $instance "$PSScriptRoot\sample-table.csv" "newguestbook" "tablenotexist" } | 
         Should Throw "Error 1146: Table 'newguestbook.tablenotexist' doesn't exist"

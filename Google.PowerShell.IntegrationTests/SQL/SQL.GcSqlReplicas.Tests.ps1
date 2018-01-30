@@ -28,7 +28,7 @@ Describe "Start-GcSqlReplica" {
         }
     }
 
-     It "should work and start a pipelined replica (replica and default projects same)" {
+     It "should work and start a pipelined replica (replica and default projects same)" -Skip {
          # A random number is used to avoid collisions with the speed of creating and deleting instances/replicas.
         $r = Get-Random
         $replica = "test-repl$r"
@@ -48,7 +48,7 @@ Describe "Start-GcSqlReplica" {
         }
      }
 
-    It "should work and start a pipelined replica (replica and default projects differ)" {
+    It "should work and start a pipelined replica (replica and default projects differ)" -Skip {
         $nonDefaultProject = "asdf"
         $defaultProject = "gcloud-powershell-testing"
 
@@ -104,7 +104,7 @@ Describe "Stop-GcSqlReplica" {
         }
     }
 
-     It "should work and stop a pipelined replica (replica and default projects same)" {
+     It "should work and stop a pipelined replica (replica and default projects same)" -Skip {
          # A random number is used to avoid collisions with the speed of creating and deleting instances/replicas.
         $r = Get-Random
         $replica = "test-repl$r"
@@ -124,7 +124,7 @@ Describe "Stop-GcSqlReplica" {
         }
      }
 
-    It "should work and stop a pipelined replica (replica and default projects differ)" {
+    It "should work and stop a pipelined replica (replica and default projects differ)" -Skip {
         $nonDefaultProject = "asdf"
         $defaultProject = "gcloud-powershell-testing"
 

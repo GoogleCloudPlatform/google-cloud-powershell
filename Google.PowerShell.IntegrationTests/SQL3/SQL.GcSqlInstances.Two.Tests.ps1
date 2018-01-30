@@ -26,7 +26,7 @@ Describe "Restart-GcSqlInstance" {
         }
     }
 
-     It "should work and restart a pipelined instance (instance and default projects same)" {
+     It "should work and restart a pipelined instance (instance and default projects same)" -Skip {
          # A random number is used to avoid collisions with the speed of creating and deleting instances.
         $r = Get-Random
         $instance = "test-inst$r"
@@ -46,7 +46,7 @@ Describe "Restart-GcSqlInstance" {
         }
      }
 
-    It "should work and restart a pipelined instance (instance and default projects differ)" {
+    It "should work and restart a pipelined instance (instance and default projects differ)" -Skip {
         $nonDefaultProject = "asdf"
         $defaultProject = "gcloud-powershell-testing"
 

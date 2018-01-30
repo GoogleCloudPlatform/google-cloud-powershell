@@ -332,12 +332,12 @@ Describe "Remove-GceInstance" {
             { Get-GceInstance -Project $project -Zone $zone2 -Name $instance } | Should Throw 404
         }
         
-        It "should Work with pipeline" {
+        It "should Work with pipeline" -Skip {
             $instance | Remove-GceInstance -Project $project -Zone $zone2
             { Get-GceInstance -Project $project -Zone $zone2 -Name $instance } | Should Throw 404
         }
         
-        It "should Work with object pipeline" {
+        It "should Work with object pipeline" -Skip {
             Get-GceInstance $instance -Project $project -Zone $zone2 | Remove-GceInstance
             { Get-GceInstance -Project $project -Zone $zone2 -Name $instance } | Should Throw 404
         }
@@ -377,7 +377,7 @@ Describe "Start-GceInstance" {
 
     Stop-GceInstance -Project $project -Zone $zone2 -Name $instance
 
-    It "should work with object pipeline" {
+    It "should work with object pipeline" -Skip {
         Get-GceInstance $instance -Zone $zone2 | Start-GceInstance 
         (Get-GceInstance $instance -Zone $zone2).Status | Should Be "RUNNING"
     }
@@ -409,7 +409,7 @@ Describe "Stop-GceInstance" {
     
     Start-GceInstance $instance -Zone $zone2
 
-    It "should work with object pipeline" {
+    It "should work with object pipeline" -Skip {
         Get-GceInstance $instance -Zone $zone2 | Stop-GceInstance
         (Get-GceInstance $instance -Zone $zone2).Status | Should Be "TERMINATED"
     }
