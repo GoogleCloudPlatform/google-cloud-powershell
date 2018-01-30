@@ -433,7 +433,7 @@ Describe "Restart-GceInstance" {
         New-GceInstanceConfig -DiskImage $image -MachineType "f1-micro" |
         Add-GceInstance -Project $project -Zone $zone2
 
-    It "should show restart in log" {
+    It "should show restart in log" -Skip {
         $before = (Get-Date).ToUniversalTime()
         Restart-GceInstance $instance -Zone $zone2
         Start-Sleep 5
@@ -447,7 +447,7 @@ Describe "Restart-GceInstance" {
         $restartTime -gt $before | Should Be $true
     }
     
-    It "should restart using object pipeline" {
+    It "should restart using object pipeline" -Skip {
         $before = (Get-Date).ToUniversalTime()
         Get-GceInstance $instance -Zone $zone2 | Restart-GceInstance
         Start-Sleep 5
