@@ -104,12 +104,12 @@ namespace Google.PowerShell.Tests.Provider
         }
 
         /// <summary>
-        /// Test the fix for an issue where the GcsProvider would hang.
+        /// Test the fix for an issue where the GcsProvider would hang when ListProjects threw an error.
         /// </summary>
         /// <seealso href="https://github.com/GoogleCloudPlatform/google-cloud-powershell/issues/594"/>
         [Test]
         [Timeout(200)]
-        public void TestIssue594()
+        public void TestListProjectsThrownError()
         {
             const string mockExceptionMessage = "mock exception message";
             _projectsMock.SetupRequest(p => p.List()).SetupResponse<ListProjectsResponse>()
