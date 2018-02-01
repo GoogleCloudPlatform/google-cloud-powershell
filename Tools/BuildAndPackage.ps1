@@ -249,11 +249,16 @@ function ConfirmExists($relativePath) {
    }
 }
 
+# Move BootstrapCloudToolsForPowerShell.ps1 to the GoogleCloud folder as this is
+# where "Cloud Tools For PowerShell" program in the Cloud SDK is looking for it.
+Move-Item "$googleCloudDir\BootstrapCloudToolsForPowerShell.ps1" `
+          "$powerShellDir\GoogleCloud\BootstrapCloudToolsForPowerShell.ps1"
+
 ConfirmExists "PowerShell\GoogleCloud\$normalizedVersion\GoogleCloud.psd1"
 ConfirmExists "PowerShell\GoogleCloud\$normalizedVersion\fullclr\Google.PowerShell.dll"
 ConfirmExists "PowerShell\GoogleCloud\$normalizedVersion\coreclr\Google.PowerShell.dll"
 ConfirmExists "PowerShell\GoogleCloud\$normalizedVersion\GoogleCloud.psm1"
-ConfirmExists "PowerShell\GoogleCloud\$normalizedVersion\BootstrapCloudToolsForPowerShell.ps1"
+ConfirmExists "PowerShell\GoogleCloud\BootstrapCloudToolsForPowerShell.ps1"
 ConfirmExists "GoogleCloudPowerShell\GoogleCloudPowerShell.psd1"
 ConfirmExists "PowerShell\GoogleCloudBeta\$normalizedVersion\GoogleCloudBeta.psd1"
 ConfirmExists "PowerShell\GoogleCloudBeta\$normalizedVersion\GoogleCloud.psm1"
