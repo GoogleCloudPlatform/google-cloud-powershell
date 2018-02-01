@@ -20,12 +20,15 @@ using Google.PowerShell.Provider;
 using Google.PowerShell.Tests.Common;
 using Moq;
 using NUnit.Framework;
+using System;
 using System.Collections.ObjectModel;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
+using ProjectsResource = Google.Apis.CloudResourceManager.v1.ProjectsResource;
 
 namespace Google.PowerShell.Tests.Provider
 {
+    [TestFixture]
     public class GoogleCloudStorageProviderTests : PowerShellTestBase
     {
         /// <summary>
@@ -34,6 +37,18 @@ namespace Google.PowerShell.Tests.Provider
         private readonly Mock<StorageService> _serviceMock = new Mock<StorageService>();
         private readonly Mock<CloudResourceManagerService> _resourceServiceMock =
             new Mock<CloudResourceManagerService>();
+
+        private static readonly Project s_defaultProject = new Project { Name = FakeProjectId, ProjectId = FakeProjectId, LifecycleState = "ACTIVE" };
+
+        private static readonly ListProjectsResponse s_defaultListProjectsResponse = new ListProjectsResponse
+        {
+            Projects = new[]
+            {
+                s_defaultProject
+            }
+        };
+
+        private Mock<ProjectsResource> _projectsMock;
 
         [OneTimeSetUp]
         public void BeforeAll()
@@ -58,15 +73,9 @@ namespace Google.PowerShell.Tests.Provider
         {
             _serviceMock.Reset();
             _resourceServiceMock.Reset();
-            _resourceServiceMock.Resource(s => s.Projects).SetupRequest(
-                p => p.List(),
-                new ListProjectsResponse
-                {
-                    Projects = new[]
-                    {
-                        new Project {Name = FakeProjectId, ProjectId = FakeProjectId, LifecycleState = "ACTIVE"}
-                    }
-                });
+            _projectsMock = _resourceServiceMock.Resource(s => s.Projects);
+
+            GoogleCloudStorageProvider.ClearCache();
         }
 
         /// <summary>
@@ -77,6 +86,7 @@ namespace Google.PowerShell.Tests.Provider
         public void TestIssue580()
         {
             const string bucketName = "bucket-name";
+            _projectsMock.SetupRequest(p => p.List(), s_defaultListProjectsResponse);
             Mock<BucketsResource> bucketsMock = _serviceMock.Resource(s => s.Buckets);
             bucketsMock.SetupRequest(b => b.List(FakeProjectId),
                 new Buckets { Items = new[] { new Bucket { Id = bucketName, Name = bucketName } } });
@@ -91,6 +101,28 @@ namespace Google.PowerShell.Tests.Provider
             var returnedBucket = results[0].BaseObject as Bucket;
             Assert.IsNotNull(returnedBucket);
             Assert.AreEqual(bucketName, returnedBucket.Id);
+        }
+
+        /// <summary>
+        /// Test the fix for an issue where the GcsProvider would hang.
+        /// </summary>
+        /// <seealso href="https://github.com/GoogleCloudPlatform/google-cloud-powershell/issues/594"/>
+        [Test]
+        [Timeout(200)]
+        public void TestIssue594()
+        {
+            const string mockExceptionMessage = "mock exception message";
+            _projectsMock.SetupRequest(p => p.List()).SetupResponse<ListProjectsResponse>()
+                    .Throws(new Exception(mockExceptionMessage));
+            Pipeline.Commands.AddScript("cd gs:");
+
+            Pipeline.Commands.AddScript("ls");
+            Collection<PSObject> output = Pipeline.Invoke();
+
+            Assert.AreEqual(0, output.Count);
+            Assert.AreEqual(1, Pipeline.Error.Count);
+            var errorRecord = (ErrorRecord)((PSObject)Pipeline.Error.ReadToEnd()[0]).BaseObject;
+            Assert.AreEqual(mockExceptionMessage, errorRecord.Exception.Message);
         }
     }
 }

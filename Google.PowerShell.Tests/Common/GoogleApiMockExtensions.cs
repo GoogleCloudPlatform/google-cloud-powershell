@@ -16,6 +16,7 @@ using Google.Apis.Http;
 using Google.Apis.Requests;
 using Google.Apis.Services;
 using Moq;
+using Moq.Language.Flow;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,13 +33,13 @@ namespace Google.PowerShell.Tests.Common
     public static class GoogleApiMockExtensions
     {
         /// <summary>
-        /// Takes a mock for either a  <see cref="BaseClientService"/> or a resource and creates a mock of a child resource.
+        /// Takes a mock for either a  <see cref="BaseClientService"/> or a resource and creates a mock of a child
+        /// resource.
         /// </summary>
         /// <typeparam name="T">The mocked type to get a mocked child resource from.</typeparam>
         /// <typeparam name="TResource">A resource type in the mocked type.</typeparam>
         /// <param name="mock">The mock to setup the resource as a child of.</param>
-        /// <param name="resourceExpression">The express that gets the resource.
-        /// </param>
+        /// <param name="resourceExpression">The express that gets the resource.</param>
         public static Mock<TResource> Resource<T, TResource>(
             this Mock<T> mock,
             Expression<Func<T, TResource>> resourceExpression)
@@ -68,8 +69,7 @@ namespace Google.PowerShell.Tests.Common
             where TResource : class
         {
             Mock<IClientService> clientServiceMock = GetClientServiceMock();
-            Mock<TRequest> requestMock =
-                GetRequestMock<TRequest, TResponse>(requestExpression, clientServiceMock.Object);
+            Mock<TRequest> requestMock = GetRequestMock(requestExpression, clientServiceMock.Object);
             resourceMock.Setup(requestExpression).Returns(requestMock.Object);
             clientServiceMock.Setup(c => c.DeserializeResponse<TResponse>(It.IsAny<HttpResponseMessage>()))
                 .Throws(exception);
@@ -94,10 +94,10 @@ namespace Google.PowerShell.Tests.Common
             where TResource : class
         {
             Mock<IClientService> clientServiceMock = GetClientServiceMock();
-            Mock<TRequest> requestMock =
-                GetRequestMock<TRequest, TResponse>(requestExpression, clientServiceMock.Object);
+            Mock<TRequest> requestMock = GetRequestMock(requestExpression, clientServiceMock.Object);
             resourceMock.Setup(requestExpression).Returns(requestMock.Object);
-            clientServiceMock.Setup(c => c.DeserializeResponse<TResponse>(It.IsAny<HttpResponseMessage>())).Returns(response);
+            clientServiceMock.Setup(c => c.DeserializeResponse<TResponse>(It.IsAny<HttpResponseMessage>()))
+                    .Returns(response);
             return requestMock;
         }
 
@@ -140,17 +140,62 @@ namespace Google.PowerShell.Tests.Common
             where TResource : class
         {
             Mock<IClientService> clientServiceMock = GetClientServiceMock();
-            Mock<TRequest> requestMock =
-                GetRequestMock<TRequest, TResponse>(requestExpression, clientServiceMock.Object);
+            Mock<TRequest> requestMock = GetRequestMock(requestExpression, clientServiceMock.Object);
             resourceMock.Setup(requestExpression).Returns(requestMock.Object);
             clientServiceMock.Setup(c => c.DeserializeResponse<TResponse>(It.IsAny<HttpResponseMessage>()))
                 .Returns(response);
             return requestMock;
         }
 
-        private static Mock<TRequest> GetRequestMock<TRequest, TResponse>(
-            LambdaExpression requestExpression,
-            IClientService clientService) where TRequest : ClientServiceRequest<TResponse>
+        /// <summary>
+        /// Sets up a request on which a response can be set up. Pairs with <see cref="SetupResponse{TResponse}"/>.
+        /// </summary>
+        /// When setting up an error, using this with <see cref="SetupResponse{TResponse}"/> requires fewer explicit
+        /// generic parameters.
+        /// <code>
+        /// projects.SetupRequest(p =&gt; p.List()).SetupResponse&lt;ListProjectsResponse&gt;()
+        ///     .Throws(new Exception("error-message"));
+        /// </code>
+        /// as opposed to
+        /// <code>
+        /// projects.SetupRequestError&lt;ProjectsResource, ProjectsResource.ListRequest, ListProjectsResponse&gt;(
+        ///         p =&gt; o.Get(bucketName, objectName),
+        ///         new Exception("error-message"));
+        /// </code>
+        /// <typeparam name="TResource">The type of resource creating the request.</typeparam>
+        /// <typeparam name="TRequest">The type of the request to make.</typeparam>
+        /// <param name="resourceMock">The mock of the resource that makes the request.</param>
+        /// <param name="requestExpression">The expression of the request. Uses Moq.It functions for wildcards.</param>
+        /// <returns>The mock of the request object. Useful for verification.</returns>
+
+        public static Mock<IClientService> SetupRequest<TResource, TRequest>(
+            this Mock<TResource> resourceMock,
+            Expression<Func<TResource, TRequest>> requestExpression)
+            where TRequest : class, IClientServiceRequest
+            where TResource : class
+        {
+            Mock<IClientService> clientServiceMock = GetClientServiceMock();
+            Mock<TRequest> requestMock = GetRequestMock(requestExpression, clientServiceMock.Object);
+            resourceMock.Setup(requestExpression).Returns(requestMock.Object);
+            return clientServiceMock;
+        }
+
+        /// <summary>
+        /// Gets a setup for a response to a request. Call <see cref="Moq.Language.IThrows.Throws"/> or
+        /// <see cref="Moq.Language.IReturns{TMock,TResult}.Returns{T}"/> on the result of this function.
+        /// </summary>
+        /// <typeparam name="TResponse">The type of response to return.</typeparam>
+        /// <param name="clientServiceMock">The mock of a Client Service to setup.
+        /// Usually comes from <see cref="SetupRequest{TResource,TRequest}"/>.</param>
+        public static ISetup<IClientService, Task<TResponse>> SetupResponse<TResponse>(
+            this Mock<IClientService> clientServiceMock)
+        {
+            return clientServiceMock.Setup(c => c.DeserializeResponse<TResponse>(It.IsAny<HttpResponseMessage>()));
+        }
+
+        private static Mock<TRequest> GetRequestMock<TRequest, TResource>(
+            Expression<Func<TResource, TRequest>> requestExpression,
+            IClientService clientService) where TRequest : class, IClientServiceRequest
         {
             var requestMethod = requestExpression.Body as MethodCallExpression;
             if (requestMethod == null)
