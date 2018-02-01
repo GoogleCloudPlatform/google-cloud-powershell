@@ -23,7 +23,7 @@ namespace Google.PowerShell.Provider
     /// </summary>
     public class CacheItem<T>
     {
-        private static TimeSpan s_minuteTimeSpan = TimeSpan.FromMinutes(1);
+        private static readonly TimeSpan s_minuteTimeSpan = TimeSpan.FromMinutes(1);
         private DateTimeOffset _lastUpdate = DateTimeOffset.MinValue;
         private readonly TimeSpan _cacheLifetime;
         private T _value;
@@ -34,12 +34,22 @@ namespace Google.PowerShell.Provider
         /// Get the value after applying the default update function
         /// if the value is out of date.
         /// </summary>
-        public T Value
+        public T Value => GetValueWithUpdateFunction(_update);
+
+        /// <summary>
+        /// Initialize a CacheItem with a cache reset time set to cacheLifetime
+        /// and update function set to update.
+        /// </summary>
+        /// <param name="update">
+        /// Update function that is used to update the value if cache is out of date.
+        /// Default to null, which means GetValueWithUpdateFunction, GetLastValueWithoutUpdate
+        /// and Value will return default value for type T.
+        /// </param>
+        /// <param name="cacheLifetime">Time span that the cache is valid for. Default to 1 minute.</param>
+        public CacheItem(Func<T> update = null, TimeSpan? cacheLifetime = null)
         {
-            get
-            {
-                return GetValueWithUpdateFunction(_update);
-            }
+            _update = update;
+            _cacheLifetime = cacheLifetime ?? s_minuteTimeSpan;
         }
 
         /// <summary>
@@ -75,19 +85,11 @@ namespace Google.PowerShell.Provider
         }
 
         /// <summary>
-        /// Initialize a CacheItem with a cache reset time set to cacheLifetime
-        /// and update function set to update.
+        /// Resets the Cache to update at the next opportunity.
         /// </summary>
-        /// <param name="update">
-        /// Update function that is used to update the value if cache is out of date.
-        /// Default to null, which means GetValueWithUpdateFunction, GetLastValueWithoutUpdate
-        /// and Value will return default value for type T.
-        /// </param>
-        /// <param name="cacheLifetime">Time span that the cache is valid for. Default to 1 minute.</param>
-        public CacheItem(Func<T> update = null, TimeSpan? cacheLifetime = null)
+        public void Reset()
         {
-            _update = update;
-            _cacheLifetime = cacheLifetime ?? s_minuteTimeSpan;
+            _lastUpdate = DateTimeOffset.MinValue;
         }
     }
 }

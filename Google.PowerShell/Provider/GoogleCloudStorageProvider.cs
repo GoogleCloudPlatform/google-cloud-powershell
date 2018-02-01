@@ -279,7 +279,7 @@ namespace Google.PowerShell.Provider
             new Dictionary<string, CacheItem<BucketModel>>();
 
         /// <summary>
-        /// Maps the name of a bucket to a cahced object describing that bucket.
+        /// Maps the name of a bucket to a cached object describing that bucket.
         /// </summary>
         private static CacheItem<Dictionary<string, Bucket>> BucketCache { get; } =
             new CacheItem<Dictionary<string, Bucket>>();
@@ -612,11 +612,11 @@ namespace Google.PowerShell.Provider
                 case GcsPath.GcsPathType.Drive:
                     throw new InvalidOperationException("Use New-PSDrive to create a new drive.");
                 case GcsPath.GcsPathType.Bucket:
-                    Bucket newBucket = NewBucket(gcsPath, (NewGcsBucketDynamicParameters) DynamicParameters);
+                    Bucket newBucket = NewBucket(gcsPath, (NewGcsBucketDynamicParameters)DynamicParameters);
                     WriteItemObject(newBucket, path, true);
                     break;
                 case GcsPath.GcsPathType.Object:
-                    var dynamicParameters = (NewGcsObjectDynamicParameters) DynamicParameters;
+                    var dynamicParameters = (NewGcsObjectDynamicParameters)DynamicParameters;
                     Stream contentStream = GetContentStream(newItemValue, dynamicParameters);
                     Object newObject = NewObject(gcsPath, dynamicParameters, contentStream);
                     WriteItemObject(newObject, path, newFolder);
@@ -659,7 +659,7 @@ namespace Google.PowerShell.Provider
             {
                 return;
             }
-            var dyanmicParameters = (GcsCopyItemDynamicParameters) DynamicParameters;
+            var dyanmicParameters = (GcsCopyItemDynamicParameters)DynamicParameters;
             if (recurse)
             {
                 char directorySeparator = Path.DirectorySeparatorChar;
@@ -759,7 +759,7 @@ namespace Google.PowerShell.Provider
             };
             var inputStream = new AnonymousPipeServerStream(PipeDirection.Out);
             var outputStream = new AnonymousPipeClientStream(PipeDirection.In, inputStream.ClientSafePipeHandle);
-            string contentType = ((GcsGetContentWriterDynamicParameters) DynamicParameters).ContentType ?? GcsCmdlet.UTF8TextMimeType;
+            string contentType = ((GcsGetContentWriterDynamicParameters)DynamicParameters).ContentType ?? GcsCmdlet.UTF8TextMimeType;
             ObjectsResource.InsertMediaUpload request =
                 Service.Objects.Insert(body, gcsPath.Bucket, outputStream, contentType);
             request.UploadAsync();
@@ -1151,13 +1151,21 @@ namespace Google.PowerShell.Provider
 
             // If we don't do these steps in a new thread, it will block until the task array (taskWithActions)
             // is created and this may take a while if there are lots of projects.
-            Task.Factory.StartNew(() =>
+            Task getBucketsTask = Task.Run(async () =>
             {
-                IEnumerable<Project> projects = ListAllProjects();
-                // In each of these tasks, the buckets will be added to the blocking collection bucketCollections.
-                IEnumerable<Task> taskWithActions = projects.Select(project => ListBucketsAsync(project, bucketCollections));
-                // Once all the tasks are done, we signal to the blocking collection that there is nothing to be added.
-                Task.Factory.ContinueWhenAll(taskWithActions.ToArray(), result => bucketCollections.CompleteAdding());
+                try
+                {
+                    IEnumerable<Project> projects = ListAllProjects();
+                    // In each of these tasks, the buckets will be added to the blocking collection bucketCollections.
+                    IEnumerable<Task> taskWithActions =
+                            projects.Select(project => ListBucketsAsync(project, bucketCollections));
+                    await Task.WhenAll(taskWithActions.ToArray()).ConfigureAwait(false);
+                }
+                finally
+                {
+                    // Once all the tasks are done, we signal to the blocking collection that there is nothing to be added.
+                    bucketCollections.CompleteAdding();
+                }
             });
 
             // bucketCollections.IsCompleted is true if CompleteAdding is called.
@@ -1178,7 +1186,24 @@ namespace Google.PowerShell.Provider
                 }
             }
 
+            if (getBucketsTask.IsFaulted && getBucketsTask.Exception != null)
+            {
+                foreach (Exception exception in getBucketsTask.Exception.InnerExceptions)
+                {
+                    WriteError(new ErrorRecord(exception, "GetBuckets", ErrorCategory.NotSpecified, this));
+                }
+            }
+
             return bucketDict.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        }
+
+        /// <summary>
+        /// Clears the cache. Used in unit tests.
+        /// </summary>
+        internal static void ClearCache()
+        {
+            BucketCache.Reset();
+            BucketModels.Clear();
         }
     }
 }
