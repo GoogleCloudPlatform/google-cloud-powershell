@@ -9,8 +9,7 @@ function Get-ScriptDirectory
     return Split-Path $invocation.MyCommand.Path
 }
 
-$modulePath = Join-Path (Get-ScriptDirectory) "GoogleCloud.psd1"
-Import-Module $modulePath
+Import-Module (Get-ScriptDirectory)
 
 $Env:UserProfile
 clear
