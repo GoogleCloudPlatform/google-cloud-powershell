@@ -87,6 +87,7 @@ Describe "Get-GceImage" {
         ($images.Deprecated -ne $null).Count | Should BeGreaterThan 0
     }
 
+    <#
     $disk | Add-GceImage -Name $imageName1
     $disk | Add-GceImage -Name $imageName2 -Family $familyName
 
@@ -120,6 +121,7 @@ Describe "Get-GceImage" {
         $image.Name | Should Be $imageName2
         $image.SourceDisk | Should Match $diskName
     }
+    #>
 
     Remove-GceDisk $diskName
     Get-GceImage -Project $project | Remove-GceImage
@@ -144,6 +146,7 @@ Describe "Disable-GceImage" {
         { Disable-GceImage $imageName1 -State DEPRECATED } | Should Throw 404
     }
     
+    <#
     $image1 = $disk | Add-GceImage -Name $imageName1
     $image2 = $disk | Add-GceImage -Name $imageName2
 
@@ -155,13 +158,14 @@ Describe "Disable-GceImage" {
         $deprecation.Replacement | Should Be $image2.SelfLink
     }
 
-    It "should set status by object" {
+    It "should set status by object" -SKip {
         $image = Disable-GceImage $image1 -State OBSOLETE -Replacement $image2
         $deprecation = $image.Deprecated
         $deprecation | Should Not BeNullOrEmpty
         $deprecation.State | Should Be OBSOLETE
         $deprecation.Replacement | Should Be $image2.SelfLink
     }
+    #>
 
     Remove-GceDisk $diskName
     Get-GceImage -Project $project | Remove-GceImage
