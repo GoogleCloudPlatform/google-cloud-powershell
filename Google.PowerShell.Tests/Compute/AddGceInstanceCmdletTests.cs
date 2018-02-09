@@ -80,31 +80,6 @@ namespace Google.PowerShell.Tests.Compute
             TestErrorRecord(ErrorCategory.ResourceExists);
         }
 
-        /// <summary>
-        /// Tests that when calling Add-GceManagedInstanceGroup, if the request executed with
-        /// a GoogleApiException of HttpStatusCode.Conflict, a non-terminating error
-        /// is written to the pipeline.
-        /// </summary>
-        [Test]
-        public void TestErrorAddManagedGceInstanceGroup()
-        {
-            Mock<InstanceGroupManagersResource> instances = ServiceMock.Resource(s => s.InstanceGroupManagers);
-            GoogleApiException apiException = new GoogleApiException("mock-service-name", "mock-error-message");
-            apiException.HttpStatusCode = HttpStatusCode.Conflict;
-
-            instances.SetupRequestError<InstanceGroupManagersResource, InstanceGroupManagersResource.InsertRequest, Operation>(
-                i => i.Insert(It.IsAny<InstanceGroupManager>(), It.IsAny<string>(), It.IsAny<string>()),
-                apiException);
-
-            Pipeline.Commands.AddScript(
-                $"Add-GceManagedInstanceGroup -Name instance-group -InstanceTemplate template -TargetSize 1");
-            Collection<PSObject> results = Pipeline.Invoke();
-
-            // An error should be thrown (if it is a terminating error,
-            // we wouldn't even reach this point).
-            TestErrorRecord(ErrorCategory.ResourceExists);
-        }
-
         [Test]
         public void TestErrorMissingCustomMemoryWithCustomCpu()
         {

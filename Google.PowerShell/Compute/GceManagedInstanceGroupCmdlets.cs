@@ -48,6 +48,7 @@ namespace Google.PowerShell.Compute
         private class ParameterSetNames
         {
             public const string ListProject = "ListProject";
+            public const string ListRegion = "ListRegion";
             public const string ListZone = "ListZone";
             public const string ByName = "ByName";
             public const string ByUri = "ByUri";
@@ -61,6 +62,7 @@ namespace Google.PowerShell.Compute
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ListProject)]
         [Parameter(ParameterSetName = ParameterSetNames.ListZone)]
+        [Parameter(ParameterSetName = ParameterSetNames.ListRegion)]
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public override string Project { get; set; }
@@ -74,6 +76,15 @@ namespace Google.PowerShell.Compute
         [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         public string Zone { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The zone the instance group is in.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ListRegion, Mandatory = true)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Region)]
+        public string Region { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -117,6 +128,9 @@ namespace Google.PowerShell.Compute
             {
                 case ParameterSetNames.ListProject:
                     managers = GetProjectGroups();
+                    break;
+                case ParameterSetNames.ListRegion:
+                    managers = GetRegionGroups();
                     break;
                 case ParameterSetNames.ListZone:
                     managers = GetZoneGroups();
@@ -195,6 +209,23 @@ namespace Google.PowerShell.Compute
             do
             {
                 InstanceGroupManagerList response = request.Execute();
+                var managers = response.Items ?? Enumerable.Empty<InstanceGroupManager>();
+                foreach (InstanceGroupManager manager in managers)
+                {
+                    yield return manager;
+                }
+                request.PageToken = response.NextPageToken;
+            } while (!Stopping && request.PageToken != null);
+        }
+
+
+        private IEnumerable<InstanceGroupManager> GetRegionGroups()
+        {
+            RegionInstanceGroupManagersResource.ListRequest request =
+                Service.RegionInstanceGroupManagers.List(Project, Region);
+            do
+            {
+                RegionInstanceGroupManagerList response = request.Execute();
                 var managers = response.Items ?? Enumerable.Empty<InstanceGroupManager>();
                 foreach (InstanceGroupManager manager in managers)
                 {
