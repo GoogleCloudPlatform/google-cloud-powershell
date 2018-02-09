@@ -83,7 +83,6 @@ namespace Google.PowerShell.Compute
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ListRegion, Mandatory = true)]
-        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Region)]
         public string Region { get; set; }
 
