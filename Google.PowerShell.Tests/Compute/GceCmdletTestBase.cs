@@ -28,6 +28,11 @@ namespace Google.PowerShell.Tests.Compute
     public abstract class GceCmdletTestBase : PowerShellTestBase
     {
         /// <summary>
+        /// Represents the start of a compute https link.
+        /// </summary>
+        protected const string ComputeHttpsLink = "https://www.googleapis.com/compute/v1";
+
+        /// <summary>
         /// A completed operation.
         /// </summary>
         protected Operation DoneOperation { get; } = new Operation

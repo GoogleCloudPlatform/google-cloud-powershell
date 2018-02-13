@@ -471,13 +471,14 @@ namespace Google.PowerShell.Compute
     /// </para>
     /// </summary>
     [Cmdlet(VerbsCommon.Remove, "GceManagedInstanceGroup", SupportsShouldProcess = true,
-        DefaultParameterSetName = ParameterSetNames.ByName)]
+        DefaultParameterSetName = ParameterSetNames.ByNameZone)]
     public class RemoveManagedInstanceGroupCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
         {
-            public const string ByName = "ByName";
+            public const string ByNameZone = "ByNameZone";
             public const string ByObject = "ByObject";
+            public const string ByNameRegion = "ByNameRegion";
         }
 
         /// <summary>
@@ -485,7 +486,8 @@ namespace Google.PowerShell.Compute
         /// The project that owns the managed instance group.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByNameZone)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByNameRegion)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public override string Project { get; set; }
 
@@ -494,16 +496,27 @@ namespace Google.PowerShell.Compute
         /// The zone the managed instance group is in.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByNameZone)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         public string Zone { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The region the regional managed instance group is in.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByNameRegion)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Region)]
+        public string Region { get; set; }
 
         /// <summary>
         /// <para type="description">
         /// The name of the managed instance group to delete.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
+        [Parameter(ParameterSetName = ParameterSetNames.ByNameZone, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByNameRegion, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         public string Name { get; set; }
 
@@ -520,8 +533,11 @@ namespace Google.PowerShell.Compute
         {
             switch (ParameterSetName)
             {
-                case ParameterSetNames.ByName:
-                    DeleteByName();
+                case ParameterSetNames.ByNameRegion:
+                    DeleteByRegion(Project, Region, Name);
+                    break;
+                case ParameterSetNames.ByNameZone:
+                    DeleteByZone(Project, Zone, Name);
                     break;
                 case ParameterSetNames.ByObject:
                     DeleteByObject();
@@ -534,8 +550,21 @@ namespace Google.PowerShell.Compute
         private void DeleteByObject()
         {
             string project = GetProjectNameFromUri(Object.SelfLink);
-            string zone = GetZoneNameFromUri(Object.Zone);
             string name = Object.Name;
+            if (!string.IsNullOrWhiteSpace(Object.Region))
+            {
+                string region = GetRegionNameFromUri(Object.Region);
+                DeleteByRegion(project, region, name);
+            }
+            else
+            {
+                string zone = GetZoneNameFromUri(Object.Zone);
+                DeleteByZone(project, zone, name);
+            }
+        }
+
+        private void DeleteByZone(string project, string zone, string name)
+        {
             if (ShouldProcess($"{project}/{zone}/{name}", "Remove Instance Group Manager"))
             {
                 Operation operation = Service.InstanceGroupManagers.Delete(project, zone, name).Execute();
@@ -543,12 +572,12 @@ namespace Google.PowerShell.Compute
             }
         }
 
-        private void DeleteByName()
+        private void DeleteByRegion(string project, string region, string name)
         {
-            if (ShouldProcess($"{Project}/{Zone}/{Name}", "Remove Instance Group Manager"))
+            if (ShouldProcess($"{project}/{region}/{name}", "Remove Instance Group Manager"))
             {
-                Operation operation = Service.InstanceGroupManagers.Delete(Project, Zone, Name).Execute();
-                AddZoneOperation(Project, Zone, operation);
+                Operation operation = Service.RegionInstanceGroupManagers.Delete(project, region, name).Execute();
+                AddRegionOperation(project, region, operation);
             }
         }
     }

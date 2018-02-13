@@ -69,5 +69,84 @@ namespace Google.PowerShell.Tests.Compute
             Assert.IsNotNull(secondGroup);
             Assert.AreEqual(secondGroup.Name, SecondTestGroup.Name);
         }
+
+        /// <summary>
+        /// Tests that Remove-GceManagedInstanceGroup works with -Region option.
+        /// </summary>
+        [Test]
+        public void TestRemoveGceManagedInstanceGroupByRegion()
+        {
+            string instanceGroupName = "instance-group";
+            Mock<RegionInstanceGroupManagersResource> instances =
+                  ServiceMock.Resource(s => s.RegionInstanceGroupManagers);
+            instances.SetupRequest(
+                  item => item.Delete(FakeProjectId, FakeRegionName, instanceGroupName), DoneOperation);
+
+            Pipeline.Commands.AddScript(
+                $"Remove-GceManagedInstanceGroup -Name {instanceGroupName} -Region {FakeRegionName}");
+            Pipeline.Invoke();
+
+            instances.VerifyAll();
+        }
+
+        /// <summary>
+        /// Tests that Remove-GceManagedInstanceGroup works when pipelining regional instance group.
+        /// </summary>
+        [Test]
+        public void TestRemoveGceManagedInstanceGroupPipelineRegional()
+        {
+            string instanceGroupName = "RegionalInstanceGroup";
+            string regionLink = $"{ComputeHttpsLink}/projects/{FakeProjectId}/regions/{FakeRegionName}";
+            InstanceGroupManager regionalInstanceGroup = new InstanceGroupManager()
+            {
+                Name = instanceGroupName,
+                Region = regionLink,
+                SelfLink = $"{regionLink}/instanceGroupManagers/{instanceGroupName}"
+            };
+
+            string managedRegionVar = "managedRegion";
+            Pipeline.Runspace.SessionStateProxy.SetVariable(managedRegionVar, regionalInstanceGroup);
+
+            Mock<RegionInstanceGroupManagersResource> instances =
+                  ServiceMock.Resource(s => s.RegionInstanceGroupManagers);
+            instances.SetupRequest(
+                  item => item.Delete(FakeProjectId, FakeRegionName, instanceGroupName), DoneOperation);
+
+            Pipeline.Commands.AddScript(
+                $"${managedRegionVar} | Remove-GceManagedInstanceGroup");
+            Pipeline.Invoke();
+
+            instances.VerifyAll();
+        }
+
+        /// <summary>
+        /// Tests that Remove-GceManagedInstanceGroup works when pipelining zonal instance group.
+        /// </summary>
+        [Test]
+        public void TestRemoveGceManagedInstanceGroupPipelineZonal()
+        {
+            string instanceGroupName = "RegionalInstanceGroup";
+            string zoneLink = $"{ComputeHttpsLink}/projects/{FakeProjectId}/zones/{FakeZoneName}";
+            InstanceGroupManager regionalInstanceGroup = new InstanceGroupManager()
+            {
+                Name = instanceGroupName,
+                Zone = zoneLink,
+                SelfLink = $"{zoneLink}/instanceGroupManagers/{instanceGroupName}"
+            };
+
+            string managedRegionVar = "managedRegion";
+            Pipeline.Runspace.SessionStateProxy.SetVariable(managedRegionVar, regionalInstanceGroup);
+
+            Mock<InstanceGroupManagersResource> instances =
+                  ServiceMock.Resource(s => s.InstanceGroupManagers);
+            instances.SetupRequest(
+                  item => item.Delete(FakeProjectId, FakeZoneName, instanceGroupName), DoneOperation);
+
+            Pipeline.Commands.AddScript(
+                $"${managedRegionVar} | Remove-GceManagedInstanceGroup");
+            Pipeline.Invoke();
+
+            instances.VerifyAll();
+        }
     }
 }
