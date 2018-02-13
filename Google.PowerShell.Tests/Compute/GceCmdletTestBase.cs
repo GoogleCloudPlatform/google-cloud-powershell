@@ -30,7 +30,7 @@ namespace Google.PowerShell.Tests.Compute
         /// <summary>
         /// Represents the start of a compute https link.
         /// </summary>
-        protected string ComputeHttpsLink = "https://www.googleapis.com/compute/v1";
+        protected const string ComputeHttpsLink = "https://www.googleapis.com/compute/v1";
 
         /// <summary>
         /// A completed operation.

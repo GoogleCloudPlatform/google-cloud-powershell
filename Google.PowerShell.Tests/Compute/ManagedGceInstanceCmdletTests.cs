@@ -96,11 +96,12 @@ namespace Google.PowerShell.Tests.Compute
         public void TestRemoveGceManagedInstanceGroupPipelineRegional()
         {
             string instanceGroupName = "RegionalInstanceGroup";
+            string regionLink = $"{ComputeHttpsLink}/projects/{FakeProjectId}/regions/{FakeRegionName}";
             InstanceGroupManager regionalInstanceGroup = new InstanceGroupManager()
             {
                 Name = instanceGroupName,
-                Region = $"{ComputeHttpsLink}/projects/{FakeProjectId}/regions/{FakeRegionName}",
-                SelfLink = $"{ComputeHttpsLink}/projects/{FakeProjectId}/regions/{FakeRegionName}/instanceGroupManagers/{instanceGroupName}"
+                Region = regionLink,
+                SelfLink = $"{regionLink}/instanceGroupManagers/{instanceGroupName}"
             };
 
             string managedRegionVar = "managedRegion";
@@ -125,11 +126,12 @@ namespace Google.PowerShell.Tests.Compute
         public void TestRemoveGceManagedInstanceGroupPipelineZonal()
         {
             string instanceGroupName = "RegionalInstanceGroup";
+            string zoneLink = $"{ComputeHttpsLink}/projects/{FakeProjectId}/zones/{FakeZoneName}";
             InstanceGroupManager regionalInstanceGroup = new InstanceGroupManager()
             {
                 Name = instanceGroupName,
-                Zone = $"{ComputeHttpsLink}/projects/{FakeProjectId}/zones/{FakeZoneName}",
-                SelfLink = $"{ComputeHttpsLink}/projects/{FakeProjectId}/zones/{FakeZoneName}/instanceGroupManagers/{instanceGroupName}"
+                Zone = zoneLink,
+                SelfLink = $"{zoneLink}/instanceGroupManagers/{instanceGroupName}"
             };
 
             string managedRegionVar = "managedRegion";
