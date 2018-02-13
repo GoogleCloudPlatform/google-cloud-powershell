@@ -274,14 +274,17 @@ namespace Google.PowerShell.Compute
     /// [Managed Instance Group resource definition]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.Add, "GceManagedInstanceGroup")]
+    [Cmdlet(VerbsCommon.Add, "GceManagedInstanceGroup", DefaultParameterSetName =
+        ParameterSetNames.ByZoneProperties)]
     [OutputType(typeof(InstanceGroupManager))]
     public class AddManagedInstanceGroupCmdlet : GceConcurrentCmdlet
     {
         private class ParameterSetNames
         {
-            public const string ByProperies = "ByProperties";
-            public const string ByObject = "ByObject";
+            public const string ByZoneProperties = "ByZoneProperties";
+            public const string ByRegionProperties = "ByRegionProperties";
+            public const string ByZoneObject = "ByZoneObject";
+            public const string ByRegionObject = "ByRegionObject";
         }
 
         /// <summary>
@@ -298,16 +301,28 @@ namespace Google.PowerShell.Compute
         /// The zone where the instance gorup will live.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.ByZoneProperties)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByZoneObject)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         public string Zone { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The region where the instance gorup will live.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByRegionProperties)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByRegionObject)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Region)]
+        public string Region { get; set; }
 
         /// <summary>
         /// <para type="description">
         /// The name of the instance group.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByProperies, Mandatory = true, Position = 0)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByZoneProperties, Mandatory = true, Position = 0)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByRegionProperties, Mandatory = true, Position = 0)]
         public string Name { get; set; }
 
         /// <summary>
@@ -316,7 +331,8 @@ namespace Google.PowerShell.Compute
         /// InstanceTemplate object from Get-GceInstanceTemplate.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByProperies, Mandatory = true, Position = 1)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByZoneProperties, Mandatory = true, Position = 1)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByRegionProperties, Mandatory = true, Position = 1)]
         [PropertyByTypeTransformation(Property = nameof(Apis.Compute.v1.Data.InstanceTemplate.SelfLink),
             TypeToTransform = typeof(InstanceTemplate))]
         public string InstanceTemplate { get; set; }
@@ -326,7 +342,8 @@ namespace Google.PowerShell.Compute
         /// The target number of instances for this instance group to have.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByProperies, Mandatory = true, Position = 2)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByZoneProperties, Mandatory = true, Position = 2)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByRegionProperties, Mandatory = true, Position = 2)]
         public int TargetSize { get; set; }
 
         /// <summary>
@@ -335,7 +352,8 @@ namespace Google.PowerShell.Compute
         /// random four character string. Defaults to the group name.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByProperies)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByZoneProperties)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByRegionProperties)]
         public string BaseInstanceName { get; set; }
 
         /// <summary>
@@ -343,7 +361,8 @@ namespace Google.PowerShell.Compute
         /// The human readable description of this instance group.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByProperies)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByZoneProperties)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByRegionProperties)]
         public string Description { get; set; }
 
         /// <summary>
@@ -352,7 +371,8 @@ namespace Google.PowerShell.Compute
         /// The target pools automatically apply to all of the instances in the managed instance group.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByProperies)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByZoneProperties)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByRegionProperties)]
         public string[] TargetPool { get; set; }
 
         /// <summary>
@@ -360,7 +380,8 @@ namespace Google.PowerShell.Compute
         /// The name you want to give to a port. Must have the same number of elements as PortNumber.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByProperies)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByZoneProperties)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByRegionProperties)]
         public string[] PortName { get; set; } = { };
 
         /// <summary>
@@ -368,7 +389,8 @@ namespace Google.PowerShell.Compute
         /// The number of the port you want to give a name. Must have the same number of elements as PortName.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByProperies)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByZoneProperties)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByRegionProperties)]
         public int[] PortNumber { get; set; } = { };
 
         /// <summary>
@@ -376,7 +398,8 @@ namespace Google.PowerShell.Compute
         /// A NamedPort object you want to include in the list of named ports.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByProperies)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByZoneProperties)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByRegionProperties)]
         public NamedPort[] NamedPort { get; set; }
 
         /// <summary>
@@ -384,7 +407,9 @@ namespace Google.PowerShell.Compute
         /// An InstanceGroupManager object used to create a new managed instance group.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
+        [Parameter(ParameterSetName = ParameterSetNames.ByRegionObject, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByZoneObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         public InstanceGroupManager Object { get; set; }
 
@@ -393,12 +418,12 @@ namespace Google.PowerShell.Compute
             InstanceGroupManager manager;
             switch (ParameterSetName)
             {
-                case ParameterSetNames.ByProperies:
+                case ParameterSetNames.ByZoneProperties:
+                case ParameterSetNames.ByRegionProperties:
                     manager = new InstanceGroupManager
                     {
                         Name = Name,
                         InstanceTemplate = InstanceTemplate,
-                        Zone = Zone,
                         BaseInstanceName = BaseInstanceName ?? Name,
                         Description = Description,
                         TargetPools = TargetPool,
@@ -406,27 +431,69 @@ namespace Google.PowerShell.Compute
                         TargetSize = TargetSize
                     };
                     break;
-                case ParameterSetNames.ByObject:
+                case ParameterSetNames.ByRegionObject:
+                case ParameterSetNames.ByZoneObject:
                     manager = Object;
                     break;
                 default:
                     throw UnknownParameterSetException;
             }
+
+            bool isRegionInstanceGroup = ParameterSetName == ParameterSetNames.ByRegionObject
+                || ParameterSetName == ParameterSetNames.ByRegionProperties;
+            if (isRegionInstanceGroup)
+            {
+                manager.Region = Region;
+                AddRegionManagedInstanceGroup(manager, Project, Region);
+            }
+            else
+            {
+                manager.Zone = Zone;
+                AddZoneManagedInstanceGroup(manager, Project, Zone);
+            }
+        }
+
+        private void AddZoneManagedInstanceGroup(InstanceGroupManager manager,
+            string project, string zone)
+        {
             InstanceGroupManagersResource.InsertRequest request =
-                Service.InstanceGroupManagers.Insert(manager, Project, Zone);
+                Service.InstanceGroupManagers.Insert(manager, project, zone);
             try
             {
                 Operation operation = request.Execute();
-                AddZoneOperation(Project, Zone, operation, () =>
+                AddZoneOperation(project, zone, operation, () =>
                 {
-                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, manager.Name));
+                    WriteObject(Service.InstanceGroupManagers.Get(project, zone, manager.Name).Execute());
                 });
             }
             catch (GoogleApiException apiEx) when (apiEx.HttpStatusCode == HttpStatusCode.Conflict)
             {
                 WriteResourceExistsError(
-                    exceptionMessage: $"Instance Group '{Name}' already exists " +
-                      $"in zone '{Zone}' of project '{Project}'",
+                    exceptionMessage: $"Instance Group '{manager.Name}' already exists " +
+                      $"in zone '{zone}' of project '{project}'",
+                    errorId: "InstanceAlreadyExists",
+                    targetObject: manager);
+            }
+        }
+
+        private void AddRegionManagedInstanceGroup(InstanceGroupManager manager,
+            string project, string region)
+        {
+            RegionInstanceGroupManagersResource.InsertRequest request =
+                Service.RegionInstanceGroupManagers.Insert(manager, project, region);
+            try
+            {
+                Operation operation = request.Execute();
+                AddRegionOperation(project, region, operation, () =>
+                {
+                    WriteObject(Service.RegionInstanceGroupManagers.Get(project, region, manager.Name).Execute());
+                });
+            }
+            catch (GoogleApiException apiEx) when (apiEx.HttpStatusCode == HttpStatusCode.Conflict)
+            {
+                WriteResourceExistsError(
+                    exceptionMessage: $"Instance Group '{manager.Name}' already exists " +
+                      $"in region '{region}' of project '{project}'",
                     errorId: "InstanceAlreadyExists",
                     targetObject: manager);
             }

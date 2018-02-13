@@ -148,5 +148,98 @@ namespace Google.PowerShell.Tests.Compute
 
             instances.VerifyAll();
         }
+
+        /// <summary>
+        /// Runs PowerShell script script to create a GceManagedInstanceGroup.
+        /// Checks that the group created has name instanceGroupName.
+        /// </summary>
+        /// <param name="script"></param>
+        private void TestAddGceManagedInstanceGroupHelper(string script, string instanceGroupName)
+        {
+            Pipeline.Commands.AddScript(script);
+            Collection<PSObject> results = Pipeline.Invoke();
+
+            Assert.AreEqual(results.Count, 1);
+            InstanceGroupManager createdInstance = results[0].BaseObject as InstanceGroupManager;
+            Assert.AreEqual(createdInstance?.Name, instanceGroupName);
+        }
+
+        /// <summary>
+        /// Tests that Add-GceManagedInstanceGroup works with -Region option.
+        /// </summary>
+        [Test]
+        public void TestAddGceManagedInstanceGroupByRegion()
+        {
+            string instanceGroupName = "instance-group";
+            string templateName = "instance-template";
+            Mock<RegionInstanceGroupManagersResource> instances =
+                  ServiceMock.Resource(s => s.RegionInstanceGroupManagers);
+            instances.SetupRequest(
+                  item => item.Insert(
+                      It.Is<InstanceGroupManager>(manager => manager.Name == instanceGroupName),
+                      FakeProjectId, FakeRegionName),
+                  DoneOperation);
+            instances.SetupRequest(
+                i => i.Get(FakeProjectId, FakeRegionName, instanceGroupName),
+                new InstanceGroupManager { Name = instanceGroupName });
+
+            TestAddGceManagedInstanceGroupHelper(
+                $"Add-GceManagedInstanceGroup -Name {instanceGroupName} " +
+                $"-InstanceTemplate {templateName} -TargetSize 1 -Region {FakeRegionName}",
+                instanceGroupName);
+            instances.VerifyAll();
+        }
+
+        /// <summary>
+        /// Tests that Add-GceManagedInstanceGroup works with -Region and -Object.
+        /// </summary>
+        [Test]
+        public void TestAddGceManagedInstanceGroupByRegionObject()
+        {
+            string managedRegionObject = "managedRegionObj";
+            string instanceGroupName = FirstTestGroup.Name;
+            Pipeline.Runspace.SessionStateProxy.SetVariable(managedRegionObject, FirstTestGroup);
+
+            Mock<RegionInstanceGroupManagersResource> instances =
+                  ServiceMock.Resource(s => s.RegionInstanceGroupManagers);
+            instances.SetupRequest(
+                  item => item.Insert(
+                      It.Is<InstanceGroupManager>(manager => manager.Name == instanceGroupName),
+                      FakeProjectId, FakeRegionName),
+                  DoneOperation);
+            instances.SetupRequest(
+                i => i.Get(FakeProjectId, FakeRegionName, FirstTestGroup.Name),
+                FirstTestGroup);
+
+            TestAddGceManagedInstanceGroupHelper(
+                $"${managedRegionObject} | Add-GceManagedInstanceGroup -Region {FakeRegionName}",
+                instanceGroupName);
+            instances.VerifyAll();
+        }
+
+        /// <summary>
+        /// Tests that Add-GceManagedInstanceGroup uses -Zone option by default.
+        /// </summary>
+        [Test]
+        public void TestAddGceManagedInstanceGroupDefault()
+        {
+            string instanceGroupName = FirstTestGroup.Name;
+            Mock<InstanceGroupManagersResource> instances =
+                  ServiceMock.Resource(s => s.InstanceGroupManagers);
+            instances.SetupRequest(
+                  item => item.Insert(
+                      It.Is<InstanceGroupManager>(manager => manager.Name == instanceGroupName),
+                      FakeProjectId, FakeZoneName),
+                  DoneOperation);
+            instances.SetupRequest(
+                i => i.Get(FakeProjectId, FakeZoneName, instanceGroupName),
+                FirstTestGroup);
+
+            TestAddGceManagedInstanceGroupHelper(
+                $"Add-GceManagedInstanceGroup -Name {instanceGroupName} " +
+                $"-InstanceTemplate template -TargetSize 1",
+                instanceGroupName);
+            instances.VerifyAll();
+        }
     }
 }
