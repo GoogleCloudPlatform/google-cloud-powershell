@@ -90,19 +90,29 @@ namespace Google.PowerShell.Tests.Compute
         }
 
         /// <summary>
+        /// Creates a InstanceGroupManager with a region and self-link.
+        /// </summary>
+        private InstanceGroupManager CreateRegionalInstanceGroup(
+            string groupName, string projectName, string regionName)
+        {
+            string regionLink = $"{ComputeHttpsLink}/projects/{projectName}/regions/{regionName}";
+            return new InstanceGroupManager()
+            {
+                Name = groupName,
+                Region = regionLink,
+                SelfLink = $"{regionLink}/instanceGroupManagers/{groupName}"
+            };
+        }
+
+        /// <summary>
         /// Tests that Remove-GceManagedInstanceGroup works when pipelining regional instance group.
         /// </summary>
         [Test]
         public void TestRemoveGceManagedInstanceGroupPipelineRegional()
         {
             string instanceGroupName = "RegionalInstanceGroup";
-            string regionLink = $"{ComputeHttpsLink}/projects/{FakeProjectId}/regions/{FakeRegionName}";
-            InstanceGroupManager regionalInstanceGroup = new InstanceGroupManager()
-            {
-                Name = instanceGroupName,
-                Region = regionLink,
-                SelfLink = $"{regionLink}/instanceGroupManagers/{instanceGroupName}"
-            };
+            InstanceGroupManager regionalInstanceGroup =
+                CreateRegionalInstanceGroup(instanceGroupName, FakeProjectId, FakeRegionName);
 
             string managedRegionVar = "managedRegion";
             Pipeline.Runspace.SessionStateProxy.SetVariable(managedRegionVar, regionalInstanceGroup);
@@ -150,21 +160,6 @@ namespace Google.PowerShell.Tests.Compute
         }
 
         /// <summary>
-        /// Runs PowerShell script script to create a GceManagedInstanceGroup.
-        /// Checks that the group created has name instanceGroupName.
-        /// </summary>
-        /// <param name="script"></param>
-        private void TestAddGceManagedInstanceGroupHelper(string script, string instanceGroupName)
-        {
-            Pipeline.Commands.AddScript(script);
-            Collection<PSObject> results = Pipeline.Invoke();
-
-            Assert.AreEqual(results.Count, 1);
-            InstanceGroupManager createdInstance = results[0].BaseObject as InstanceGroupManager;
-            Assert.AreEqual(createdInstance?.Name, instanceGroupName);
-        }
-
-        /// <summary>
         /// Tests that Add-GceManagedInstanceGroup works with -Region option.
         /// </summary>
         [Test]
@@ -183,18 +178,26 @@ namespace Google.PowerShell.Tests.Compute
                 i => i.Get(FakeProjectId, FakeRegionName, instanceGroupName),
                 new InstanceGroupManager { Name = instanceGroupName });
 
-            TestAddGceManagedInstanceGroupHelper(
-                $"Add-GceManagedInstanceGroup -Name {instanceGroupName} " +
-                $"-InstanceTemplate {templateName} -TargetSize 1 -Region {FakeRegionName}",
-                instanceGroupName);
-            instances.VerifyAll();
+            Pipeline.Commands.AddScript($"Add-GceManagedInstanceGroup -Name {instanceGroupName} " +
+                $"-InstanceTemplate {templateName} -TargetSize 1 -Region {FakeRegionName}");
+            Collection<PSObject> results = Pipeline.Invoke();
+
+            instances.Verify(
+                resource => resource.Insert(
+                    It.Is<InstanceGroupManager>(manager => manager.Name == instanceGroupName),
+                    FakeProjectId, FakeRegionName),
+                Times.Once);
+
+            Assert.AreEqual(results.Count, 1);
+            InstanceGroupManager createdInstance = results[0].BaseObject as InstanceGroupManager;
+            Assert.AreEqual(createdInstance?.Name, instanceGroupName);
         }
 
         /// <summary>
         /// Tests that Add-GceManagedInstanceGroup works with -Region and -Object.
         /// </summary>
         [Test]
-        public void TestAddGceManagedInstanceGroupByRegionObject()
+        public void TestAddGceManagedInstanceGroupByObjectWithRegionParam()
         {
             string managedRegionObject = "managedRegionObj";
             string instanceGroupName = FirstTestGroup.Name;
@@ -211,10 +214,60 @@ namespace Google.PowerShell.Tests.Compute
                 i => i.Get(FakeProjectId, FakeRegionName, FirstTestGroup.Name),
                 FirstTestGroup);
 
-            TestAddGceManagedInstanceGroupHelper(
-                $"${managedRegionObject} | Add-GceManagedInstanceGroup -Region {FakeRegionName}",
-                instanceGroupName);
-            instances.VerifyAll();
+            Pipeline.Commands.AddScript(
+                $"${managedRegionObject} | Add-GceManagedInstanceGroup -Region {FakeRegionName}");
+            Collection<PSObject> results = Pipeline.Invoke();
+
+            instances.Verify(
+                resource => resource.Insert(
+                    It.Is<InstanceGroupManager>(manager => manager.Name == instanceGroupName),
+                    FakeProjectId, FakeRegionName),
+                Times.Once);
+
+            Assert.AreEqual(results.Count, 1);
+            InstanceGroupManager createdInstance = results[0].BaseObject as InstanceGroupManager;
+            Assert.AreEqual(createdInstance?.Name, instanceGroupName);
+        }
+
+        /// <summary>
+        /// Tests that Add-GceManagedInstanceGroup works with -Object when
+        /// the object has a region.
+        /// </summary>
+        [Test]
+        public void TestAddGceManagedInstanceGroupByObjectWithRegionSet()
+        {
+            string instanceGroupName = "RegionalInstanceGroup";
+            string instanceRegionName = "MyRegion";
+            InstanceGroupManager regionalInstanceGroup =
+                CreateRegionalInstanceGroup(instanceGroupName, FakeProjectId, instanceRegionName);
+
+            string managedRegionObject = "managedRegionObj";
+            Pipeline.Runspace.SessionStateProxy.SetVariable(managedRegionObject, regionalInstanceGroup);
+
+            Mock<RegionInstanceGroupManagersResource> instances =
+                  ServiceMock.Resource(s => s.RegionInstanceGroupManagers);
+            instances.SetupRequest(
+                  item => item.Insert(
+                      It.Is<InstanceGroupManager>(manager => manager.Name == instanceGroupName),
+                      FakeProjectId, instanceRegionName),
+                  DoneOperation);
+            instances.SetupRequest(
+                i => i.Get(FakeProjectId, instanceRegionName, instanceGroupName),
+                regionalInstanceGroup);
+
+            Pipeline.Commands.AddScript(
+                $"${managedRegionObject} | Add-GceManagedInstanceGroup -Region {instanceRegionName}");
+            Collection<PSObject> results = Pipeline.Invoke();
+
+            instances.Verify(
+                resource => resource.Insert(
+                    It.Is<InstanceGroupManager>(manager => manager.Name == instanceGroupName),
+                    FakeProjectId, instanceRegionName),
+                Times.Once);
+
+            Assert.AreEqual(results.Count, 1);
+            InstanceGroupManager createdInstance = results[0].BaseObject as InstanceGroupManager;
+            Assert.AreEqual(createdInstance?.Name, instanceGroupName);
         }
 
         /// <summary>
@@ -235,11 +288,20 @@ namespace Google.PowerShell.Tests.Compute
                 i => i.Get(FakeProjectId, FakeZoneName, instanceGroupName),
                 FirstTestGroup);
 
-            TestAddGceManagedInstanceGroupHelper(
+            Pipeline.Commands.AddScript(
                 $"Add-GceManagedInstanceGroup -Name {instanceGroupName} " +
-                $"-InstanceTemplate template -TargetSize 1",
-                instanceGroupName);
-            instances.VerifyAll();
+                $"-InstanceTemplate template -TargetSize 1");
+            Collection<PSObject> results = Pipeline.Invoke();
+
+            instances.Verify(
+                resource => resource.Insert(
+                    It.Is<InstanceGroupManager>(manager => manager.Name == instanceGroupName),
+                    FakeProjectId, FakeZoneName),
+                Times.Once);
+
+            Assert.AreEqual(results.Count, 1);
+            InstanceGroupManager createdInstance = results[0].BaseObject as InstanceGroupManager;
+            Assert.AreEqual(createdInstance?.Name, instanceGroupName);
         }
     }
 }

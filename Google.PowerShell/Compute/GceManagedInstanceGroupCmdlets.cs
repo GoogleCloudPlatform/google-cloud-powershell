@@ -283,8 +283,7 @@ namespace Google.PowerShell.Compute
         {
             public const string ByZoneProperties = "ByZoneProperties";
             public const string ByRegionProperties = "ByRegionProperties";
-            public const string ByZoneObject = "ByZoneObject";
-            public const string ByRegionObject = "ByRegionObject";
+            public const string ByObject = "ByObject";
         }
 
         /// <summary>
@@ -302,7 +301,7 @@ namespace Google.PowerShell.Compute
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByZoneProperties)]
-        [Parameter(ParameterSetName = ParameterSetNames.ByZoneObject)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByObject)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         public string Zone { get; set; }
 
@@ -312,7 +311,7 @@ namespace Google.PowerShell.Compute
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ByRegionProperties)]
-        [Parameter(ParameterSetName = ParameterSetNames.ByRegionObject)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByObject)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Region)]
         public string Region { get; set; }
 
@@ -407,19 +406,21 @@ namespace Google.PowerShell.Compute
         /// An InstanceGroupManager object used to create a new managed instance group.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByRegionObject, Mandatory = true,
-            Position = 0, ValueFromPipeline = true)]
-        [Parameter(ParameterSetName = ParameterSetNames.ByZoneObject, Mandatory = true,
+        [Parameter(ParameterSetName = ParameterSetNames.ByObject, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         public InstanceGroupManager Object { get; set; }
 
         protected override void ProcessRecord()
         {
             InstanceGroupManager manager;
+            bool isZoneInstanceGroup = true;
+
             switch (ParameterSetName)
             {
-                case ParameterSetNames.ByZoneProperties:
                 case ParameterSetNames.ByRegionProperties:
+                    isZoneInstanceGroup = false;
+                    goto case ParameterSetNames.ByZoneProperties;
+                case ParameterSetNames.ByZoneProperties:
                     manager = new InstanceGroupManager
                     {
                         Name = Name,
@@ -431,25 +432,48 @@ namespace Google.PowerShell.Compute
                         TargetSize = TargetSize
                     };
                     break;
-                case ParameterSetNames.ByRegionObject:
-                case ParameterSetNames.ByZoneObject:
+                case ParameterSetNames.ByObject:
                     manager = Object;
+                    // Uses Zone by default unless user explicitly uses -Region.
+                    isZoneInstanceGroup = !MyInvocation.BoundParameters.ContainsKey(nameof(Region));
+                    ProcessPipedObjectArguments();
                     break;
                 default:
                     throw UnknownParameterSetException;
             }
 
-            bool isRegionInstanceGroup = ParameterSetName == ParameterSetNames.ByRegionObject
-                || ParameterSetName == ParameterSetNames.ByRegionProperties;
-            if (isRegionInstanceGroup)
+            if (isZoneInstanceGroup)
             {
-                manager.Region = Region;
-                AddRegionManagedInstanceGroup(manager, Project, Region);
+                AddZoneManagedInstanceGroup(manager, Project, Zone);
             }
             else
             {
-                manager.Zone = Zone;
-                AddZoneManagedInstanceGroup(manager, Project, Zone);
+                AddRegionManagedInstanceGroup(manager, Project, Region);
+            }
+        }
+
+        /// <summary>
+        /// Processes the arguments when the cmdlet receives a piped ManagedInstanceGroup.
+        /// </summary>
+        private void ProcessPipedObjectArguments()
+        {
+            // Only use argument from -Project if the user supplies it.
+            if (MyInvocation.BoundParameters.ContainsKey(nameof(Project))
+                && !string.IsNullOrWhiteSpace(Object.SelfLink))
+            {
+                Project = GetProjectNameFromUri(Object.SelfLink);
+            }
+
+            if (MyInvocation.BoundParameters.ContainsKey(nameof(Zone))
+                && !string.IsNullOrWhiteSpace(Object.Zone))
+            {
+                Zone = GetZoneNameFromUri(Object.Zone);
+            }
+
+            if (MyInvocation.BoundParameters.ContainsKey(nameof(Region))
+                && !string.IsNullOrWhiteSpace(Object.Region))
+            {
+                Region = GetRegionNameFromUri(Object.Region);
             }
         }
 
