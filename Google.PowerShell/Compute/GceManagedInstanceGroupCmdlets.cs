@@ -434,9 +434,7 @@ namespace Google.PowerShell.Compute
                     break;
                 case ParameterSetNames.ByObject:
                     manager = Object;
-                    // Uses Zone by default unless user explicitly uses -Region.
-                    isZoneInstanceGroup = !MyInvocation.BoundParameters.ContainsKey(nameof(Region));
-                    ProcessPipedObjectArguments();
+                    isZoneInstanceGroup = ProcessPipedObjectArguments();
                     break;
                 default:
                     throw UnknownParameterSetException;
@@ -454,27 +452,52 @@ namespace Google.PowerShell.Compute
 
         /// <summary>
         /// Processes the arguments when the cmdlet receives a piped ManagedInstanceGroup.
+        /// This function will return true if we need to create a zone instance
+        /// and return false if we need to create a region.
         /// </summary>
-        private void ProcessPipedObjectArguments()
+        private bool ProcessPipedObjectArguments()
         {
-            // Only use argument from -Project if the user supplies it.
-            if (MyInvocation.BoundParameters.ContainsKey(nameof(Project))
-                && !string.IsNullOrWhiteSpace(Object.SelfLink))
+            bool regionSpecified = MyInvocation.BoundParameters.ContainsKey(nameof(Region));
+            bool projectSpecified = MyInvocation.BoundParameters.ContainsKey(nameof(Project));
+            bool zoneSpecified = MyInvocation.BoundParameters.ContainsKey(nameof(Zone));
+
+            if (regionSpecified && zoneSpecified)
+            {
+                throw UnknownParameterSetException;
+            }
+
+            // Extracts Project from the object if -Project not used.
+            if (!projectSpecified && !string.IsNullOrWhiteSpace(Object.SelfLink))
             {
                 Project = GetProjectNameFromUri(Object.SelfLink);
             }
 
-            if (MyInvocation.BoundParameters.ContainsKey(nameof(Zone))
-                && !string.IsNullOrWhiteSpace(Object.Zone))
+            if (regionSpecified)
             {
-                Zone = GetZoneNameFromUri(Object.Zone);
+                return false;
             }
 
-            if (MyInvocation.BoundParameters.ContainsKey(nameof(Region))
-                && !string.IsNullOrWhiteSpace(Object.Region))
+            if (zoneSpecified)
+            {
+                return true;
+            }
+
+            // If we reach here, then regionSpecified and zoneSpecified are both false.
+            // So we check the object for clue.
+            if (!string.IsNullOrWhiteSpace(Object.Zone))
+            {
+                Zone = GetZoneNameFromUri(Object.Zone);
+                return true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(Object.Region))
             {
                 Region = GetRegionNameFromUri(Object.Region);
+                return false;
             }
+
+            // Creates a zone by default.
+            return true;
         }
 
         private void AddZoneManagedInstanceGroup(InstanceGroupManager manager,

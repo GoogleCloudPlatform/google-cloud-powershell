@@ -31,7 +31,8 @@ namespace Google.PowerShell.Tests.Compute
     {
         private InstanceGroupManager FirstTestGroup = new InstanceGroupManager()
         {
-            Name = "One"
+            Name = "One",
+            Region = $@"{ComputeHttpsLink}\region\us-central1"
         };
         private InstanceGroupManager SecondTestGroup = new InstanceGroupManager()
         {
