@@ -15,14 +15,14 @@ namespace Google.PowerShell.ComputeEngine
         public Operation.ErrorData OperationError { get; private set; }
 
         public GoogleComputeOperationException(Operation.ErrorData errorData) :
-            this(GetErrorMessaage(errorData), errorData)
+            this(GetErrorMessage(errorData), errorData)
         {
         }
 
         /// <summary>
         /// Gets the first error message, or "Unknown error" if there is none.
         /// </summary>
-        private static string GetErrorMessaage(Operation.ErrorData errorData)
+        private static string GetErrorMessage(Operation.ErrorData errorData)
         {
             if (errorData?.Errors != null && errorData.Errors.Count > 0)
             {
