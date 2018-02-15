@@ -287,7 +287,7 @@ namespace Google.PowerShell.Tests.Compute
                 $"{FakeRegionName} -Zone {FakeZoneName}");
             var error = Assert.Throws<PSInvalidOperationException>(() => Pipeline.Invoke());
 
-            Assert.AreEqual("Parameters -Region and -Zone cannot be used together.",
+            Assert.AreEqual("Parameters -Region and -Zone cannot be used together with -Object.",
                 error.Message);
         }
 
