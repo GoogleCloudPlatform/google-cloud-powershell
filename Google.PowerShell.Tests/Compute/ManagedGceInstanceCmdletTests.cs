@@ -272,6 +272,26 @@ namespace Google.PowerShell.Tests.Compute
         }
 
         /// <summary>
+        /// Tests that Add-GceManagedInstanceGroup throws error if -Object
+        /// is used with both -Region and -Zone.
+        /// </summary>
+        [Test]
+        public void TestAddGceManagedInstanceGroupByObjectError()
+        {
+            string managedRegionObject = "managedRegionObj";
+            string instanceGroupName = FirstTestGroup.Name;
+            Pipeline.Runspace.SessionStateProxy.SetVariable(managedRegionObject, FirstTestGroup);
+
+            Pipeline.Commands.AddScript(
+                $"${managedRegionObject} | Add-GceManagedInstanceGroup -Region " +
+                $"{FakeRegionName} -Zone {FakeZoneName}");
+            var error = Assert.Throws<PSInvalidOperationException>(() => Pipeline.Invoke());
+
+            Assert.AreEqual("Parameters -Region and -Zone cannot be used together.",
+                error.Message);
+        }
+
+        /// <summary>
         /// Tests that Add-GceManagedInstanceGroup uses -Zone option by default.
         /// </summary>
         [Test]

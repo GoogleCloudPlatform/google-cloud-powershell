@@ -463,7 +463,8 @@ namespace Google.PowerShell.Compute
 
             if (regionSpecified && zoneSpecified)
             {
-                throw UnknownParameterSetException;
+                throw new PSInvalidOperationException(
+                    "Parameters -Region and -Zone cannot be used together.");
             }
 
             // Extracts Project from the object if -Project not used.
