@@ -83,6 +83,7 @@ namespace Google.PowerShell.Compute
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.ListRegion, Mandatory = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Region)]
         public string Region { get; set; }
 
@@ -192,14 +193,60 @@ namespace Google.PowerShell.Compute
         private InstanceGroupManager GetGroupByUri()
         {
             string project = GetProjectNameFromUri(Uri);
-            string zone = GetZoneNameFromUri(Uri);
+            string region = GetRegionNameFromUri(Uri);
             string name = GetUriPart("instanceGroupManagers", Uri);
+
+            if (!string.IsNullOrWhiteSpace(region))
+            {
+                return Service.RegionInstanceGroupManagers.Get(project, region, name).Execute();
+            }
+
+            string zone = GetZoneNameFromUri(Uri);
             return Service.InstanceGroupManagers.Get(project, zone, name).Execute();
         }
 
+        /// <summary>
+        /// If -Region and -Zone are specified together, returns an error.
+        /// If -Region is specified, finds a regional managed instance group
+        /// with name Name.
+        /// If -Zone is specified, finds a zonal managed instance group with
+        /// name Name.
+        /// If neither -Region or -Zone is specified, tries to find a zonal
+        /// managed instance group with name Name in the default zone.
+        /// If that fails, tries to find a regional managed instance group
+        /// with name Name in the default region.
+        /// </summary>
         private InstanceGroupManager GetGroupByName()
         {
-            return Service.InstanceGroupManagers.Get(Project, Zone, Name).Execute();
+            bool regionSpecified = MyInvocation.BoundParameters.ContainsKey(nameof(Region));
+            bool zoneSpecified = MyInvocation.BoundParameters.ContainsKey(nameof(Zone));
+            if (regionSpecified && zoneSpecified)
+            {
+                throw new PSInvalidOperationException(
+                    "Parameters -Region and -Zone cannot be used together with -Name.");
+            }
+
+            if (regionSpecified)
+            {
+                return Service.RegionInstanceGroupManagers.Get(Project, Region, Name).Execute();
+            }
+
+            if (zoneSpecified)
+            {
+                return Service.InstanceGroupManagers.Get(Project, Zone, Name).Execute();
+            }
+
+            InstanceGroupManager manager;
+            try
+            {
+                manager = Service.InstanceGroupManagers.Get(Project, Zone, Name).Execute();
+            }
+            catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.NotFound)
+            {
+                manager = Service.RegionInstanceGroupManagers.Get(Project, Region, Name).Execute();
+            }
+
+            return manager;
         }
 
         private IEnumerable<InstanceGroupManager> GetZoneGroups()

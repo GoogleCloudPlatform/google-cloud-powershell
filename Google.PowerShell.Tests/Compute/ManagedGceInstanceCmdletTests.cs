@@ -72,6 +72,42 @@ namespace Google.PowerShell.Tests.Compute
         }
 
         /// <summary>
+        /// Tests that Get-GceManagedInstanceGroup works with -Name and -Region option.
+        /// </summary>
+        [Test]
+        public void TestGetGceManagedInstanceGroupByNameAndRegion()
+        {
+            string instanceGroupName = FirstTestGroup.Name;
+            Mock<RegionInstanceGroupManagersResource> instances =
+                  ServiceMock.Resource(s => s.RegionInstanceGroupManagers);
+            instances.SetupRequest(
+                  item => item.Get(FakeProjectId, FakeRegionName, instanceGroupName), FirstTestGroup);
+
+            Pipeline.Commands.AddScript(
+                $"Get-GceManagedInstanceGroup -Name {instanceGroupName} -Region {FakeRegionName}");
+            Collection<PSObject> results = Pipeline.Invoke();
+
+            Assert.AreEqual(results.Count, 1);
+            InstanceGroupManager retrievedInstance = results[0].BaseObject as InstanceGroupManager;
+            Assert.AreEqual(retrievedInstance?.Name, instanceGroupName);
+        }
+
+        /// <summary>
+        /// Tests that Get-GceManagedInstanceGroup throws error if -Name
+        /// is used with both -Region and -Zone.
+        /// </summary>
+        [Test]
+        public void TestGetGceManagedInstanceGroupByNameError()
+        {
+            Pipeline.Commands.AddScript(
+                $"Get-GceManagedInstanceGroup -Name instance -Region {FakeRegionName} -Zone {FakeZoneName}");
+            var error = Assert.Throws<CmdletInvocationException>(() => Pipeline.Invoke());
+
+            Assert.AreEqual("Parameters -Region and -Zone cannot be used together with -Name.",
+                error.Message);
+        }
+
+        /// <summary>
         /// Tests that Remove-GceManagedInstanceGroup works with -Region option.
         /// </summary>
         [Test]
@@ -285,7 +321,7 @@ namespace Google.PowerShell.Tests.Compute
             Pipeline.Commands.AddScript(
                 $"${managedRegionObject} | Add-GceManagedInstanceGroup -Region " +
                 $"{FakeRegionName} -Zone {FakeZoneName}");
-            var error = Assert.Throws<PSInvalidOperationException>(() => Pipeline.Invoke());
+            var error = Assert.Throws<CmdletInvocationException>(() => Pipeline.Invoke());
 
             Assert.AreEqual("Parameters -Region and -Zone cannot be used together with -Object.",
                 error.Message);
