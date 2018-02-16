@@ -824,6 +824,15 @@ namespace Google.PowerShell.Compute
 
         /// <summary>
         /// <para type="description">
+        /// The region the managed instance group is in.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Region)]
+        public string Region { get; set; }
+
+        /// <summary>
+        /// <para type="description">
         /// The name of the managed instance group to change.
         /// </para>
         /// </summary>
@@ -910,42 +919,67 @@ namespace Google.PowerShell.Compute
 
         protected override void ProcessRecord()
         {
+            bool regionSpecified = MyInvocation.BoundParameters.ContainsKey(nameof(Region));
+            bool zoneSpecified = MyInvocation.BoundParameters.ContainsKey(nameof(Zone));
+            if (regionSpecified && zoneSpecified)
+            {
+                throw new PSInvalidOperationException(
+                    "Parameters -Region and -Zone cannot be used together.");
+            }
+
+            if (InstanceObject != null)
+            {
+                InstanceUri = InstanceObject.Select(instance => instance.SelfLink).ToArray();
+            }
+
             switch (ParameterSetName)
             {
                 case ParameterSetNames.AbandonUri:
-                    AbandonUri();
-                    break;
                 case ParameterSetNames.AbandonObject:
-                    AbandonObject();
+                    AbandonUri(regionSpecified);
                     break;
                 case ParameterSetNames.DeleteUri:
-                    DeleteUri();
-                    break;
                 case ParameterSetNames.DeleteObject:
-                    DeleteObject();
+                    DeleteUri(regionSpecified);
                     break;
                 case ParameterSetNames.RecreateUri:
-                    RecreateUri();
-                    break;
                 case ParameterSetNames.RecreateObject:
-                    RecreateObject();
+                    RecreateUri(regionSpecified);
                     break;
                 case ParameterSetNames.Resize:
-                    Resize();
+                    Resize(regionSpecified);
                     break;
                 case ParameterSetNames.SetTemplate:
-                    SetTemplate();
+                    SetTemplate(regionSpecified);
                     break;
                 case ParameterSetNames.SetTargetPools:
-                    SetTargetPools();
+                    SetTargetPools(regionSpecified);
                     break;
                 default:
                     throw UnknownParameterSetException;
             }
         }
 
-        private void SetTemplate()
+        private void SetTemplate(bool isRegionSpecified)
         {
+            if (isRegionSpecified)
+            {
+                var regionRequestBody = new RegionInstanceGroupManagersSetTemplateRequest
+                {
+                    InstanceTemplate = Template
+                };
+                if (ShouldProcess($"{Project}/{Region}/{Name}", "Set Target Pools"))
+                {
+                    RegionInstanceGroupManagersResource.SetInstanceTemplateRequest request =
+                        Service.RegionInstanceGroupManagers.SetInstanceTemplate(regionRequestBody, Project, Region, Name);
+                    Operation operation = request.Execute();
+                    AddRegionOperation(Project, Region, operation, () =>
+                    {
+                        WriteObject(Service.RegionInstanceGroupManagers.Get(Project, Region, Name).Execute());
+                    });
+                }
+            }
+
             InstanceGroupManagersSetInstanceTemplateRequest body =
                 new InstanceGroupManagersSetInstanceTemplateRequest
                 {
@@ -958,14 +992,32 @@ namespace Google.PowerShell.Compute
                 Operation operation = request.Execute();
                 AddZoneOperation(Project, Zone, operation, () =>
                 {
-                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name));
+                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name).Execute());
                 });
             }
         }
 
 
-        private void SetTargetPools()
+        private void SetTargetPools(bool isRegionSpecified)
         {
+            if (isRegionSpecified)
+            {
+                var regionRequestBody = new RegionInstanceGroupManagersSetTargetPoolsRequest()
+                {
+                    TargetPools = TargetPoolUri
+                };
+                if (ShouldProcess($"{Project}/{Region}/{Name}", "Set Target Pools"))
+                {
+                    RegionInstanceGroupManagersResource.SetTargetPoolsRequest request =
+                        Service.RegionInstanceGroupManagers.SetTargetPools(regionRequestBody, Project, Region, Name);
+                    Operation operation = request.Execute();
+                    AddRegionOperation(Project, Region, operation, () =>
+                    {
+                        WriteObject(Service.RegionInstanceGroupManagers.Get(Project, Region, Name).Execute());
+                    });
+                }
+            }
+
             var body = new InstanceGroupManagersSetTargetPoolsRequest()
             {
                 TargetPools = TargetPoolUri
@@ -977,13 +1029,28 @@ namespace Google.PowerShell.Compute
                 Operation operation = request.Execute();
                 AddZoneOperation(Project, Zone, operation, () =>
                 {
-                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name));
+                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name).Execute());
                 });
             }
         }
 
-        private void Resize()
+        private void Resize(bool isRegionSpecified)
         {
+            if (isRegionSpecified)
+            {
+                if (ShouldProcess($"{Project}/{Region}/{Name}", "Resize"))
+                {
+                    RegionInstanceGroupManagersResource.ResizeRequest request =
+                        Service.RegionInstanceGroupManagers.Resize(Project, Region, Name, Size);
+                    Operation operation = request.Execute();
+                    AddRegionOperation(Project, Region, operation, () =>
+                    {
+                        WriteObject(Service.RegionInstanceGroupManagers.Get(Project, Region, Name).Execute());
+                    });
+                }
+                return;
+            }
+
             if (ShouldProcess($"{Project}/{Zone}/{Name}", "Resize"))
             {
                 InstanceGroupManagersResource.ResizeRequest request =
@@ -991,16 +1058,36 @@ namespace Google.PowerShell.Compute
                 Operation operation = request.Execute();
                 AddZoneOperation(Project, Zone, operation, () =>
                 {
-                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name));
+                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name).Execute());
                 });
             }
         }
 
-        private void RecreateObject()
+        private void RecreateUri(bool isRegionSpecified)
         {
+            if (isRegionSpecified)
+            {
+                var regionBody = new RegionInstanceGroupManagersRecreateRequest
+                {
+                    Instances = InstanceUri
+                };
+                if (ShouldProcess("Recreating instances: " + JoinInstanceNames(regionBody.Instances), null,
+                    $"Managed Instance Group {Project}/{Region}/{Name}"))
+                {
+                    RegionInstanceGroupManagersResource.RecreateInstancesRequest request =
+                        Service.RegionInstanceGroupManagers.RecreateInstances(regionBody, Project, Region, Name);
+                    Operation operation = request.Execute();
+                    AddRegionOperation(Project, Region, operation, () =>
+                    {
+                        WriteObject(Service.RegionInstanceGroupManagers.Get(Project, Region, Name).Execute());
+                    });
+                }
+                return;
+            }
+
             var body = new InstanceGroupManagersRecreateInstancesRequest
             {
-                Instances = InstanceObject.Select(i => i.SelfLink).ToList()
+                Instances = InstanceUri
             };
             if (ShouldProcess("Recreating instances: " + JoinInstanceNames(body.Instances), null,
                 $"Managed Instance Group {Project}/{Zone}/{Name}"))
@@ -1010,51 +1097,33 @@ namespace Google.PowerShell.Compute
                 Operation operation = request.Execute();
                 AddZoneOperation(Project, Zone, operation, () =>
                 {
-                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name));
+                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name).Execute());
                 });
             }
         }
 
-        private void RecreateUri()
+        private void DeleteUri(bool isRegionSpecified)
         {
-            var body = new InstanceGroupManagersRecreateInstancesRequest
+            if (isRegionSpecified)
             {
-                Instances = InstanceUri
-            };
-            if (ShouldProcess("Recreating instances: " + JoinInstanceNames(body.Instances), null,
-                $"Managed Instance Group {Project}/{Zone}/{Name}"))
-            {
-                InstanceGroupManagersResource.RecreateInstancesRequest request =
-                    Service.InstanceGroupManagers.RecreateInstances(body, Project, Zone, Name);
-                Operation operation = request.Execute();
-                AddZoneOperation(Project, Zone, operation, () =>
+                var regionBody = new RegionInstanceGroupManagersDeleteInstancesRequest
                 {
-                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name));
-                });
-            }
-        }
-
-        private void DeleteObject()
-        {
-            var body = new InstanceGroupManagersDeleteInstancesRequest
-            {
-                Instances = InstanceObject.Select(i => i.SelfLink).ToList()
-            };
-            if (ShouldProcess("Deleting instances: " + JoinInstanceNames(body.Instances), null,
-                $"Managed Instance Group {Project}/{Zone}/{Name}"))
-            {
-                InstanceGroupManagersResource.DeleteInstancesRequest request =
-                    Service.InstanceGroupManagers.DeleteInstances(body, Project, Zone, Name);
-                Operation operation = request.Execute();
-                AddZoneOperation(Project, Zone, operation, () =>
+                    Instances = InstanceUri
+                };
+                if (ShouldProcess("Abandoning instances: " + JoinInstanceNames(regionBody.Instances), null,
+                    $"Managed Instance Group {Project}/{Region}/{Name}"))
                 {
-                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name));
-                });
+                    RegionInstanceGroupManagersResource.DeleteInstancesRequest request =
+                        Service.RegionInstanceGroupManagers.DeleteInstances(regionBody, Project, Region, Name);
+                    Operation operation = request.Execute();
+                    AddRegionOperation(Project, Region, operation, () =>
+                    {
+                        WriteObject(Service.RegionInstanceGroupManagers.Get(Project, Region, Name).Execute());
+                    });
+                }
+                return;
             }
-        }
 
-        private void DeleteUri()
-        {
             var body = new InstanceGroupManagersDeleteInstancesRequest
             {
                 Instances = InstanceUri
@@ -1067,32 +1136,33 @@ namespace Google.PowerShell.Compute
                 Operation operation = request.Execute();
                 AddZoneOperation(Project, Zone, operation, () =>
                 {
-                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name));
+                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name).Execute());
                 });
             }
         }
 
-        private void AbandonObject()
+        private void AbandonUri(bool isRegionSpecified)
         {
-            var body = new InstanceGroupManagersAbandonInstancesRequest
+            if (isRegionSpecified)
             {
-                Instances = InstanceObject.Select(i => i.SelfLink).ToList()
-            };
-            if (ShouldProcess("Abandoning instances: " + JoinInstanceNames(body.Instances), null,
-                $"Managed Instance Group {Project}/{Zone}/{Name}"))
-            {
-                InstanceGroupManagersResource.AbandonInstancesRequest request =
-                    Service.InstanceGroupManagers.AbandonInstances(body, Project, Zone, Name);
-                Operation operation = request.Execute();
-                AddZoneOperation(Project, Zone, operation, () =>
+                var regionBody = new RegionInstanceGroupManagersAbandonInstancesRequest
                 {
-                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name));
-                });
+                    Instances = InstanceUri
+                };
+                if (ShouldProcess("Abandoning instances: " + JoinInstanceNames(regionBody.Instances), null,
+                    $"Managed Instance Group {Project}/{Region}/{Name}"))
+                {
+                    RegionInstanceGroupManagersResource.AbandonInstancesRequest request =
+                        Service.RegionInstanceGroupManagers.AbandonInstances(regionBody, Project, Region, Name);
+                    Operation operation = request.Execute();
+                    AddRegionOperation(Project, Region, operation, () =>
+                    {
+                        WriteObject(Service.RegionInstanceGroupManagers.Get(Project, Region, Name).Execute());
+                    });
+                }
+                return;
             }
-        }
 
-        private void AbandonUri()
-        {
             var body = new InstanceGroupManagersAbandonInstancesRequest
             {
                 Instances = InstanceUri
@@ -1105,7 +1175,7 @@ namespace Google.PowerShell.Compute
                 Operation operation = request.Execute();
                 AddZoneOperation(Project, Zone, operation, () =>
                 {
-                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name));
+                    WriteObject(Service.InstanceGroupManagers.Get(Project, Zone, Name).Execute());
                 });
             }
         }

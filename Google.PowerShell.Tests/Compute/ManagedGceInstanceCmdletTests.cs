@@ -360,5 +360,87 @@ namespace Google.PowerShell.Tests.Compute
             InstanceGroupManager createdInstance = results[0].BaseObject as InstanceGroupManager;
             Assert.AreEqual(createdInstance?.Name, instanceGroupName);
         }
+
+        /// <summary>
+        /// Tests that Set-GceManagedInstanceGroup works with -Region option.
+        /// </summary>
+        [Test]
+        public void TestSetGceManagedInstanceGroupAbandonInstanceByRegion()
+        {
+            string instanceGroupName = FirstTestGroup.Name;
+            string instanceUri = "uri";
+            Mock<RegionInstanceGroupManagersResource> instances =
+                  ServiceMock.Resource(s => s.RegionInstanceGroupManagers);
+            instances.SetupRequest(
+                  item => item.AbandonInstances(It.IsAny<RegionInstanceGroupManagersAbandonInstancesRequest>(),
+                  FakeProjectId, FakeRegionName, instanceGroupName), DoneOperation);
+            instances.SetupRequest(
+                i => i.Get(FakeProjectId, FakeRegionName, instanceGroupName),
+                FirstTestGroup);
+
+            Pipeline.Commands.AddScript(
+                $"Set-GceManagedInstanceGroup -Name {instanceGroupName} -Region {FakeRegionName}" +
+                $" -Abandon -InstanceUri {instanceUri}");
+            Collection<PSObject> results = Pipeline.Invoke();
+
+            instances.Verify(
+                resource => resource.AbandonInstances(
+                    It.Is<RegionInstanceGroupManagersAbandonInstancesRequest>(request =>
+                        request.Instances.Count == 1 && request.Instances.Contains(instanceUri)),
+                    FakeProjectId, FakeRegionName, instanceGroupName),
+                Times.Once);
+
+            Assert.AreEqual(results.Count, 1);
+            InstanceGroupManager createdInstance = results[0].BaseObject as InstanceGroupManager;
+            Assert.AreEqual(createdInstance?.Name, instanceGroupName);
+        }
+
+        /// <summary>
+        /// Tests that Set-GceManagedInstanceGroup works with -Region option.
+        /// </summary>
+        [Test]
+        public void TestSetGceManagedInstanceGroupResizeByRegion()
+        {
+            string instanceGroupName = FirstTestGroup.Name;
+            int newSize = 5;
+            Mock<RegionInstanceGroupManagersResource> instances =
+                  ServiceMock.Resource(s => s.RegionInstanceGroupManagers);
+            instances.SetupRequest(
+                item => item.Resize(FakeProjectId, FakeRegionName, instanceGroupName, newSize),
+                DoneOperation);
+            instances.SetupRequest(
+                i => i.Get(FakeProjectId, FakeRegionName, instanceGroupName),
+                FirstTestGroup);
+
+            Pipeline.Commands.AddScript(
+                $"Set-GceManagedInstanceGroup -Name {instanceGroupName} -Region {FakeRegionName}" +
+                $" -Size {newSize}");
+            Collection<PSObject> results = Pipeline.Invoke();
+
+            instances.Verify(
+                resource => resource.Resize(
+                    FakeProjectId, FakeRegionName, instanceGroupName, newSize),
+                Times.Once);
+
+            Assert.AreEqual(results.Count, 1);
+            InstanceGroupManager createdInstance = results[0].BaseObject as InstanceGroupManager;
+            Assert.AreEqual(createdInstance?.Name, instanceGroupName);
+        }
+
+        /// <summary>
+        /// Tests that Set-GceManagedInstanceGroup throws error if -Region and -Zone
+        /// are used together.
+        /// </summary>
+        [Test]
+        public void TestSetGceManagedInstanceGroupError()
+        {
+            Pipeline.Commands.AddScript(
+                $"Set-GceManagedInstanceGroup -Name instance-group -Region {FakeRegionName}" +
+                $" -Zone {FakeZoneName} -Size 5");
+            var error = Assert.Throws<CmdletInvocationException>(() => Pipeline.Invoke());
+
+            Assert.AreEqual("Parameters -Region and -Zone cannot be used together.",
+                error.Message);
+        }
     }
 }

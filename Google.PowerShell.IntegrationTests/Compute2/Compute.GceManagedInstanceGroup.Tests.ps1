@@ -12,7 +12,7 @@ Get-GceInstanceTemplate | Remove-GceInstanceTemplate
 Add-GceInstanceTemplate -Name $templateName -MachineType $machineType -BootDiskImage $image
 $template = Get-GceInstanceTemplate $templateName
 
-gcloud compute target-pools create test-pool --region us-central1 2>&1
+gcloud compute target-pools create test-pool --region us-central1 2>$null
 $poolUrl = (Get-GceTargetPool -Name test-pool).SelfLink
 
 Describe "Get-GceManagedInstanceGroup" {
