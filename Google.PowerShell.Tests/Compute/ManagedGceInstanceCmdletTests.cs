@@ -362,7 +362,7 @@ namespace Google.PowerShell.Tests.Compute
         }
 
         /// <summary>
-        /// Tests that Set-GceManagedInstanceGroup works with -Region option.
+        /// Tests that Set-GceManagedInstanceGroup works with -Region and -Abandon option.
         /// </summary>
         [Test]
         public void TestSetGceManagedInstanceGroupAbandonInstanceByRegion()
@@ -396,7 +396,7 @@ namespace Google.PowerShell.Tests.Compute
         }
 
         /// <summary>
-        /// Tests that Set-GceManagedInstanceGroup works with -Region option.
+        /// Tests that Set-GceManagedInstanceGroup works with -Region and -Size option.
         /// </summary>
         [Test]
         public void TestSetGceManagedInstanceGroupResizeByRegion()
