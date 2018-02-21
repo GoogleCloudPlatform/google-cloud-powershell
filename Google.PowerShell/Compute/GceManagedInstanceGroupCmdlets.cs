@@ -1248,13 +1248,15 @@ namespace Google.PowerShell.Compute
     /// [Managed Instance Group resource definition]
     /// </para>
     /// </summary>
-    [Cmdlet(VerbsLifecycle.Wait, "GceManagedInstanceGroup")]
+    [Cmdlet(VerbsLifecycle.Wait, "GceManagedInstanceGroup",
+        DefaultParameterSetName = ParameterSetNames.ByNameZone)]
     public class WaitGceManagedInstanceGroupCmdlet : GceCmdlet
     {
         private class ParameterSetNames
         {
-            public const string ByName = "ByName";
+            public const string ByNameZone = "ByNameZone";
             public const string ByObject = "ByObject";
+            public const string ByNameRegion = "ByNameRegion";
         }
 
         /// <summary>
@@ -1262,7 +1264,8 @@ namespace Google.PowerShell.Compute
         /// The project that owns the managed instance group.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByNameZone)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByNameRegion)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Project)]
         public override string Project { get; set; }
 
@@ -1271,16 +1274,27 @@ namespace Google.PowerShell.Compute
         /// The zone the managed instance group is in.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByName)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByNameZone)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         public string Zone { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The region the managed instance group is in.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByNameRegion)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Region)]
+        public string Region { get; set; }
 
         /// <summary>
         /// <para type="description">
         /// The name of the managed instance group to wait on.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ByName, Mandatory = true,
+        [Parameter(ParameterSetName = ParameterSetNames.ByNameZone, Mandatory = true,
+            Position = 0, ValueFromPipeline = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByNameRegion, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         public string Name { get; set; }
 
@@ -1305,21 +1319,37 @@ namespace Google.PowerShell.Compute
 
         protected override void ProcessRecord()
         {
-            InstanceGroupManagersResource.ListManagedInstancesRequest request;
             switch (ParameterSetName)
             {
-                case ParameterSetNames.ByName:
-                    request = Service.InstanceGroupManagers.ListManagedInstances(Project, Zone, Name);
+                case ParameterSetNames.ByNameZone:
+                    WaitZoneManagedInstance(Project, Zone, Name);
+                    break;
+                case ParameterSetNames.ByNameRegion:
+                    WaitRegionManagedInstance(Project, Region, Name);
                     break;
                 case ParameterSetNames.ByObject:
                     string project = GetProjectNameFromUri(Object.SelfLink);
-                    string zone = GetZoneNameFromUri(Object.Zone);
                     string name = Object.Name;
-                    request = Service.InstanceGroupManagers.ListManagedInstances(project, zone, name);
+                    if (!string.IsNullOrWhiteSpace(Object.Region))
+                    {
+                        string region = GetRegionNameFromUri(Object.Region);
+                        WaitRegionManagedInstance(project, region, name);
+                    }
+                    else
+                    {
+                        string zone = GetZoneNameFromUri(Object.Zone);
+                        WaitZoneManagedInstance(project, zone, name);
+                    }
                     break;
                 default:
                     throw UnknownParameterSetException;
             }
+        }
+
+        private void WaitZoneManagedInstance(string project, string zone, string name)
+        {
+            InstanceGroupManagersResource.ListManagedInstancesRequest request =
+                Service.InstanceGroupManagers.ListManagedInstances(project, zone, name);
 
             Stopwatch stopwatch = Stopwatch.StartNew();
             IList<ManagedInstance> instances = request.Execute().ManagedInstances;
@@ -1329,6 +1359,26 @@ namespace Google.PowerShell.Compute
                 {
                     WriteWarning("Wait-GceManagedInstanceGroup timed out for " +
                                  $"{request.Project}/{request.Zone}/{request.InstanceGroupManager}");
+                    break;
+                }
+                Thread.Sleep(150);
+                instances = request.Execute().ManagedInstances;
+            }
+        }
+
+        private void WaitRegionManagedInstance(string project, string region, string name)
+        {
+            RegionInstanceGroupManagersResource.ListManagedInstancesRequest request =
+                Service.RegionInstanceGroupManagers.ListManagedInstances(project, region, name);
+
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            IList<ManagedInstance> instances = request.Execute().ManagedInstances;
+            while (instances != null && instances.Any(i => i.CurrentAction != "NONE") && !Stopping)
+            {
+                if (Timeout >= 0 && stopwatch.Elapsed.Seconds > Timeout)
+                {
+                    WriteWarning("Wait-GceManagedInstanceGroup timed out for " +
+                                 $"{request.Project}/{request.Region}/{request.InstanceGroupManager}");
                     break;
                 }
                 Thread.Sleep(150);
