@@ -39,6 +39,18 @@ namespace Google.PowerShell.Tests.Compute
             Name = "Two"
         };
 
+        private ManagedInstance FirstTestInstance = new ManagedInstance()
+        {
+            Id = 0,
+            CurrentAction = "NONE"
+        };
+
+        private ManagedInstance SecondTestInstance = new ManagedInstance()
+        {
+            Id = 1,
+            CurrentAction = "NONE"
+        };
+
         /// <summary>
         /// Tests that Get-GceManagedInstanceGroup works with -Region option.
         /// </summary>
@@ -441,6 +453,110 @@ namespace Google.PowerShell.Tests.Compute
 
             Assert.AreEqual("Parameters -Region and -Zone cannot be used together.",
                 error.Message);
+        }
+
+        /// <summary>
+        /// Tests that Remove-GceManagedInstanceGroup works with -Region option.
+        /// </summary>
+        [Test]
+        public void TestWaitGceManagedInstanceGroupByRegion()
+        {
+            var listResponse = new RegionInstanceGroupManagersListInstancesResponse()
+            {
+                ManagedInstances = new[]
+                {
+                    FirstTestInstance,
+                    SecondTestInstance
+                }
+            };
+
+            string instanceGroupName = "instance-group";
+            Mock<RegionInstanceGroupManagersResource> instances =
+                  ServiceMock.Resource(s => s.RegionInstanceGroupManagers);
+            instances.SetupRequest(
+                  item => item.ListManagedInstances(FakeProjectId, FakeRegionName, instanceGroupName),
+                  listResponse);
+
+            Pipeline.Commands.AddScript(
+                $"Wait-GceManagedInstanceGroup -Name {instanceGroupName} -Region {FakeRegionName}");
+            Pipeline.Invoke();
+
+            instances.VerifyAll();
+        }
+
+        /// <summary>
+        /// Tests that Remove-GceManagedInstanceGroup works when pipelining regional instance group.
+        /// </summary>
+        [Test]
+        public void TestWaitGceManagedInstanceGroupPipelineRegional()
+        {
+            var listResponse = new RegionInstanceGroupManagersListInstancesResponse()
+            {
+                ManagedInstances = new[]
+                {
+                    FirstTestInstance,
+                    SecondTestInstance
+                }
+            };
+
+            string instanceGroupName = "RegionalInstanceGroup";
+            InstanceGroupManager regionalInstanceGroup =
+                CreateRegionalInstanceGroup(instanceGroupName, FakeProjectId, FakeRegionName);
+
+            string managedRegionVar = "managedRegion";
+            Pipeline.Runspace.SessionStateProxy.SetVariable(managedRegionVar, regionalInstanceGroup);
+
+            Mock<RegionInstanceGroupManagersResource> instances =
+                  ServiceMock.Resource(s => s.RegionInstanceGroupManagers);
+            instances.SetupRequest(
+                  item => item.ListManagedInstances(FakeProjectId, FakeRegionName, instanceGroupName),
+                  listResponse);
+
+            Pipeline.Commands.AddScript(
+                $"${managedRegionVar} | Wait-GceManagedInstanceGroup");
+            Pipeline.Invoke();
+
+            instances.VerifyAll();
+        }
+
+        /// <summary>
+        /// Tests that Wait-GceManagedInstanceGroup works when pipelining zonal instance group.
+        /// </summary>
+        [Test]
+        public void TestWaitGceManagedInstanceGroupPipelineZonal()
+        {
+            var listResponse = new InstanceGroupManagersListManagedInstancesResponse()
+            {
+                ManagedInstances = new[]
+                {
+                    FirstTestInstance,
+                    SecondTestInstance
+                }
+            };
+
+            string instanceGroupName = "RegionalInstanceGroup";
+            string zoneLink = $"{ComputeHttpsLink}/projects/{FakeProjectId}/zones/{FakeZoneName}";
+            InstanceGroupManager regionalInstanceGroup = new InstanceGroupManager()
+            {
+                Name = instanceGroupName,
+                Zone = zoneLink,
+                SelfLink = $"{zoneLink}/instanceGroupManagers/{instanceGroupName}"
+            };
+
+            string managedRegionVar = "managedRegion";
+            Pipeline.Runspace.SessionStateProxy.SetVariable(managedRegionVar, regionalInstanceGroup);
+
+            Mock<InstanceGroupManagersResource> instances =
+                  ServiceMock.Resource(s => s.InstanceGroupManagers);
+            instances.SetupRequest(
+                  item => item.ListManagedInstances(FakeProjectId, FakeZoneName, instanceGroupName),
+                  listResponse);
+
+            Pipeline.Commands.AddScript(
+                $"${managedRegionVar} | Wait-GceManagedInstanceGroup");
+            Pipeline.Invoke();
+
+            instances.VerifyAll();
         }
     }
 }
