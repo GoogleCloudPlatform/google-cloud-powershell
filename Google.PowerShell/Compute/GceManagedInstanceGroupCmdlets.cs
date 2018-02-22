@@ -1350,39 +1350,39 @@ namespace Google.PowerShell.Compute
         {
             InstanceGroupManagersResource.ListManagedInstancesRequest request =
                 Service.InstanceGroupManagers.ListManagedInstances(project, zone, name);
-
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            IList<ManagedInstance> instances = request.Execute().ManagedInstances;
-            while (instances != null && instances.Any(i => i.CurrentAction != "NONE") && !Stopping)
-            {
-                if (Timeout >= 0 && stopwatch.Elapsed.Seconds > Timeout)
-                {
-                    WriteWarning("Wait-GceManagedInstanceGroup timed out for " +
-                                 $"{request.Project}/{request.Zone}/{request.InstanceGroupManager}");
-                    break;
-                }
-                Thread.Sleep(150);
-                instances = request.Execute().ManagedInstances;
-            }
+            string warningMessage = "Wait-GceManagedInstanceGroup timed out for "
+                + $"{request.Project}/{request.Zone}/{request.InstanceGroupManager}";
+            WaitForManagedInstancesHelper(
+                () => request.Execute().ManagedInstances,
+                warningMessage);
         }
 
         private void WaitRegionManagedInstance(string project, string region, string name)
         {
             RegionInstanceGroupManagersResource.ListManagedInstancesRequest request =
                 Service.RegionInstanceGroupManagers.ListManagedInstances(project, region, name);
+            string warningMessage = "Wait-GceManagedInstanceGroup timed out for "
+                + $"{request.Project}/{request.Region}/{request.InstanceGroupManager}";
+            WaitForManagedInstancesHelper(
+                () => request.Execute().ManagedInstances,
+                warningMessage);
+        }
 
+        private void WaitForManagedInstancesHelper(
+            Func<IList<ManagedInstance>> getInstanceDelegate,
+            string warningMessage)
+        {
             Stopwatch stopwatch = Stopwatch.StartNew();
-            IList<ManagedInstance> instances = request.Execute().ManagedInstances;
+            IList<ManagedInstance> instances = getInstanceDelegate();
             while (instances != null && instances.Any(i => i.CurrentAction != "NONE") && !Stopping)
             {
                 if (Timeout >= 0 && stopwatch.Elapsed.Seconds > Timeout)
                 {
-                    WriteWarning("Wait-GceManagedInstanceGroup timed out for " +
-                                 $"{request.Project}/{request.Region}/{request.InstanceGroupManager}");
+                    WriteWarning(warningMessage);
                     break;
                 }
                 Thread.Sleep(150);
-                instances = request.Execute().ManagedInstances;
+                instances = getInstanceDelegate();
             }
         }
     }
