@@ -248,7 +248,7 @@ Describe "Import-GcSqlInstance" {
         { Import-GcSqlInstance $instance "gs://gcsql-csharp-import-testing/testsql.csv" "newguestbook" "entries" } | Should not Throw
     }
 
-    It "should throw an error if something's wrong" {
+    It "should throw an error if something's wrong" -Skip {
         { Import-GcSqlInstance $instance "gs://gcsql-csharp-import-testing/testsqlS" "newguestbook" } | Should Throw `
         "ERROR 1227 (42000) at line 18: Access denied; you need (at least one of) the SUPER privilege(s) for this operation"
     }

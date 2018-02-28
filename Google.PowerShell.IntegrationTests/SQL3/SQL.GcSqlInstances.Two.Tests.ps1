@@ -165,7 +165,7 @@ Describe "Restore-GcSqlInstanceBackup" {
     $numRestoreOps1 = (Get-GcSqlOperation -Instance $backupInstance1 | where { $_.OperationType -eq "RESTORE_VOLUME" }).Count
     $numRestoreOps2 = (Get-GcSqlOperation -Instance $backupInstance2 | where { $_.OperationType -eq "RESTORE_VOLUME" }).Count
 
-    It "should backup test-db4 to its own backup" {
+    It "should backup test-db4 to its own backup" -Skip:$skipTest {
         $backupRunId = $backupRunIds1[0]
 
         Restore-GcSqlInstanceBackup $backupRunId $backupInstance1
@@ -225,9 +225,11 @@ Describe "Restore-GcSqlInstanceBackup" {
         $operations[0].Error | Should Match ""
      }
 
-    # Reset both instances to their own last backups
-    Restore-GcSqlInstanceBackup $backupRunIds1[0] $backupInstance1
-    Restore-GcSqlInstanceBackup $backupRunIds2[0] $backupInstance2
+    if (-not $skipTest) {
+        # Reset both instances to their own last backups
+        Restore-GcSqlInstanceBackup $backupRunIds1[0] $backupInstance1
+        Restore-GcSqlInstanceBackup $backupRunIds2[0] $backupInstance2
+    }
 }
 
 Describe "Update-GcSqlInstance" {    
