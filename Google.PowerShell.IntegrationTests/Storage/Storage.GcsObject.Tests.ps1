@@ -222,7 +222,7 @@ Describe "New-GcsObject" {
         Remove-GcsObject $bucket $objectName
     }
 
-    It "will not overwrite existing objects without -Force" {
+    It "will not overwrite existing objects without -Force" -Skip {
         $tempFile = [System.IO.Path]::GetTempFileName()
         "existing-gcs-object" | Out-File $tempFile -Encoding ascii -NoNewline
 

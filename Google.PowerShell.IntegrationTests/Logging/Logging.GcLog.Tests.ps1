@@ -290,10 +290,10 @@ Describe "Remove-GcLog" {
         $logName = "gcp-testing-remove-gclog-$r"
         $textPayload = "This is the text payload."
         New-GcLogEntry -LogName $logName -TextPayload $textPayload
-        Start-Sleep -Seconds 5
+        Start-Sleep -Seconds 15
         (Get-GcLogEntry -LogName $logName) | Should Not BeNullOrEmpty
         Remove-GcLog -LogName $logName
-        Start-Sleep -Seconds 5
+        Start-Sleep -Seconds 15
         (Get-GcLogEntry -LogName $logName) | Should BeNullOrEmpty
     }
 
