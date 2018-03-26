@@ -141,6 +141,7 @@
     <Compile Include="Common\TestProcessUtils.cs" />
     <Compile Include="Compute\AddSnapshotTests.cs" />
     <Compile Include="Compute\AddGceInstanceCmdletTests.cs" />
+    <Compile Include="Compute\GceMetadataTests.cs" />
     <Compile Include="Compute\ManagedGceInstanceCmdletTests.cs" />
     <Compile Include="Compute\NewGceInstanceConfigCmdletTests.cs" />
     <Compile Include="Compute\GceCmdletTestBase.cs" />
