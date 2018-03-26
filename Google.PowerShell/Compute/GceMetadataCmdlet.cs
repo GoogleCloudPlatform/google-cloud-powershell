@@ -119,7 +119,12 @@ namespace Google.PowerShell.ComputeEngine
         /// <summary>
         /// Make this a field, so it can be aborted if cmdlet stops e.g. the user hits Ctrl-C.
         /// </summary>
-        private static HttpClient _client = new HttpClient();
+        internal static HttpClient Client = new HttpClient();
+
+        /// <summary>
+        /// Name of the header for Metadata-Flavor.
+        /// </summary>
+        internal static readonly string MetadataFlavorHeader = "Metadata-Flavor";
 
         protected override void ProcessRecord()
         {
@@ -143,14 +148,17 @@ namespace Google.PowerShell.ComputeEngine
             }
 
             string query = string.Join("&", queryParameters);
-            _client.DefaultRequestHeaders.Add("Metadata-Flavor", "Google");
+            if (!Client.DefaultRequestHeaders.Contains(MetadataFlavorHeader))
+            {
+                Client.DefaultRequestHeaders.Add(MetadataFlavorHeader, "Google");
+            }
             if (WaitUpdate)
             {
-                _client.Timeout = System.Threading.Timeout.InfiniteTimeSpan;
+                Client.Timeout = System.Threading.Timeout.InfiniteTimeSpan;
             }
             try
             {
-                using (HttpResponseMessage response = _client.GetAsync($"{basePath}{Path}?{query}").Result)
+                using (HttpResponseMessage response = Client.GetAsync($"{basePath}{Path}?{query}").Result)
                 using (Stream responseStream = response.Content?.ReadAsStreamAsync().Result)
                 using (StreamReader streamReader = new StreamReader(responseStream ?? Stream.Null))
                 {
@@ -181,7 +189,7 @@ namespace Google.PowerShell.ComputeEngine
 
         protected override void StopProcessing()
         {
-            _client?.CancelPendingRequests();
+            Client?.CancelPendingRequests();
             base.StopProcessing();
         }
     }
