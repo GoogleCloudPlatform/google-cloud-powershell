@@ -1,8 +1,7 @@
-﻿// Copyright 2015-2016 Google Inc. All Rights Reserved.
+﻿// Copyright 2015-2018 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
 using Google.PowerShell.Common;
-using NUnit.Core;
 using NUnit.Framework;
 using System.Management.Automation;
 
