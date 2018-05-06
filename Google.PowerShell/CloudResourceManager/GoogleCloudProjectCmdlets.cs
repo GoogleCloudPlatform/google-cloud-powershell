@@ -1,4 +1,7 @@
-﻿using Google.Apis.CloudResourceManager.v1;
+﻿// Copyright 2018 Google Inc. All Rights Reserved.
+// Licensed under the Apache License Version 2.0.
+
+using Google.Apis.CloudResourceManager.v1;
 using Google.Apis.CloudResourceManager.v1.Data;
 using System.Collections;
 using System.Collections.Generic;
@@ -76,7 +79,7 @@ namespace Google.PowerShell.CloudResourceManager
         protected override void ProcessRecord()
         {
             string filter = ConstructFilter(Name, ProjectId, Label);
-            WriteObject(GetProjects(filter));
+            WriteObject(GetProjects(filter), true);
         }
 
         /// <summary>

@@ -1,8 +1,9 @@
-﻿// Copyright 2015-2017 Google Inc. All Rights Reserved.
+﻿// Copyright 2015-2018 Google Inc. All Rights Reserved.
 // Licensed under the Apache License Version 2.0.
 
 using Google.Apis.CloudResourceManager.v1;
 using Google.PowerShell.Common;
+using System;
 
 namespace Google.PowerShell.CloudResourceManager
 {
@@ -11,11 +12,14 @@ namespace Google.PowerShell.CloudResourceManager
     /// </summary>
     public class CloudResourceManagerCmdlet : GCloudCmdlet
     {
-        public CloudResourceManagerService Service { get; private set; }
+        private Lazy<CloudResourceManagerService> _cloudResourceManagerServiceLazy;
+
+        public CloudResourceManagerService Service => ServiceOverride ?? _cloudResourceManagerServiceLazy.Value;
+        internal static CloudResourceManagerService ServiceOverride { private get; set; }
 
         public CloudResourceManagerCmdlet()
         {
-            Service = new CloudResourceManagerService(GetBaseClientServiceInitializer());
+            _cloudResourceManagerServiceLazy = new Lazy<CloudResourceManagerService>(() => new CloudResourceManagerService(GetBaseClientServiceInitializer()));
         }
     }
 }
