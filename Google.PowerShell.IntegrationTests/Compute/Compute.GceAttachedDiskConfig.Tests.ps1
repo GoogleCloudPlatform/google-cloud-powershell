@@ -36,6 +36,24 @@ Describe "New-GceAttachedDiskConfig" {
         $params.DiskType | Should BeNullOrEmpty
     }
 
+    It "should set defaults for scratch disk" {
+        $disk = New-GceAttachedDiskConfig -ScratchDiskZone $zone
+        $disk.AutoDelete | Should Be $true
+        $disk.Boot | Should Be $false
+        $disk.DeviceName | Should BeNullOrEmpty
+        $disk.Index | Should BeNullOrEmpty
+        $disk.Interface__ | Should Be SCSI
+        $disk.Mode | Should Be READ_WRITE
+        $params = $disk.InitializeParams
+        $params.DiskName | Should BeNullOrEmpty
+        $params.DiskSizeGb | Should BeNullOrEmpty
+        $params.DiskType | Should Be "/zones/$zone/diskTypes/local-ssd"
+        $params.SourceIamge | Should BeNullOrEmpty
+        $disk.Source | Should BeNullOrEmpty
+        $disk.Type | Should Be SCRATCH
+
+    }
+
     It "should fail with both source and sourceImage" {
         { New-GceAttachedDiskConfig -SourceImage $image -Source $source} |
             Should Throw "Parameter set cannot be resolved"
@@ -73,10 +91,12 @@ Describe "New-GceAttachedDiskConfig" {
 
     It "should build list" {
         $diskList = (New-GceAttachedDiskConfig -SourceImage $image),
-            (New-GceAttachedDiskConfig -Source $source)
-        $diskList.Count | Should Be 2
+            (New-GceAttachedDiskConfig -Source $source),
+            (New-GceAttachedDiskConfig -ScratchDiskZone $zone)
+        $diskList.Count | Should Be 3
         $diskList[0].InitializeParams | Should Not BeNullOrEmpty
         $diskList[1].InitializeParams | Should BeNullOrEmpty
+        $diskList[2].Type | Should Be SCRATCH
     }
 }
 

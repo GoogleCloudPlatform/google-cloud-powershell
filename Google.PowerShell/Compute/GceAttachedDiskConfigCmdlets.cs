@@ -2,6 +2,7 @@
 // Licensed under the Apache License Version 2.0.
 
 using Google.Apis.Compute.v1.Data;
+using Google.PowerShell.Common;
 using System.Management.Automation;
 
 namespace Google.PowerShell.ComputeEngine
@@ -38,6 +39,7 @@ namespace Google.PowerShell.ComputeEngine
         {
             public const string Persistant = "Persistant";
             public const string New = "New";
+            public const string Scratch = "Scratch";
         }
 
         /// <summary>
@@ -80,14 +82,15 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.New)]
-        public long? Size { get; set; }
+        public long? Size { get; set; } 
 
         /// <summary>
         /// <para type="description">
         /// When set, disk will be deleted when the instance is.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.New)]
+        [Parameter(ParameterSetName = ParameterSetNames.Persistant)]
         public SwitchParameter AutoDelete { get; set; }
 
         /// <summary>
@@ -95,7 +98,8 @@ namespace Google.PowerShell.ComputeEngine
         /// When set, describes the boot disk of an instance.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.New)]
+        [Parameter(ParameterSetName = ParameterSetNames.Persistant)]
         public SwitchParameter Boot { get; set; }
 
         /// <summary>
@@ -111,7 +115,8 @@ namespace Google.PowerShell.ComputeEngine
         /// The name of the disk on the instance.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.New)]
+        [Parameter(ParameterSetName = ParameterSetNames.Persistant)]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -119,11 +124,27 @@ namespace Google.PowerShell.ComputeEngine
         /// Set to limit the instance to read operations.
         /// </para>
         /// </summary>
-        [Parameter]
+        [Parameter(ParameterSetName = ParameterSetNames.New)]
+        [Parameter(ParameterSetName = ParameterSetNames.Persistant)]
         public SwitchParameter ReadOnly { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// The zone in which the instance resides in.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.Scratch, Mandatory = true)]
+        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
+        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
+        public string ScratchDiskZone { get; set; }
 
         protected override void ProcessRecord()
         {
+            if(ParameterSetName == ParameterSetNames.Scratch)
+            {
+                this.AutoDelete = true;
+                this.Boot = false;
+            }
             var attachedDisk = new AttachedDisk
             {
                 AutoDelete = AutoDelete,
@@ -143,6 +164,19 @@ namespace Google.PowerShell.ComputeEngine
                     DiskType = DiskType,
                     SourceImage = SourceImage.SelfLink
                 };
+            }
+
+            if (ParameterSetName == ParameterSetNames.Scratch)
+            {
+                attachedDisk.Type = "SCRATCH";
+                attachedDisk.InitializeParams = new AttachedDiskInitializeParams
+                {
+                    DiskType = $"/zones/{ScratchDiskZone}/diskTypes/local-ssd"
+                };
+            }
+            else
+            {
+                attachedDisk.Type = "PERSISTENT";
             }
             WriteObject(attachedDisk);
         }
