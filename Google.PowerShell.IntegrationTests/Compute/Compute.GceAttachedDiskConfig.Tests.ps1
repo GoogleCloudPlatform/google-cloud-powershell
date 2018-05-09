@@ -8,7 +8,7 @@ Describe "New-GceAttachedDiskConfig" {
     $image = Get-GceImage "debian-cloud" -Family "debian-8"
     $source = New-GceDisk "test-attached-disk-config-$r" $image
 
-    It "should set defaults for persistant disks" {
+    It "should set defaults for existing disks" {
         $disk = New-GceAttachedDiskConfig $source
         $disk.AutoDelete | Should Be $false
         $disk.Boot | Should Be $false
@@ -18,6 +18,7 @@ Describe "New-GceAttachedDiskConfig" {
         $disk.Interface__ | Should Be SCSI
         $disk.Mode | Should Be READ_WRITE
         $disk.Source | Should Be $source.SelfLink
+        $disk.Type | Should Be PERSISTENT
     }
 
     It "should set defaults for new disk" {
@@ -33,12 +34,13 @@ Describe "New-GceAttachedDiskConfig" {
         $params.SourceImage | Should Be $image.SelfLink
         $params.DiskName | Should BeNullOrEmpty
         $params.DiskSizeGb | Should BeNullOrEmpty
-        $params.DiskType | Should BeNullOrEmpty
+        $params.DiskType | Should Be "/zones/$zone/diskTypes/pd-standard"
+        $disk.Type | Should Be PERSISTENT
     }
 
     It "should set defaults for scratch disk" {
-        $disk = New-GceAttachedDiskConfig -ScratchDiskZone $zone
-        $disk.AutoDelete | Should Be $true
+        $disk = New-GceAttachedDiskConfig -Zone $zone -DiskType "local-ssd"
+        $disk.AutoDelete | Should Be $false
         $disk.Boot | Should Be $false
         $disk.DeviceName | Should BeNullOrEmpty
         $disk.Index | Should BeNullOrEmpty
@@ -59,7 +61,7 @@ Describe "New-GceAttachedDiskConfig" {
             Should Throw "Parameter set cannot be resolved"
     }
 
-    It "should set values for persistant disks" {
+    It "should set values for existing disk" {
         $disk = New-GceAttachedDiskConfig -Source $source -AutoDelete -Boot -Nvme `
             -DeviceName "nameOnDevice" -ReadOnly
         $disk.AutoDelete | Should Be $true
@@ -74,7 +76,7 @@ Describe "New-GceAttachedDiskConfig" {
 
     It "should set values for new disk" {
         $disk = New-GceAttachedDiskConfig -SourceImage $image -AutoDelete -Boot -Name "diskname" `
-            -Nvme -DeviceName "nameOnDevice" -DiskType "someDiskType" -ReadOnly -Size 30
+            -Nvme -DeviceName "nameOnDevice" -DiskType "pd-ssd" -Zone $zone -ReadOnly -Size 30
         $disk.AutoDelete | Should Be $true
         $disk.Boot | Should Be $true
         $disk.DeviceName | Should Be "nameOnDevice"
@@ -86,13 +88,13 @@ Describe "New-GceAttachedDiskConfig" {
         $params.SourceImage | Should Be $image.SelfLink
         $params.DiskName | Should Be diskname
         $params.DiskSizeGb | Should Be 30
-        $params.DiskType | Should Be someDiskType
+        $params.DiskType | Should Be "/zones/$zone/diskTypes/pd-ssd"
     }
 
     It "should build list" {
         $diskList = (New-GceAttachedDiskConfig -SourceImage $image),
             (New-GceAttachedDiskConfig -Source $source),
-            (New-GceAttachedDiskConfig -ScratchDiskZone $zone)
+            (New-GceAttachedDiskConfig -Zone $zone -DiskType "local-ssd")
         $diskList.Count | Should Be 3
         $diskList[0].InitializeParams | Should Not BeNullOrEmpty
         $diskList[1].InitializeParams | Should BeNullOrEmpty

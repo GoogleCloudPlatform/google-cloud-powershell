@@ -31,15 +31,14 @@ namespace Google.PowerShell.ComputeEngine
     ///     [Attached Disk resource definition]
     ///   </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.New, "GceAttachedDiskConfig", DefaultParameterSetName = ParameterSetNames.Persistant)]
+    [Cmdlet(VerbsCommon.New, "GceAttachedDiskConfig", DefaultParameterSetName = ParameterSetNames.ExistingDisk)]
     [OutputType(typeof(AttachedDisk))]
     public class NewGceAttachedDiskConfigCmdlet : GceCmdlet
     {
         private class ParameterSetNames
         {
-            public const string Persistant = "Persistant";
-            public const string New = "New";
-            public const string Scratch = "Scratch";
+            public const string ExistingDisk = "ExistingDisk";
+            public const string NewDisk = "NewDisk";
         }
 
         /// <summary>
@@ -47,7 +46,7 @@ namespace Google.PowerShell.ComputeEngine
         /// The URI of the preexisting disk to attach to an instance.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.Persistant, Mandatory = true,
+        [Parameter(ParameterSetName = ParameterSetNames.ExistingDisk, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         public Disk Source { get; set; }
 
@@ -56,7 +55,7 @@ namespace Google.PowerShell.ComputeEngine
         /// The source image of the new disk.
         /// </para>
         /// </summary>
-        [Parameter(Mandatory = true, ParameterSetName = ParameterSetNames.New,
+        [Parameter(ParameterSetName = ParameterSetNames.NewDisk,
             Position = 0, ValueFromPipeline = true)]
         public Image SourceImage { get; set; }
 
@@ -65,7 +64,7 @@ namespace Google.PowerShell.ComputeEngine
         /// The name of the disk to create.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.New)]
+        [Parameter(ParameterSetName = ParameterSetNames.NewDisk)]
         public string Name { get; set; }
 
         /// <summary>
@@ -73,15 +72,16 @@ namespace Google.PowerShell.ComputeEngine
         /// Specifies the type of the disk. Defaults to pd-standard.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.New)]
-        public string DiskType { get; set; }
+        [Parameter(ParameterSetName = ParameterSetNames.NewDisk)]
+        [ValidateSet("pd-standard", "pd-ssd", "local-ssd")]
+        public string DiskType { get; set; } = "pd-standard";
 
         /// <summary>
         /// <para type="description">
         /// The size of the disk to create, in GB.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.New)]
+        [Parameter(ParameterSetName = ParameterSetNames.NewDisk)]
         public long? Size { get; set; } 
 
         /// <summary>
@@ -89,8 +89,7 @@ namespace Google.PowerShell.ComputeEngine
         /// When set, disk will be deleted when the instance is.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.New)]
-        [Parameter(ParameterSetName = ParameterSetNames.Persistant)]
+        [Parameter]
         public SwitchParameter AutoDelete { get; set; }
 
         /// <summary>
@@ -98,8 +97,7 @@ namespace Google.PowerShell.ComputeEngine
         /// When set, describes the boot disk of an instance.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.New)]
-        [Parameter(ParameterSetName = ParameterSetNames.Persistant)]
+        [Parameter]
         public SwitchParameter Boot { get; set; }
 
         /// <summary>
@@ -115,8 +113,7 @@ namespace Google.PowerShell.ComputeEngine
         /// The name of the disk on the instance.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.New)]
-        [Parameter(ParameterSetName = ParameterSetNames.Persistant)]
+        [Parameter]
         public string DeviceName { get; set; }
 
         /// <summary>
@@ -124,8 +121,7 @@ namespace Google.PowerShell.ComputeEngine
         /// Set to limit the instance to read operations.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.New)]
-        [Parameter(ParameterSetName = ParameterSetNames.Persistant)]
+        [Parameter]
         public SwitchParameter ReadOnly { get; set; }
 
         /// <summary>
@@ -133,18 +129,13 @@ namespace Google.PowerShell.ComputeEngine
         /// The zone in which the instance resides in.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.Scratch, Mandatory = true)]
+        [Parameter(ParameterSetName = ParameterSetNames.NewDisk)]
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
-        public string ScratchDiskZone { get; set; }
+        public string Zone { get; set; }
 
         protected override void ProcessRecord()
         {
-            if(ParameterSetName == ParameterSetNames.Scratch)
-            {
-                this.AutoDelete = true;
-                this.Boot = false;
-            }
             var attachedDisk = new AttachedDisk
             {
                 AutoDelete = AutoDelete,
@@ -155,28 +146,30 @@ namespace Google.PowerShell.ComputeEngine
                 Source = Source?.SelfLink
             };
 
-            if (ParameterSetName == ParameterSetNames.New)
+            if(DiskType == "local-ssd")
+            {
+                attachedDisk.Type = "SCRATCH";
+            }
+            else
+            {
+                attachedDisk.Type = "PERSISTENT";
+            }
+
+            if (ParameterSetName != ParameterSetNames.ExistingDisk)
             {
                 attachedDisk.InitializeParams = new AttachedDiskInitializeParams
                 {
                     DiskName = Name,
                     DiskSizeGb = Size,
-                    DiskType = DiskType,
-                    SourceImage = SourceImage.SelfLink
                 };
-            }
-
-            if (ParameterSetName == ParameterSetNames.Scratch)
-            {
-                attachedDisk.Type = "SCRATCH";
-                attachedDisk.InitializeParams = new AttachedDiskInitializeParams
+                if(Zone != null)
                 {
-                    DiskType = $"/zones/{ScratchDiskZone}/diskTypes/local-ssd"
-                };
-            }
-            else
-            {
-                attachedDisk.Type = "PERSISTENT";
+                    attachedDisk.InitializeParams.DiskType = $"/zones/{Zone}/diskTypes/{DiskType}";
+                }
+                if(SourceImage != null)
+                {
+                    attachedDisk.InitializeParams.SourceImage = SourceImage.SelfLink;
+                }
             }
             WriteObject(attachedDisk);
         }
