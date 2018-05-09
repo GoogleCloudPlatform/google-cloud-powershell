@@ -31,14 +31,14 @@ namespace Google.PowerShell.ComputeEngine
     ///     [Attached Disk resource definition]
     ///   </para>
     /// </summary>
-    [Cmdlet(VerbsCommon.New, "GceAttachedDiskConfig", DefaultParameterSetName = ParameterSetNames.ExistingDisk)]
+    [Cmdlet(VerbsCommon.New, "GceAttachedDiskConfig", DefaultParameterSetName = ParameterSetNames.Persistent)]
     [OutputType(typeof(AttachedDisk))]
     public class NewGceAttachedDiskConfigCmdlet : GceCmdlet
     {
         private class ParameterSetNames
         {
-            public const string ExistingDisk = "ExistingDisk";
-            public const string NewDisk = "NewDisk";
+            public const string Persistent = "Persistent";
+            public const string New = "New";
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace Google.PowerShell.ComputeEngine
         /// The URI of the preexisting disk to attach to an instance.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.ExistingDisk, Mandatory = true,
+        [Parameter(ParameterSetName = ParameterSetNames.Persistent, Mandatory = true,
             Position = 0, ValueFromPipeline = true)]
         public Disk Source { get; set; }
 
@@ -55,7 +55,7 @@ namespace Google.PowerShell.ComputeEngine
         /// The source image of the new disk.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.NewDisk,
+        [Parameter(ParameterSetName = ParameterSetNames.New,
             Position = 0, ValueFromPipeline = true)]
         public Image SourceImage { get; set; }
 
@@ -64,7 +64,7 @@ namespace Google.PowerShell.ComputeEngine
         /// The name of the disk to create.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.NewDisk)]
+        [Parameter(ParameterSetName = ParameterSetNames.New)]
         public string Name { get; set; }
 
         /// <summary>
@@ -72,16 +72,15 @@ namespace Google.PowerShell.ComputeEngine
         /// Specifies the type of the disk. Defaults to pd-standard.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.NewDisk)]
-        [ValidateSet("pd-standard", "pd-ssd", "local-ssd")]
-        public string DiskType { get; set; } = "pd-standard";
+        [Parameter(ParameterSetName = ParameterSetNames.New)]
+        public string DiskType { get; set; }
 
         /// <summary>
         /// <para type="description">
         /// The size of the disk to create, in GB.
         /// </para>
         /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.NewDisk)]
+        [Parameter(ParameterSetName = ParameterSetNames.New)]
         public long? Size { get; set; } 
 
         /// <summary>
@@ -124,16 +123,6 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter]
         public SwitchParameter ReadOnly { get; set; }
 
-        /// <summary>
-        /// <para type="description">
-        /// The zone in which the instance resides in.
-        /// </para>
-        /// </summary>
-        [Parameter(ParameterSetName = ParameterSetNames.NewDisk)]
-        [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
-        [PropertyByTypeTransformation(Property = "Name", TypeToTransform = typeof(Zone))]
-        public string Zone { get; set; }
-
         protected override void ProcessRecord()
         {
             var attachedDisk = new AttachedDisk
@@ -146,7 +135,7 @@ namespace Google.PowerShell.ComputeEngine
                 Source = Source?.SelfLink
             };
 
-            if(DiskType == "local-ssd")
+            if(DiskType != null && DiskType.Contains("local-ssd"))
             {
                 attachedDisk.Type = "SCRATCH";
             }
@@ -155,21 +144,15 @@ namespace Google.PowerShell.ComputeEngine
                 attachedDisk.Type = "PERSISTENT";
             }
 
-            if (ParameterSetName != ParameterSetNames.ExistingDisk)
+            if (ParameterSetName == ParameterSetNames.New)
             {
                 attachedDisk.InitializeParams = new AttachedDiskInitializeParams
                 {
                     DiskName = Name,
                     DiskSizeGb = Size,
+                    DiskType = DiskType,
+                    SourceImage = SourceImage?.SelfLink
                 };
-                if(Zone != null)
-                {
-                    attachedDisk.InitializeParams.DiskType = $"/zones/{Zone}/diskTypes/{DiskType}";
-                }
-                if(SourceImage != null)
-                {
-                    attachedDisk.InitializeParams.SourceImage = SourceImage.SelfLink;
-                }
             }
             WriteObject(attachedDisk);
         }
