@@ -81,7 +81,7 @@ namespace Google.PowerShell.ComputeEngine
         /// </para>
         /// </summary>
         [Parameter(ParameterSetName = ParameterSetNames.New)]
-        public long? Size { get; set; } 
+        public long? Size { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -135,7 +135,7 @@ namespace Google.PowerShell.ComputeEngine
                 Source = Source?.SelfLink
             };
 
-            if(DiskType != null && DiskType.Contains("local-ssd"))
+            if(DiskType != null && GetUriPart("disktypes", DiskType.ToLower()) == "local-ssd")
             {
                 attachedDisk.Type = "SCRATCH";
             }
