@@ -121,6 +121,14 @@ namespace Google.PowerShell.ComputeEngine
         public abstract string[] Tag { get; set; }
 
         /// <summary>
+        /// <para type="description">
+        /// The map of labels (key/value pairs) to be applied to the instance.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public abstract Hashtable Label { get; set; }
+
+        /// <summary>
         /// Builds a network interface given the Network and NoExternalIp parameters.
         /// </summary>
         /// <returns>
@@ -269,7 +277,8 @@ namespace Google.PowerShell.ComputeEngine
                     Tags = new Tags
                     {
                         Items = Tag
-                    }
+                    },
+                    Labels = ConvertToDictionary<string, string>(Label)
                 }
             };
         }
@@ -358,7 +367,8 @@ namespace Google.PowerShell.ComputeEngine
                 Tags = new Tags
                 {
                     Items = Tag
-                }
+                },
+                Labels = ConvertToDictionary<string, string>(Label)
             };
         }
     }

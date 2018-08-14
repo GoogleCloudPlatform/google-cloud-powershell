@@ -5,6 +5,7 @@ using Google.Apis.Compute.v1;
 using Google.Apis.Compute.v1.Data;
 using Google.PowerShell.Common;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Management.Automation;
 
@@ -222,6 +223,14 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
+        /// The map of labels (key/value pairs) to be applied to the disk.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public virtual Hashtable Label { get; set; }
+
+        /// <summary>
+        /// <para type="description">
         /// Source image to apply to the disk.
         /// </para>
         /// <para type="description">
@@ -271,7 +280,8 @@ namespace Google.PowerShell.ComputeEngine
                 SourceImage = Image?.SelfLink,
                 // Optional fields. OK if null.
                 Description = Description,
-                SizeGb = SizeGb
+                SizeGb = SizeGb,
+                Labels = ConvertToDictionary<string, string>(Label)
             };
 
             DisksResource.InsertRequest insertReq = Service.Disks.Insert(newDisk, Project, Zone);

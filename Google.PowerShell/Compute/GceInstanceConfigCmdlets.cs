@@ -230,6 +230,14 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
+        /// The map of labels (key/value pairs) to be applied to the instance.
+        /// </para>
+        /// </summary>
+        [Parameter]
+        public override Hashtable Label { get; set; }
+
+        /// <summary>
+        /// <para type="description">
         /// The static ip address this instance will have. Can be a string, or and Address object from
         /// Get-GceAddress.
         /// </para>

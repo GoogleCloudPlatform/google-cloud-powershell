@@ -6,6 +6,7 @@ using Google.Apis.Compute.v1.Data;
 using Google.PowerShell.Common;
 using Google.PowerShell.ComputeEngine;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Management.Automation;
 
@@ -73,6 +74,13 @@ namespace Google.PowerShell.Compute
         [ConfigPropertyName(CloudSdkSettings.CommonProperties.Zone)]
         public string Zone { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The map of labels (key/value pairs) to be applied to the snapshot.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public virtual Hashtable Label { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -134,8 +142,10 @@ namespace Google.PowerShell.Compute
             var body = new Snapshot
             {
                 Description = Description,
-                Name = Name ?? $"{diskName}-{DateTime.UtcNow:yyyyMMddHHmmss\\z}"
+                Name = Name ?? $"{diskName}-{DateTime.UtcNow:yyyyMMddHHmmss\\z}",
+                Labels = ConvertToDictionary<string, string>(Label)
             };
+
             DisksResource.CreateSnapshotRequest request = Service.Disks.CreateSnapshot(body, project, zone, diskName);
             if (GuestFlush)
             {

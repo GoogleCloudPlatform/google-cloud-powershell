@@ -386,6 +386,16 @@ namespace Google.PowerShell.ComputeEngine
         [Parameter(ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
         public override string[] Tag { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// The map of labels (key/value pairs) to be applied to the instance.
+        /// </para>
+        /// </summary>
+        [Parameter(ParameterSetName = ParameterSetNames.ByValues)]
+        [Parameter(ParameterSetName = ParameterSetNames.ByValuesCustomMachine)]
+        public override Hashtable Label { get; set; }
+
+
         protected override void ProcessRecord()
         {
             InstanceTemplate instanceTemplate;
