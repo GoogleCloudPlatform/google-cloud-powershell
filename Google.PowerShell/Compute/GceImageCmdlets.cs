@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
+using System.Collections;
 
 namespace Google.PowerShell.ComputeEngine
 {
@@ -252,6 +253,14 @@ namespace Google.PowerShell.ComputeEngine
 
         /// <summary>
         /// <para type="description">
+        /// The map of labels (key/value pairs) to be applied to the image.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public virtual Hashtable Label { get; set; }
+
+        /// <summary>
+        /// <para type="description">
         /// Human readable description of the image.
         /// </para>
         /// </summary>
@@ -266,6 +275,7 @@ namespace Google.PowerShell.ComputeEngine
                 DiskSizeGb = SourceDisk.SizeGb,
                 Name = Name ?? SourceDisk.Name,
                 Description = Description ?? SourceDisk.Description,
+                Labels = ConvertToDictionary<string, string>(Label),
                 Family = Family
             };
 

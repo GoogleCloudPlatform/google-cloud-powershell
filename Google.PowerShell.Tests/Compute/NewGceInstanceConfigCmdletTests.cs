@@ -25,11 +25,8 @@ namespace Google.PowerShell.Tests.Compute
         [Test]
         public void TestAcceptingCustomMemoryCustomCpu()
         {
-            const string psDiskVar = "attachedDisk";
-            Pipeline.Runspace.SessionStateProxy.SetVariable(psDiskVar, new AttachedDisk());
-
             Pipeline.Commands.AddScript(
-                $"New-GceInstanceConfig -Region us-central1-a -Name instance-name -Disk ${psDiskVar} -CustomCpu 2 -CustomMemory 2048");
+                $"New-GceInstanceConfig -Region us-central1-a -Name instance-name -CustomCpu 2 -CustomMemory 2048");
             Collection<PSObject> results = Pipeline.Invoke();
 
             var instance = (Instance) results.Single().BaseObject;
@@ -39,11 +36,8 @@ namespace Google.PowerShell.Tests.Compute
         [Test]
         public void TestErrorMissingCustomMemoryWithCustomCpu()
         {
-            const string psDiskVar = "attachedDisk";
-            Pipeline.Runspace.SessionStateProxy.SetVariable(psDiskVar, new AttachedDisk());
-
             Pipeline.Commands.AddScript(
-                $"New-GceInstanceConfig -Region us-central1-a -Name instance-name -Disk ${psDiskVar} -CustomCpu 2");
+                $"New-GceInstanceConfig -Region us-central1-a -Name instance-name -CustomCpu 2");
             var e = Assert.Throws<ParameterBindingException>(() => Pipeline.Invoke());
 
             Assert.AreEqual("CustomMemory", e.ParameterName.Trim());
@@ -52,11 +46,8 @@ namespace Google.PowerShell.Tests.Compute
         [Test]
         public void TestErrorMissingCustomCpuWithCustomMemory()
         {
-            const string psDiskVar = "attachedDisk";
-            Pipeline.Runspace.SessionStateProxy.SetVariable(psDiskVar, new AttachedDisk());
-
             Pipeline.Commands.AddScript(
-                $"New-GceInstanceConfig -Region us-central1-a -Name instance-name -Disk ${psDiskVar} -CustomMemory 2048");
+                $"New-GceInstanceConfig -Region us-central1-a -Name instance-name -CustomMemory 2048");
             var e = Assert.Throws<ParameterBindingException>(() => Pipeline.Invoke());
 
             Assert.AreEqual("CustomCpu", e.ParameterName.Trim());
@@ -65,15 +56,23 @@ namespace Google.PowerShell.Tests.Compute
         [Test]
         public void TestMachineTypeInvalidWithCustom()
         {
-            const string psDiskVar = "attachedDisk";
-            Pipeline.Runspace.SessionStateProxy.SetVariable(psDiskVar, new AttachedDisk());
-
             Pipeline.Commands.AddScript(
-                $"New-GceInstanceConfig -Region us-central1-a -Name instance-name -Disk ${psDiskVar} -CustomCpu 2 -CustomMemory 2048 -MachineType some-type");
+                $"New-GceInstanceConfig -Region us-central1-a -Name instance-name -CustomCpu 2 -CustomMemory 2048 -MachineType some-type");
             var e = Assert.Throws<ParameterBindingException>(() => Pipeline.Invoke());
 
             Assert.AreEqual("Parameter set cannot be resolved using the specified named parameters.", e.Message);
             Assert.IsNull(e.ParameterName);
+        }
+
+        [Test]
+        public void TestLabels()
+        {
+            Pipeline.Commands.AddScript(
+                $"New-GceInstanceConfig -Region us-central1-a -Name instance-name -Label @{{'key' = 'value'}}");
+            Collection<PSObject> results = Pipeline.Invoke();
+
+            var instance = (Instance)results.Single().BaseObject;
+            Assert.AreEqual(instance.Labels["key"], "value");
         }
     }
 }

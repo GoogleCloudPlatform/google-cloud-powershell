@@ -340,13 +340,9 @@ namespace Google.PowerShell.Container
                 OauthScopes = ServiceAccount?.Scopes,
                 Preemptible = Preemptible.ToBool(),
                 MachineType = SelectedMachineType,
-                ImageType = SelectedImageType
+                ImageType = SelectedImageType,
+                Labels = ConvertToDictionary<string, string>(Label),
             };
-
-            if (Label != null)
-            {
-                nodeConfig.Labels = ConvertToDictionary<string, string>(Label);
-            }
 
             if (InstanceMetadata != null)
             {

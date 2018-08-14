@@ -68,5 +68,22 @@ namespace Google.PowerShell.Tests.Compute
             CollectionAssert.AreEqual(results, new[] { snapshotResult });
             requestMock.VerifySet(r => r.GuestFlush = true, Times.Once);
         }
+
+        [Test]
+        public void TestLabels()
+        {
+            Mock<DisksResource.CreateSnapshotRequest> requestMock = ServiceMock.Resource(s => s.Disks).SetupRequest(
+                d => d.CreateSnapshot(It.Is<Snapshot>(snapshot => snapshot.Labels["key"] == "value"),
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()),
+                DoneOperation);
+            var snapshotResult = new Snapshot();
+            ServiceMock.Resource(s => s.Snapshots).SetupRequest(
+                s => s.Get(It.IsAny<string>(), It.IsAny<string>()), snapshotResult);
+
+            Pipeline.Commands.AddScript("Add-GceSnapShot -DiskName diskname -Label @{'key' = 'value'}");
+            Collection<PSObject> results = Pipeline.Invoke();
+
+            CollectionAssert.AreEqual(results, new[] { snapshotResult });
+        }
     }
 }

@@ -119,5 +119,29 @@ namespace Google.PowerShell.Tests.Compute
             Assert.AreEqual("Parameter set cannot be resolved using the specified named parameters.", e.Message);
             Assert.IsNull(e.ParameterName);
         }
+
+        [Test]
+        public void TestMachineTypeWithLabel()
+        {
+            const string psDiskVar = "attachedDisk";
+            const string mockedResultName = "mocked-result-name";
+            Pipeline.Runspace.SessionStateProxy.SetVariable(psDiskVar, new AttachedDisk());
+            Mock<InstancesResource> instances = ServiceMock.Resource(s => s.Instances);
+            instances.SetupRequest(
+                resource => resource.Insert(It.Is<Instance>(
+                    i => i.Labels["key"] == "value"),
+                It.IsAny<string>(), It.IsAny<string>()),
+                DoneOperation);
+            instances.SetupRequest(
+                i => i.Get(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()),
+                new Instance { Name = mockedResultName });
+
+            Pipeline.Commands.AddScript(
+                $"Add-GceInstance -Name instance-name -Disk ${psDiskVar} -Label @{{'key' = 'value'}}");
+            Collection<PSObject> results = Pipeline.Invoke();
+
+            var instance = (Instance)results.Single().BaseObject;
+            Assert.AreEqual(mockedResultName, instance.Name);
+        }
     }
 }
