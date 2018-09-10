@@ -295,15 +295,44 @@ Describe "New-GcsObject" {
         Remove-GcsObject $emptyObj
     }
 
+    It "should work with fixed-type metadata" {
+        $obj = New-GcsObject $bucket "metadata-test" `
+            -ContentEncoding "gzip" -ContentType "image/png"
+        $obj.Metadata | Should BeNullOrEmpty
+        $obj.ContentType | Should Be "image/png"
+        $obj.ContentEncoding | Should Be "gzip"
+        Remove-GcsObject $obj
+    }
+
+    It "should work with fixed-type metadata through -Metadata parameter" {
+        $obj = New-GcsObject $bucket "metadata-test" `
+            -Metadata @{ "Content-Encoding" = "gzip"; "Content-Type" = "image/png" }
+        $obj.Metadata | Should BeNullOrEmpty
+        $obj.ContentType | Should Be "image/png"
+        $obj.ContentEncoding | Should Be "gzip"
+        Remove-GcsObject $obj
+    }
+
     It "should write metadata" {
         $obj = New-GcsObject $bucket "metadata-test" `
             -Metadata @{ "alpha" = 1; "beta" = "two"; "Content-Type" = "image/png" }
-        $obj.Metadata.Count = 3
+        $obj.Metadata.Count = 2
         $obj.Metadata["alpha"] | Should Be 1
         $obj.Metadata["beta"] | Should Be "two"
-        $obj.Metadata["Content-Type"] | Should Be "image/png"
         # Content-Type can be set from metadata.
         $obj.ContentType | Should Be "image/png"
+        Remove-GcsObject $obj
+    }
+
+    It "should work with both fixed-type and custom metadata" {
+        $obj = New-GcsObject $bucket "metadata-test" `
+            -Metadata @{ "Content-Encoding" = "gzip"; "Content-Type" = "image/png";
+                         "alpha" = 1; "beta" = "two" }
+        $obj.Metadata.Count = 2
+        $obj.Metadata["alpha"] | Should Be 1
+        $obj.Metadata["beta"] | Should Be "two"
+        $obj.ContentType | Should Be "image/png"
+        $obj.ContentEncoding | Should Be "gzip"
         Remove-GcsObject $obj
     }
 
@@ -316,13 +345,15 @@ Describe "New-GcsObject" {
         Remove-GcsObject $obj
     }
 
-    It "will prefer the -ContentType parameter to -Metadata" {
+    It "will prefer the fixed-type metadata parameter to -Metadata" {
         $obj = New-GcsObject $bucket "metadata-test" `
+            -ContentLanguage "aa" `
             -ContentType "image/jpeg" `
-            -Metadata @{ "Content-Type" = "image/png" }
+            -Metadata @{ "Content-Type" = "image/png"; "Content-Language" = "en" }
         $obj.ContentType | Should Be "image/jpeg"
-        # It will also apply to the Metadata too.
-        $obj.Metadata["Content-Type"] | Should Be "image/jpeg"
+        $obj.ContentLanguage | Should Be "aa"
+        # It should not apply to the Metadata too.
+        $obj.Metadata | Should BeNullOrEmpty
         Remove-GcsObject $obj
     }
 
@@ -1151,13 +1182,37 @@ Describe "Write-GcsObject" {
         Remove-GcsObject $bucket "acl-test"
     }
 
-    It "should not clobber existing metadata" {
+    It "should not clobber existing custom metadata" {
         $orgObj = "original contents" | New-GcsObject $bucket "metadata-test" `
             -Metadata @{ "one" = 1; "two" = 2}
         $orgObj.Metadata.Count | Should Be 2
         
         $updatedObj = "new contents" | Write-GcsObject $bucket "metadata-test"
         $updatedObj.Metadata.Count | Should Be 2
+
+        Remove-GcsObject $bucket "metadata-test"
+    }
+
+    It "should not clobber existing fixed-key metadata" {
+        $orgObj = "original contents" | New-GcsObject $bucket "metadata-test" `
+            -ContentEncoding "gzip" -ContentLanguage "aa"
+        
+        $updatedObj = "new contents" | Write-GcsObject $bucket "metadata-test" `
+            -ContentLanguage "en"
+        $updatedObj.ContentLanguage | Should Be "en"
+        $updatedObj.ContentEncoding | Should Be "gzip"
+
+        Remove-GcsObject $bucket "metadata-test"
+    }
+
+    It "should update fixed-key metadata to null" {
+        $orgObj = "original contents" | New-GcsObject $bucket "metadata-test" `
+            -ContentEncoding "gzip" -ContentLanguage "aa"
+        
+        $updatedObj = "new contents" | Write-GcsObject $bucket "metadata-test" `
+            -ContentLanguage $null -ContentEncoding $null
+        $updatedObj.ContentLanguage | Should BeNullOrEmpty
+        $updatedObj.ContentEncoding | Should BeNullOrEmpty
 
         Remove-GcsObject $bucket "metadata-test"
     }
@@ -1183,17 +1238,36 @@ Describe "Write-GcsObject" {
         Remove-GcsObject $bucket "metadata-test2"
     }
 
-    It "should give precidence to the ContentType parameter" {
+    It "should use fixed-key parameter in -Metadata parameter" {
         # Where Write-Gcs object creates a new object (-Force)
         $newObjectCase = "XXX" | Write-GcsObject $bucket "content-type-test" `
-            -ContentType "image/png" -Metadata @{ "Content-Type" = "image/jpeg" } `
-            -Force
+            -ContentType "image/png" -ContentLanguage "en" `
+            -Metadata @{ "Content-Type" = "image/jpeg" } -Force
         $newObjectCase.ContentType | Should Be "image/png"
+        $newObjectCase.ContentLanguage | Should Be "en"
 
-        # Where Write-Gcs has both ContentType and a Metadata value.
         $both = "XXX" | Write-GcsObject $bucket "content-type-test" `
-            -ContentType "test/alpha" -Metadata @{ "Content-Type" = "test/beta" }
+            -Metadata @{ "Content-Type" = "test/beta"; "Content-Language" = "bb" }
+        $both.ContentType | Should Be "test/beta"
+        $both.ContentLanguage | Should Be "bb"
+
+        Remove-GcsObject $bucket "content-type-test"
+    }
+
+    It "should give precedence to the fixed type parameter" {
+        # Where Write-Gcs object creates a new object (-Force)
+        $newObjectCase = "XXX" | Write-GcsObject $bucket "content-type-test" `
+            -ContentType "image/png" -ContentLanguage "en" `
+            -Metadata @{ "Content-Type" = "image/jpeg" } -Force
+        $newObjectCase.ContentType | Should Be "image/png"
+        $newObjectCase.ContentLanguage | Should Be "en"
+
+        # Where Write-Gcs has both ContentType, ContentLanguage and a Metadata value.
+        $both = "XXX" | Write-GcsObject $bucket "content-type-test" `
+            -ContentType "test/alpha" -ContentLanguage "aa" `
+            -Metadata @{ "Content-Type" = "test/beta"; "Content-Language" = "bb" }
         $both.ContentType | Should Be "test/alpha"
+        $both.ContentLanguage | Should Be "aa"
 
         Remove-GcsObject $bucket "content-type-test"
     }

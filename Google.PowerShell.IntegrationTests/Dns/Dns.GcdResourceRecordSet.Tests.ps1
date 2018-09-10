@@ -11,7 +11,7 @@ Describe "Get-GcdResourceRecordSet" {
     }
 
     It "should fail to return ResourceRecordSets of non-existent project" {
-        { Get-GcdResourceRecordSet -Project $nonExistProject $testZone1 } | Should Throw "404"
+        { Get-GcdResourceRecordSet -Project $nonExistProject $testZone1 } | Should Throw "403"
     }
 
     It "should give access errors as appropriate" {

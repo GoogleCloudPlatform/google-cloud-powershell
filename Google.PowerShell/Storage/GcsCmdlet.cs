@@ -139,5 +139,30 @@ namespace Google.PowerShell.CloudStorage
 
             return OctetStreamMimeType;
         }
+
+        /// <summary>
+        /// Gets fixed type metadata from the cmdlet parameter if user provides that.
+        /// If not, tries retrieving it from the metadata dictionary using keyNameInMetadataDictionary.
+        /// If that also fails, returns the default content type.
+        /// </summary>
+        /// <returns></returns>
+        protected string GetFixedTypeMetadata(
+            string parameterName,
+            Dictionary<string, string> metadataDictionary,
+            string keyNameInMetadataDictionary,
+            string defaultContentType = null)
+        {
+            if (MyInvocation.BoundParameters.ContainsKey(parameterName))
+            {
+                return MyInvocation.BoundParameters[parameterName] as string;
+            }
+
+            if (metadataDictionary != null && metadataDictionary.ContainsKey(keyNameInMetadataDictionary))
+            {
+                return metadataDictionary[keyNameInMetadataDictionary];
+            }
+
+            return defaultContentType;
+        }
     }
 }
