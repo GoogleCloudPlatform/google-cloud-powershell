@@ -1247,9 +1247,9 @@ Describe "Write-GcsObject" {
         $newObjectCase.ContentLanguage | Should Be "en"
 
         $both = "XXX" | Write-GcsObject $bucket "content-type-test" `
-            -Metadata @{ "Content-Type" = "test/beta"; "Content-Language" = "bb" }
+            -Metadata @{ "Content-Type" = "test/beta"; "Content-Language" = "aa" }
         $both.ContentType | Should Be "test/beta"
-        $both.ContentLanguage | Should Be "bb"
+        $both.ContentLanguage | Should Be "aa"
 
         Remove-GcsObject $bucket "content-type-test"
     }
