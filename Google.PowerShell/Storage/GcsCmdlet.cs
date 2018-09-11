@@ -76,7 +76,8 @@ namespace Google.PowerShell.CloudStorage
         }
 
         /// <summary>
-        /// Infer the MIME type of a non-qualified file path. Returns null if no match is found.
+        /// Infer the MIME type of a non-qualified file path.
+        /// Returns octet stream mime type if no match is found.
         /// </summary>
         public static string InferContentType(string file)
         {
@@ -110,37 +111,6 @@ namespace Google.PowerShell.CloudStorage
         }
 
         /// <summary>
-        /// Return the content type to use for a Cloud Storage object given existing values, defauts, etc. The order of
-        /// precidence is:
-        /// 1. New content type, e.g. a ContentType parameter.
-        /// 2. New metadata, e.g. Metadata value specified via parameter.
-        /// 3. Default content type to apply (potentially null), e.g. sniffing file content.
-        /// If no match is found, will return OctetStreamMimeType.
-        /// </summary>
-        public string GetContentType(
-            string newContentType,
-            Dictionary<string, string> newMetadata,
-            string defaultContentType = null)
-        {
-            if (!String.IsNullOrEmpty(newContentType))
-            {
-                return newContentType;
-            }
-
-            if (newMetadata != null && newMetadata.ContainsKey("Content-Type"))
-            {
-                return newMetadata["Content-Type"];
-            }
-
-            if (!String.IsNullOrEmpty(defaultContentType))
-            {
-                return defaultContentType;
-            }
-
-            return OctetStreamMimeType;
-        }
-
-        /// <summary>
         /// Gets fixed type metadata from the cmdlet parameter if user provides that.
         /// If not, tries retrieving it from the metadata dictionary using keyNameInMetadataDictionary.
         /// If that also fails, returns the default content type.
@@ -148,9 +118,9 @@ namespace Google.PowerShell.CloudStorage
         /// <returns></returns>
         protected string GetFixedTypeMetadata(
             string parameterName,
-            Dictionary<string, string> metadataDictionary,
+            IReadOnlyDictionary<string, string> metadataDictionary,
             string keyNameInMetadataDictionary,
-            string defaultContentType = null)
+            string defaultValue = null)
         {
             if (MyInvocation.BoundParameters.ContainsKey(parameterName))
             {
@@ -162,7 +132,7 @@ namespace Google.PowerShell.CloudStorage
                 return metadataDictionary[keyNameInMetadataDictionary];
             }
 
-            return defaultContentType;
+            return defaultValue;
         }
     }
 }

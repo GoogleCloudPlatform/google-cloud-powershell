@@ -21,6 +21,21 @@ namespace Google.PowerShell.CloudStorage
     /// </summary>
     public abstract class GcsObjectCmdlet : GcsCmdlet
     {
+        protected static readonly string ContentTypeKeyMetadata = "Content-Type";
+
+        protected static readonly string ContentEncodingKeyMetadata = "Content-Encoding";
+
+        protected static readonly string CacheControlKeyMetadata = "Cache-Control";
+
+        protected static readonly string ContentDispositionKeyMetadata = "Content-Disposition";
+
+        protected static readonly string ContentLanguageKeyMetadata = "Content-Language";
+
+        private static string[] FixedKeysMetadata = new string[] {
+            ContentTypeKeyMetadata, ContentEncodingKeyMetadata, CacheControlKeyMetadata,
+            ContentDispositionKeyMetadata, ContentLanguageKeyMetadata
+        };
+
         /// <summary>
         /// Returns whether or not a storage object with the given name exists in the provided
         /// bucket. Will return false if the object exists but is not visible to the current
@@ -68,25 +83,12 @@ namespace Google.PowerShell.CloudStorage
             {
                 // Handles fixed-key metadata. Removes them so there won't be duplicate. See:
                 // https://cloud.google.com/storage/docs/metadata#mutable
-                if (metadata.ContainsKey("Content-Type"))
+                foreach (string fixedKeyMetadata in FixedKeysMetadata)
                 {
-                    metadata.Remove("Content-Type");
-                }
-                if (metadata.ContainsKey("Content-Encoding"))
-                {
-                    metadata.Remove("Content-Encoding");
-                }
-                if (metadata.ContainsKey("Cache-Control"))
-                {
-                    metadata.Remove("Cache-Control");
-                }
-                if (metadata.ContainsKey("Content-Disposition"))
-                {
-                    metadata.Remove("Content-Disposition");
-                }
-                if (metadata.ContainsKey("Content-Language"))
-                {
-                    metadata.Remove("Content-Language");
+                    if (metadata.ContainsKey(fixedKeyMetadata))
+                    {
+                        metadata.Remove(fixedKeyMetadata);
+                    }
                 }
 
                 // Other metadata pairs will be custom metadata.
@@ -447,7 +449,8 @@ namespace Google.PowerShell.CloudStorage
             // ContentsFromFile and ContentsFromString case.
             if (ParameterSetName == ParameterSetNames.ContentsFromFile)
             {
-                objContentType = GetContentType(ContentType, metadataDict, InferContentType(File));
+                objContentType = GetFixedTypeMetadata(
+                    nameof(ContentType), metadataDict, ContentTypeKeyMetadata, InferContentType(File));
                 string qualifiedPath = GetFullFilePath(File);
                 if (!System.IO.File.Exists(qualifiedPath))
                 {
@@ -460,7 +463,8 @@ namespace Google.PowerShell.CloudStorage
             {
                 // We store string data as UTF-8, which is different from .NET's default encoding
                 // (UTF-16). But this simplifies several other issues.
-                objContentType = GetContentType(ContentType, metadataDict, UTF8TextMimeType);
+                objContentType = GetFixedTypeMetadata(
+                    nameof(ContentType), metadataDict, ContentTypeKeyMetadata, UTF8TextMimeType);
                 byte[] contentBuffer = Encoding.UTF8.GetBytes(Value);
                 contentStream = new MemoryStream(contentBuffer);
             }
@@ -498,7 +502,8 @@ namespace Google.PowerShell.CloudStorage
             }
 
             // Create a directory on the cloud.
-            string objContentType = GetContentType(null, metadataDict, UTF8TextMimeType);
+            string objContentType = GetFixedTypeMetadata(
+                string.Empty, metadataDict, ContentTypeKeyMetadata, UTF8TextMimeType);
             Stream contentStream = new MemoryStream();
             UploadStreamToGcsObject(contentStream, objContentType, metadataDict, gcsObjectNamePrefix);
 
@@ -511,7 +516,8 @@ namespace Google.PowerShell.CloudStorage
                 fileWithGcsObjectNamePrefix = ConvertLocalToGcsFolderPath(fileWithGcsObjectNamePrefix);
                 UploadStreamToGcsObject(
                     new FileStream(file, FileMode.Open),
-                    GetContentType(ContentType, metadataDict, InferContentType(file)),
+                    GetFixedTypeMetadata(
+                        nameof(ContentType), metadataDict, ContentTypeKeyMetadata, InferContentType(File)),
                     metadataDict,
                     ConvertLocalToGcsFolderPath(fileWithGcsObjectNamePrefix));
             }
@@ -1398,8 +1404,8 @@ namespace Google.PowerShell.CloudStorage
                     }
                 }
 
-                string contentType = GetContentType(ContentType, existingObjectMetadata, existingGcsObject?.ContentType);
-
+                string contentType = GetFixedTypeMetadata(
+                    nameof(ContentType), existingObjectMetadata, ContentTypeKeyMetadata, existingGcsObject?.ContentType ?? OctetStreamMimeType);
                 string cacheControl =
                     GetFixedTypeMetadata(nameof(CacheControl), existingObjectMetadata, "Cache-Control", existingGcsObject?.CacheControl);
                 string contentDisposition =
