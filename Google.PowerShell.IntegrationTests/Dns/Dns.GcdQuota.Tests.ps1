@@ -5,7 +5,7 @@ $project, $zone, $oldActiveConfig, $configName = Set-GCloudConfig
 Describe "Get-GcdQuota" {
 
     It "should fail to return DNS quota of non-existent project" {
-        { Get-GcdQuota -Project $nonExistProject } | Should Throw "404"
+        { Get-GcdQuota -Project $nonExistProject } | Should Throw "403"
     }
 
     It "should give access errors as appropriate" {

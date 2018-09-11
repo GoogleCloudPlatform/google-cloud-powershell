@@ -11,7 +11,7 @@ Describe "Get-GcdManagedZone" {
     }
 
     It "should fail to return ManagedZones of non-existent project" {
-        { Get-GcdManagedZone -Project $nonExistProject } | Should Throw "404"
+        { Get-GcdManagedZone -Project $nonExistProject } | Should Throw "403"
     }
 
     It "should give access errors as appropriate" {
@@ -62,7 +62,7 @@ Describe "Add-GcdManagedZone" {
     }
 
     It "should fail to create a ManagedZone in a non-existent project" {
-        { Add-GcdManagedZone -Project $nonExistProject $testZone1 $dnsName1 } | Should Throw "404"
+        { Add-GcdManagedZone -Project $nonExistProject $testZone1 $dnsName1 } | Should Throw "403"
     }
 
     It "should give access errors as appropriate" {
@@ -114,7 +114,7 @@ Describe "Remove-GcdManagedZone" {
     }
 
     It "should fail to delete a ManagedZone in a non-existent project" {
-        { Remove-GcdManagedZone -Project $nonExistProject $testZone1 } | Should Throw "404"
+        { Remove-GcdManagedZone -Project $nonExistProject $testZone1 } | Should Throw "403"
     }
 
     It "should give access errors as appropriate" {

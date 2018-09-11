@@ -76,10 +76,16 @@ namespace Google.PowerShell.CloudStorage
         }
 
         /// <summary>
-        /// Infer the MIME type of a non-qualified file path. Returns null if no match is found.
+        /// Infer the MIME type of a non-qualified file path.
+        /// Returns octet stream mime type if no match is found.
         /// </summary>
         public static string InferContentType(string file)
         {
+            if (file == null)
+            {
+                return OctetStreamMimeType;
+            }
+
             int index = file.LastIndexOf('.');
             if (index == -1)
             {
@@ -110,34 +116,28 @@ namespace Google.PowerShell.CloudStorage
         }
 
         /// <summary>
-        /// Return the content type to use for a Cloud Storage object given existing values, defauts, etc. The order of
-        /// precidence is:
-        /// 1. New content type, e.g. a ContentType parameter.
-        /// 2. New metadata, e.g. Metadata value specified via parameter.
-        /// 3. Default content type to apply (potentially null), e.g. sniffing file content.
-        /// If no match is found, will return OctetStreamMimeType.
+        /// Gets fixed type metadata from the cmdlet parameter if user provides that.
+        /// If not, tries retrieving it from the metadata dictionary using keyNameInMetadataDictionary.
+        /// If that also fails, returns the default content type.
         /// </summary>
-        public string GetContentType(
-            string newContentType,
-            Dictionary<string, string> newMetadata,
-            string defaultContentType = null)
+        /// <returns></returns>
+        protected string GetFixedTypeMetadata(
+            string parameterName,
+            IReadOnlyDictionary<string, string> metadataDictionary,
+            string keyNameInMetadataDictionary,
+            string defaultValue = null)
         {
-            if (!String.IsNullOrEmpty(newContentType))
+            if (MyInvocation.BoundParameters.ContainsKey(parameterName))
             {
-                return newContentType;
+                return MyInvocation.BoundParameters[parameterName] as string;
             }
 
-            if (newMetadata != null && newMetadata.ContainsKey("Content-Type"))
+            if (metadataDictionary != null && metadataDictionary.ContainsKey(keyNameInMetadataDictionary))
             {
-                return newMetadata["Content-Type"];
+                return metadataDictionary[keyNameInMetadataDictionary];
             }
 
-            if (!String.IsNullOrEmpty(defaultContentType))
-            {
-                return defaultContentType;
-            }
-
-            return OctetStreamMimeType;
+            return defaultValue;
         }
     }
 }

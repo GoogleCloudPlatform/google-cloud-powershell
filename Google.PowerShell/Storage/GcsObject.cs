@@ -21,6 +21,21 @@ namespace Google.PowerShell.CloudStorage
     /// </summary>
     public abstract class GcsObjectCmdlet : GcsCmdlet
     {
+        protected static readonly string ContentTypeKeyMetadata = "Content-Type";
+
+        protected static readonly string ContentEncodingKeyMetadata = "Content-Encoding";
+
+        protected static readonly string CacheControlKeyMetadata = "Cache-Control";
+
+        protected static readonly string ContentDispositionKeyMetadata = "Content-Disposition";
+
+        protected static readonly string ContentLanguageKeyMetadata = "Content-Language";
+
+        private static string[] FixedKeysMetadata = new string[] {
+            ContentTypeKeyMetadata, ContentEncodingKeyMetadata, CacheControlKeyMetadata,
+            ContentDispositionKeyMetadata, ContentLanguageKeyMetadata
+        };
+
         /// <summary>
         /// Returns whether or not a storage object with the given name exists in the provided
         /// bucket. Will return false if the object exists but is not visible to the current
@@ -49,22 +64,39 @@ namespace Google.PowerShell.CloudStorage
         protected Object UploadGcsObject(
             StorageService service, string bucket, string objectName,
             Stream contentStream, string contentType,
-            PredefinedAclEnum? predefinedAcl, Dictionary<string, string> metadata)
+            PredefinedAclEnum? predefinedAcl, Dictionary<string, string> metadata,
+            string cacheControl = null, string contentDisposition = null,
+            string contentEncoding = null, string contentLanguage = null)
         {
-            // Work around an API wart. It is possible to specify content type via the API and also by
-            // metadata.
-            if (metadata != null && metadata.ContainsKey("Content-Type"))
-            {
-                metadata["Content-Type"] = contentType;
-            }
-
             Object newGcsObject = new Object
             {
                 Bucket = bucket,
                 Name = objectName,
                 ContentType = contentType,
-                Metadata = metadata
+                ContentEncoding = contentEncoding,
+                ContentDisposition = contentDisposition,
+                CacheControl = cacheControl,
+                ContentLanguage = contentLanguage
             };
+
+            if (metadata != null)
+            {
+                // Handles fixed-key metadata. Removes them so there won't be duplicate. See:
+                // https://cloud.google.com/storage/docs/metadata#mutable
+                foreach (string fixedKeyMetadata in FixedKeysMetadata)
+                {
+                    if (metadata.ContainsKey(fixedKeyMetadata))
+                    {
+                        metadata.Remove(fixedKeyMetadata);
+                    }
+                }
+
+                // Other metadata pairs will be custom metadata.
+                if (metadata.Count != 0)
+                {
+                    newGcsObject.Metadata = metadata;
+                }
+            }
 
             ObjectsResource.InsertMediaUpload insertReq = service.Objects.Insert(
                 newGcsObject, bucket, contentStream, contentType);
@@ -274,7 +306,68 @@ namespace Google.PowerShell.CloudStorage
         /// </summary>
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ContentsFromFile)]
         [Parameter(Mandatory = false, ParameterSetName = ParameterSetNames.ContentsFromString)]
+        [ValidateNotNullOrEmpty]
         public string ContentType { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Content encoding of the Cloud Storage object. e.g. "gzip".
+        /// </para>
+        /// <para type="description">
+        /// This metadata can be used to indcate that an object is compressed, while still
+        /// maitaining the object's underlying Content-Type. For example, a text file that
+        /// is gazip compressed can have the fact that it's a text file indicated in ContentType
+        /// and the fact that it's gzip compressed indicated in ContentEncoding.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ValidateNotNullOrEmpty]
+        public string ContentEncoding { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Content language of the Cloud Storage object. e.g. "en".
+        /// </para>
+        /// <para type="description">
+        /// This metadata indicates the language(s) that the object is intended for.
+        /// Refer to https://www.loc.gov/standards/iso639-2/php/code_list.php
+        /// for the supported values of this metadata.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ValidateNotNullOrEmpty]
+        public string ContentLanguage { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Specifies presentation information about the data being transmitted.
+        /// </para>
+        /// <para type="description">
+        /// This metadata allows you to control presentation style of the content,
+        /// for example determining whether an attachment should be automatically displayed
+        /// or whether some form of actions from the user should be required to open it.
+        /// See https://tools.ietf.org/html/rfc6266.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ValidateNotNullOrEmpty]
+        public string ContentDisposition { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// This metadata specifies two different aspects of how data is served
+        /// from Cloud Storage: whether data can be cached and whether data can be transformed.
+        /// </para>
+        /// <para type="description">
+        /// Sets the value to "no-cache" if you do not want the object to be cached.
+        /// Sets the value to "max-age=[TIME_IN_SECONDS]" so the object can be cached up to
+        /// the specified length of time.
+        /// See https://cloud.google.com/storage/docs/metadata#cache-control for more information.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        [ValidateNotNullOrEmpty]
+        public string CacheControl { get; set; }
 
         /// <summary>
         /// <para type="description">
@@ -302,6 +395,7 @@ namespace Google.PowerShell.CloudStorage
         /// </para>
         /// </summary>
         [Parameter(Mandatory = false)]
+        [ValidateNotNullOrEmpty]
         public Hashtable Metadata { get; set; }
 
         /// <summary>
@@ -355,7 +449,8 @@ namespace Google.PowerShell.CloudStorage
             // ContentsFromFile and ContentsFromString case.
             if (ParameterSetName == ParameterSetNames.ContentsFromFile)
             {
-                objContentType = GetContentType(ContentType, metadataDict, InferContentType(File));
+                objContentType = GetFixedTypeMetadata(
+                    nameof(ContentType), metadataDict, ContentTypeKeyMetadata, InferContentType(File));
                 string qualifiedPath = GetFullFilePath(File);
                 if (!System.IO.File.Exists(qualifiedPath))
                 {
@@ -368,7 +463,8 @@ namespace Google.PowerShell.CloudStorage
             {
                 // We store string data as UTF-8, which is different from .NET's default encoding
                 // (UTF-16). But this simplifies several other issues.
-                objContentType = GetContentType(ContentType, metadataDict, UTF8TextMimeType);
+                objContentType = GetFixedTypeMetadata(
+                    nameof(ContentType), metadataDict, ContentTypeKeyMetadata, UTF8TextMimeType);
                 byte[] contentBuffer = Encoding.UTF8.GetBytes(Value);
                 contentStream = new MemoryStream(contentBuffer);
             }
@@ -406,20 +502,22 @@ namespace Google.PowerShell.CloudStorage
             }
 
             // Create a directory on the cloud.
-            string objContentType = GetContentType(null, metadataDict, UTF8TextMimeType);
+            string objContentType = GetFixedTypeMetadata(
+                string.Empty, metadataDict, ContentTypeKeyMetadata, UTF8TextMimeType);
             Stream contentStream = new MemoryStream();
             UploadStreamToGcsObject(contentStream, objContentType, metadataDict, gcsObjectNamePrefix);
 
             // TODO(quoct): Add a progress indicator if there are too many files.
-            foreach (string file in Directory.EnumerateFiles(directory))
+            foreach (string enumeratedFile in Directory.EnumerateFiles(directory))
             {
-                string fileName = Path.GetFileName(file);
+                string fileName = Path.GetFileName(enumeratedFile);
                 string fileWithGcsObjectNamePrefix = Path.Combine(gcsObjectNamePrefix, fileName);
                 // We have to replace \ with / so it will be created with correct folder structure.
                 fileWithGcsObjectNamePrefix = ConvertLocalToGcsFolderPath(fileWithGcsObjectNamePrefix);
                 UploadStreamToGcsObject(
-                    new FileStream(file, FileMode.Open),
-                    GetContentType(ContentType, metadataDict, InferContentType(file)),
+                    new FileStream(enumeratedFile, FileMode.Open),
+                    GetFixedTypeMetadata(
+                        nameof(ContentType), metadataDict, ContentTypeKeyMetadata, InferContentType(enumeratedFile)),
                     metadataDict,
                     ConvertLocalToGcsFolderPath(fileWithGcsObjectNamePrefix));
             }
@@ -459,10 +557,20 @@ namespace Google.PowerShell.CloudStorage
                         $"Storage object '{ObjectName}' already exists. Use -Force to overwrite.");
                 }
 
+                string cacheControl =
+                    GetFixedTypeMetadata(nameof(CacheControl), metadataDict, CacheControlKeyMetadata);
+                string contentDisposition =
+                    GetFixedTypeMetadata(nameof(ContentDisposition), metadataDict, ContentDispositionKeyMetadata);
+                string contentEncoding =
+                    GetFixedTypeMetadata(nameof(ContentEncoding), metadataDict, ContentEncodingKeyMetadata);
+                string contentLanguage =
+                    GetFixedTypeMetadata(nameof(ContentLanguage), metadataDict, ContentLanguageKeyMetadata);
+
                 Object newGcsObject = UploadGcsObject(
                     Service, Bucket, objectName, contentStream,
                     objContentType, PredefinedAcl,
-                    metadataDict);
+                    metadataDict, cacheControl, contentDisposition,
+                    contentEncoding, contentLanguage);
 
                 WriteObject(newGcsObject);
             }
@@ -1154,6 +1262,62 @@ namespace Google.PowerShell.CloudStorage
         [Parameter(Mandatory = false)]
         public string ContentType { get; set; }
 
+        /// <summary>
+        /// <para type="description">
+        /// Content encoding of the Cloud Storage object. e.g. "gzip".
+        /// </para>
+        /// <para type="description">
+        /// This metadata can be used to indcate that an object is compressed, while still
+        /// maitaining the object's underlying Content-Type. For example, a text file that
+        /// is gazip compressed can have the fact that it's a text file indicated in ContentType
+        /// and the fact that it's gzip compressed indicated in ContentEncoding.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public string ContentEncoding { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Content language of the Cloud Storage object. e.g. "en".
+        /// </para>
+        /// <para type="description">
+        /// This metadata indicates the language(s) that the object is intended for.
+        /// Refer to https://www.loc.gov/standards/iso639-2/php/code_list.php
+        /// for the supported values of this metadata.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public string ContentLanguage { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// Specifies presentation information about the data being transmitted.
+        /// </para>
+        /// <para type="description">
+        /// This metadata allows you to control presentation style of the content,
+        /// for example determining whether an attachment should be automatically displayed
+        /// or whether some form of actions from the user should be required to open it.
+        /// See https://tools.ietf.org/html/rfc6266.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public string ContentDisposition { get; set; }
+
+        /// <summary>
+        /// <para type="description">
+        /// This metadata specifies two different aspects of how data is served
+        /// from Cloud Storage: whether data can be cached and whether data can be transformed.
+        /// </para>
+        /// <para type="description">
+        /// Sets the value to "no-cache" if you do not want the object to be cached.
+        /// Sets the value to "max-age=[TIME_IN_SECONDS]" so the object can be cached up to
+        /// the specified length of time.
+        /// See https://cloud.google.com/storage/docs/metadata#cache-control for more information.
+        /// </para>
+        /// </summary>
+        [Parameter(Mandatory = false)]
+        public string CacheControl { get; set; }
+
         // TODO(chrsmith): Support updating an existing object's ACLs. Currently we don't do this because we only
         // support setting canned, default ACLs; which is only allowed by the API when creating new objects.
 
@@ -1240,7 +1404,16 @@ namespace Google.PowerShell.CloudStorage
                     }
                 }
 
-                string contentType = GetContentType(ContentType, existingObjectMetadata, existingGcsObject?.ContentType);
+                string contentType = GetFixedTypeMetadata(
+                    nameof(ContentType), existingObjectMetadata, ContentTypeKeyMetadata, existingGcsObject?.ContentType ?? OctetStreamMimeType);
+                string cacheControl =
+                    GetFixedTypeMetadata(nameof(CacheControl), existingObjectMetadata, "Cache-Control", existingGcsObject?.CacheControl);
+                string contentDisposition =
+                    GetFixedTypeMetadata(nameof(ContentDisposition), existingObjectMetadata, "Content-Disposition", existingGcsObject?.ContentDisposition);
+                string contentEncoding =
+                    GetFixedTypeMetadata(nameof(ContentEncoding), existingObjectMetadata, "Content-Encoding", existingGcsObject?.ContentEncoding);
+                string contentLanguage =
+                    GetFixedTypeMetadata(nameof(ContentLanguage), existingObjectMetadata, "Content-Language", existingGcsObject?.ContentLanguage);
 
                 // Rewriting GCS objects is done by simply creating a new object with the
                 // same name. (i.e. this is functionally identical to New-GcsObject.)
@@ -1251,7 +1424,9 @@ namespace Google.PowerShell.CloudStorage
                 Object updatedGcsObject = UploadGcsObject(
                     Service, Bucket, ObjectName, contentStream,
                     contentType, null /* predefinedAcl */,
-                    existingObjectMetadata);
+                    existingObjectMetadata, cacheControl,
+                    contentDisposition, contentEncoding,
+                    contentLanguage);
 
                 WriteObject(updatedGcsObject);
             }
