@@ -81,6 +81,11 @@ namespace Google.PowerShell.CloudStorage
         /// </summary>
         public static string InferContentType(string file)
         {
+            if (file == null)
+            {
+                return OctetStreamMimeType;
+            }
+
             int index = file.LastIndexOf('.');
             if (index == -1)
             {

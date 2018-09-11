@@ -508,16 +508,16 @@ namespace Google.PowerShell.CloudStorage
             UploadStreamToGcsObject(contentStream, objContentType, metadataDict, gcsObjectNamePrefix);
 
             // TODO(quoct): Add a progress indicator if there are too many files.
-            foreach (string file in Directory.EnumerateFiles(directory))
+            foreach (string enumeratedFile in Directory.EnumerateFiles(directory))
             {
-                string fileName = Path.GetFileName(file);
+                string fileName = Path.GetFileName(enumeratedFile);
                 string fileWithGcsObjectNamePrefix = Path.Combine(gcsObjectNamePrefix, fileName);
                 // We have to replace \ with / so it will be created with correct folder structure.
                 fileWithGcsObjectNamePrefix = ConvertLocalToGcsFolderPath(fileWithGcsObjectNamePrefix);
                 UploadStreamToGcsObject(
-                    new FileStream(file, FileMode.Open),
+                    new FileStream(enumeratedFile, FileMode.Open),
                     GetFixedTypeMetadata(
-                        nameof(ContentType), metadataDict, ContentTypeKeyMetadata, InferContentType(File)),
+                        nameof(ContentType), metadataDict, ContentTypeKeyMetadata, InferContentType(enumeratedFile)),
                     metadataDict,
                     ConvertLocalToGcsFolderPath(fileWithGcsObjectNamePrefix));
             }
@@ -558,13 +558,13 @@ namespace Google.PowerShell.CloudStorage
                 }
 
                 string cacheControl =
-                    GetFixedTypeMetadata(nameof(CacheControl), metadataDict, "Cache-Control");
+                    GetFixedTypeMetadata(nameof(CacheControl), metadataDict, CacheControlKeyMetadata);
                 string contentDisposition =
-                    GetFixedTypeMetadata(nameof(ContentDisposition), metadataDict, "Content-Disposition");
+                    GetFixedTypeMetadata(nameof(ContentDisposition), metadataDict, ContentDispositionKeyMetadata);
                 string contentEncoding =
-                    GetFixedTypeMetadata(nameof(ContentEncoding), metadataDict, "Content-Encoding");
+                    GetFixedTypeMetadata(nameof(ContentEncoding), metadataDict, ContentEncodingKeyMetadata);
                 string contentLanguage =
-                    GetFixedTypeMetadata(nameof(ContentLanguage), metadataDict, "Content-Language");
+                    GetFixedTypeMetadata(nameof(ContentLanguage), metadataDict, ContentLanguageKeyMetadata);
 
                 Object newGcsObject = UploadGcsObject(
                     Service, Bucket, objectName, contentStream,
