@@ -169,7 +169,7 @@ Describe "Remove-GcSqlInstance" {
 
 Describe "Export-GcSqlInstance" {
     AfterAll {
-        gsutil -q rm gs://gcsql-instance-testing/*
+        gcloud storage rm gs://gcsql-instance-testing/*
     }
 
     # For these tests, test-db4 was used because an instance must have a populated database for it to work.
@@ -181,34 +181,34 @@ Describe "Export-GcSqlInstance" {
 
 
     It "should export an applicable SQL file" {
-        $beforeObjects = gsutil ls gs://gcsql-instance-testing
+        $beforeObjects = gcloud storage ls gs://gcsql-instance-testing
         ($beforeObjects -contains "gs://gcsql-instance-testing/testsql$r.gz") | Should Be false
         Export-GcSqlInstance $instance "gs://gcsql-instance-testing/testsql$r.gz"
-        $afterObjects = gsutil ls gs://gcsql-instance-testing
+        $afterObjects = gcloud storage ls gs://gcsql-instance-testing
         ($afterObjects -contains "gs://gcsql-instance-testing/testsql$r.gz") | Should Be true
     }
 
     It "should export an applicable CSV file" {
-        $beforeObjects = gsutil ls gs://gcsql-instance-testing
+        $beforeObjects = gcloud storage ls gs://gcsql-instance-testing
         ($beforeObjects -contains "gs://gcsql-instance-testing/testcsv$r.csv") | Should Be false
         Export-GcSqlInstance $instance "gs://gcsql-instance-testing/testcsv$r.csv" "SELECT * FROM guestbook.entries"
-        $afterObjects = gsutil ls gs://gcsql-instance-testing
+        $afterObjects = gcloud storage ls gs://gcsql-instance-testing
         ($afterObjects -contains "gs://gcsql-instance-testing/testcsv$r.csv") | Should Be true
     }
 
     It "should be able to export a specific SQL file" {
-        $beforeObjects = gsutil ls gs://gcsql-instance-testing
+        $beforeObjects = gcloud storage ls gs://gcsql-instance-testing
         ($beforeObjects -contains "gs://gcsql-instance-testing/testothersql$r.gz") | Should Be false
         Export-GcSqlInstance $instance "gs://gcsql-instance-testing/testothersql$r.gz" -Database "guestbook","guestbook2" 
-        $afterObjects = gsutil ls gs://gcsql-instance-testing
+        $afterObjects = gcloud storage ls gs://gcsql-instance-testing
         ($afterObjects -contains "gs://gcsql-instance-testing/testothersql$r.gz") | Should Be true
     }
 
     It "should be able to export a specific CSV file" {
-        $beforeObjects = gsutil ls gs://gcsql-instance-testing
+        $beforeObjects = gcloud storage ls gs://gcsql-instance-testing
         ($beforeObjects -contains "gs://gcsql-instance-testing/testothercsv$r.csv") | Should Be false
         Export-GcSqlInstance $instance "gs://gcsql-instance-testing/testothercsv$r.csv" -Database "guestbook" "SELECT * FROM entries"
-        $afterObjects = gsutil ls gs://gcsql-instance-testing
+        $afterObjects = gcloud storage ls gs://gcsql-instance-testing
         ($afterObjects -contains "gs://gcsql-instance-testing/testothercsv$r.csv") | Should Be true
     }
 
