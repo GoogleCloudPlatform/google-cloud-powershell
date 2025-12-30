@@ -28,7 +28,7 @@ Describe "Get-GcsBucket" {
     }
 
     It "should work" {
-        gsutil mb -p gcloud-powershell-testing gs://gcps-testbucket 2>$null
+        gcloud storage buckets create gs://gcps-testbucket --project gcloud-powershell-testing 2>$null
         $bucket = Get-GcsBucket -Name "gcps-testbucket"
         $bucket.GetType().FullName | Should Match "Google.Apis.Storage.v1.Data.Bucket"
 
@@ -36,7 +36,7 @@ Describe "Get-GcsBucket" {
         $bucket.Id | Should Match "gcps-testbucket"
         $bucket.SelfLink | Should Match "https://www.googleapis.com/storage/v1/b/gcps-testbucket"
 
-        gsutil rb gs://gcps-testbucket 2>$null
+        gcloud storage buckets delete gs://gcps-testbucket 2>$null
     }
 
     It "should take into account changes in the Cloud SDK, including environment variables" -Skip:$skipServiceAccountTest {
@@ -94,12 +94,12 @@ Describe "New-GcsBucket" {
 
     # Should remove the bucket before/after each test to ensure we are in a good state.
     BeforeEach {
-        gsutil -m rm -r "gs://gcps-bucket-creation/*" 2>$null
-        gsutil rb gs://gcps-bucket-creation 2>$null
+        gcloud storage rm --recursive "gs://gcps-bucket-creation/*" 2>$null
+        gcloud storage buckets delete gs://gcps-bucket-creation 2>$null
     }
 
     AfterEach {
-        gsutil rb gs://gcps-bucket-creation 2>$null
+        gcloud storage buckets delete gs://gcps-bucket-creation 2>$null
     }
 
     It "should work" {
@@ -167,7 +167,7 @@ Describe "New-GcsBucket" {
         { Invoke-WebRequest https://www.googleapis.com/storage/v1/b/gcps-bucket-creation/o/test-obj } |
             Should Throw "(401) Unauthorized"
         # But going through gsutil (which passes along your Google credentials) will work.
-        gsutil cat gs://gcps-bucket-creation/test-obj | Should Be "testing 1, 2, 3..."
+        gcloud storage cat gs://gcps-bucket-creation/test-obj | Should Be "testing 1, 2, 3..."
     }
 }
 
