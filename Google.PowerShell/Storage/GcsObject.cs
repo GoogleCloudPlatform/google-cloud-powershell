@@ -668,7 +668,7 @@ namespace Google.PowerShell.CloudStorage
 
         /// <summary>
         /// <para type="description">
-        /// Object prefix to use. e.g. "/logs/". If not specified all
+        /// Object prefix to use. e.g. "logs/". If not specified all
         /// objects in the bucket will be returned.
         /// </para>
         /// </summary>
