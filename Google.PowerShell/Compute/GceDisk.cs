@@ -218,7 +218,7 @@ namespace Google.PowerShell.ComputeEngine
         /// Type of disk, e.g. pd-ssd or pd-standard.
         /// </para>
         /// </summary>
-        [Parameter, ValidateSet("pd-ssd", "pd-standard")]
+        [Parameter, ValidateSet("pd-ssd", "pd-standard", "pd-balanced", "pd-extreme")]
         public string DiskType { get; set; }
 
         /// <summary>
