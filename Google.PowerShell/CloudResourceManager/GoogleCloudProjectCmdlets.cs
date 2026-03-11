@@ -27,8 +27,8 @@ namespace Google.PowerShell.CloudResourceManager
     ///   <para>This command gets the project that has the name "My Project".</para>
     /// </example>
     /// <example>
-    ///   <code>PS C:\> Get-GcProject -Id "my-id"</code>
-    ///   <para>This command gets the project that has the Id "my-id".</para>
+    ///   <code>PS C:\> Get-GcProject ‑ProjectId "my-id"</code>
+    ///   <para>This command gets the project that has the ProjectId "my-id".</para>
     /// </example>
     /// <example>
     ///   <code>PS C:\> Get-GcProject -Label @{"environment" = "test"}</code>
